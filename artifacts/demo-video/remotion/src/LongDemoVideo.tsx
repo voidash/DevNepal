@@ -39,7 +39,7 @@ const scenes: LongScene[] = [
     summary: 'The first screen explains what can be contributed, who owns it, and where to begin.',
     proof: ['No sign-in wall', 'Bilingual discovery', 'Official ownership visible'],
     audio: 'voice-long/01-public-entry.mp3',
-    audioPlaybackRate: 1,
+    audioPlaybackRate: 1.1,
     media: [{kind: 'image', source: 'long/01-home-ne.png'}],
   },
   {
@@ -93,7 +93,7 @@ const scenes: LongScene[] = [
     summary: 'The contributor view is public GitHub identity tied to visible repository activity.',
     proof: ['Public fields only', 'Repository activity', 'Original GitHub profile linked'],
     audio: 'voice-long/05-public-profile.mp3',
-    audioPlaybackRate: 1,
+    audioPlaybackRate: 1.12,
     media: [{kind: 'image', source: 'long/05-profile-ne.png'}],
   },
   {
@@ -163,7 +163,7 @@ const scenes: LongScene[] = [
     summary: 'Discover in DevNepal, collaborate in GitHub, and let the ministry monitor a timestamped public projection.',
     proof: ['Visitor-first', 'GitHub-first', 'Publisher-verifiable'],
     audio: 'voice-long/10-resilience-close.mp3',
-    audioPlaybackRate: 1.01,
+    audioPlaybackRate: 1.3,
     media: [
       {kind: 'image', source: 'long/03-project-top-ne.png'},
       {kind: 'image', source: 'long/07-workspace-refreshed.png'},
