@@ -50,7 +50,7 @@ const scenes: LongScene[] = [
     summary: 'Government listings stay concise while exposing responsibility, contribution mode, and next steps.',
     proof: ['Approved government listings', 'Legible dummy data', 'Direct route to project detail'],
     audio: 'voice-long/02-project-discovery.mp3',
-    audioPlaybackRate: 1,
+    audioPlaybackRate: 0.9,
     media: [
       {kind: 'image', source: 'long/02-project-list-ne.png'},
       {kind: 'image', source: 'long/03-project-top-ne.png'},
@@ -64,7 +64,7 @@ const scenes: LongScene[] = [
     summary: 'A timestamped GitHub snapshot brings open issues, pull requests, and contributors into one public page.',
     proof: ['Synchronized issue list', 'PR #10 visible', 'Contributor activity visible'],
     audio: 'voice-long/03-project-github.mp3',
-    audioPlaybackRate: 1,
+    audioPlaybackRate: 0.83,
     media: [
       {kind: 'image', source: 'long/03-project-top-ne.png'},
       {kind: 'image', source: 'long/03-project-issues-ne.png'},
@@ -148,7 +148,7 @@ const scenes: LongScene[] = [
     summary: 'Navigation, project context, and issue discovery remain usable at a 390-pixel mobile viewport.',
     proof: ['No horizontal overflow', 'Nepali navigation', 'Issues remain reachable'],
     audio: 'voice-long/09-mobile-nepali.mp3',
-    audioPlaybackRate: 1,
+    audioPlaybackRate: 0.95,
     media: [
       {kind: 'image', source: 'long/09-mobile-home.png', mobile: true},
       {kind: 'image', source: 'long/09-mobile-project.png', mobile: true},
