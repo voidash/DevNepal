@@ -111,6 +111,32 @@ def test_home_hero_keeps_air_between_the_claim_the_actions_and_the_officer_line(
 
 
 @pytest.mark.unit
+def test_home_chapters_use_ground_not_heading_hairlines():
+    """DSC-001: home chapters sit on alternating grounds instead of stacked heading rules."""
+    root = Path(settings.BASE_DIR)
+    css = (root / "static/src/devnepal.css").read_text()
+    home = (root / "apps/projects/templates/projects/home.html").read_text()
+
+    assert 'class="section dn-home dn-home--band"' in home
+    assert 'class="section dn-home dn-home--mute"' in home
+    heading_rule = css.split(".dn-home-section-heading {", 1)[1].split("}", 1)[0]
+    facts_rule = css.split(".dn-featured-card__facts {", 1)[1].split("}", 1)[0]
+    people_rule = css.split(".dn-people-grid {", 1)[1].split("}", 1)[0]
+    kicker_rule = css.split(".dn-contribution-model > header .dn-section-kicker {", 1)[1].split(
+        "}", 1
+    )[0]
+
+    assert ".section.dn-home--band { background: var(--color-paper); }" in css
+    assert ".section.dn-home--mute { background: var(--color-surface); }" in css
+    assert "border-bottom: 0;" in heading_rule
+    assert "border-bottom: 1px" not in heading_rule
+    assert "border-top: 0;" in facts_rule
+    assert "background: var(--color-divider);" not in people_rule
+    assert "gap: var(--space-5);" in people_rule
+    assert "border-bottom: 0;" in kicker_rule
+
+
+@pytest.mark.unit
 def test_public_ministry_onboarding_is_an_explainer_not_an_application(client):
     """C1.1/C1.3/GOV-001: prospective officers receive an onboarding explanation."""
     response = client.get(reverse("projects:ministry_onboarding"))

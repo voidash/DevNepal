@@ -63,7 +63,9 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
    glance table, community rows, people cells, the two ways in. Sheets, cards
    and tiles all share the 6px radius; nothing carries registration ticks. */
 .section.dn-home { padding-block: var(--space-16); }
-.dn-home-section-heading { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--color-divider); }
+.section.dn-home--band { background: var(--color-paper); }
+.section.dn-home--mute { background: var(--color-surface); }
+.dn-home-section-heading { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: end; justify-content: space-between; margin-bottom: 32px; padding-bottom: 0; border-bottom: 0; }
 .dn-home-section-heading > div { min-width: 0; }
 .dn-home-section-heading .dn-section-kicker { display: block; }
 .dn-home-section-heading h2 { margin: 0; line-height: 1.08; letter-spacing: -0.01em; text-transform: none; }
@@ -112,7 +114,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 /* Ways to contribute: statement on the left, four doors on the right. */
 .dn-contribution-model { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
 .dn-contribution-model > header { display: block; margin: 0; padding: 0; border: 0; }
-.dn-contribution-model > header .dn-section-kicker { padding-bottom: 12px; border-bottom: 1px solid var(--color-divider); }
+.dn-contribution-model > header .dn-section-kicker { padding-bottom: 0; border-bottom: 0; }
 .dn-contribution-model > header h2 { margin-top: 20px; }
 .dn-contribution-model > header > a { display: inline-block; margin-top: 24px; }
 .dn-way-line { display: flex; flex-wrap: wrap; column-gap: 0; row-gap: 4px; max-width: 48ch; margin: 20px 0 0; padding: 0; list-style: none; color: var(--color-neutral-700); font-size: var(--fs-sm); line-height: 1.7; }
@@ -146,8 +148,8 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-community-rows .dn-empty { margin: 24px; }
 
 /* People: cells divided by hairlines inside the sheet. D12 keeps scores off. */
-.dn-people-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; margin: 0; background: var(--color-divider); }
-.dn-person-card { display: flex; flex-direction: column; gap: 6px; padding: 20px 24px; border: 0; background: var(--color-paper); }
+.dn-people-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-5); margin: 0; }
+.dn-person-card { display: flex; flex-direction: column; gap: 6px; padding: 20px 24px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-paper); }
 .dn-person-card .dn-person-avatar { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 6px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-accent-100); color: var(--color-accent-800); font: 600 13px var(--font-heading); }
 .dn-person-card h3 { margin: 0; font-size: 18px; }
 .dn-person-card h3 a { color: var(--color-text); text-decoration: none; }
@@ -155,7 +157,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-person-card p { margin: 0; color: var(--color-neutral-700); font-size: 13px; }
 .dn-person-card .dn-person-headline { color: var(--color-text); font-size: 14px; }
 .dn-person-card .dn-person-open { color: var(--color-accent-700); font-size: 12px; }
-.dn-person-card .dn-person-meta { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--color-divider); color: var(--color-neutral-600); font-size: 12px; }
+.dn-person-card .dn-person-meta { margin-top: auto; padding-top: 8px; border-top: 0; color: var(--color-neutral-600); font-size: 12px; }
 .dn-people-grid + .dn-sheet__foot { border-top: 0; }
 .dn-sheet > .dn-empty { margin: 24px; }
 
@@ -627,7 +629,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 /* ── landing page ────────────────────────────────────────────────────────────
    The hero states the claim on the left and the figures that back it on the
    right, so a first-time visitor sees the evidence before any invitation. */
-.hero { background: var(--color-paper); border-bottom: 1px solid var(--color-divider); }
+.hero { background: var(--color-paper); border-bottom: 0; }
 .dn-home-hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr); gap: var(--space-16); align-items: center; padding-block: var(--space-12) var(--space-16); }
 .dn-home-hero .hero__panel { max-width: none; padding: 0; }
 .dn-home-hero h1 { max-width: 11em; }
@@ -654,7 +656,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-featured-card__owner { margin: var(--space-1) 0 0; color: var(--color-neutral-600); font-size: var(--fs-sm); }
 .dn-featured-card__summary { margin: 0; color: var(--color-neutral-800); }
 .dn-featured-card .dn-labels { margin: 0; }
-.dn-featured-card__facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin: auto 0 0; padding-top: var(--space-4); border-top: 1px solid var(--color-divider); }
+.dn-featured-card__facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin: auto 0 0; padding-top: var(--space-5); border-top: 0; }
 .dn-featured-card__facts div { min-width: 0; }
 .dn-featured-card__facts dt { margin-bottom: 2px; color: var(--color-neutral-600); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .dn-featured-card__facts dd { margin: 0; font-size: var(--fs-sm); font-weight: 500; overflow-wrap: anywhere; }

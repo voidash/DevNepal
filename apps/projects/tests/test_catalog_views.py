@@ -576,7 +576,7 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
         "language",
     ):
         assert f'name="{field_name}" data-auto-submit' in content
-    assert 'src="/static/src/catalog-controls.js"' in content
+    assert 'src="/static/src/catalog-controls.js?v=' in content
     assert "onchange=" not in content
     assert '<button class="btn btn--secondary" type="submit">Apply filters</button>' in content
     script = (Path(settings.BASE_DIR) / "static/src/catalog-controls.js").read_text()
@@ -592,7 +592,8 @@ def test_catalog_keeps_search_simple_and_the_filter_rail_in_view(client):
     content = response.content.decode()
 
     toolbar = content.split('<div class="dn-catalog-toolbar">', 1)[1].split("</div>", 1)[0]
-    filters = content.split('<details class="dn-catalog-filters" open>', 1)[1].split("</details>", 1)[0]
+    rail = content.split('<details class="dn-catalog-filters" open>', 1)[1]
+    filters = rail.split("</details>", 1)[0]
 
     assert 'name="q"' in toolbar
     assert 'name="sort"' not in toolbar

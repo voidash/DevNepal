@@ -76,7 +76,7 @@
   </div>
 </section>
 
-<section class="section dn-home" aria-labelledby="contribution-path-heading">
+<section class="section dn-home dn-home--band" aria-labelledby="contribution-path-heading">
   <div class="container">
     <div class="dn-contribution-model">
       <header>
@@ -120,7 +120,7 @@
   </div>
 </section>
 
-<section class="section dn-home" aria-labelledby="community-heading">
+<section class="section dn-home dn-home--mute" aria-labelledby="community-heading">
   <div class="container">
     <header class="dn-home-section-heading">
       <div>
@@ -204,27 +204,25 @@
       </div>
       <a class="dn-arrow-link" href="{% url 'accounts:member_directory' %}">{% trans "Browse members" %} →</a>
     </header>
-    <div class="dn-sheet blueprint">
-      <div class="dn-people-grid">
-        {% for profile in featured_members %}
-        <article class="dn-person-card">
-          <span class="dn-person-avatar" aria-hidden="true">{{ profile.user.username|slice:":1"|upper }}</span>
-          <h3><a href="{% url 'accounts:public_profile' profile.user.username %}">@{{ profile.user.username }}</a></h3>
-          {% if profile.headline %}<p class="dn-person-headline">{{ profile.headline }}</p>{% endif %}
-          {% if profile.field_visibility.skills == "public" and profile.user.directory_skills %}
-          <div class="dn-labels">{% for member_skill in profile.user.directory_skills|slice:":3" %}<span class="tag tag-neutral">{{ member_skill.skill.name }}</span>{% endfor %}</div>
-          {% endif %}
-          <p class="dn-person-meta">{% trans "Discoverable profile" %}</p>
-        </article>
-        {% endfor %}
-      </div>
+    <div class="dn-people-grid">
+      {% for profile in featured_members %}
+      <article class="dn-person-card">
+        <span class="dn-person-avatar" aria-hidden="true">{{ profile.user.username|slice:":1"|upper }}</span>
+        <h3><a href="{% url 'accounts:public_profile' profile.user.username %}">@{{ profile.user.username }}</a></h3>
+        {% if profile.headline %}<p class="dn-person-headline">{{ profile.headline }}</p>{% endif %}
+        {% if profile.field_visibility.skills == "public" and profile.user.directory_skills %}
+        <div class="dn-labels">{% for member_skill in profile.user.directory_skills|slice:":3" %}<span class="tag tag-neutral">{{ member_skill.skill.name }}</span>{% endfor %}</div>
+        {% endif %}
+        <p class="dn-person-meta">{% trans "Discoverable profile" %}</p>
+      </article>
+      {% endfor %}
     </div>
   </div>
 </section>
 {% endif %}
 
 {% if featured_posts %}
-<section class="section dn-home" aria-labelledby="writing-heading">
+<section class="section dn-home dn-home--mute" aria-labelledby="writing-heading">
   <div class="container">
     <header class="dn-home-section-heading">
       <div>
