@@ -1,7 +1,5 @@
 {
-	email admin@zapper.cloud
 	http_port 8080
-	https_port 8444
 }
 
 (devnepal) {
@@ -22,14 +20,9 @@
 	}
 }
 
-zapper.cloud {
-	bind 192.168.10.30
+http://devnepal.zapper.cloud:8080 {
+	bind 127.0.0.1
 	import devnepal
-}
-
-www.zapper.cloud {
-	bind 192.168.10.30
-	redir https://zapper.cloud{uri} permanent
 }
 
 http://k2.fell-truck.ts.net:8080 {

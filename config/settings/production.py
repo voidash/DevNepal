@@ -13,10 +13,10 @@ def _csv_setting(name: str, default: str = "") -> list[str]:
 
 DEBUG = False
 
-ALLOWED_HOSTS = _csv_setting("DJANGO_ALLOWED_HOSTS", "zapper.cloud,www.zapper.cloud")
+ALLOWED_HOSTS = _csv_setting("DJANGO_ALLOWED_HOSTS", "devnepal.zapper.cloud")
 CSRF_TRUSTED_ORIGINS = _csv_setting(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
-    "https://zapper.cloud,https://www.zapper.cloud",
+    "https://devnepal.zapper.cloud",
 )
 
 STATIC_ROOT = BASE_DIR / "staticfiles"

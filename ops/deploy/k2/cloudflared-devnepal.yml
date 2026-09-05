@@ -1,0 +1,10 @@
+tunnel: 3870ab23-cb09-41cc-a68d-56362b84eb6b
+credentials-file: /Users/k2/.cloudflared/3870ab23-cb09-41cc-a68d-56362b84eb6b.json
+
+ingress:
+  - hostname: devnepal.zapper.cloud
+    service: http://127.0.0.1:8080
+    originRequest:
+      httpHostHeader: devnepal.zapper.cloud
+      connectTimeout: 10s
+  - service: http_status:404

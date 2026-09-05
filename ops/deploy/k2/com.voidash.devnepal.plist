@@ -17,9 +17,9 @@
     <key>DJANGO_SECRET_KEY</key>
     <string>REPLACE_DURING_DEPLOYMENT</string>
     <key>DJANGO_ALLOWED_HOSTS</key>
-    <string>zapper.cloud,www.zapper.cloud,k2.fell-truck.ts.net,192.168.10.30,100.80.123.8</string>
+    <string>devnepal.zapper.cloud,k2.fell-truck.ts.net,192.168.10.30,100.80.123.8</string>
     <key>DJANGO_CSRF_TRUSTED_ORIGINS</key>
-    <string>https://zapper.cloud,https://www.zapper.cloud,https://k2.fell-truck.ts.net</string>
+    <string>https://devnepal.zapper.cloud,https://k2.fell-truck.ts.net</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
