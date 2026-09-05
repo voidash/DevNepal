@@ -31,6 +31,7 @@
         <div class="blueprint dn-authoring-form">
         {% csrf_token %}
         {% if is_create %}
+        <input type="hidden" name="demo_fill" value="">
         {% trans "Civic Help Directory" as demo_title_en %}
         {% trans "नागरिक सहायता निर्देशिका" as demo_title_ne %}
         {% trans "A public directory of Government of Nepal help programmes, including scholarships, health subsidies, and agricultural support." as demo_summary_en %}
