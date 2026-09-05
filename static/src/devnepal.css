@@ -1039,7 +1039,10 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 @media (max-width: 1000px) {
   .dn-catalog-body { grid-template-columns: 1fr; gap: var(--space-5); }
   .dn-catalog-filters { position: static; padding: var(--space-4); border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-paper); }
-  .dn-catalog-filters > summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 700; }
+  .dn-catalog-filters > summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 700; list-style: none; }
+  .dn-catalog-filters > summary::-webkit-details-marker { display: none; }
+  .dn-catalog-filters > summary::after { content: "+"; color: var(--color-accent-700); font-size: var(--fs-lg); line-height: 1; }
+  .dn-catalog-filters[open] > summary::after { content: "\2212"; }
   .dn-catalog-filters[open] > summary { margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-divider); }
   .dn-catalog-filters .dn-catalog-filter-head { display: none; }
   .dn-catalog-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
