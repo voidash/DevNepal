@@ -619,7 +619,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .hero { background: var(--color-paper); border-bottom: 1px solid var(--color-divider); }
 .dn-home-hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr); gap: var(--space-16); align-items: center; padding-block: var(--space-12) var(--space-16); }
 .dn-home-hero .hero__panel { max-width: none; padding: 0; }
-.dn-home-hero h1 { max-width: 13ch; }
+.dn-home-hero h1 { max-width: 11em; }
 .dn-home-hero .hero__lead { max-width: 52ch; }
 .hero__ministry-link { display: block; margin: var(--space-5) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); }
 .dn-hero-proof { align-self: center; padding: var(--space-6) var(--space-8); }
@@ -685,7 +685,7 @@ ol.dn-journey .dn-journey-step { list-style: none; padding: var(--space-6); }
 
 @media (max-width: 1080px) {
   .dn-home-hero { grid-template-columns: 1fr; gap: var(--space-8); padding-block: var(--space-10) var(--space-12); }
-  .dn-home-hero h1 { max-width: 16ch; }
+  .dn-home-hero h1 { max-width: none; }
   ol.dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   ol.dn-journey .dn-journey-step:nth-child(3) { border-left: 0; }
@@ -833,3 +833,8 @@ ol.dn-journey .dn-journey-step { list-style: none; padding: var(--space-6); }
 .dn-account .card form p { margin-bottom: var(--space-3); color: var(--color-neutral-600); font-size: var(--fs-sm); }
 .dn-account-state { display: flex; gap: var(--space-2); align-items: center; font-size: var(--fs-sm); }
 .dn-account-danger { border-color: var(--color-divider-strong); }
+.dn-issue-list > .dn-empty { border: 0; border-radius: 0; }
+.dn-queue-facts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: var(--space-3) 0; }
+.dn-queue-facts div { display: flex; gap: var(--space-2); align-items: baseline; }
+.dn-queue-facts dt { color: var(--color-neutral-600); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.dn-queue-facts dd { margin: 0; color: var(--color-neutral-800); font-size: var(--fs-sm); }
