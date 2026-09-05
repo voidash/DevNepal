@@ -8,16 +8,16 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.unit
-def test_auth001_login_explains_identity_github_and_private_email(client):
-    """AUTH-001/AUTH-002/AUTH-008: sign-in explains identity, GitHub separation, and privacy."""
+def test_auth001_login_is_explicitly_for_ministry_publishers(client):
+    """AUTH-001/AUTH-002: the only visible local identity boundary is ministry publishing."""
     response = client.get(reverse("accounts:login"))
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "Signing in proves who you are" in content
-    assert "GitHub connection" in content
-    assert "separate" in content
-    assert "Your email is never shown publicly" in content
+    assert "Ministry Publisher sign in" in content
+    assert "account issued for your ministry" in content
+    assert "Visitors and contributors do not need an account" in content
+    assert "GitHub connection" not in content
 
 
 @pytest.mark.unit

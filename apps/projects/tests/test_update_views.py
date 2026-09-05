@@ -168,8 +168,8 @@ def test_public_updates_route_renders_timeline_with_public_fields_only(
 
 
 @pytest.mark.integration
-def test_public_detail_links_to_the_updates_route_and_stays_overview(client):
-    """GOV-009/DSC-009: the public detail stays the overview and links the updates timeline."""
+def test_public_detail_keeps_updates_timeline_off_the_minimal_surface(client):
+    """GOV-009/DSC-009: updates remain stored but do not expand the issue-first demo."""
     project = open_project()
     ProjectUpdateFactory(
         project=project,
@@ -183,6 +183,6 @@ def test_public_detail_links_to_the_updates_route_and_stays_overview(client):
     assert response.status_code == 200
     content = response.content
     updates_path = reverse("projects:updates", kwargs={"slug": project.slug}).encode()
-    assert updates_path in content
+    assert updates_path not in content
     assert b"Release v1" not in content
     assert b"Last maintainer activity" in content

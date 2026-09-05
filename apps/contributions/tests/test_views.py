@@ -214,8 +214,8 @@ def test_hidden_evidence_submission_urls_reject_ineligible_project_states(client
 
 
 @pytest.mark.unit
-def test_open_direct_project_links_authenticated_member_to_evidence_submission(client):
-    """A5/B2.5/DSC-005: an eligible public project exposes a member evidence-submission entry."""
+def test_open_direct_project_does_not_link_the_retired_evidence_submission_flow(client):
+    """A5/B2.5/DSC-005: the public page keeps contribution on GitHub."""
     member = UserFactory()
     project = ProjectFactory(
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
@@ -230,8 +230,8 @@ def test_open_direct_project_links_authenticated_member_to_evidence_submission(c
 
     assert response.status_code == 200
     submit_url = reverse("contributions:submit", kwargs={"project_id": project.pk})
-    assert submit_url in response.content.decode()
-    assert "Submit evidence" in response.content.decode()
+    assert submit_url not in response.content.decode()
+    assert "Submit evidence" not in response.content.decode()
 
 
 @pytest.mark.unit

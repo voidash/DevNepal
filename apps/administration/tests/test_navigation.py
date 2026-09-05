@@ -76,25 +76,28 @@ def test_ministry_publisher_reaches_their_publishing_dashboard(client):
 
 
 @pytest.mark.integration
-def test_a_signed_in_member_is_greeted_by_name(client):
-    """AUTH-006/DSC-001: the shared shell tells a signed-in person who they are signed in as."""
+def test_a_legacy_signed_in_member_does_not_expand_the_minimal_shell(client):
+    """AUTH-006/DSC-001: legacy member identity is absent from the GitHub-first shell."""
     member = UserFactory(username="sabina-thapa", first_name="Sabina", last_name="Thapa")
     client.force_login(member)
 
     content = client.get(reverse("projects:home")).content.decode()
 
-    assert "Hi Sabina Thapa" in content
+    assert "Sabina Thapa" not in content
+    assert reverse("accounts:dashboard") not in content
 
 
 @pytest.mark.integration
-def test_a_github_signup_without_a_full_name_is_greeted_by_their_handle(client):
-    """GIT-002/AUTH-006: a GitHub sign-up carries its handle as the username, so greet with it."""
-    member = UserFactory(username="octocat-np", first_name="", last_name="")
-    client.force_login(member)
+def test_a_ministry_publisher_without_a_full_name_is_identified_by_username(client):
+    """GIT-002/AUTH-006: the ministry workspace identifies its authenticated operator."""
+    publisher = MinistryPublisherFactory(
+        user=UserFactory(username="octocat-np", first_name="", last_name="")
+    )
+    client.force_login(publisher.user)
 
     content = client.get(reverse("projects:home")).content.decode()
 
-    assert "Hi octocat-np" in content
+    assert "Ministry: octocat-np" in content
 
 
 @pytest.mark.integration

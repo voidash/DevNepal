@@ -14,12 +14,7 @@
         <p class="hero__lead">{% trans "Browse approved government work with a named owner, a clear contribution route and a public response commitment. Where a project publishes a repository, code stays on GitHub; DevNepal records participation and verification." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
-          <a class="btn btn--ghost" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
-          {% if github_oauth_enabled %}
-          <form method="post" action="{% url 'accounts:github_connect' %}">{% csrf_token %}<button class="btn btn--ghost" type="submit">{% trans "Join with GitHub" %}</button></form>
-          {% else %}
-          <a class="btn btn--ghost" href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a>
-          {% endif %}
+          <a class="btn btn--ghost" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
         </div>
         <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a></p>
       </div>
@@ -66,47 +61,17 @@
     <div class="dn-contribution-model">
       <header>
         <span class="dn-section-kicker">{% trans "How it works" %}</span>
-        <h2 id="contribution-path-heading">{% trans "Code is one of nine ways in" %}</h2>
-        <p>{% trans "Choose work that fits, read its contribution route, and create an account only when you are ready to apply or submit evidence. A named maintainer verifies accepted work." %}</p>
+        <h2 id="contribution-path-heading">{% trans "From public project to GitHub contribution" %}</h2>
+        <p>{% trans "No DevNepal account is required. Find government work here, choose a synchronized issue, then contribute in the project's GitHub repository." %}</p>
         <a href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
       </header>
       <div class="dn-contribution-grid">
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Code & data" %}</a></h3><p>{% trans "Find repository-backed work and published starter tasks where a project has them." %}</p></article>
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "Design & research" %}</a></h3><p>{% trans "Submit audits, flows, interface work or research as project evidence." %}</p></article>
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Documentation & Nepali" %}</a></h3><p>{% trans "Translation and documentation are verified contributions alongside code." %}</p></article>
+        <article class="blueprint"><h3>{% trans "1. Find public work" %}</h3><p>{% trans "Browse approved government projects with a named ministry owner and public repository." %}</p></article>
+        <article class="blueprint"><h3>{% trans "2. Choose an issue" %}</h3><p>{% trans "Read the complete synchronized issue, its goal, and its acceptance criteria before leaving DevNepal." %}</p></article>
+        <article class="blueprint"><h3>{% trans "3. Contribute on GitHub" %}</h3><p>{% trans "Use GitHub for assignment, discussion, commits, and pull requests. DevNepal reflects public activity back to the ministry." %}</p></article>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="community-heading">
-  <div class="container">
-    <div class="blueprint dn-community-boundary dn-community-boundary--compact">
-      <h2 id="community-heading">{% trans "Community projects" %}</h2>
-      <p>{% trans "Member-owned projects are separate from Government of Nepal opportunities and never imply government endorsement." %}</p>
-      <a href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
-    </div>
-  </div>
-</section>
-{% if recommendations %}
-<section class="section" aria-labelledby="recommended-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div><span class="dn-section-kicker">{% trans "Your workspace" %}</span><h2 id="recommended-heading">{% trans "Recommended for you" %}</h2></div>
-      <a href="{% url 'projects:government' %}">{% trans "Browse all projects" %}</a>
-    </header>
-    <div class="dn-issue-list">
-      {% for recommendation in recommendations %}
-      <article class="dn-issue-row">
-        {% include "components/status_octicon.html" with project_status=recommendation.project.status %}
-        <div>
-          <a class="dn-issue-title" href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a>
-          <div class="dn-labels">{% for reason in recommendation.reasons %}<span class="Label Label--secondary">{{ reason }}</span>{% endfor %}</div>
-        </div>
-      </article>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
 {% endblock %}

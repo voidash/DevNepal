@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{% trans "DevNepal — Government of Nepal public collaboration platform" %}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{% trans "DevNepal — Government of Nepal public collaboration platform" %}{% endblock %}">
+  <link rel="icon" href="{% static 'images/devnepal-mark.svg' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'vendor/primer/primer.css' %}">
   <link rel="stylesheet" href="{% static 'src/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'src/base.css' %}">
   <link rel="stylesheet" href="{% static 'src/components.css' %}">
-  <link rel="stylesheet" href="{% static 'src/devnepal.css' %}?v=20260905">
+  <link rel="stylesheet" href="{% static 'src/devnepal.css' %}?v=20260905-minimal1">
   <link rel="stylesheet" href="{% static 'src/onboarding.css' %}">
   <link rel="stylesheet" href="{% static 'src/public-discovery.css' %}">
 </head>
@@ -27,7 +28,6 @@
       <nav class="dn-primary-nav" aria-label="{% trans 'Primary' %}">
         <ul>
           {% url 'projects:government' as nav_government %}{% if nav_government %}<li><a href="{{ nav_government }}"{% if request.resolver_match.view_name == 'projects:government' %} aria-current="page"{% endif %}>{% trans "Government projects" %}</a></li>{% endif %}
-          {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}"{% if request.resolver_match.view_name == 'projects:community' %} aria-current="page"{% endif %}>{% trans "Community projects" %}</a></li>{% endif %}
           {% url 'projects:about' as nav_about %}{% if nav_about %}<li><a href="{{ nav_about }}"{% if request.resolver_match.view_name == 'projects:about' %} aria-current="page"{% endif %}>{% trans "How to contribute" %}</a></li>{% endif %}
         </ul>
       </nav>
@@ -40,14 +40,13 @@
           <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
         </form>
         {% if user.is_authenticated %}
-        <a class="dn-greeting" href="{% url 'accounts:dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
-        {% if viewer_is_ministry_publisher %}<a class="btn btn-sm" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>{% endif %}
+        {% if viewer_is_ministry_publisher %}<span class="dn-greeting">{% blocktrans with name=user.get_full_name|default:user.username %}Ministry: {{ name }}{% endblocktrans %}</span><a class="btn btn-sm" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>{% endif %}
         <form action="{% url 'accounts:logout' %}" method="post">
           {% csrf_token %}
           <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
         </form>
         {% else %}
-        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a>
+        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Ministry sign in" %}</a>
         {% endif %}
       </div>
       <details class="mobile-nav">
@@ -55,22 +54,16 @@
         <nav aria-label="{% trans 'Primary' %}">
           <ul>
             {% url 'projects:government' as nav_gov %}{% if nav_gov %}<li><a href="{{ nav_gov }}"{% if request.resolver_match.view_name == 'projects:government' %} aria-current="page"{% endif %}>{% trans "Government projects" %}</a></li>{% endif %}
-            {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}"{% if request.resolver_match.view_name == 'projects:community' %} aria-current="page"{% endif %}>{% trans "Community projects" %}</a></li>{% endif %}
             {% url 'projects:about' as nav_about_m %}{% if nav_about_m %}<li><a href="{{ nav_about_m }}"{% if request.resolver_match.view_name == 'projects:about' %} aria-current="page"{% endif %}>{% trans "How to contribute" %}</a></li>{% endif %}
             {% if not user.is_authenticated %}
-            {% url 'accounts:login' as nav_login_m %}{% if nav_login_m %}<li><a href="{{ nav_login_m }}"{% if request.resolver_match.view_name == 'accounts:login' %} aria-current="page"{% endif %}>{% trans "Sign in" %}</a></li>{% endif %}
-            {% url 'accounts:signup' as nav_signup_m %}{% if nav_signup_m %}<li><a href="{{ nav_signup_m }}"{% if request.resolver_match.view_name == 'accounts:signup' %} aria-current="page"{% endif %}>{% trans "Create an account" %}</a></li>{% endif %}
+            {% url 'accounts:login' as nav_login_m %}{% if nav_login_m %}<li><a href="{{ nav_login_m }}"{% if request.resolver_match.view_name == 'accounts:login' %} aria-current="page"{% endif %}>{% trans "Ministry sign in" %}</a></li>{% endif %}
             {% endif %}
             {% if user.is_authenticated %}
-            <li class="dn-greeting-item">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</li>
-            {% url 'accounts:dashboard' as nav_dashboard_m %}{% if nav_dashboard_m %}<li><a href="{{ nav_dashboard_m }}"{% if request.resolver_match.view_name == 'accounts:dashboard' %} aria-current="page"{% endif %}>{% trans "Dashboard" %}</a></li>{% endif %}
-            {% url 'projects:application_list' as nav_applications_m %}{% if nav_applications_m %}<li><a href="{{ nav_applications_m }}"{% if request.resolver_match.view_name == 'projects:application_list' %} aria-current="page"{% endif %}>{% trans "Applications" %}</a></li>{% endif %}
-            {% url 'notifications:list' as nav_notifications_m %}{% if nav_notifications_m %}<li><a href="{{ nav_notifications_m }}"{% if request.resolver_match.view_name == 'notifications:list' %} aria-current="page"{% endif %}>{% trans "Notifications" %}</a></li>{% endif %}
-            {% url 'recognition:my_profile' as nav_recognition_m %}{% if nav_recognition_m %}<li><a href="{{ nav_recognition_m }}"{% if request.resolver_match.view_name == 'recognition:my_profile' %} aria-current="page"{% endif %}>{% trans "My recognition" %}</a></li>{% endif %}
-            {% url 'accounts:session_list' as nav_sessions_m %}{% if nav_sessions_m %}<li><a href="{{ nav_sessions_m }}">{% trans "Sessions" %}</a></li>{% endif %}
-            {% endif %}
             {% if viewer_is_ministry_publisher %}
+            <li class="dn-greeting-item">{% blocktrans with name=user.get_full_name|default:user.username %}Ministry: {{ name }}{% endblocktrans %}</li>
             {% url 'projects:authoring_dashboard' as nav_pub_m %}{% if nav_pub_m %}<li><a href="{{ nav_pub_m }}"{% if request.resolver_match.view_name == 'projects:authoring_dashboard' %} aria-current="page"{% endif %}>{% trans "Publishing dashboard" %}</a></li>{% endif %}
+            {% endif %}
+            <li><form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button></form></li>
             {% endif %}
           </ul>
         </nav>
@@ -94,12 +87,6 @@
         <h2>{% trans "Platform" %}</h2>
         <ul>
           {% url 'projects:government' as government_url %}{% if government_url %}<li><a href="{{ government_url }}">{% trans "Government Projects" %}</a></li>{% endif %}
-          {% url 'projects:community' as community_url %}{% if community_url %}<li><a href="{{ community_url }}">{% trans "Community Projects" %}</a></li>{% endif %}
-          {% url 'projects:list' as projects_url %}{% if projects_url %}<li><a href="{{ projects_url }}">{% trans "All Projects" %}</a></li>{% endif %}
-          {% url 'accounts:member_directory' as members_url %}{% if members_url %}<li><a href="{{ members_url }}">{% trans "Members" %}</a></li>{% endif %}
-          {% url 'blogs:list' as blogs_url %}{% if blogs_url %}<li><a href="{{ blogs_url }}">{% trans "Tech blogs" %}</a></li>{% endif %}
-          {% url 'recognition:leaderboard' as recognition_url %}{% if recognition_url %}<li><a href="{{ recognition_url }}">{% trans "Recognition" %}</a></li>{% endif %}
-          {% url 'recognition:public_badges' as badges_url %}{% if badges_url %}<li><a href="{{ badges_url }}">{% trans "Badge criteria" %}</a></li>{% endif %}
           {% url 'projects:about' as about_url %}{% if about_url %}<li><a href="{{ about_url }}">{% trans "How to contribute" %}</a></li>{% endif %}
         </ul>
       </nav>
@@ -109,17 +96,12 @@
           {% url 'projects:code_of_conduct' as conduct_url %}{% if conduct_url %}<li><a href="{{ conduct_url }}">{% trans "Code of conduct" %}</a></li>{% endif %}
           {% url 'projects:privacy_policy' as privacy_url %}{% if privacy_url %}<li><a href="{{ privacy_url }}">{% trans "Privacy" %}</a></li>{% endif %}
           {% url 'projects:security_policy' as security_url %}{% if security_url %}<li><a href="{{ security_url }}">{% trans "Security contact" %}</a></li>{% endif %}
-          {% url 'recognition:public_policy' as scoring_url %}{% if scoring_url %}<li><a href="{{ scoring_url }}">{% trans "Scoring policy" %}</a></li>{% endif %}
-          {% url 'moderation:report_create' as report_url %}{% if report_url %}<li><a href="{{ report_url }}">{% trans "Report content" %}</a></li>{% endif %}
-          {% url 'accounts:privacy_export' as privacy_export_url %}{% if privacy_export_url %}<li><a href="{{ privacy_export_url }}">{% trans "Export your data" %}</a></li>{% endif %}
                   </ul>
       </nav>
       <nav aria-label="{% trans 'Help' %}">
         <h2>{% trans "Help" %}</h2>
         <ul>
-          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Sign in" %}</a></li>{% endif %}
-          {% url 'accounts:signup' as signup_url %}{% if signup_url %}<li><a href="{{ signup_url }}">{% trans "Create an account" %}</a></li>{% endif %}
-          {% url 'github_sync:connection' as github_connection_url %}{% if github_connection_url %}<li><a href="{{ github_connection_url }}">{% trans "GitHub connection" %}</a></li>{% endif %}
+          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Ministry sign in" %}</a></li>{% endif %}
         </ul>
       </nav>
       <div>

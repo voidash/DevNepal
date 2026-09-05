@@ -113,9 +113,9 @@ def test_authenticated_members_are_redirected_away_from_signup(client):
 
 
 @pytest.mark.unit
-def test_login_page_offers_account_creation(client):
-    """AUTH-001: the sign-in page links to the create-account flow."""
+def test_login_page_does_not_offer_contributor_account_creation(client):
+    """AUTH-001: ministry sign-in does not lead visitors into a legacy member flow."""
     response = client.get(reverse("accounts:login"))
 
     assert response.status_code == 200
-    assert reverse("accounts:signup") in response.content.decode()
+    assert reverse("accounts:signup") not in response.content.decode()

@@ -166,8 +166,8 @@ def test_recommendation_query_count_is_constant_as_candidates_grow():
 
 
 @pytest.mark.unit
-def test_projects_home_shows_recommended_section_for_signed_in_member(client):
-    """DSC-010: signed-in members see explained recommendations on the projects home."""
+def test_projects_home_hides_legacy_recommendations_for_signed_in_member(client):
+    """DSC-010: legacy identity does not expand the minimal public home surface."""
     member = member_with_skill()
     candidate = open_project("Open candidate")
     candidate.skills.add(skill("Django"))
@@ -177,11 +177,11 @@ def test_projects_home_shows_recommended_section_for_signed_in_member(client):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Recommended for you" in content
+    assert "Recommended for you" not in content
     assert "Open candidate" in content
-    assert "Matches your Django skill" in content
+    assert "Matches your Django skill" not in content
     assert 'class="Label' in content
-    assert 'aria-labelledby="recommended-heading"' in content
+    assert 'aria-labelledby="recommended-heading"' not in content
 
 
 @pytest.mark.unit

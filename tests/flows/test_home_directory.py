@@ -69,16 +69,16 @@ def test_every_homepage_link_resolves_for_anonymous_visitors(client):
 
 
 @pytest.mark.unit
-def test_every_homepage_link_resolves_for_signed_in_members(client):
-    """NTF-001/MEM-002: members reach their workspace destinations from home."""
+def test_every_homepage_link_resolves_without_legacy_member_shortcuts(client):
+    """NTF-001/MEM-002: legacy members do not expand the minimal public shell."""
     user = make_member("hub-member")
     client.force_login(user)
 
     links = homepage_links(client)
 
-    assert any("dashboard" in link for link in links)
-    assert any("applications" in link for link in links)
-    assert any("notifications" in link for link in links)
+    assert not any("dashboard" in link for link in links)
+    assert not any("applications" in link for link in links)
+    assert not any("notifications" in link for link in links)
     assert_links_resolve(client, links)
 
 

@@ -82,7 +82,7 @@ def test_mem003_i2_member_directory_exposes_only_opted_in_public_profiles(client
 @pytest.mark.integration
 def test_mem003_i2_member_directory_empty_state_and_navigation_are_actionable(client):
     """MEM-003/NFR-A11Y-01/NFR-I18N-01: the empty directory explains the opt-in boundary,
-    remains reachable from public navigation, and has a Nepali route."""
+    remains available by direct route, and has a Nepali route."""
     response = client.get(reverse("accounts:member_directory"))
     home = client.get(reverse("projects:home"))
     with translation.override("ne"):
@@ -90,7 +90,7 @@ def test_mem003_i2_member_directory_empty_state_and_navigation_are_actionable(cl
 
     assert response.status_code == 200
     assert "No members match these filters." in response.content.decode()
-    assert reverse("accounts:member_directory").encode() in home.content
+    assert reverse("accounts:member_directory").encode() not in home.content
     assert nepali.status_code == 200
     assert '<html lang="ne"' in nepali.content.decode()
     assert "सदस्यहरू" in nepali.content.decode()

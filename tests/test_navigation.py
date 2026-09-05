@@ -12,9 +12,8 @@ def test_shared_navigation_uses_resolvable_localized_routes(client):
     assert response.status_code == 200
     for destination in (
         reverse("projects:home"),
-        reverse("projects:list"),
         reverse("projects:government"),
-        reverse("projects:community"),
+        reverse("projects:about"),
         reverse("accounts:login"),
     ):
         assert f'href="{destination}"'.encode() in response.content
@@ -22,15 +21,16 @@ def test_shared_navigation_uses_resolvable_localized_routes(client):
 
 @pytest.mark.django_db
 @pytest.mark.unit
-def test_primary_navigation_exposes_government_and_community_catalogs(client):
-    """DSC-001/NFR-A11Y-01: public catalog choices are reachable before sign-in."""
+def test_primary_navigation_exposes_only_the_validated_visitor_choices(client):
+    """DSC-001/NFR-A11Y-01: the public shell stays on the GitHub-first spine."""
     response = client.get(reverse("projects:home"))
     primary_start = response.content.index(b'<nav class="dn-primary-nav"')
     primary_end = response.content.index(b"</nav>", primary_start)
     primary = response.content[primary_start:primary_end]
 
     assert reverse("projects:government").encode() in primary
-    assert reverse("projects:community").encode() in primary
+    assert reverse("projects:about").encode() in primary
+    assert reverse("projects:community").encode() not in primary
 
 
 @pytest.mark.django_db
@@ -44,4 +44,4 @@ def test_home_calls_to_action_keep_visitors_in_the_active_language(client):
         hero = response.content[hero_start:hero_end]
 
         assert f'href="{reverse("projects:government")}"'.encode() in hero
-        assert f'href="{reverse("projects:community")}"'.encode() in hero
+        assert f'href="{reverse("projects:about")}"'.encode() in hero

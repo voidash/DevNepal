@@ -7398,3 +7398,56 @@ msgstr "अनुमोदनलाई यसको कानुनी सन्
 
 msgid "%(spdx)s approved."
 msgstr "%(spdx)s अनुमोदित।"
+
+#: templates/base.html
+msgid "Ministry sign in"
+msgstr "मन्त्रालय साइन इन"
+
+#: apps/accounts/templates/accounts/login.html
+msgid "Ministry Publisher sign in"
+msgstr "मन्त्रालय प्रकाशक साइन इन"
+
+#: apps/accounts/templates/accounts/login.html
+msgid "Sign in with the account issued for your ministry to publish projects and review public GitHub activity."
+msgstr "परियोजनाहरू प्रकाशित गर्न र सार्वजनिक GitHub गतिविधि समीक्षा गर्न मन्त्रालयले जारी गरेको खाताबाट साइन इन गर्नुहोस्।"
+
+#: apps/accounts/templates/accounts/login.html
+msgid "Visitors and contributors do not need an account. Contributions happen in each project's public GitHub repository."
+msgstr "आगन्तुक र योगदानकर्तालाई खाता आवश्यक छैन। योगदान प्रत्येक परियोजनाको सार्वजनिक GitHub रिपोजिटरीमा गरिन्छ।"
+
+#: apps/projects/templates/projects/home.html
+msgid "From public project to GitHub contribution"
+msgstr "सार्वजनिक परियोजनादेखि GitHub योगदानसम्म"
+
+#: apps/projects/templates/projects/home.html
+msgid "No DevNepal account is required. Find government work here, choose a synchronized issue, then contribute in the project's GitHub repository."
+msgstr "DevNepal खाता आवश्यक छैन। यहाँ सरकारी काम खोज्नुहोस्, सिङ्क गरिएको इस्यु छान्नुहोस् र त्यसपछि परियोजनाको GitHub रिपोजिटरीमा योगदान गर्नुहोस्।"
+
+#: apps/projects/templates/projects/home.html
+msgid "1. Find public work"
+msgstr "१. सार्वजनिक काम खोज्नुहोस्"
+
+#: apps/projects/templates/projects/home.html
+msgid "Browse approved government projects with a named ministry owner and public repository."
+msgstr "तोकिएको मन्त्रालय स्वामी र सार्वजनिक रिपोजिटरी भएका अनुमोदित सरकारी परियोजनाहरू हेर्नुहोस्।"
+
+#: apps/projects/templates/projects/home.html
+msgid "2. Choose an issue"
+msgstr "२. एउटा इस्यु छान्नुहोस्"
+
+#: apps/projects/templates/projects/home.html
+msgid "Read the complete synchronized issue, its goal, and its acceptance criteria before leaving DevNepal."
+msgstr "DevNepal छोड्नुअघि सिङ्क गरिएको पूरा इस्यु, यसको लक्ष्य र स्वीकृति मापदण्ड पढ्नुहोस्।"
+
+#: apps/projects/templates/projects/home.html
+msgid "3. Contribute on GitHub"
+msgstr "३. GitHub मा योगदान गर्नुहोस्"
+
+#: apps/projects/templates/projects/home.html
+msgid "Use GitHub for assignment, discussion, commits, and pull requests. DevNepal reflects public activity back to the ministry."
+msgstr "जिम्मेवारी, छलफल, कमिट र पुल रिक्वेस्टका लागि GitHub प्रयोग गर्नुहोस्। DevNepal ले सार्वजनिक गतिविधि मन्त्रालयलाई देखाउँछ।"
+
+#: templates/base.html
+#, python-format
+msgid "Ministry: %(name)s"
+msgstr "मन्त्रालय: %(name)s"

@@ -1,18 +1,14 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Sign in" %} | DevNepal{% endblock %}
+{% block title %}{% trans "Ministry sign in" %} | DevNepal{% endblock %}
 {% block content %}
 <section class="section">
   <div class="container dn-auth-page">
     <header class="dn-page-header">
-      <p class="dn-kicker">{% trans "Member account" %}</p>
-      <h1>{% trans "Sign in to DevNepal" %}</h1>
-      <p class="dn-lede">{% trans "Signing in proves who you are. It gives you access to your profile, applications, and contribution records." %}</p>
+      <p class="dn-kicker">{% trans "Ministry workspace" %}</p>
+      <h1>{% trans "Ministry Publisher sign in" %}</h1>
+      <p class="dn-lede">{% trans "Sign in with the account issued for your ministry to publish projects and review public GitHub activity." %}</p>
     </header>
-    <div class="dn-state-banner" role="note">
-      <strong>{% trans "Sign-in and GitHub connection are separate controls." %}</strong>
-      <p>{% trans "A GitHub connection is optional and is managed after sign-in when you want eligible public work to be recognised. Your email is never shown publicly." %}</p>
-    </div>
     {% if messages %}
     <ul role="status">
       {% for message in messages %}<li>{{ message }}</li>{% endfor %}
@@ -44,8 +40,7 @@
       {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
       <button class="btn btn--primary" type="submit">{% trans "Sign in" %}</button>
     </form>
-    <p>{% trans "New to DevNepal?" %} <a href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a></p>
-    <p class="field__help">{% trans "After sign-in, you return to the page where you started whenever a safe return address was provided." %}</p>
+    <p class="field__help">{% trans "Visitors and contributors do not need an account. Contributions happen in each project's public GitHub repository." %}</p>
   </div>
 </section>
 {% endblock %}

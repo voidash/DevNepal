@@ -95,6 +95,6 @@ def test_a08_keyboard_and_bilingual_core_route_contract(client):
     assert project.title_ne in catalog.content.decode()
     assert f'href="{blogs_list_url}">प्रविधि ब्लगहरू</a>' in blog.content.decode()
     assert "प्रोफाइल सम्पादन गर्नुहोस्" in settings.content.decode()
-    assert f'href="{sessions_url}">सत्रहरू</a>' in sessions.content.decode()
+    assert "साइन इन भएका उपकरणहरू" in sessions.content.decode()
     assert application.status_code == 302
     assert Application.objects.filter(project=project, applicant__username="a08-member").exists()

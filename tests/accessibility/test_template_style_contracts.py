@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260905\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260905-minimal1\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -103,7 +103,7 @@ def test_shared_navigation_keeps_the_compact_menu_through_tablet_widths():
 def test_shared_shell_loads_one_coherent_design_system_after_primer():
     """NFR-A11Y-01/DSC-001: shared styles have a predictable, accessible cascade."""
     base = (Path(settings.BASE_DIR) / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base)
+    stylesheets = re.findall(r"href=\"\{% static '([^']+\.css)' %\}(?:\?[^\"]+)?\"", base)
 
     assert stylesheets == [
         "vendor/primer/primer.css",
@@ -173,21 +173,18 @@ def test_official_provenance_uses_textual_prototype_labels():
 
 
 @pytest.mark.unit
-def test_project_detail_carries_contribution_and_accountability_sheets():
-    """A1.3/A2.2/NFR-A11Y-01: project facts and accountability remain textual."""
+def test_project_detail_keeps_the_public_github_path_textual():
+    """A1.3/A2.2/NFR-A11Y-01: the minimal visitor path remains explicit and textual."""
     detail = (
         Path(settings.BASE_DIR) / "apps/projects/templates/projects/project_detail.html"
     ).read_text()
 
-    assert 'class="dn-accountability"' in detail
-    assert detail.count('class="dn-accountability-item"') >= 6
-    assert '{% trans "Project sheet" %}' in detail
-    assert "project.suitability" in detail and "confirmed_at" in detail
-    assert "maintainer_assignments" in detail
-    assert "get_response_sla_display" in detail
-    assert '{% trans "No maintainer assigned yet" %}' in detail
-    assert '{% trans "Suitability checklist not started" %}' in detail
-    assert '{% trans "First-response commitment not yet published" %}' in detail
+    assert '{% trans "Open issues from GitHub" %}' in detail
+    assert '{% trans "Read issue" %}' in detail
+    assert '{% trans "People working on this repository" %}' in detail
+    assert '{% trans "Project sheet" %}' not in detail
+    assert '{% trans "Submit evidence" %}' not in detail
+    assert '{% trans "Sign in to apply" %}' not in detail
 
 
 @pytest.mark.unit
@@ -376,18 +373,15 @@ def test_project_pages_carry_a_context_header_with_underline_tabs_and_counters()
         assert 'class="dn-page-header"' in template
         assert 'class="dn-repo-title"' in template
         assert 'class="dn-repo-title-separator" aria-hidden="true">/<' in template
-        assert 'class="dn-tabs" aria-label=' in template
-        assert 'class="dn-tab" aria-current="page"' in template
         assert "<h1>" in template
 
-    assert '{% trans "Overview" %}</a>' in detail
-    updates_counter = (
-        '{% trans "Updates" %} <span class="Counter">{{ project.updates.all|length }}</span>'
-    )
-    assert updates_counter in detail
-    assert 'id="overview"' in detail and 'id="updates"' in detail
-    assert "{% url 'projects:updates' project.slug %}" in detail
-    assert 'href="#updates"' not in detail
+    for template in (authoring, application, timeline):
+        assert 'class="dn-tabs" aria-label=' in template
+        assert 'class="dn-tab" aria-current="page"' in template
+
+    assert 'id="overview"' in detail
+    assert '{% trans "Overview" %}</a>' not in detail
+    assert "{% url 'projects:updates' project.slug %}" not in detail
 
     for tab, route in (
         ("Overview", "projects:authoring_detail"),
@@ -584,10 +578,9 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
     assert base.count("{% url ") == base.count("{% url ") and "_url %}" in base
     assert '<a href="{% url' not in base.split("<footer")[1]
     assert '<li><a href="{{ government_url }}">{% trans "Government Projects" %}</a></li>' in base
-    assert '<li><a href="{{ report_url }}">{% trans "Report content" %}</a></li>' in base
-    assert (
-        '<li><a href="{{ github_connection_url }}">{% trans "GitHub connection" %}</a></li>' in base
-    )
+    assert '<li><a href="{{ about_url }}">{% trans "How to contribute" %}</a></li>' in base
+    assert "report_url" not in base
+    assert "github_connection_url" not in base
 
     footer_css = _read("static/src/devnepal.css")
     footer_link_rule = (

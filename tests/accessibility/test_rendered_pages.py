@@ -241,8 +241,8 @@ def test_rendered_forms_and_images_have_programmatic_text_alternatives(rendered_
 
 
 @pytest.mark.unit
-def test_catalog_cards_and_accountability_sheets_keep_textual_state(rendered_pages):
-    """A2.1/A2.2/NFR-A11Y-01/GOV-011: cards and sheets state their meaning.
+def test_catalog_cards_and_public_project_work_keep_textual_state(rendered_pages):
+    """A2.1/A2.2/NFR-A11Y-01/GOV-011: cards and public work state their meaning.
 
     Status is never carried by shape or color alone: every catalog card renders the
     localized status text, provenance is a labeled "Official"/"Community" Label, and
@@ -251,7 +251,6 @@ def test_catalog_cards_and_accountability_sheets_keep_textual_state(rendered_pag
     catalog = rendered_pages["catalog"]
     detail = rendered_pages["project detail"]
     catalog_document = parse_document(catalog.content)
-    detail_document = parse_document(detail.content)
 
     cards = [
         element
@@ -269,24 +268,10 @@ def test_catalog_cards_and_accountability_sheets_keep_textual_state(rendered_pag
     ]
     assert provenance, "catalog"
 
-    accountability = [
-        element
-        for element in detail_document.elements
-        if (element.attributes.get("class") or "") == "dn-accountability"
-    ]
-    assert len(accountability) >= 2, "project detail"
-    cells = [
-        element
-        for element in detail_document.elements
-        if has_ancestor(detail_document, element, "div")
-        and element.attributes.get("class") == "dn-accountability-item"
-    ]
-    assert len(cells) >= 6, "project detail"
-
     content = detail.content.decode()
-    assert "Maintainers" in content, "project detail"
-    assert "Response commitment" in content, "project detail"
-    assert "In review" in content, "project detail"
+    assert detail.context["project"].localized_title in content, "project detail"
+    assert "Submit evidence" not in content, "project detail"
+    assert "Sign in to apply" not in content, "project detail"
 
 
 @pytest.mark.unit

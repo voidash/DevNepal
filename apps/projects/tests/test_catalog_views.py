@@ -109,17 +109,17 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
 
 @pytest.mark.unit
 def test_home_exposes_the_compact_trust_and_contribution_model(client):
-    """DSC-001/GOV-011/REC-001: home makes the verified work model clear without a dashboard."""
+    """DSC-001/GOV-011: home explains the GitHub-first path without secondary products."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "Code is one of nine ways in" in content
+    assert "From public project to GitHub contribution" in content
     assert "Open public work" in content
     assert "Featured government projects" in content
-    assert "Community projects" in content
-    assert "never imply government endorsement" in content
-    assert "A named maintainer verifies accepted work" in content
+    assert "Community projects" not in content
+    assert "No DevNepal account is required" in content
+    assert "3. Contribute on GitHub" in content
     assert 'class="blueprint' in content
     assert "DevNepal — platform at a glance" not in content
     assert "People — verified impact and the people behind it" not in content
@@ -467,8 +467,8 @@ def test_project_detail_resolves_nfd_nepali_slug_and_displays_official_status(cl
 
 
 @pytest.mark.unit
-def test_direct_project_detail_shows_only_open_tasks_and_contribution_guidance(client):
-    """DSC-005: direct projects expose actionable open tasks and their published guidance."""
+def test_direct_project_detail_shows_only_open_tasks_and_github_exit(client):
+    """DSC-005: direct projects expose actionable work without legacy account workflows."""
     project = make_public_project(
         contribution_mode=ContributionMode.OPEN_DIRECT,
         prerequisites="Read the contribution guide before claiming a task.",
@@ -495,21 +495,17 @@ def test_direct_project_detail_shows_only_open_tasks_and_contribution_guidance(c
     content = response.content.decode()
     assert response.status_code == 200
     assert list(response.context["open_tasks"]) == [open_task]
-    assert "Open direct contribution" in content
     assert "Translate service labels" in content
     assert "Completed private task" not in content
-    assert "Read the contribution guide before claiming a task." in content
-    assert "https://matrix.to/#/#service-directory:matrix.org" in content
     assert "https://github.com/moit/service-directory" in content
-    assert "Contribution handbook" in content
-    assert "Maintainer consensus" in content
-    assert "DCO-style sign-off" in content
     assert "Apply to contribute" not in content
+    assert "Submit evidence" not in content
+    assert "Project sheet" not in content
 
 
 @pytest.mark.unit
-def test_project_detail_uses_the_a1_3_a2_2_project_sheet_with_real_accountability_data(client):
-    """A1.3/A2.2/GOV-007/GOV-011: sheets disclose maintainers, route, SLA, governance, security."""
+def test_project_detail_keeps_accountability_data_out_of_the_minimal_visitor_surface(client):
+    """A1.3/A2.2/GOV-011: publisher metadata does not overwhelm the issue-first page."""
     project = make_public_project(
         contribution_mode=ContributionMode.HYBRID,
         estimated_effort=EffortBand.MEDIUM,
@@ -527,25 +523,17 @@ def test_project_detail_uses_the_a1_3_a2_2_project_sheet_with_real_accountabilit
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert 'class="blueprint dn-sheet"' in content
-    assert "Project sheet" in content
-    assert "Maintainers" in content
-    assert first.user.username in content
-    assert second.user.username in content
-    assert "Contribution mode" in content
-    assert "Expected effort" in content
-    assert "First response" in content
     assert "Open tasks" in content
     assert task.title in content
-    assert "Governance and sign-off" in content
-    assert "Security and reporting" in content
-    assert "security@example.gov.np" in content
-    assert "https://example.gov.np/security" in content
+    assert "Project sheet" not in content
+    assert first.user.username not in content
+    assert second.user.username not in content
+    assert "security@example.gov.np" not in content
 
 
 @pytest.mark.unit
-def test_application_project_detail_shows_application_without_direct_task_section(client):
-    """DSC-005/DSC-006: application projects show their controlled-workstream entry point."""
+def test_application_project_detail_does_not_expose_the_retired_member_application_flow(client):
+    """DSC-005/DSC-006: the visitor surface does not request a DevNepal account."""
     project = make_public_project(contribution_mode=ContributionMode.APPLICATION)
     ProjectTaskFactory(project=project, title="Task reserved for assignment")
 
@@ -553,15 +541,15 @@ def test_application_project_detail_shows_application_without_direct_task_sectio
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Application required" in content
-    assert "Sign in to apply" in content
+    assert "Application required" not in content
+    assert "Sign in to apply" not in content
     assert "Open tasks" not in content
     assert "Task reserved for assignment" not in content
 
 
 @pytest.mark.unit
-def test_hybrid_project_detail_shows_open_tasks_and_application(client):
-    """DSC-005: hybrid projects expose both direct tasks and controlled-workstream application."""
+def test_hybrid_project_detail_keeps_open_tasks_but_hides_member_application(client):
+    """DSC-005: hybrid records retain open work without exposing the retired member flow."""
     project = make_public_project(contribution_mode=ContributionMode.HYBRID)
     task = ProjectTaskFactory(project=project, title="Improve search labels")
 
@@ -570,9 +558,8 @@ def test_hybrid_project_detail_shows_open_tasks_and_application(client):
     content = response.content.decode()
     assert response.status_code == 200
     assert list(response.context["open_tasks"]) == [task]
-    assert "Hybrid (open tasks and application workstreams)" in content
     assert "Improve search labels" in content
-    assert "Sign in to apply" in content
+    assert "Sign in to apply" not in content
 
 
 @pytest.mark.unit

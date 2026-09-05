@@ -84,8 +84,8 @@ def test_publisher_toggles_and_removes_screening_questions(client):
 
 
 @pytest.mark.integration
-def test_only_active_questions_render_on_public_apply_form(client):
-    """DSC-006: the public apply form renders only active screening questions."""
+def test_public_project_hides_legacy_screening_questions(client):
+    """DSC-006: the issue-first public surface does not expose the retired apply form."""
     project = PersonalProjectFactory(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
     project.contribution_mode = "application"
     project.save(update_fields=["contribution_mode"])
@@ -97,9 +97,9 @@ def test_only_active_questions_render_on_public_apply_form(client):
     response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
 
     assert response.status_code == 200
-    assert b"Active question?" in response.content
+    assert b"Active question?" not in response.content
     assert b"Retired question?" not in response.content
-    assert reverse("projects:apply", kwargs={"slug": project.slug}).encode() in response.content
+    assert reverse("projects:apply", kwargs={"slug": project.slug}).encode() not in response.content
     assert active.is_active is True
 
 

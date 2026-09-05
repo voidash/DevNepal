@@ -1,6 +1,7 @@
 import logging
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
@@ -136,6 +137,8 @@ def signup(request):
     Policy: no auto-login. A fresh member is redirected to sign-in with a success
     message so the first authenticated request is always a deliberate one.
     """
+    if not getattr(settings, "PUBLIC_CONTRIBUTOR_ACCOUNTS_ENABLED", True):
+        raise Http404("Public contributor accounts are not enabled")
     if request.user.is_authenticated:
         return redirect("accounts:dashboard")
     if request.method == "POST":

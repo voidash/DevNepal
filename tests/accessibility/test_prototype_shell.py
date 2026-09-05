@@ -33,7 +33,7 @@ def test_shared_shell_has_one_ordered_design_cascade_and_real_barlow_assets():
     """DSC-001/NFR-I18N-01: styling and bilingual typography load predictably."""
     root = Path(settings.BASE_DIR)
     base = (root / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base)
+    stylesheets = re.findall(r"href=\"\{% static '([^']+\.css)' %\}(?:\?[^\"]+)?\"", base)
 
     assert stylesheets == [
         "vendor/primer/primer.css",

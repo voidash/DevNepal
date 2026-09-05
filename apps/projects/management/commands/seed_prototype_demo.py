@@ -11,7 +11,14 @@ from apps.blogs.services import render_safe_markdown
 from apps.contributions.enums import ContributionSource, ImpactTier, VerificationStatus
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.enums import Provider, SyncState
-from apps.github_sync.models import GithubStarterTask, RepositoryConnection
+from apps.github_sync.models import (
+    GithubIssueSnapshot,
+    GithubPublicProfileSnapshot,
+    GithubPullRequestSnapshot,
+    GithubRepositoryContributor,
+    GithubStarterTask,
+    RepositoryConnection,
+)
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import (
@@ -343,6 +350,61 @@ def seed_prototype_demo() -> dict[str, int]:
         "Document keyboard-first contribution workflow",
         ["good first issue"],
     )
+    _github_issue(
+        repository,
+        7,
+        "Add Nepali eligibility text for scholarship programs",
+        (
+            "## Goal\n\nAdd an `eligibility_ne` field to every entry in "
+            "`data/scholarships.json` so visitors can understand eligibility in Nepali.\n\n"
+            "## Acceptance criteria\n\n- Every scholarship has concise Nepali eligibility text.\n"
+            "- JSON remains valid against `data/programs.schema.json`.\n"
+            "- Existing English content is unchanged.\n\n"
+            "## How to contribute\n\nFork the repository, update the data file, validate the "
+            "JSON, and open a pull request linked to this issue."
+        ),
+        ["help wanted", "good first issue"],
+    )
+    _github_issue(
+        repository,
+        8,
+        "Check health subsidy contact details against official sources",
+        (
+            "## Goal\n\nVerify that every health subsidy entry points to a current official "
+            "contact and source page.\n\n## Acceptance criteria\n\n"
+            "- Contact details are checked against official sources.\n"
+            "- Broken or superseded links are replaced.\n"
+            "- Each change names the official source used.\n\n"
+            "## How to contribute\n\nChoose an entry, verify it against the responsible agency, "
+            "and open a pull request with the source link."
+        ),
+        ["documentation", "help wanted"],
+    )
+    _github_issue(
+        repository,
+        9,
+        "Document keyboard-first contribution workflow",
+        (
+            "## Goal\n\nDocument a keyboard-only workflow for contributing to the directory.\n\n"
+            "## Acceptance criteria\n\n- Covers finding an issue, editing data, validation, and "
+            "opening a pull request.\n- Uses clear focus and keyboard instructions.\n"
+            "- Includes a short accessibility check.\n\n"
+            "## How to contribute\n\nUpdate the contributor guide and link the pull request to "
+            "this issue."
+        ),
+        ["accessibility", "good first issue"],
+    )
+    _github_pull_request(
+        repository,
+        10,
+        "Document keyboard-only contribution workflow",
+        (
+            "Adds a keyboard-first path for finding an issue, editing data, validating JSON, "
+            "and opening a pull request.\n\nCloses #9"
+        ),
+    )
+    _github_contributor(repository)
+    _github_profile()
 
     address_schema = _government_project(
         slug="unified-local-address-schema",
@@ -776,6 +838,73 @@ def _starter_task(repository, number, title, labels):
             "url": f"https://github.com/{repository.full_name}/issues/{number}",
             "labels": labels,
             "source_updated_at": timezone.now(),
+        },
+    )[0]
+
+
+def _github_issue(repository, number, title, body, labels):
+    return GithubIssueSnapshot.objects.update_or_create(
+        repository=repository,
+        github_issue_id=number,
+        defaults={
+            "number": number,
+            "title": title,
+            "body": body,
+            "state": "open",
+            "comments_count": 0,
+            "url": f"https://github.com/{repository.full_name}/issues/{number}",
+            "labels": labels,
+            "author_login": "voidash",
+            "author_avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
+            "source_updated_at": timezone.now(),
+        },
+    )[0]
+
+
+def _github_pull_request(repository, number, title, body):
+    return GithubPullRequestSnapshot.objects.update_or_create(
+        repository=repository,
+        github_pull_request_id=number,
+        defaults={
+            "number": number,
+            "title": title,
+            "body": body,
+            "state": "open",
+            "comments_count": 0,
+            "url": f"https://github.com/{repository.full_name}/pull/{number}",
+            "author_login": "voidash",
+            "author_avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
+            "source_updated_at": timezone.now(),
+        },
+    )[0]
+
+
+def _github_contributor(repository):
+    return GithubRepositoryContributor.objects.update_or_create(
+        repository=repository,
+        github_user_id=23_181_294,
+        defaults={
+            "login": "voidash",
+            "avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
+            "profile_url": "https://github.com/voidash",
+            "contributions": 9,
+        },
+    )[0]
+
+
+def _github_profile():
+    return GithubPublicProfileSnapshot.objects.update_or_create(
+        github_user_id=23_181_294,
+        defaults={
+            "login": "voidash",
+            "avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
+            "html_url": "https://github.com/voidash",
+            "display_name": "voidash",
+            "bio": "",
+            "location": "",
+            "company": "",
+            "public_repos": 155,
+            "followers": 135,
         },
     )[0]
 

@@ -2,6 +2,7 @@
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 
 from apps.accounts.models import MemberProfile
@@ -10,6 +11,15 @@ from apps.audit.models import AuditEvent
 from apps.taxonomy.tests.factories import SkillFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.mark.unit
+@override_settings(PUBLIC_CONTRIBUTOR_ACCOUNTS_ENABLED=False)
+def test_public_signup_is_unavailable_on_the_minimal_demo_surface(client):
+    """AUTH-001: contributors use GitHub and cannot enter the retired member flow."""
+    response = client.get(reverse("accounts:signup"))
+
+    assert response.status_code == 404
 
 
 @pytest.mark.unit

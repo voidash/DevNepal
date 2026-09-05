@@ -180,14 +180,8 @@ for (const required of [
 
 for (const viewName of [
   'projects:government',
-  'projects:community',
   'projects:about',
   'accounts:login',
-  'accounts:signup',
-  'accounts:dashboard',
-  'recognition:my_profile',
-  'notifications:list',
-  'projects:application_list',
   'projects:authoring_dashboard',
 ]) {
   const marker = `request.resolver_match.view_name == '${viewName}'`

@@ -13,3 +13,5 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver", "host.docker.internal",
 CSRF_TRUSTED_ORIGINS = [f"https://{TUNNEL_HOST}"]
 
 PRIVILEGED_MFA_BYPASS = True
+GITHUB_OAUTH_ENABLED = False
+PUBLIC_CONTRIBUTOR_ACCOUNTS_ENABLED = False

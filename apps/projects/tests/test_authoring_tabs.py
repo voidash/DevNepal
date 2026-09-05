@@ -100,8 +100,8 @@ def test_publisher_authoring_routes_render_the_github_first_workspace(client):
 
 
 @pytest.mark.integration
-def test_authoring_overview_exposes_repository_binding_and_project_scoped_action(client):
-    """GIT-003/GOV-007: publishers can inspect and change the project's App binding."""
+def test_authoring_overview_exposes_repository_activity_without_user_oauth_binding(client):
+    """GIT-003/GOV-007: publishers inspect repository activity without a user OAuth action."""
     project = make_publishable()
     repository = project.repository_connections.get()
     verify_mfa(client, project.owner)
@@ -112,7 +112,7 @@ def test_authoring_overview_exposes_repository_binding_and_project_scoped_action
     content = response.content.decode()
     assert repository.full_name in content
     expected = f"{reverse('github_sync:connect_repository')}?project_id={project.pk}"
-    assert f'href="{expected}"' in content
+    assert f'href="{expected}"' not in content
 
 
 @pytest.mark.integration
@@ -294,8 +294,8 @@ def test_public_updates_route_hides_non_public_projects(client):
 
 
 @pytest.mark.integration
-def test_public_detail_tabs_link_to_the_updates_route(client):
-    """DSC-009: the public detail header links overview and updates as real routes."""
+def test_public_detail_keeps_updates_out_of_the_minimal_issue_first_surface(client):
+    """DSC-009: a direct updates route can remain without expanding the demo surface."""
     project = PersonalProjectFactory(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
     updates_path = reverse("projects:updates", kwargs={"slug": project.slug})
     detail_path = reverse("projects:detail", kwargs={"slug": project.slug})
@@ -304,6 +304,6 @@ def test_public_detail_tabs_link_to_the_updates_route(client):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert updates_path in content
-    assert f'aria-current="page" href="{detail_path}"' in content
+    assert updates_path not in content
+    assert f'aria-current="page" href="{detail_path}"' not in content
     assert 'href="#updates"' not in content
