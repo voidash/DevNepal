@@ -12,13 +12,14 @@ DEBUG = False
 ALLOWED_HOSTS: list[str] = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "apps.administration.admin_config.DevNepalAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.accounts",
+    "apps.administration",
     "apps.audit",
     "apps.ministries",
     "apps.taxonomy",
@@ -59,6 +60,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.administration.context_processors.roles",
             ],
         },
     },

@@ -41,6 +41,8 @@ def test_shared_shell_has_one_ordered_design_cascade_and_real_barlow_assets():
         "src/base.css",
         "src/components.css",
         "src/devnepal.css",
+        "src/onboarding.css",
+        "src/public-discovery.css",
     ]
     for font in (
         "barlow-latin-400.woff2",

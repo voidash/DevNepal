@@ -9,16 +9,19 @@ SEC-008).
 
 import logging
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
+from django.conf import settings
 from django.db import OperationalError, ProgrammingError, transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.accounts.services import require_privileged_mfa
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
 from apps.audit.services import record_audit
-from apps.contributions.enums import ContributionSource, VerificationStatus
-from apps.contributions.models import ContributionRecord
+from apps.contributions.enums import ContributionSource, EvidenceScanStatus, VerificationStatus
+from apps.contributions.models import ContributionRecord, safe_evidence_filename
 from apps.github_sync.enums import VerifiedEventKind
 from apps.github_sync.webhooks import ParsedEvent
 from apps.ministries.services import is_publisher_active
@@ -46,6 +49,14 @@ PROVIDER_REF_PREFIX = "github"
 DEFAULT_GITHUB_CONTRIBUTION_SLUG = "engineering"
 MAX_CONTRIBUTION_REASON_LENGTH = 2000
 MAX_HOLD_RESPONSE_LENGTH = 4000
+DEFAULT_MAX_EVIDENCE_FILE_BYTES = 25 * 1024 * 1024
+EVIDENCE_CONTENT_TYPES = {
+    ".pdf": ("application/pdf", (b"%PDF-",)),
+    ".png": ("image/png", (b"\x89PNG\r\n\x1a\n",)),
+    ".jpg": ("image/jpeg", (b"\xff\xd8\xff",)),
+    ".jpeg": ("image/jpeg", (b"\xff\xd8\xff",)),
+}
+EXECUTABLE_SIGNATURES = (b"MZ", b"\x7fELF", b"#!")
 
 
 class ContributionServiceError(Exception):
@@ -100,6 +111,14 @@ class InvalidEvidenceError(ContributionServiceError):
     """Submitted evidence is not valid for an approved contribution category (BR-006, GOV-008)."""
 
 
+class InvalidEvidenceFileError(ContributionServiceError):
+    """Evidence attachment violates the SEC-007 upload boundary."""
+
+
+class EvidenceFilePendingScanError(ContributionServiceError):
+    """A file-backed contribution cannot be accepted before an external security result."""
+
+
 class SubmissionNotEligibleError(ContributionServiceError):
     """The project is not open for direct member evidence submissions (DSC-005)."""
 
@@ -124,6 +143,102 @@ class Evidence:
     contribution_type: TaxonomyTerm
     description: str = ""
     evidence_url: str = ""
+    evidence_file: object | None = None
+
+
+@dataclass(frozen=True)
+class ValidatedEvidenceFile:
+    """SEC-007 metadata derived from bytes rather than a client-supplied MIME declaration."""
+
+    content_type: str
+    size_bytes: int
+
+
+def max_evidence_file_bytes() -> int:
+    """SEC-007: use the deployment upload ceiling without requiring a second setting."""
+    value = getattr(
+        settings,
+        "MAX_EVIDENCE_FILE_BYTES",
+        getattr(settings, "MAX_ATTACHMENT_BYTES", DEFAULT_MAX_EVIDENCE_FILE_BYTES),
+    )
+    try:
+        maximum = int(value)
+    except (TypeError, ValueError) as error:
+        raise InvalidEvidenceFileError(_("The evidence upload limit is not configured.")) from error
+    if maximum <= 0:
+        raise InvalidEvidenceFileError(_("The evidence upload limit is not configured."))
+    return maximum
+
+
+def validate_evidence_file(file) -> ValidatedEvidenceFile:
+    """SEC-007: allow only content-identified, non-executable evidence file types."""
+    if file is None or not getattr(file, "name", ""):
+        raise InvalidEvidenceFileError(_("Choose an evidence file to upload."))
+    safe_name = safe_evidence_filename(file.name)
+    suffix = PurePosixPath(safe_name).suffix.lower()
+    expected = EVIDENCE_CONTENT_TYPES.get(suffix)
+    if expected is None:
+        raise InvalidEvidenceFileError(_("Evidence files must be a PDF, PNG, or JPEG image."))
+    try:
+        file.seek(0, 2)
+        size_bytes = file.tell()
+        file.seek(0)
+        sample = file.read(32)
+        file.seek(0)
+    except (AttributeError, OSError, ValueError) as error:
+        logger.exception("Evidence upload could not be inspected; filename=%s", safe_name)
+        raise InvalidEvidenceFileError(_("The evidence file could not be inspected.")) from error
+    if size_bytes <= 0:
+        raise InvalidEvidenceFileError(_("Evidence files cannot be empty."))
+    if size_bytes > max_evidence_file_bytes():
+        raise InvalidEvidenceFileError(_("The evidence file exceeds the permitted size."))
+    if any(sample.startswith(signature) for signature in EXECUTABLE_SIGNATURES):
+        raise InvalidEvidenceFileError(
+            _("Executable or script files cannot be submitted as evidence.")
+        )
+    content_type, signatures = expected
+    if not any(sample.startswith(signature) for signature in signatures):
+        raise InvalidEvidenceFileError(
+            _("The evidence file content does not match its filename extension.")
+        )
+    return ValidatedEvidenceFile(content_type=content_type, size_bytes=size_bytes)
+
+
+def record_evidence_scan_result(record: ContributionRecord, scan_status: str) -> ContributionRecord:
+    """SEC-007: receive an external security result; this function does not scan files."""
+    if record.evidence_size_bytes <= 0:
+        raise InvalidEvidenceFileError(_("This contribution has no uploaded evidence file."))
+    if scan_status not in {
+        EvidenceScanStatus.CLEAN,
+        EvidenceScanStatus.FAILED,
+        EvidenceScanStatus.QUARANTINED,
+    }:
+        raise InvalidEvidenceFileError(_("The evidence security result is invalid."))
+    before = {"evidence_scan": record.evidence_scan}
+    with transaction.atomic():
+        if scan_status in {EvidenceScanStatus.FAILED, EvidenceScanStatus.QUARANTINED}:
+            try:
+                record.evidence_file.delete(save=False)
+            except (OSError, ValueError) as error:
+                logger.exception("Evidence quarantine failed; contribution_id=%s", record.pk)
+                raise InvalidEvidenceFileError(
+                    _("The unsafe evidence file could not be quarantined.")
+                ) from error
+            record.evidence_file = None
+            record.evidence_scan = EvidenceScanStatus.QUARANTINED
+            record.save(update_fields=["evidence_file", "evidence_scan", "updated_at"])
+        else:
+            record.evidence_scan = EvidenceScanStatus.CLEAN
+            record.save(update_fields=["evidence_scan", "updated_at"])
+        record_audit(
+            actor=None,
+            action="contribution.evidence_scanned",
+            obj=record,
+            before=before,
+            after={"evidence_scan": record.evidence_scan},
+            source="system",
+        )
+    return record
 
 
 def record_candidate_from_github(
@@ -173,6 +288,12 @@ def submit_evidence(member, project, evidence: Evidence) -> ContributionRecord:
             "or an accepted application (DSC-005)"
         )
 
+    evidence_file = None
+    file_metadata = None
+    if evidence.evidence_file is not None:
+        evidence_file = evidence.evidence_file
+        file_metadata = validate_evidence_file(evidence_file)
+
     return ContributionRecord.objects.create(
         project=project,
         contributor=member,
@@ -180,6 +301,12 @@ def submit_evidence(member, project, evidence: Evidence) -> ContributionRecord:
         title=evidence.title.strip(),
         description=evidence.description,
         evidence_url=evidence.evidence_url,
+        evidence_file=evidence_file,
+        evidence_content_type=file_metadata.content_type if file_metadata else "",
+        evidence_size_bytes=file_metadata.size_bytes if file_metadata else 0,
+        evidence_scan=(
+            EvidenceScanStatus.PENDING if file_metadata else EvidenceScanStatus.NOT_APPLICABLE
+        ),
         source=ContributionSource.MEMBER_SUBMISSION,
         status=VerificationStatus.CANDIDATE,
     )
@@ -224,6 +351,21 @@ def verify(
         raise InvalidStatusTransitionError(
             "PMO-held records must be released before a verification decision can be recorded "
             "(D4.1)"
+        )
+    if (
+        decision == VerificationStatus.ACCEPTED
+        and record.evidence_size_bytes > 0
+        and record.evidence_scan != EvidenceScanStatus.CLEAN
+    ):
+        _audit_decision(
+            verifier,
+            record,
+            "contribution.verify.denied",
+            {"status": record.status, "evidence_scan": record.evidence_scan},
+            {"decision": decision},
+        )
+        raise EvidenceFilePendingScanError(
+            _("File-backed evidence cannot be accepted before its security check passes.")
         )
 
     before = {"status": record.status}

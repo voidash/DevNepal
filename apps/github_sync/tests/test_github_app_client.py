@@ -70,6 +70,7 @@ def token_transport():
 
 def test_list_open_issues_uses_the_installation_token_and_preserves_query_parameters():
     """GIT-003/DSC-009: starter-task sync reads open issue metadata via the App token."""
+
     def handler(request):
         if request["method"] == "POST":
             return 201, {"token": INSTALLATION_TOKEN}

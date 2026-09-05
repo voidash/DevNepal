@@ -91,9 +91,9 @@ def test_a08_keyboard_and_bilingual_core_route_contract(client):
         assert 'class="btn dn-skip-link" href="#main-content"' in content
         assert 'id="main-content" tabindex="-1"' in content
         assert "onclick=" not in content.lower()
-    assert "सरकारी योगदान अवसरहरू" in home.content.decode()
+    assert project.title_ne in home.content.decode()
     assert project.title_ne in catalog.content.decode()
-    assert f'href="{blogs_list_url}">ब्लगहरू</a>' in blog.content.decode()
+    assert f'href="{blogs_list_url}">प्रविधि ब्लगहरू</a>' in blog.content.decode()
     assert "प्रोफाइल सम्पादन गर्नुहोस्" in settings.content.decode()
     assert f'href="{sessions_url}">सत्रहरू</a>' in sessions.content.decode()
     assert application.status_code == 302

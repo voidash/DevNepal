@@ -189,7 +189,7 @@ def submit(request: HttpRequest, project_id: int) -> HttpResponse:
             "contributions/evidence_form.html",
             {"project": project, "form": EvidenceForm()},
         )
-    form = EvidenceForm(request.POST)
+    form = EvidenceForm(request.POST, request.FILES)
     if not form.is_valid():
         return render(
             request,
@@ -206,6 +206,7 @@ def submit(request: HttpRequest, project_id: int) -> HttpResponse:
                 contribution_type=form.cleaned_data["contribution_type"],
                 description=form.cleaned_data["description"],
                 evidence_url=form.cleaned_data["evidence_url"],
+                evidence_file=form.cleaned_data["evidence_file"],
             ),
         )
     except SubmissionNotEligibleError:

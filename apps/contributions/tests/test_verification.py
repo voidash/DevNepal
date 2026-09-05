@@ -311,7 +311,7 @@ def test_repeated_hold_release_cycles_keep_every_reason_in_the_audit_history(can
 
 @pytest.mark.unit
 def test_new_hold_cycle_clears_the_previous_response_without_erasing_its_audit_event(candidate):
-    """D4.2/D4.3: a new hold gets a fresh response while the prior response remains audited."""
+    """REC-006/D4.2/D4.3: a new hold gets a fresh response; the prior response stays audited."""
     pmo = SuperAdminFactory()
     place_on_hold(pmo, candidate, "First review")
     respond_to_hold(candidate.contributor, candidate, "First contributor response")
@@ -376,7 +376,7 @@ def test_other_members_cannot_answer_a_hold(candidate):
 
 @pytest.mark.unit
 def test_hold_response_timestamp_cannot_be_persisted_without_text(candidate):
-    """D4.2: the database prevents a false indication that the contributor responded."""
+    """REC-006/D4.2: the database prevents a false indication that the contributor responded."""
     from django.utils import timezone
 
     candidate.hold_responded_at = timezone.now()

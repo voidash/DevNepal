@@ -14,6 +14,7 @@ urlpatterns += i18n_patterns(
     path("", include("apps.projects.urls")),
     path("", include("apps.analytics.urls")),
     path("", include("apps.accounts.urls")),
+    path("", include("apps.administration.urls")),
     path("", include("apps.blogs.urls")),
     path("", include("apps.contributions.urls")),
     path("", include("apps.ministries.urls")),

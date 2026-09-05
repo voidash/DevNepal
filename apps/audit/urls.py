@@ -6,5 +6,6 @@ app_name = "audit"
 
 urlpatterns = [
     path("audit/", views.audit_log, name="audit_log"),
+    path("audit/my-actions/", views.my_actions, name="my_actions"),
     path("audit/ops/", views.ops_dashboard, name="ops_dashboard"),
 ]

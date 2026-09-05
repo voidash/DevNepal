@@ -1,4 +1,5 @@
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -21,6 +22,12 @@ pytestmark = [
     pytest.mark.django_db,
     pytest.mark.urls("apps.contributions.tests.urls"),
 ]
+
+
+@pytest.fixture(autouse=True)
+def isolated_evidence_storage(settings, tmp_path):
+    """SEC-007: view tests never persist uploads outside their temporary directory."""
+    settings.MEDIA_ROOT = tmp_path
 
 
 def verify_mfa(client, user):
@@ -64,6 +71,31 @@ def test_member_submits_non_code_evidence_through_the_authenticated_form(client)
     assert record.contributor == member
     assert record.status == VerificationStatus.CANDIDATE
     assert record.contribution_type.slug == "qa"
+
+
+@pytest.mark.unit
+def test_member_submits_content_checked_file_evidence_through_the_authenticated_form(client):
+    """SEC-007/A6: the submission route passes a validated evidence upload to the service layer."""
+    member = UserFactory()
+    project = ProjectFactory(
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+    )
+    client.force_login(member)
+
+    response = client.post(
+        reverse("contributions:submit", kwargs={"project_id": project.pk}),
+        {
+            "title": "Accessibility evidence",
+            "contribution_type": contribution_type("qa").pk,
+            "evidence_file": SimpleUploadedFile("review.pdf", b"%PDF-1.7 evidence"),
+        },
+    )
+
+    record = ContributionRecord.objects.get()
+    assert response.status_code == 302
+    assert record.evidence_content_type == "application/pdf"
+    assert record.evidence_size_bytes == len(b"%PDF-1.7 evidence")
 
 
 @pytest.mark.unit
@@ -249,7 +281,7 @@ def test_maintainer_verification_queue_scopes_candidates_to_owned_projects(clien
 
 @pytest.mark.unit
 def test_verification_queue_exposes_provenance_review_age_sla_and_escalation(client):
-    """C4.1/C4.2: reviewers see source, automated checks, age, SLA, and escalation."""
+    """REC-006/C4.1/C4.2: reviewers see source, checks, age, SLA, and escalation."""
     owned = ContributionRecordFactory(
         source=ContributionSource.PROVIDER_EVENT,
         provider_event_ref="github:queue-check-1",

@@ -5,7 +5,7 @@
 <div class="dn-container">
   <header class="dn-contribution-header">
     <h1>{% trans "My technical blogs" %}</h1>
-    <p><a class="btn" href="{% url 'blogs:create' %}">{% trans "New technical blog" %}</a></p>
+    <p><a class="btn" href="{% url 'blogs:create' %}">{% trans "New technical blog" %}</a> <a class="btn btn--secondary" href="{% url 'blogs:link_external' %}">{% trans "Link an article" %}</a></p>
     <p role="status">{% blocktrans count count=posts|length %}{{ count }} listing{% plural %}{{ count }} listings{% endblocktrans %}</p>
   </header>
   <div class="dn-issue-list">

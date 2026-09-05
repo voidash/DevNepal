@@ -28,6 +28,7 @@ from apps.moderation.services import (
     ModerationServiceError,
     appeal,
     assign_case,
+    build_community_health_snapshot,
     export_case_record,
     file_report,
     record_decision,
@@ -133,6 +134,19 @@ def case_queue(request):
             "query_string": query_string,
             "report_reasons": ReportReason.choices,
         },
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_GET
+def community_health(request):
+    """ADM-006/SRS 3.2: MFA-verified Super Admins view aggregate community health."""
+    _require_super_admin(request.user)
+    return render(
+        request,
+        "moderation/community_health.html",
+        {"health": build_community_health_snapshot()},
     )
 
 

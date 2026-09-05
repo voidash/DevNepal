@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+
+{% block title %}{% trans "Community health" %} | DevNepal{% endblock %}
+
+{% block content %}
+<main class="dn-container" aria-labelledby="community-health-heading">
+  <p><a href="{% url 'moderation:case_queue' %}">{% trans "Moderation cases" %}</a></p>
+  <p class="dn-section-kicker">{% trans "Operational dashboards / Community health" %}</p>
+  <h1 id="community-health-heading">{% trans "Community health" %}</h1>
+  <p class="dn-lede">
+    {% blocktrans with start=health.period_start|localtime|date:"F j" end=health.period_end|localtime|date:"F j, Y" %}Current-month aggregate moderation data from {{ start }} through {{ end }}.{% endblocktrans %}
+  </p>
+  <section aria-label="{% trans 'Community health summary' %}" class="blueprint dn-health-summary">
+    <i class="corner tl" aria-hidden="true"></i><i class="corner tr" aria-hidden="true"></i><i class="corner bl" aria-hidden="true"></i><i class="corner br" aria-hidden="true"></i>
+    <div>
+      <span>{% trans "Reports" %}</span>
+      <strong>{{ health.report_count }}</strong>
+      <small>{% blocktrans with cases=health.routine_case_count %}→ {{ cases }} cases{% endblocktrans %}</small>
+    </div>
+    <div>
+      <span>{% trans "Median to decision" %}</span>
+      {% if health.median_decision_hours is not None %}
+      <strong>{% blocktrans with hours=health.median_decision_hours %}{{ hours }} h{% endblocktrans %}</strong>
+      {% if health.sla_met_percent is not None %}<small>{% blocktrans with percent=health.sla_met_percent %}target ≤ 48 h · {{ percent }}% met{% endblocktrans %}</small>{% endif %}
+      {% else %}<strong>—</strong><small>{% trans "No decisions this month" %}</small>{% endif %}
+    </div>
+    <div>
+      <span>{% trans "Appealed" %}</span>
+      <strong>{{ health.appeal_count }}</strong>
+      <small>{% blocktrans count count=health.overturned_appeal_count %}{{ count }} overturned{% plural %}{{ count }} overturned{% endblocktrans %}</small>
+    </div>
+    <div>
+      <span>{% trans "Repeat subjects" %}</span>
+      <strong>{{ health.repeat_subject_count }}</strong>
+      <small>{% blocktrans with total=health.routine_case_count %}of {{ total }}{% endblocktrans %}</small>
+    </div>
+  </section>
+
+  <section aria-labelledby="reason-breakdown-heading">
+    <h2 id="reason-breakdown-heading">{% trans "Cases by reason" %}</h2>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Community-health case breakdown by reason' %}">
+      <table class="dn-data-table">
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Reason" %}</th>
+            <th scope="col">{% trans "Cases" %}</th>
+            <th scope="col">{% trans "Outcome mix" %}</th>
+            <th scope="col">{% trans "Fixed & reinstated" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in health.reason_rows %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td>{{ row.case_count }}</td>
+            <td>
+              {% for outcome in row.outcomes %}
+                {% if not forloop.first %} · {% endif %}{{ outcome.count }} {{ outcome.label }}
+              {% empty %}
+                {% trans "No decision yet" %}
+              {% endfor %}
+            </td>
+            <td>
+              {% if row.appeal_count %}
+                {% blocktrans with overturned=row.overturned_appeal_count appealed=row.appeal_count %}{{ overturned }} overturned of {{ appealed }} appealed{% endblocktrans %}
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4">{% trans "No routine moderation cases were filed this month." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="pattern-heading" class="dn-health-pattern">
+    <h2 id="pattern-heading">{% trans "Pattern" %}</h2>
+    {% if health.pattern %}
+    <p>{% blocktrans with label=health.pattern.label percent=health.pattern.percent %}{{ label }} accounts for {{ percent }}% of routine cases. Review the relevant intake and prevention guidance for a product change.{% endblocktrans %}</p>
+    {% else %}
+    <p>{% trans "No routine-case pattern is available this month." %}</p>
+    {% endif %}
+    <p>{% blocktrans count count=health.security_report_count %}{{ count }} security report is handled separately through the disclosure programme and does not appear in this table.{% plural %}{{ count }} security reports are handled separately through the disclosure programme and do not appear in this table.{% endblocktrans %}</p>
+  </section>
+</main>
+{% endblock %}

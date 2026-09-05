@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Privileged access" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container">
+  <div class="dn-repo-title"><h1>{% trans "Privileged access" %}</h1><span class="Label">{% trans "Super Admin" %}</span></div>
+  <p class="dn-lede">{% trans "Who holds Super Admin, how they verify, and who granted it. A grant needs a second Super Admin to confirm within 24 hours. Revocation is immediate: sessions end, and the person's audit entries stay under their own name." %}</p>
+</div></div>
+<main class="section"><div class="dn-container">
+  <p><a href="{% url 'administration:console' %}">{% trans "Back to the administration console" %}</a></p>
+
+  {% if pending_grants %}
+  <section aria-labelledby="pending-grants-heading">
+    <h2 id="pending-grants-heading">{% trans "Grants awaiting a second Super Admin" %}</h2>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Grants awaiting confirmation' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Proposed Super Admin grants and the time left to confirm them" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Account" %}</th>
+        <th scope="col">{% trans "Proposed by · reason" %}</th>
+        <th scope="col">{% trans "Confirm before" %}</th>
+        <th scope="col"><span class="visually-hidden">{% trans "Action" %}</span></th>
+      </tr></thead>
+      <tbody>{% for grant in pending_grants %}<tr>
+        <th scope="row">{{ grant.subject.get_full_name|default:grant.subject.username }}<br><code>{{ grant.subject.username }}</code></th>
+        <td>{{ grant.proposed_by.get_full_name|default:grant.proposed_by.username }}<br><span class="dn-lede">{{ grant.reason }}</span></td>
+        <td><time datetime="{{ grant.expires_at|date:'c' }}">{{ grant.expires_at|date:"j M H:i" }}</time></td>
+        <td>{% if grant.proposed_by_id == user.pk %}<span class="Label Label--attention">{% trans "Needs another Super Admin" %}</span>{% else %}
+          <form method="post" action="{% url 'administration:super_admin_grant_confirm' grant.pk %}">{% csrf_token %}
+            <button class="btn btn--primary" type="submit">{% trans "Confirm grant" %}<span class="visually-hidden"> {{ grant.subject.username }}</span></button>
+          </form>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="roster-heading">
+    <h2 id="roster-heading">{% trans "Super Admins" %}</h2>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Super Admins' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Every Super Admin with their multi-factor method, how the role was granted, and their open sessions" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Super Admin" %}</th>
+        <th scope="col">{% trans "MFA" %}</th>
+        <th scope="col">{% trans "Granted" %}</th>
+        <th scope="col">{% trans "Active sessions" %}</th>
+        <th scope="col"><span class="visually-hidden">{% trans "Action" %}</span></th>
+      </tr></thead>
+      <tbody>{% for entry in roster %}<tr>
+        <th scope="row">{{ entry.user.get_full_name|default:entry.user.username }}{% if entry.user.pk == user.pk %} <span class="Label Label--outline">{% trans "you" %}</span>{% endif %}<br><code>{{ entry.user.username }}</code></th>
+        <td>{% if entry.mfa %}<span class="Label Label--accent">{{ entry.mfa }}</span>{% else %}<span class="Label Label--attention">{% trans "Not enrolled" %}</span>{% endif %}</td>
+        <td>{% if entry.grant %}{{ entry.grant.proposed_by.get_full_name|default:entry.grant.proposed_by.username }}{% if entry.grant.approved_by %}, {% blocktrans with approver=entry.grant.approved_by.get_full_name|default:entry.grant.approved_by.username %}confirmed by {{ approver }}{% endblocktrans %}{% endif %} · <time datetime="{{ entry.grant.applied_at|date:'c' }}">{{ entry.grant.applied_at|date:"j M Y" }}</time>{% else %}<span class="dn-lede">{% trans "Deployment" %}</span>{% endif %}</td>
+        <td>{{ entry.active_sessions }}</td>
+        <td>{% if entry.user.pk == user.pk %}<span class="dn-lede">{% trans "You cannot revoke yourself." %}</span>{% else %}
+          <form method="post" action="{% url 'administration:super_admin_revoke' entry.user.username %}" class="dn-form-stack">{% csrf_token %}
+            <div class="dn-field">
+              <label for="revoke-{{ entry.user.username }}">{% trans "Reason for revoking" %}</label>
+              <textarea id="revoke-{{ entry.user.username }}" name="reason" rows="2" required maxlength="1000"></textarea>
+            </div>
+            <button class="btn btn--danger" type="submit">{% trans "Revoke Super Admin" %}<span class="visually-hidden"> {{ entry.user.username }}</span></button>
+          </form>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="dn-lede">{% trans "Security notices about privileged sign-ins cannot be muted and go to every Super Admin." %}</p>
+  </section>
+
+  <section aria-labelledby="own-sessions-heading">
+    <h2 id="own-sessions-heading">{% trans "Your sessions" %}</h2>
+    <p class="dn-lede">{% trans "Your own signed-in devices, with the place and time of each, are managed on your sessions page." %}</p>
+    <p><a class="btn" href="{% url 'accounts:session_list' %}">{% trans "Review and revoke your sessions" %}</a></p>
+  </section>
+
+  <section aria-labelledby="grant-heading">
+    <h2 id="grant-heading">{% trans "Grant Super Admin" %}</h2>
+    <p class="dn-lede">{% trans "A grant needs a second Super Admin to confirm within 24 hours; it is recorded with both names and a reason. If nobody confirms in time it lapses." %}</p>
+    <form method="post" class="dn-form-stack">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}<div class="dn-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>{% endfor %}
+      <button class="btn btn--primary" type="submit">{% trans "Propose grant" %}</button>
+    </form>
+  </section>
+
+  <section aria-labelledby="grant-history-heading">
+    <h2 id="grant-history-heading">{% trans "Grant and revocation history" %}</h2>
+    <ul class="dn-change-log">{% for grant in history %}
+      <li>
+        <strong>{{ grant.get_action_display }}</strong> · {{ grant.subject.get_full_name|default:grant.subject.username }} ·
+        <time datetime="{{ grant.applied_at|date:'c' }}">{{ grant.applied_at|date:"j M Y" }}</time> ·
+        {{ grant.proposed_by.get_full_name|default:grant.proposed_by.username }}
+        <br><span class="dn-lede">“{{ grant.reason }}”{% if grant.approved_by and grant.approved_by_id != grant.proposed_by_id %} · {% blocktrans with approver=grant.approved_by.get_full_name|default:grant.approved_by.username %}confirmed by {{ approver }} (four-eyes){% endblocktrans %}{% endif %}</span>
+      </li>
+    {% empty %}<li>{% trans "No Super Admin has been granted or revoked through this page yet." %}</li>{% endfor %}</ul>
+  </section>
+
+</div></main>
+{% endblock %}

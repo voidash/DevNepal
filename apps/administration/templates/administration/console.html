@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Administration console" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container">
+  <div class="dn-repo-title"><h1>{% trans "Administration console" %}</h1><span class="Label">{% trans "Super Admin" %}</span></div>
+  <p class="dn-lede">
+    {% if outstanding %}{% blocktrans count counter=outstanding %}{{ counter }} item is waiting across the administrative queues.{% plural %}{{ counter }} items are waiting across the administrative queues.{% endblocktrans %}{% else %}{% trans "Every administrative queue is clear." %}{% endif %}
+  </p>
+</div></div>
+<main class="section"><div class="dn-container">
+
+  {% if breached %}
+  <p class="dn-state-banner is-attention" role="status">{% blocktrans count counter=breached %}{{ counter }} item has passed its service level and needs attention first.{% plural %}{{ counter }} items have passed their service level and need attention first.{% endblocktrans %}</p>
+  {% endif %}
+
+  <section aria-labelledby="queues-heading">
+    <h2 id="queues-heading">{% trans "Work queues" %}</h2>
+    <p class="dn-lede">{% trans "Every decision taken in these queues is written to the immutable audit trail." %}</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Work queues' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Outstanding administrative work by queue, with service-level breaches" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Queue" %}</th>
+        <th scope="col">{% trans "Waiting" %}</th>
+        <th scope="col">{% trans "Service level" %}</th>
+        <th scope="col">{% trans "What it covers" %}</th>
+      </tr></thead>
+      <tbody>{% for queue in queues %}<tr>
+        <th scope="row"><a href="{{ queue.url }}">{{ queue.title }}</a></th>
+        <td>{{ queue.count }}</td>
+        <td>{% if queue.breached %}<span class="Label Label--attention">{% blocktrans count counter=queue.breached %}{{ counter }} overdue{% plural %}{{ counter }} overdue{% endblocktrans %}</span>{% elif queue.count %}<span class="Label Label--secondary">{% trans "Within service level" %}</span>{% else %}<span class="Label Label--outline">{% trans "Clear" %}</span>{% endif %}</td>
+        <td>{{ queue.description }}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="catalogue-heading">
+    <h2 id="catalogue-heading">{% trans "Reference data" %}</h2>
+    <p class="dn-lede">{% trans "Ministries and named publishers, skills, categories, approved licenses, badges, and feature flags." %}</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Reference data' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Reference data a Super Admin maintains, with active and total record counts" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Catalogue" %}</th>
+        <th scope="col">{% trans "Active" %}</th>
+        <th scope="col">{% trans "Total" %}</th>
+      </tr></thead>
+      <tbody>{% for entry in catalogue %}<tr>
+        <th scope="row"><a href="{{ entry.url }}">{{ entry.title }}</a></th>
+        <td>{{ entry.count }}</td>
+        <td>{{ entry.total }}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="oversight-heading">
+    <h2 id="oversight-heading">{% trans "Oversight" %}</h2>
+    <dl class="dn-definition-list">{% for entry in oversight %}
+      <dt><a href="{{ entry.url }}">{{ entry.title }}</a></dt>
+      <dd>{{ entry.description }}</dd>
+    {% endfor %}</dl>
+    <p class="dn-lede">{% trans "No privileged user can erase the audit record of their own action through this interface." %}</p>
+  </section>
+
+</div></main>
+{% endblock %}

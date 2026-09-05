@@ -8,6 +8,7 @@ from apps.accounts.models import MemberProfile
 from apps.contributions.enums import ContributionSource, VerificationStatus
 from apps.contributions.services import Evidence, accepted_contributions, submit_evidence, verify
 from apps.contributions.tests.factories import contribution_type
+from apps.github_sync.tests.factories import RepositoryConnectionFactory
 from apps.ministries.tests.factories import (
     MinistryOrganizationFactory,
     MinistryPublisherFactory,
@@ -83,6 +84,10 @@ def test_prototype_main_cross_role_spine(client):
         code_of_conduct_url="https://example.gov.np/code-of-conduct",
         security_contact="security@example.gov.np",
         license=ApprovedLicenseFactory(is_approved=True),
+    )
+    RepositoryConnectionFactory(
+        project=project,
+        full_name="moit/citizen-service-directory",
     )
     assign_maintainer(
         publisher,
