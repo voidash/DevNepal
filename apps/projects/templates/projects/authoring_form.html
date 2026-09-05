@@ -3,11 +3,13 @@
 {% block title %}{% if is_create %}{% trans "Create project draft" %}{% else %}{% trans "Edit project draft" %}{% endif %} | DevNepal{% endblock %}
 {% block content %}
 <div class="dn-container">
-  <div class="dn-form-layout">
+  <div class="dn-authoring-simple">
+    <div class="dn-form-layout">
     <section aria-labelledby="authoring-form-heading">
-      <p class="dn-section-kicker">{% if is_create %}{% trans "C2 · Draft preparation" %}{% else %}{% trans "C2 · Draft revision" %}{% endif %}</p>
-      <h1 id="authoring-form-heading">{% if is_create %}{% trans "Create government project draft" %}{% else %}{% trans "Edit government project" %}{% endif %}</h1>
-      <p>{% trans "Save the structured draft first. Readiness evidence, review, and publication happen from the project workflow after this step." %}</p>
+      <p class="dn-section-kicker">{% trans "Ministry publishing" %}</p>
+      <h1 id="authoring-form-heading">{% if is_create %}{% trans "Create a government project" %}{% else %}{% trans "Edit government project" %}{% endif %}</h1>
+      <p>{% trans "Connect a public GitHub repository. DevNepal will show its open issues, pull requests, and contributors." %}</p>
+      <p class="dn-field-help">{% trans "Only the ministry, bilingual title and summary, repository, licence, and contribution route are needed to begin." %}</p>
       {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
       {% if editable|default:is_create %}
       <form method="post" class="dn-form-stack">
@@ -24,41 +26,55 @@
         {% trans "Review the data format, choose a good first issue, then fork, branch, and open a pull request." as demo_prerequisites %}
         {% trans "Fill demo details" as fill_demo_details %}
         {% trans "Demo details added. Review every field before saving." as demo_details_added %}
-        <button class="btn btn--secondary" id="fill-demo-details" type="button">{{ fill_demo_details }}</button>
-        <p id="demo-fill-status" role="status" hidden data-filled-message="{{ demo_details_added }}"></p>
+        <div class="dn-field">
+          <button class="btn btn--secondary" id="fill-demo-details" type="button">{{ fill_demo_details }}</button>
+          <p id="demo-fill-status" role="status" hidden data-filled-message="{{ demo_details_added }}"></p>
+        </div>
         <script id="authoring-demo-details" type="application/json">{"fields":{"title_en":"{{ demo_title_en|escapejs }}","title_ne":"{{ demo_title_ne|escapejs }}","summary_en":"{{ demo_summary_en|escapejs }}","summary_ne":"{{ demo_summary_ne|escapejs }}","description_md":"{{ demo_summary_en|escapejs }}","problem_statement":"{{ demo_problem_statement|escapejs }}","target_users":"{{ demo_target_users|escapejs }}","expected_outcome":"{{ demo_expected_outcome|escapejs }}","success_indicators":"{{ demo_success_indicators|escapejs }}","difficulty":"beginner","estimated_effort":"small","contribution_mode":"open_direct","prerequisites":"{{ demo_prerequisites|escapejs }}","repository_url":"https://github.com/voidash/civic-help-directory","default_branch":"main","issue_tracker_url":"https://github.com/voidash/civic-help-directory/issues","documentation_url":"https://github.com/voidash/civic-help-directory#readme","data_classification":"public"},"choice_labels":{"contribution_types":["Data","Documentation"],"skills":["Data Analysis","Documentation"],"license":["MIT"]}}</script>
         <script type="module" src="{% static 'src/authoring-demo-fill.js' %}"></script>
         {% endif %}
         {{ form.non_field_errors }}
-        {% for field in form %}
-        <div class="dn-field">
-          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
-          {{ field }}
-          {{ field.errors }}
-          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
-        </div>
-        {% endfor %}
-        <button class="btn btn--primary" type="submit">{% trans "Save draft" %}</button>
+        {% include "projects/_authoring_field.html" with field=form.ministry %}
+        {% include "projects/_authoring_field.html" with field=form.title_en %}
+        {% include "projects/_authoring_field.html" with field=form.title_ne %}
+        {% include "projects/_authoring_field.html" with field=form.summary_en %}
+        {% include "projects/_authoring_field.html" with field=form.summary_ne %}
+        {% include "projects/_authoring_field.html" with field=form.repository_url %}
+        {% include "projects/_authoring_field.html" with field=form.default_branch %}
+        {% include "projects/_authoring_field.html" with field=form.issue_tracker_url %}
+        {% include "projects/_authoring_field.html" with field=form.documentation_url %}
+        {% include "projects/_authoring_field.html" with field=form.license %}
+        {% include "projects/_authoring_field.html" with field=form.contribution_mode %}
+        <details class="dn-authoring-more">
+          <summary>{% trans "More project details" %}</summary>
+          {% include "projects/_authoring_field.html" with field=form.description_md %}
+          {% include "projects/_authoring_field.html" with field=form.problem_statement %}
+          {% include "projects/_authoring_field.html" with field=form.target_users %}
+          {% include "projects/_authoring_field.html" with field=form.expected_outcome %}
+          {% include "projects/_authoring_field.html" with field=form.success_indicators %}
+          {% include "projects/_authoring_field.html" with field=form.contribution_types %}
+          {% include "projects/_authoring_field.html" with field=form.skills %}
+          {% include "projects/_authoring_field.html" with field=form.technologies %}
+          {% include "projects/_authoring_field.html" with field=form.difficulty %}
+          {% include "projects/_authoring_field.html" with field=form.estimated_effort %}
+          {% include "projects/_authoring_field.html" with field=form.deadline %}
+          {% include "projects/_authoring_field.html" with field=form.prerequisites %}
+          {% include "projects/_authoring_field.html" with field=form.communication_channel %}
+          {% include "projects/_authoring_field.html" with field=form.response_sla %}
+          {% include "projects/_authoring_field.html" with field=form.code_of_conduct_url %}
+          {% include "projects/_authoring_field.html" with field=form.signoff_model %}
+          {% include "projects/_authoring_field.html" with field=form.data_classification %}
+          {% include "projects/_authoring_field.html" with field=form.security_contact %}
+          {% include "projects/_authoring_field.html" with field=form.vulnerability_disclosure_url %}
+        </details>
+        <button class="btn btn--primary" type="submit">{% if is_create %}{% trans "Create project" %}{% else %}{% trans "Save changes" %}{% endif %}</button>
       </form>
       {% else %}
       <div class="dn-state-banner is-attention" role="status">{% trans "This project is read-only in its current lifecycle state." %}</div>
       {% endif %}
       {% if project %}<p><a href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Back to project workflow" %}</a></p>{% endif %}
     </section>
-    <aside class="dn-sidebar">
-      <section class="dn-sidebar-section">
-        <h2>{% trans "Draft and submit path" %}</h2>
-        <ol>
-          <li>{% trans "Save the bilingual draft." %}</li>
-          <li>{% trans "Add readiness evidence, maintainers, tasks, and suitability confirmation." %}</li>
-          <li>{% trans "Submit for Super Admin review from the project workflow." %}</li>
-        </ol>
-      </section>
-      <section class="dn-sidebar-section">
-        <h2>{% trans "Review hand-off" %}</h2>
-        <p>{% trans "Super Admins review completeness and documented suitability. If changes are requested, revise this draft and resubmit. Legal responsibility remains with the publishing ministry." %}</p>
-      </section>
-    </aside>
+    </div>
   </div>
 </div>
 {% endblock %}

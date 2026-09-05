@@ -1,0 +1,7 @@
+{% load i18n %}
+<div class="dn-field">
+  <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+  {{ field }}
+  {{ field.errors }}
+  {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+</div>

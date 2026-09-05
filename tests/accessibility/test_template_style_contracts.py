@@ -488,7 +488,8 @@ def test_forms_use_the_design_system_form_layout_and_field_patterns():
         assert 'class="dn-form-stack"' in template, relative
         assert 'class="dn-field"' in template, relative
         assert 'class="dn-field-help"' in template or "{{ field.help_text }}" in template
-        assert 'class="dn-sidebar"' in template, relative
+        if relative != "apps/projects/templates/projects/authoring_form.html":
+            assert 'class="dn-sidebar"' in template, relative
         assert "as_p" not in template, relative
 
     authoring = _read("apps/projects/templates/projects/authoring_detail.html")
