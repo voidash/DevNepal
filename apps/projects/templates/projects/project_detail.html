@@ -46,12 +46,14 @@
     <div class="dn-accountability">
       <div class="dn-accountability-item"><strong>{% trans "How to join" %}</strong><span>{{ project.get_contribution_mode_display }}</span></div>
       <div class="dn-accountability-item"><strong>{% trans "Expected effort" %}</strong><span>{{ project.get_estimated_effort_display }}</span></div>
-      <div class="dn-accountability-item"><strong>{% trans "First response" %}</strong><span>{% if project.response_sla %}{{ project.get_response_sla_display }}{% else %}{% trans "First-response commitment not yet published" %}{% endif %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "First response" %}</strong><span>{% if project.response_sla %}{{ project.get_response_sla_display }} · {% trans "Response commitment" %}{% else %}{% trans "First-response commitment not yet published" %}{% endif %}</span></div>
+    </div>
+    <p class="dn-sheet__note">{% if project.suitability.confirmed_at %}{% trans "Suitability confirmed" %} <time datetime="{{ project.suitability.confirmed_at|date:'Y-m-d' }}">{{ project.suitability.confirmed_at|date:"DATE_FORMAT" }}</time>{% else %}{% trans "In review" %} · {% trans "Suitability checklist not started" %} · {% trans "Repository visibility and issue data are checked before publication." %}{% endif %}</p>
+    <div class="dn-accountability">
       <div class="dn-accountability-item"><strong>{% trans "Maintainers" %}</strong><span>{% for maintainer in project.maintainer_assignments.all %}{{ maintainer.user.get_full_name|default:maintainer.user.username }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "No maintainer assigned yet" %}{% endfor %}</span></div>
       <div class="dn-accountability-item"><strong>{% trans "Repository" %}</strong><span>{% if project.repository_url %}<a href="{{ project.repository_url }}" rel="noopener noreferrer">{{ project.repository_url|cut:"https://github.com/" }}</a>{% else %}{% trans "No public repository" %}{% endif %}</span></div>
       <div class="dn-accountability-item"><strong>{% trans "Deadline" %}</strong><span>{% if project.deadline %}<time datetime="{{ project.deadline|date:'Y-m-d' }}">{{ project.deadline|date:"DATE_FORMAT" }}</time>{% else %}{% trans "No deadline" %}{% endif %}</span></div>
     </div>
-    <p class="dn-sheet__note">{% if project.suitability.confirmed_at %}{% trans "Suitability confirmed" %} <time datetime="{{ project.suitability.confirmed_at|date:'Y-m-d' }}">{{ project.suitability.confirmed_at|date:"DATE_FORMAT" }}</time>{% else %}{% trans "In review" %} · {% trans "Suitability checklist not started" %} · {% trans "Repository visibility and issue data are checked before publication." %}{% endif %}</p>
   </section>
 
   {% if github_issues %}

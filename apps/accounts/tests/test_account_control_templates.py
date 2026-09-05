@@ -21,8 +21,8 @@ def test_auth001_login_explains_identity_github_and_private_email(client):
 
 
 @pytest.mark.unit
-def test_auth001_login_leads_with_the_form_not_policy_chrome(client):
-    """AUTH-001/AUTH-002: the sign-in card is the page; GitHub and privacy sit after it."""
+def test_auth001_login_leads_with_the_form_and_sends_contributors_back(client):
+    """AUTH-001/AUTH-002: sign-in serves ministry officers; contributors need no account."""
     response = client.get(reverse("accounts:login"))
     content = response.content.decode()
 
@@ -33,7 +33,10 @@ def test_auth001_login_leads_with_the_form_not_policy_chrome(client):
     )
     assert "Member account" not in content
     assert "safe return address" not in content
-    assert reverse("accounts:signup") in content
+    assert "Ministry publisher" in content
+    assert "You do not need a DevNepal account" in content
+    assert reverse("projects:government") in content
+    assert reverse("accounts:signup") not in content
     assert "dn-primary-nav" not in content
     assert "dn-footer--auth" in content
     assert "dn-footer-grid" not in content
