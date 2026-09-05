@@ -16,7 +16,7 @@
     <div>
       <span>{% trans "Reports" %}</span>
       <strong>{{ health.report_count }}</strong>
-      <small>{% blocktrans with cases=health.routine_case_count %}→ {{ cases }} cases{% endblocktrans %}</small>
+      <small>{% blocktrans count count=health.routine_case_count %}→ {{ count }} case{% plural %}→ {{ count }} cases{% endblocktrans %}</small>
     </div>
     <div>
       <span>{% trans "Median to decision" %}</span>

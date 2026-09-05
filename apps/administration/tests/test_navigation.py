@@ -19,6 +19,7 @@ SUPER_ADMIN_DESTINATIONS = (
     "administration:console",
     "projects:review_queue",
     "moderation:case_queue",
+    "moderation:community_health",
     "contributions:verification_queue",
     "ministries:organization_list",
     "taxonomy:skill_suggestion_review_list",
