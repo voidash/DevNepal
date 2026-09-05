@@ -4,8 +4,7 @@
 	https_port 8444
 }
 
-zapper.cloud {
-	bind 192.168.10.30
+(devnepal) {
 	encode zstd gzip
 
 	handle_path /static/* {
@@ -18,10 +17,22 @@ zapper.cloud {
 		file_server
 	}
 
-	reverse_proxy 127.0.0.1:8000
+	reverse_proxy 127.0.0.1:8000 {
+		header_up X-Forwarded-Proto https
+	}
+}
+
+zapper.cloud {
+	bind 192.168.10.30
+	import devnepal
 }
 
 www.zapper.cloud {
 	bind 192.168.10.30
 	redir https://zapper.cloud{uri} permanent
+}
+
+http://k2.fell-truck.ts.net:8080 {
+	bind 127.0.0.1
+	import devnepal
 }
