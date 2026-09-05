@@ -6,6 +6,26 @@ app_name = "ministries"
 
 urlpatterns = [
     path("admin/ministries/", views.organization_list, name="organization_list"),
+    path(
+        "admin/ministries/requests/new/",
+        views.onboarding_request_create,
+        name="onboarding_request_create",
+    ),
+    path(
+        "admin/ministries/requests/<str:reference>/",
+        views.onboarding_request_detail,
+        name="onboarding_request_detail",
+    ),
+    path(
+        "admin/ministries/requests/<str:reference>/provision/",
+        views.onboarding_request_provision,
+        name="onboarding_request_provision",
+    ),
+    path(
+        "admin/ministries/requests/<str:reference>/decline/",
+        views.onboarding_request_decline,
+        name="onboarding_request_decline",
+    ),
     path("admin/ministries/create/", views.organization_create, name="organization_create"),
     path("admin/ministries/<slug:slug>/", views.organization_detail, name="organization_detail"),
     path(

@@ -9,6 +9,31 @@
   <div class="dn-state-banner" role="note">
     {% trans "Read-only operational overview. Panels show at most five rows and never mutate data or offer exports." %}
   </div>
+  <section class="section" aria-labelledby="d5-summary-heading">
+    <h2 id="d5-summary-heading">{% trans "Operational dashboard" %}</h2>
+    <div class="card-grid">
+      {% for tile in summary_tiles %}
+      <article class="card">
+        <p class="dn-section-kicker">{{ tile.title }}</p>
+        <h3><a class="card__title-link" href="{{ tile.url }}">{{ tile.count }}</a></h3>
+        <p class="dn-lede">{{ tile.detail }}</p>
+      </article>
+      {% endfor %}
+    </div>
+    <section class="dn-sheet" aria-labelledby="adoption-heading">
+      <header class="dn-sheet__header"><span id="adoption-heading">{% trans "Adoption · this month" %}</span><span>{% trans "Live aggregate" %}</span></header>
+      <div class="dn-accountability">
+        {% for metric in adoption_metrics %}
+        <div class="dn-accountability-item">
+          <strong>{{ metric.label }}</strong>
+          <span>{% if metric.value is None %}—{% else %}{{ metric.value }}{{ metric.suffix }}{% endif %}</span>
+          <small class="dn-lede">{{ metric.detail }}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    <p class="dn-lede">{% trans "Tiles link to their queues. Numbers are aggregates; nothing here identifies a member." %}</p>
+  </section>
   {% for panel in panels %}
   <section class="ops-panel" aria-labelledby="panel-{{ panel.id }}-heading">
     <h2 id="panel-{{ panel.id }}-heading">

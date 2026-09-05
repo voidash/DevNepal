@@ -1,4 +1,5 @@
 import typing
+from urllib.parse import urlsplit
 
 from django.db import models
 from django.utils.translation import get_language
@@ -6,10 +7,79 @@ from django.utils.translation import get_language
 from apps.ministries.enums import (
     ContactChallengeStatus,
     ContactVerificationStatus,
+    OnboardingRequestStatus,
     OrgStatus,
     PublisherStatus,
 )
 from apps.taxonomy.fields import NFCCharField, NFCSlugField, NFCTextField
+
+
+class MinistryOnboardingRequest(models.Model):
+    """PMO-recorded request to provision a government organization (AUTH-004, D1.1)."""
+
+    reference = models.CharField(max_length=32, unique=True, editable=False)
+    name_en = NFCCharField(max_length=200)
+    name_ne = NFCTextField(blank=True)
+    abbreviation = NFCCharField(max_length=20, blank=True)
+    website_url = models.URLField()
+    official_email = models.EmailField()
+    nominated_officer_name = NFCCharField(max_length=160)
+    nominated_officer_title = NFCCharField(max_length=160)
+    purpose = NFCTextField()
+    focal_contact = NFCCharField(max_length=160)
+    nomination_reference = NFCCharField(max_length=180)
+    signatory_name = NFCCharField(max_length=160)
+    domain_verified = models.BooleanField(default=False)
+    named_person_verified = models.BooleanField(default=False)
+    signatory_verified = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=16,
+        choices=OnboardingRequestStatus.choices,
+        default=OnboardingRequestStatus.NEW,
+    )
+    decline_reason = NFCTextField(blank=True)
+    logged_by = models.ForeignKey(
+        "accounts.User",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="logged_ministry_onboarding_requests",
+    )
+    provisioned_organization = models.OneToOneField(
+        "MinistryOrganization",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="onboarding_request",
+    )
+    provisioned_at = models.DateTimeField(null=True, blank=True)
+    declined_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["-created_at", "-id"]
+        verbose_name = "ministry onboarding request"
+        indexes: typing.ClassVar[list] = [
+            models.Index(fields=["status", "-created_at"], name="idx_onboarding_request_state"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.reference} · {self.name_en}"
+
+    @property
+    def localized_name(self) -> str:
+        if get_language() == "ne" and self.name_ne:
+            return self.name_ne
+        return self.name_en
+
+    @property
+    def duplicate_organization(self):
+        return MinistryOrganization.objects.filter(name_en__iexact=self.name_en).first()
+
+    @property
+    def official_domain(self) -> str:
+        host = (urlsplit(self.website_url).hostname or "").lower()
+        return host.removeprefix("www.")
 
 
 class MinistryOrganization(models.Model):

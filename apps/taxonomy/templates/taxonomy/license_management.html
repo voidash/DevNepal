@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Approved licences" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container">
+  <div class="dn-repo-title"><h1>{% trans "Approved licences" %}</h1><span class="Label">{% trans "SPDX" %}</span></div>
+  <p class="dn-lede">{% trans "A licence is offered to ministries only once its legal approval is recorded. Withdrawing a licence stops it being offered from then on and never affects projects that are already published." %}</p>
+</div></div>
+<main class="section"><div class="dn-container">
+  <p><a href="{% url 'administration:console' %}">{% trans "Back to the administration console" %}</a></p>
+
+  <section aria-labelledby="licences-heading">
+    <h2 id="licences-heading">{% trans "Licences" %}</h2>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Approved licences' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Every licence with its use, legal approval reference, state, and how many projects rely on it" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Identifier" %}</th>
+        <th scope="col">{% trans "Use" %}</th>
+        <th scope="col">{% trans "Legal approval" %}</th>
+        <th scope="col">{% trans "State" %}</th>
+        <th scope="col">{% trans "Projects" %}</th>
+        <th scope="col"><span class="visually-hidden">{% trans "Action" %}</span></th>
+      </tr></thead>
+      <tbody>{% for licence in licenses %}<tr>
+        <th scope="row">{{ licence.spdx_id }}<br><span class="dn-lede">{{ licence.name }}</span></th>
+        <td>{{ licence.get_use_display }}</td>
+        <td>{% if licence.legal_reference %}{{ licence.legal_reference }}{% if licence.legal_approved_on %} · <time datetime="{{ licence.legal_approved_on|date:'c' }}">{{ licence.legal_approved_on|date:"j M Y" }}</time>{% endif %}{% else %}<span class="dn-lede">{% trans "Awaiting legal" %}</span>{% endif %}</td>
+        <td>{% if licence.is_approved %}<span class="Label Label--accent">{% trans "Approved" %}</span>{% else %}<span class="Label Label--attention">{% trans "Pending" %}</span>{% endif %}{% if licence.is_default %} <span class="Label Label--outline">{% trans "Default" %}</span>{% endif %}</td>
+        <td>{{ licence.project_count }}</td>
+        <td>{% if licence.is_approved %}
+          <form method="post" action="{% url 'taxonomy:license_decision' licence.pk %}" class="dn-form-stack">{% csrf_token %}
+            <input type="hidden" name="intent" value="withdraw">
+            <div class="dn-field">
+              <label for="withdraw-{{ licence.pk }}">{% trans "Reason for withdrawing" %}</label>
+              <textarea id="withdraw-{{ licence.pk }}" name="reason" rows="2" required maxlength="500"></textarea>
+            </div>
+            <button class="btn btn--danger" type="submit">{% trans "Withdraw" %}<span class="visually-hidden"> {{ licence.spdx_id }}</span></button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'taxonomy:license_decision' licence.pk %}" class="dn-form-stack">{% csrf_token %}
+            <input type="hidden" name="intent" value="approve">
+            <div class="dn-field">
+              <label for="approve-{{ licence.pk }}">{% trans "Legal approval reference" %}</label>
+              <input id="approve-{{ licence.pk }}" name="legal_reference" type="text" maxlength="60" required>
+            </div>
+            <button class="btn btn--primary" type="submit">{% trans "Record approval" %}<span class="visually-hidden"> {{ licence.spdx_id }}</span></button>
+          </form>
+        {% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="6">{% trans "No licences are registered yet." %}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="add-licence-heading">
+    <h2 id="add-licence-heading">{% trans "Add a licence" %}</h2>
+    <form method="post" class="dn-form-stack">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}<div class="dn-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="dn-field-help">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>{% endfor %}
+      <button class="btn btn--primary" type="submit">{% trans "Add licence" %}</button>
+    </form>
+    <p class="dn-lede">{% trans "A new licence is recorded as pending until its legal approval reference is entered." %}</p>
+  </section>
+
+</div></main>
+{% endblock %}

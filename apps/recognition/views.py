@@ -9,22 +9,35 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from apps.accounts.models import MemberProfile
 from apps.accounts.permissions import is_super_admin, privileged_mfa_required
+from apps.contributions.models import ContributionRecord
 from apps.recognition.enums import AwardStatus
 from apps.recognition.forms import (
     BadgeAwardForm,
     BadgeForm,
     BadgeRevokeForm,
+    CorrectionAppealForm,
+    CorrectionAppealResolutionForm,
+    RecognitionCorrectionForm,
     ScoringPolicyForm,
 )
-from apps.recognition.models import Badge, BadgeAward, ContributionScore, ScoringPolicy
+from apps.recognition.models import (
+    Badge,
+    BadgeAward,
+    ContributionScore,
+    RecognitionCorrection,
+    ScoringPolicy,
+)
 from apps.recognition.services import (
     RecognitionError,
     activate_policy,
     anomaly_summary,
+    appeal_correction,
+    apply_correction,
     award_badge,
     create_badge,
     leaderboard,
     opt_out,
+    resolve_correction_appeal,
     revoke_badge,
     update_badge,
 )
@@ -45,6 +58,11 @@ def my_profile(request):
     awards = BadgeAward.objects.filter(recipient=request.user).select_related(
         "badge", "contribution__project", "issuer", "revoked_by"
     )
+    corrections = (
+        RecognitionCorrection.objects.filter(recipient=request.user)
+        .select_related("applied_by", "appeal_decided_by")
+        .prefetch_related("contributions")
+    )
     opt_out = (
         MemberProfile.objects.filter(user=request.user)
         .values_list("leaderboard_opt_out", flat=True)
@@ -53,7 +71,12 @@ def my_profile(request):
     return render(
         request,
         "recognition/my_profile.html",
-        {"scores": scores, "awards": awards, "leaderboard_opt_out": bool(opt_out)},
+        {
+            "scores": scores,
+            "awards": awards,
+            "corrections": corrections,
+            "leaderboard_opt_out": bool(opt_out),
+        },
     )
 
 
@@ -244,3 +267,91 @@ def anomaly_review(request):
     """REC-006: read-only review of recognition velocity and duplicate anomalies."""
     _require_super_admin(request.user)
     return render(request, "recognition/anomaly_review.html", anomaly_summary())
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_http_methods(["GET", "POST"])
+def correction_create(request):
+    """REC-005/ADM-007: a verified Super Admin applies the D4.3 recognition correction."""
+    _require_super_admin(request.user)
+    form = RecognitionCorrectionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        contributions = list(
+            ContributionRecord.objects.filter(pk__in=form.cleaned_data["contribution_ids"])
+            .select_related("contributor", "project")
+            .order_by("pk")
+        )
+        try:
+            correction = apply_correction(
+                request.user,
+                contributions=contributions,
+                kind=form.cleaned_data["kind"],
+                reason=form.cleaned_data["reason"],
+                basis=form.cleaned_data["basis"],
+                member_note=form.cleaned_data["member_note"],
+                adjusted_points=form.cleaned_data["adjusted_points"],
+            )
+        except RecognitionError as error:
+            form.add_error(None, str(error))
+        else:
+            return redirect("recognition:correction_detail", pk=correction.pk)
+    return render(
+        request,
+        "recognition/correction_form.html",
+        {"form": form},
+        status=400 if form.errors else 200,
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_http_methods(["GET", "POST"])
+def correction_detail(request, pk):
+    """ADM-007/REC-005: a Super Admin reviews a correction and resolves its appeal."""
+    _require_super_admin(request.user)
+    correction = get_object_or_404(
+        RecognitionCorrection.objects.select_related(
+            "recipient", "applied_by", "appeal_decided_by"
+        ).prefetch_related("contributions__project"),
+        pk=pk,
+    )
+    form = CorrectionAppealResolutionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            resolve_correction_appeal(request.user, correction, **form.cleaned_data)
+        except RecognitionError as error:
+            form.add_error(None, str(error))
+        else:
+            return redirect("recognition:correction_detail", pk=correction.pk)
+    return render(
+        request,
+        "recognition/correction_detail.html",
+        {"correction": correction, "form": form},
+        status=400 if form.errors else 200,
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_http_methods(["GET", "POST"])
+def correction_appeal(request, pk):
+    """ADM-007/BR-010: an affected member submits one correction appeal without record leakage."""
+    correction = get_object_or_404(
+        RecognitionCorrection.objects.select_related("recipient", "applied_by"),
+        pk=pk,
+        recipient=request.user,
+    )
+    form = CorrectionAppealForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            appeal_correction(request.user, correction, form.cleaned_data["grounds"])
+        except RecognitionError as error:
+            form.add_error(None, str(error))
+        else:
+            return redirect("recognition:my_profile")
+    return render(
+        request,
+        "recognition/correction_appeal.html",
+        {"correction": correction, "form": form},
+        status=400 if form.errors else 200,
+    )

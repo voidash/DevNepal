@@ -13,7 +13,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.accounts.permissions import is_ministry_publisher, is_super_admin, privileged_mfa_required
 from apps.audit.models import AuditEvent
-from apps.audit.ops import build_ops_panels
+from apps.audit.ops import build_adoption_metrics, build_ops_panels, build_summary_tiles
 from apps.audit.publisher_audit import (
     ALL_CATEGORIES,
     PUBLISHER_AUDIT_CATEGORIES,
@@ -88,7 +88,15 @@ def _safe_csv_cell(value):
 def ops_dashboard(request):
     """ADM-006/NFR-OBS-01: read-only operational panels for MFA-verified Super Admins."""
     _require_super_admin(request.user)
-    return render(request, "audit/ops_dashboard.html", {"panels": build_ops_panels()})
+    return render(
+        request,
+        "audit/ops_dashboard.html",
+        {
+            "panels": build_ops_panels(),
+            "summary_tiles": build_summary_tiles(),
+            "adoption_metrics": build_adoption_metrics(),
+        },
+    )
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))

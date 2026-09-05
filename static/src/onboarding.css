@@ -1,7 +1,7 @@
 .dn-onboarding { padding: 40px 20px 72px; }
 .dn-onboarding__shell { width: min(100%, 820px); margin: 0 auto; }
 .dn-onboarding__heading { margin-bottom: 20px; }
-.dn-onboarding__heading > p:first-child { margin: 0 0 8px; color: var(--color-accent); font: 600 12px/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; }
+.dn-onboarding__heading > p:first-child { margin: 0 0 8px; color: var(--color-neutral-700); font: 500 13px/1.4 var(--font-body); letter-spacing: 0; text-transform: none; }
 .dn-onboarding__heading h1, .dn-onboarding__sheet h2, .dn-onboarding__sheet h3 { font-family: var(--font-heading, sans-serif); }
 .dn-onboarding__lede { max-width: 62ch; color: var(--color-neutral-800); }
 .dn-onboarding__sheet { display: flex; flex-direction: column; gap: 18px; padding: 20px; border: 1px solid var(--color-divider); background: var(--color-bg); }

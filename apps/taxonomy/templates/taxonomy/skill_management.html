@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Taxonomy · skills" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container">
+  <div class="dn-repo-title"><h1>{% trans "Taxonomy · skills" %}</h1><span class="Label">{% blocktrans %}v{{ current_version }}{% endblocktrans %}</span></div>
+  <p class="dn-lede">{% trans "Every change creates a new taxonomy version with a diff and your name. Merging re-tags the members and projects already using a skill; deprecating hides it from pickers while existing records stay readable. Both languages are required before a term goes live." %}</p>
+</div></div>
+<main class="section"><div class="dn-container">
+  <p><a href="{% url 'administration:console' %}">{% trans "Back to the administration console" %}</a></p>
+
+  {% if pending_suggestions %}
+  <section aria-labelledby="suggestions-heading">
+    <h2 id="suggestions-heading">{% trans "Suggestions from members" %}</h2>
+    <p class="dn-state-banner is-attention" role="status">{% blocktrans count counter=pending_suggestions|length %}{{ counter }} member suggestion is waiting.{% plural %}{{ counter }} member suggestions are waiting.{% endblocktrans %}</p>
+    <ul class="dn-change-log">{% for suggestion in pending_suggestions %}
+      <li>“{{ suggestion.term_name }}” · {{ suggestion.suggested_by.username }} · <time datetime="{{ suggestion.created_at|date:'c' }}">{{ suggestion.created_at|date:"j M" }}</time>
+        <br><a href="{% url 'taxonomy:skill_suggestion_review_list' %}">{% trans "Review this suggestion" %}</a></li>
+    {% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="skills-heading">
+    <h2 id="skills-heading">{% trans "Skills" %}</h2>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Skills' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Every skill with both language names, how many members hold it, and whether it appears in pickers" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Skill · English" %}</th>
+        <th scope="col" lang="ne">{% trans "नेपाली" %}</th>
+        <th scope="col">{% trans "Used by" %}</th>
+        <th scope="col">{% trans "State" %}</th>
+        <th scope="col"><span class="visually-hidden">{% trans "Action" %}</span></th>
+      </tr></thead>
+      <tbody>{% for skill in skills %}<tr>
+        <th scope="row">{{ skill.name }}<br><code>{{ skill.slug }}</code></th>
+        <td lang="ne">{% if skill.name_ne %}{{ skill.name_ne }}{% else %}<span class="Label Label--attention">{% trans "Missing" %}</span>{% endif %}</td>
+        <td>{{ skill.usage_count }}</td>
+        <td>{% if skill.is_active %}<span class="Label Label--accent">{% trans "Active" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Deprecated · hidden from pickers" %}</span>{% endif %}</td>
+        <td>
+          <form method="post" action="{% url 'taxonomy:skill_state' skill.slug %}">{% csrf_token %}
+            <input type="hidden" name="state" value="{% if skill.is_active %}deprecated{% else %}active{% endif %}">
+            <button class="btn" type="submit">{% if skill.is_active %}{% trans "Deprecate" %}{% else %}{% trans "Reinstate" %}{% endif %}<span class="visually-hidden"> {{ skill.name }}</span></button>
+          </form>
+          {% if skill.is_active %}
+          <form method="post" action="{% url 'taxonomy:skill_merge' skill.slug %}" class="dn-form-stack">{% csrf_token %}
+            <div class="dn-field">
+              <label for="merge-{{ skill.slug }}">{% trans "Merge into skill slug" %}</label>
+              <input id="merge-{{ skill.slug }}" name="target" type="text" maxlength="120" required>
+            </div>
+            <button class="btn" type="submit">{% trans "Merge" %}<span class="visually-hidden"> {{ skill.name }}</span></button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>{% empty %}<tr><td colspan="5">{% trans "No skills are registered yet." %}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="add-skill-heading">
+    <h2 id="add-skill-heading">{% trans "Add a skill" %}</h2>
+    <form method="post" class="dn-form-stack">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}<div class="dn-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="dn-field-help">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>{% endfor %}
+      <button class="btn btn--primary" type="submit">{% trans "Add skill" %}</button>
+    </form>
+  </section>
+
+  <section aria-labelledby="versions-heading">
+    <h2 id="versions-heading">{% trans "Version history" %}</h2>
+    <ul class="dn-change-log">{% for version in versions %}
+      <li>
+        <strong>{% blocktrans with number=version.version %}v{{ number }}{% endblocktrans %}</strong> ·
+        {{ version.get_action_display }} · {{ version.subject_label }} ·
+        <time datetime="{{ version.created_at|date:'c' }}">{{ version.created_at|date:"j M Y" }}</time> ·
+        {{ version.actor.get_full_name|default:version.actor.username }}
+        {% if version.summary %}<br><span class="dn-lede">{{ version.summary }}</span>{% endif %}
+      </li>
+    {% empty %}<li>{% trans "The taxonomy has not been changed yet." %}</li>{% endfor %}</ul>
+  </section>
+
+</div></main>
+{% endblock %}

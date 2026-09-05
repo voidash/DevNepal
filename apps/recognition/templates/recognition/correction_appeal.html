@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% trans "Appeal recognition correction" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <header class="dn-page-header">
+    <p class="dn-section-kicker">{% trans "Your recognition / correction" %}</p>
+    <h1 id="appeal-heading">{% trans "Appeal this correction" %}</h1>
+    <p class="dn-lede">{% trans "Explain what should be reconsidered. A different Super Admin reviews the appeal and records a reasoned outcome." %}</p>
+  </header>
+  <section class="dn-state-banner is-attention" aria-labelledby="notice-heading">
+    <strong id="notice-heading">{{ correction.get_kind_display }}</strong>
+    <p>{{ correction.member_note }}</p>
+    <p>{% trans "Reason" %}: {{ correction.reason }} · {% trans "Appeal deadline" %}: {{ correction.appeal_due_at|localtime }}</p>
+  </section>
+  <form method="post" class="dn-sheet blueprint" aria-labelledby="appeal-heading">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="dn-state-banner is-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="dn-field">{{ form.grounds.label_tag }}{{ form.grounds }}{% for error in form.grounds.errors %}<p class="field__error">{{ error }}</p>{% endfor %}</div>
+    <div class="button-group"><a class="btn btn--secondary" href="{% url 'recognition:my_profile' %}">{% trans "Cancel" %}</a><button class="btn btn--primary" type="submit">{% trans "Submit appeal" %}</button></div>
+  </form>
+</div>
+{% endblock %}

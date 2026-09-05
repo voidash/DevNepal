@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Recognition correction" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <header class="dn-page-header">
+    <p class="dn-section-kicker">{% trans "Recognition / anomaly review / correction" %}</p>
+    <h1 id="correction-heading">{% trans "Recognition correction" %}</h1>
+    <p class="dn-lede">{% trans "Apply a documented, reversible correction to one member’s verified recognition record." %}</p>
+  </header>
+  <form method="post" class="dn-sheet blueprint" aria-labelledby="correction-heading">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="dn-state-banner is-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="dn-form-stack">
+      {% for field in form %}
+      <div class="dn-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        {% for error in field.errors %}<p class="field__error">{{ error }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <section class="dn-state-banner" aria-labelledby="correction-effects-heading">
+      <h2 id="correction-effects-heading">{% trans "Will happen" %}</h2>
+      <p>{% trans "The member receives a plain-language notice, the before and after record is audited, and the member can appeal for 14 days. An overturned appeal restores the captured recognition state only when no later change makes restoration unsafe." %}</p>
+    </section>
+    <div class="button-group">
+      <a class="btn btn--secondary" href="{% url 'recognition:anomaly_review' %}">{% trans "Back to anomaly review" %}</a>
+      <button class="btn btn--primary" type="submit">{% trans "Apply correction" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

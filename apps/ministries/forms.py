@@ -1,8 +1,10 @@
+import typing
+
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
-from apps.ministries.models import MinistryOrganization
+from apps.ministries.models import MinistryOnboardingRequest, MinistryOrganization
 
 
 class MinistryOrganizationForm(forms.ModelForm):
@@ -17,6 +19,51 @@ class MinistryOrganizationForm(forms.ModelForm):
             "contact_email",
             "website_url",
         )
+
+
+class MinistryOnboardingRequestForm(forms.ModelForm):
+    signatory_verified = forms.BooleanField(
+        label=_("I verified the letter signatory with the ministry focal contact"),
+        required=True,
+    )
+
+    class Meta:
+        model = MinistryOnboardingRequest
+        fields = (
+            "name_en",
+            "name_ne",
+            "abbreviation",
+            "website_url",
+            "official_email",
+            "nominated_officer_name",
+            "nominated_officer_title",
+            "purpose",
+            "focal_contact",
+            "nomination_reference",
+            "signatory_name",
+            "signatory_verified",
+        )
+        labels: typing.ClassVar = {
+            "name_en": _("Organization name (English)"),
+            "name_ne": _("Organization name (Nepali)"),
+            "abbreviation": _("Organization code"),
+            "website_url": _("Official website"),
+            "official_email": _("Nominated officer's official email"),
+            "nominated_officer_name": _("Nominated officer"),
+            "nominated_officer_title": _("Designation"),
+            "purpose": _("Purpose"),
+            "focal_contact": _("Focal contact who verified the signatory"),
+            "nomination_reference": _("Nomination letter reference"),
+            "signatory_name": _("Letter signatory"),
+        }
+
+
+class OnboardingRequestDeclineForm(forms.Form):
+    reason = forms.CharField(
+        label=_("Reason for declining"),
+        widget=forms.Textarea,
+        max_length=2000,
+    )
 
 
 class PublisherCreateForm(forms.Form):
