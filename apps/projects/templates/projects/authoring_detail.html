@@ -183,6 +183,16 @@
     <a class="btn btn--secondary" href="{% url 'contributions:verification_queue' %}">{% trans "Review verified contributions" %}</a>
     <a href="{% url 'projects:authoring_dashboard' %}">{% trans "Back to ministry projects" %}</a>
   </div>
+  {% if project.status == 'draft' %}
+  <details class="dn-danger-zone">
+    <summary>{% trans "Delete this draft" %}</summary>
+    <p>{% trans "This permanently removes the unpublished draft. Published projects cannot be deleted here." %}</p>
+    <form action="{% url 'projects:authoring_delete' project.slug %}" method="post">
+      {% csrf_token %}
+      <button class="btn btn--danger" type="submit">{% trans "Delete draft permanently" %}</button>
+    </form>
+  </details>
+  {% endif %}
 </div>
 {% else %}
 <div class="dn-container">

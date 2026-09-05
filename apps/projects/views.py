@@ -2,6 +2,7 @@ import logging
 from datetime import date, timedelta
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -94,6 +95,7 @@ from apps.projects.services import (
     create_task,
     current_community_terms_version,
     decide_application,
+    delete_draft,
     extend_deadline,
     has_accepted_community_terms,
     latest_public_update,
@@ -1469,6 +1471,23 @@ def completion_summary(request: HttpRequest, slug: str) -> HttpResponse:
         {"project": project, "form": form, "editable": editable},
         status=400 if form.errors else 200,
     )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_POST
+def authoring_delete(request: HttpRequest, slug: str) -> HttpResponse:
+    """GOV-001/SEC-008: delete an authorized, unconnected ministry draft."""
+    project = _manageable_project_or_404(request.user, slug)
+    try:
+        delete_draft(request.user, project)
+    except ProjectAuthorizationError as error:
+        raise PermissionDenied from error
+    except ProjectLifecycleError as error:
+        messages.error(request, str(error))
+        return redirect("projects:authoring_detail", slug=project.slug)
+    messages.success(request, _("Draft deleted."))
+    return redirect("projects:authoring_dashboard")
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))

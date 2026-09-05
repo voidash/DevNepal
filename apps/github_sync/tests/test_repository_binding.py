@@ -22,6 +22,7 @@ from apps.ministries.tests.factories import (
     UserFactory,
 )
 from apps.projects.tests.factories import PersonalProjectFactory, ProjectFactory
+from apps.taxonomy.tests.factories import ApprovedLicenseFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 
@@ -205,18 +206,24 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     assert repository.activated_by == publisher.user
 
     duplicate = ProjectFactory(
+        ready=True,
         ministry=publisher.ministry,
         repository_url="https://github.com/dhm-np/flood-alert-gateway",
     )
+    duplicate.license = ApprovedLicenseFactory(is_approved=True)
+    duplicate.save(update_fields=["license"])
+    settings.DEMO_ONE_CLICK_PUBLISH_USERNAMES = [publisher.user.username]
     reused = client.post(
         reverse("github_sync:connect_repository"),
         {"project_id": str(duplicate.pk)},
     )
 
     assert reused.status_code == 302
-    assert reused.url == reverse("projects:authoring_detail", args=[project.slug])
+    assert reused.url == reverse("projects:detail", args=[duplicate.slug])
     repository.refresh_from_db()
-    assert repository.project == project
+    duplicate.refresh_from_db()
+    assert repository.project == duplicate
+    assert duplicate.status == "open_for_contribution"
 
 
 def test_cross_ministry_project_filter_is_not_found(client, settings):

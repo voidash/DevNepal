@@ -2,6 +2,7 @@ import datetime
 import logging
 from math import ceil
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -43,11 +44,13 @@ from apps.github_sync.services import (
     is_public_snapshot_lifecycle_delivery,
     member_repositories,
     process_pending,
+    rebind_repository_for_demo,
     refresh_public_repository_snapshot,
 )
 from apps.ministries.services import is_publisher_active
 from apps.projects.enums import ProjectStatus, ProjectType
 from apps.projects.models import Project
+from apps.projects.services import ProjectLifecycleError, publish_by_publisher
 
 MAX_WEBHOOK_BODY_BYTES = 1_048_576
 LIVE_SNAPSHOT_COOLDOWN_SECONDS = 60
@@ -409,6 +412,27 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
         )
         existing_project = existing_connection.project if existing_connection else None
         if existing_project is not None and existing_project.ministry_id == project.ministry_id:
+            demo_publishers = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
+            if request.user.username in demo_publishers:
+                try:
+                    with transaction.atomic():
+                        rebind_repository_for_demo(request.user, existing_connection, project)
+                        publish_by_publisher(request.user, project)
+                except (RepositoryBindingError, ProjectLifecycleError):
+                    logger.exception(
+                        "Demo repository rebind or publication failed "
+                        "(member=%s project=%s repository=%s)",
+                        request.user.pk,
+                        project.pk,
+                        choice.repository_id,
+                    )
+                    messages.error(
+                        request,
+                        _("The repository connected, but the project is not ready to publish."),
+                    )
+                    return redirect("projects:authoring_detail", slug=project.slug)
+                messages.success(request, _("Repository connected and project published."))
+                return redirect("projects:detail", slug=project.slug)
             messages.info(
                 request,
                 _("This repository is already connected. The existing project has been opened."),

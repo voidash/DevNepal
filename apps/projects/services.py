@@ -538,6 +538,27 @@ def drafts_for_publisher(user):
     )
 
 
+def delete_draft(publisher, project: Project) -> None:
+    """GOV-001/SEC-008: permanently delete only an unconnected ministry draft."""
+    _require_publisher(publisher, project, action="project.delete_draft")
+    with transaction.atomic():
+        locked = Project.objects.select_for_update().get(pk=project.pk)
+        if locked.status != ProjectStatus.DRAFT:
+            raise ProjectLifecycleError("only a draft project can be deleted")
+        if locked.repository_connections.exists():
+            raise ProjectLifecycleError("disconnect the repository before deleting this draft")
+        snapshot = _status_payload(locked)
+        record_audit(
+            actor=publisher,
+            action="project.draft_deleted",
+            obj=locked,
+            before=snapshot,
+            after={"deleted": True},
+            correlation_id=uuid.uuid4().hex,
+        )
+        locked.delete()
+
+
 def projects_for_publisher(user):
     ministries = MinistryPublisher.objects.filter(
         user=user, status="active", ministry__status="active"

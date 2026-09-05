@@ -297,6 +297,50 @@ def bind_repository(actor, repository: RepositoryConnection, project) -> BindOut
     return BindOutcome(connection=locked, bound=True)
 
 
+def rebind_repository_for_demo(actor, repository: RepositoryConnection, project) -> BindOutcome:
+    """GOV-004/GIT-003: move the single demo repository to a new same-ministry draft.
+
+    This exception is disabled by default and limited to usernames explicitly
+    configured for the disposable demo environment. Normal repository bindings
+    remain immutable across projects.
+    """
+    allowed = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
+    if actor.username not in allowed:
+        raise RepositoryBindingError("demo repository rebinding is not enabled for this account")
+    authorize_repository_binding(actor, project)
+    expected = _project_repository_name(project)
+    if expected is None or repository.full_name.casefold() != expected.casefold():
+        raise RepositoryBindingError("the repository does not match the project's GitHub URL")
+
+    with transaction.atomic():
+        locked = (
+            RepositoryConnection.objects.select_for_update()
+            .select_related("project")
+            .get(pk=repository.pk)
+        )
+        previous_project = locked.project
+        if previous_project is None or previous_project.ministry_id != project.ministry_id:
+            raise RepositoryBindingError("demo repository may move only within one ministry")
+        if locked.project_id == project.pk:
+            return BindOutcome(connection=locked, bound=False)
+        before_project_id = locked.project_id
+        locked.project = project
+        locked.save(update_fields=["project", "updated_at"])
+        record_audit(
+            actor=actor,
+            action="github_repository.demo_rebind_project",
+            obj=locked,
+            before={"project_id": before_project_id},
+            after={
+                "project_id": project.pk,
+                "repository_id": locked.repository_id,
+                "full_name": locked.full_name,
+            },
+            correlation_id=uuid.uuid4().hex,
+        )
+    return BindOutcome(connection=locked, bound=True)
+
+
 def _project_repository_name(project) -> str | None:
     from apps.projects.services import parse_github_repo_slug
 

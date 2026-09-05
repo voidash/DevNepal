@@ -54,6 +54,7 @@ urlpatterns = [
         name="authoring_questions",
     ),
     path("authoring/<str:slug>/edit/", views.authoring_edit, name="authoring_edit"),
+    path("authoring/<str:slug>/delete/", views.authoring_delete, name="authoring_delete"),
     path(
         "authoring/<str:slug>/completion/",
         views.completion_summary,
