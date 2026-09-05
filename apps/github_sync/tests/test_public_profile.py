@@ -51,6 +51,7 @@ def test_git_010_public_github_profile_uses_provider_data_and_tracked_repository
     assert "Skills" not in content
     assert "Badges" not in content
     assert "Verified contributions" not in content
+    assert content.count("<main") == 1
 
 
 def test_git_010_unknown_public_github_profile_is_not_invented(client):

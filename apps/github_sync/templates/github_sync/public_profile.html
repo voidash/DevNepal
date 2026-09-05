@@ -2,7 +2,7 @@
 {% load i18n tz %}
 {% block title %}{{ github_profile.display_name|default:github_profile.login }} | DevNepal{% endblock %}
 {% block content %}
-<main class="dn-container dn-provider-profile" aria-labelledby="profile-heading">
+<section class="dn-container dn-provider-profile" aria-labelledby="profile-heading">
   <header class="dn-provider-profile__identity">
     <div class="blueprint dn-provider-profile__avatar">
       <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
@@ -58,5 +58,5 @@
       </dl>
     </aside>
   </div>
-</main>
+</section>
 {% endblock %}
