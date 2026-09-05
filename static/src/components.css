@@ -8,19 +8,23 @@
 .card__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .card__title { margin: 0; font-size: 20px; }
 .card__title-link { color: inherit; text-decoration: none; }
-.card__title-link:hover { color: var(--color-accent); }
+.card__title-link:hover { color: var(--color-accent-700); }
 .card__summary, .card__owner, .card__title-ne, .field__help, .filterbar__count, .dn-field-help, .dn-lede { color: var(--color-neutral-700); }
 .card__meta { display: grid; gap: var(--space-2); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--color-divider); }
 .card__meta div { display: grid; gap: 2px; }
-.card__meta dt, .section__header { color: var(--color-accent-700); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.card__meta dt { color: var(--color-accent-700); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.section__header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3) var(--space-6); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-divider); color: var(--color-text); }
+.section__header > :where(h1, h2, h3) { margin-bottom: 0; }
+.section__header > p { flex-basis: 100%; max-width: 70ch; margin: 0; color: var(--color-neutral-700); }
+.section__header > .btn { margin-left: auto; }
 .dn-section-kicker { color: var(--color-neutral-700); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .card__meta dd { margin: 0; font-weight: 500; }
 
 .btn { display: inline-flex; min-height: var(--target-min); align-items: center; justify-content: center; gap: 6px; padding: 6.8px 12.24px; border: 1px solid var(--color-divider); border-radius: 0; color: var(--color-text); background: transparent; font-family: var(--font-heading); font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: 0; text-decoration: none; text-transform: none; cursor: pointer; }
 .btn:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); color: var(--color-text); }
 .btn:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
-.btn--primary, .btn-primary { border-color: var(--color-accent); color: var(--color-bg); background: var(--color-accent); }
-.btn--primary:hover, .btn-primary:hover { color: var(--color-bg); background: var(--color-accent-600); }
+.btn--primary, .btn-primary { border-color: var(--color-accent-700); color: var(--color-bg); background: var(--color-accent-700); }
+.btn--primary:hover, .btn-primary:hover { color: var(--color-bg); background: var(--color-accent-800); }
 .btn--danger { color: var(--color-bg); background: var(--color-text); }
 .btn-sm { min-height: 36px; }
 .button-group, .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -65,7 +69,7 @@
 
 .pagination, .pagination__list, .dn-tabs, .dn-steps { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .pagination a, .pagination__current, .dn-tab { display: inline-flex; min-height: 36px; align-items: center; padding: 0 10px; border: 1px solid var(--color-divider); color: var(--color-text); text-decoration: none; }
-.pagination__current, .dn-tab[aria-current="page"] { border-color: var(--color-accent); color: var(--color-bg); background: var(--color-accent); }
+.pagination__current, .dn-tab[aria-current="page"] { border-color: var(--color-accent-700); color: var(--color-bg); background: var(--color-accent-700); }
 
 .dn-issue-list, .dn-review-list, .dn-settings-list { overflow: hidden; }
 .dn-issue-list-header, .dn-issue-row, .dn-review-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10.2px; padding: 13.6px; }
