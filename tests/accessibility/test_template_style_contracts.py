@@ -79,7 +79,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert "--color-bg: #f2f2f3;" in tokens_css
     assert "--color-surface: #e9e9ea;" in tokens_css
     assert "--color-text: #1d1f20;" in tokens_css
-    assert "--color-accent: #5980a6;" in tokens_css
+    assert "--color-accent: #3b6fd4;" in tokens_css
     assert 'font-family: "Barlow Condensed"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css

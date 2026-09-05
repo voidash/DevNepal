@@ -47,7 +47,9 @@
           <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
         </form>
         {% else %}
+        {% block header_signin %}
         <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a>
+        {% endblock %}
         {% endif %}
       </div>
       <details class="mobile-nav">
@@ -88,7 +90,15 @@
   <main id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
+  {% block footer %}
   <footer class="dn-footer">
+    <div class="dn-container dn-footer-brand">
+      <span class="dn-brand-copy">
+        <strong>DevNepal</strong>
+        <small>{% trans "नेपाल सरकार · Government of Nepal" %}</small>
+      </span>
+      <p>{% trans "A trusted registry and collaboration layer, not a replacement for GitHub. Code, issues and reviews stay in approved repositories; DevNepal records who did what, and for which ministry." %}</p>
+    </div>
     <div class="dn-container dn-footer-grid">
       <nav aria-label="{% trans 'Platform' %}">
         <h2>{% trans "Platform" %}</h2>
@@ -112,7 +122,7 @@
           {% url 'recognition:public_policy' as scoring_url %}{% if scoring_url %}<li><a href="{{ scoring_url }}">{% trans "Scoring policy" %}</a></li>{% endif %}
           {% url 'moderation:report_create' as report_url %}{% if report_url %}<li><a href="{{ report_url }}">{% trans "Report content" %}</a></li>{% endif %}
           {% url 'accounts:privacy_export' as privacy_export_url %}{% if privacy_export_url %}<li><a href="{{ privacy_export_url }}">{% trans "Export your data" %}</a></li>{% endif %}
-                  </ul>
+        </ul>
       </nav>
       <nav aria-label="{% trans 'Help' %}">
         <h2>{% trans "Help" %}</h2>
@@ -130,5 +140,6 @@
     </div>
     <p class="dn-container dn-footer-legal">© {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
   </footer>
+  {% endblock %}
 </body>
 </html>

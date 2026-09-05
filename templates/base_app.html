@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% comment %} The signed-in frame: a role rail beside the work. Public pages keep base.html
+   and its full-width sections; anything a signed-in person works in extends this
+   instead, so the rail is written once and every screen inherits it. {% endcomment %}
+{% comment %} The citizen footer does not belong on a work screen. Its four
+   columns of service links, policies and contact routes are sized for someone
+   landing on a public page cold; under a queue they are dead weight, and the
+   two links an officer actually needs — report a problem, the public site —
+   live in the rail's own footer.
+
+   What stays is the legal line alone. Every page needs exactly one contentinfo
+   landmark, so this is a slim bar, not an omission. {% endcomment %}
+{% block footer %}
+  <footer class="dn-app-foot">
+    <p>&copy; {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
+  </footer>
+{% endblock %}
+
+{% block content %}
+<div class="dn-app">
+  {% include "components/sidebar.html" %}
+  <div class="dn-app-main">
+    {% block app_header %}{% endblock %}
+    {% block app_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

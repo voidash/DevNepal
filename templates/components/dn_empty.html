@@ -1,0 +1,6 @@
+{% load i18n %}{# Empty state: one message, one reason, one next action. Every empty screen on the prototype offers a way forward; a banner that only reports absence is a dead end. Parameters: title, body, action_url, action_label. #}
+<div class="dn-empty" role="status">
+  <strong>{{ title }}</strong>
+  {% if body %}<p>{{ body }}</p>{% endif %}
+  {% if action_url and action_label %}<a class="btn btn--secondary" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</div>

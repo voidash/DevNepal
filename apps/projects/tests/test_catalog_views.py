@@ -80,6 +80,49 @@ def test_home_features_recent_open_government_opportunities_only(client):
 
 
 @pytest.mark.unit
+def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
+    """DSC-001/GOV-011: featured official cards name the ministry and the work."""
+    featured = make_public_project(title_en="Featured civic service", published_at=timezone.now())
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="opportunities-heading"', 1)[1]
+        .split(b'aria-labelledby="contribution-path-heading"', 1)[0]
+        .decode()
+    )
+
+    assert featured.title_en in section
+    assert "Official" in section
+    assert "See all government projects" in section
+    assert "Open for contribution" not in section
+    assert "dn-home-section-heading--flush" in section
+
+
+@pytest.mark.unit
+def test_home_community_sheet_puts_the_catalog_exit_in_the_header(client):
+    """DSC-001/GOV-011: community listings keep one catalog exit and no endorsement chrome."""
+    make_public_project(
+        project_type=ProjectType.PERSONAL,
+        ministry=None,
+        title_en="Community work that is not official",
+        published_at=timezone.now(),
+    )
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="community-projects-heading"', 1)[1]
+        .split(b'aria-labelledby="people-heading"', 1)[0]
+        .decode()
+    )
+
+    assert "Community work that is not official" in section
+    assert "All community projects" in section
+    assert section.count("All community projects") == 1
+    assert "No government endorsement" not in section
+    assert "not reviewed by PMO" not in section
+
+
+@pytest.mark.unit
 def test_home_explains_the_verified_empty_state_without_inventing_opportunities(client):
     """DSC-001/GOV-011: an empty official catalog explains its publication safeguard."""
     response = client.get(reverse("projects:home"))
@@ -101,39 +144,64 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
     assert response.status_code == 200
     assert b"Public technology," in response.content
     assert b"built in public." in response.content
-    assert b"code stays on GitHub" in response.content
+    assert b"Code stays on GitHub" in response.content
     assert b"Browse government projects" in response.content
     assert b"Government of Nepal" in response.content
     assert b"Collaborate on Nepal's digital future" not in response.content
 
 
 @pytest.mark.unit
-def test_home_exposes_the_compact_trust_and_contribution_model(client):
-    """DSC-001/GOV-011/REC-001: home makes the verified work model clear without a dashboard."""
+def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
+    """DSC-001/GOV-011/REC-001: home reproduces the approved trust and work model."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
 
     assert response.status_code == 200
+    assert "DevNepal — platform at a glance" in content
+    assert "Ministries publishing" in content
+    assert "Projects open for contribution" in content
+    assert "Verified contributions" in content
+    assert "Public member profiles" not in content
+    assert "Pilot 2026" not in content
+    assert "Updated daily" not in content
     assert "Code is one of nine ways in" in content
-    assert "Open public work" in content
-    assert "Featured government projects" in content
-    assert "Community projects" in content
-    assert "never imply government endorsement" in content
-    assert "A named maintainer verifies accepted work" in content
+    assert "Community projects — listed by members" in content
+    assert "All community projects" in content
+    assert "Recognition counts only work accepted by a named maintainer" in content
     assert 'class="blueprint' in content
-    assert "DevNepal — platform at a glance" not in content
-    assert "People — verified impact and the people behind it" not in content
+    reference_image = Path(settings.BASE_DIR) / "static/images/devnepal-hydropower-reference.jpg"
+    assert reference_image.is_file()
+    assert reference_image.stat().st_size == 289216
+    assert 'width="1600" height="1187"' in content
 
 
 @pytest.mark.unit
-def test_home_empty_state_keeps_a_single_action_without_editorial_distraction(client):
-    """DSC-001/NFR-A11Y-01: an empty catalogue gives visitors a clear, truthful next step."""
+def test_home_empty_state_uses_a_bounded_editorial_image_without_misrepresenting_open_work(client):
+    """DSC-001/NFR-A11Y-01/NFR-PERF-01: empty-state imagery is contextual, labelled, optional."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
+    asset = Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.png"
+    modern_asset = (
+        Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.webp"
+    )
+
     assert response.status_code == 200
-    assert "Government opportunities are being prepared." in content
-    assert 'class="dn-public-work-illustration"' not in content
-    assert f'href="{reverse("projects:government")}"' in content
+    assert asset.is_file()
+    assert asset.stat().st_size > 0
+    assert modern_asset.is_file()
+    assert modern_asset.stat().st_size > 0
+    assert modern_asset.stat().st_size < asset.stat().st_size
+    assert 'class="dn-public-work-illustration"' in content
+    assert (
+        'type="image/webp" srcset="/static/images/devnepal-public-work-illustrations-v1.webp"'
+        in content
+    )
+    assert 'src="/static/images/devnepal-public-work-illustrations-v1.png"' in content
+    assert 'loading="lazy"' in content
+    assert 'decoding="async"' in content
+    assert 'width="1774" height="887"' in content
+    assert 'alt="Eight grayscale public-service scenes' in content
+    assert "Illustrated public-interest work areas, not a list of open projects." in content
 
 
 @pytest.mark.unit

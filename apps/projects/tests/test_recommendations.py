@@ -180,7 +180,7 @@ def test_projects_home_shows_recommended_section_for_signed_in_member(client):
     assert "Recommended for you" in content
     assert "Open candidate" in content
     assert "Matches your Django skill" in content
-    assert 'class="Label' in content
+    assert 'class="tag tag-neutral"' in content
     assert 'aria-labelledby="recommended-heading"' in content
 
 
