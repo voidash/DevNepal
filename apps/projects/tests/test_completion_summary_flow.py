@@ -139,13 +139,15 @@ def test_gov009_completion_page_saves_draft_and_can_mark_project_completed(clien
     }
 
     page = client.get(url)
-    workflow_page = client.get(reverse("projects:authoring_detail", kwargs={"slug": project.slug}))
+    workspace = client.get(reverse("projects:authoring_detail", kwargs={"slug": project.slug}))
     saved = client.post(url, payload | {"intent": "save"})
     project.refresh_from_db()
     completed = client.post(url, payload | {"intent": "complete"})
 
     assert page.status_code == 200
-    assert url in workflow_page.content.decode()
+    assert workspace.status_code == 200
+    assert b"GitHub activity" in workspace.content
+    assert url not in workspace.content.decode()
     assert b"Complete the project" in page.content
     assert b"published on the public listing" in page.content
     assert saved.status_code == 302

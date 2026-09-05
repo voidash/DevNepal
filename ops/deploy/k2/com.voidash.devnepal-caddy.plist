@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.voidash.devnepal-caddy</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/caddy</string>
+    <string>run</string>
+    <string>--config</string>
+    <string>/Users/k2/github/DevNepal/ops/deploy/k2/Caddyfile</string>
+    <string>--adapter</string>
+    <string>caddyfile</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/k2</string>
+    <key>XDG_DATA_HOME</key>
+    <string>/Users/k2/.local/share</string>
+    <key>XDG_CONFIG_HOME</key>
+    <string>/Users/k2/.config</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/k2/Library/Logs/devnepal-caddy.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/k2/Library/Logs/devnepal-caddy-error.log</string>
+</dict>
+</plist>

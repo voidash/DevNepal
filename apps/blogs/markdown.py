@@ -101,6 +101,17 @@ def render_markdown(value):
             flush_paragraph()
             level = len(match.group(1))
             rendered.append(f"<h{level}>{_render_inline(match.group(2).strip())}</h{level}>")
+        elif re.match(r"^\s*[-*]\s+(.+)$", line):
+            flush_paragraph()
+            items = []
+            while index < len(lines):
+                item = re.match(r"^\s*[-*]\s+(.+)$", lines[index])
+                if item is None:
+                    break
+                items.append(f"<li>{_render_inline(item.group(1).strip())}</li>")
+                index += 1
+            rendered.append(f"<ul>{''.join(items)}</ul>")
+            continue
         elif not line.strip():
             flush_paragraph()
         else:

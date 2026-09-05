@@ -51,27 +51,27 @@ def test_member_sees_no_administrative_navigation(client):
 
 
 @pytest.mark.integration
-def test_super_admin_reaches_every_privileged_surface_from_any_page(client):
-    """ADM-002/NFR-A11Y-01: the shared shell links a Super Admin to all of their work."""
+def test_super_admin_does_not_receive_privileged_navigation_in_the_public_shell(client):
+    """SEC-005/DSC-001: privileged work is not mixed into the visitor-oriented shell."""
     client.force_login(SuperAdminFactory())
 
     content = client.get(reverse("projects:home")).content.decode()
 
-    assert "dn-admin-bar" in content
+    assert "dn-admin-bar" not in content
     for name in SUPER_ADMIN_DESTINATIONS:
-        assert reverse(name) in content
+        assert reverse(name) not in content
 
 
 @pytest.mark.integration
 def test_ministry_publisher_reaches_their_publishing_dashboard(client):
-    """GOV-004/AUTH-006: a named publisher has a signed-in entry point to their own work."""
+    """GOV-004/AUTH-006: a named publisher retains their one relevant authoring entry point."""
     publisher = MinistryPublisherFactory()
     client.force_login(publisher.user)
 
     content = client.get(reverse("projects:home")).content.decode()
 
     assert reverse("projects:authoring_dashboard") in content
-    assert reverse("audit:my_actions") in content
+    assert reverse("audit:my_actions") not in content
     assert f'href="{reverse("audit:audit_log")}"' not in content
 
 

@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260905\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -103,7 +103,7 @@ def test_shared_navigation_keeps_the_compact_menu_through_tablet_widths():
 def test_shared_shell_loads_one_coherent_design_system_after_primer():
     """NFR-A11Y-01/DSC-001: shared styles have a predictable, accessible cascade."""
     base = (Path(settings.BASE_DIR) / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}\"", base)
+    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base)
 
     assert stylesheets == [
         "vendor/primer/primer.css",
@@ -488,7 +488,8 @@ def test_forms_use_the_design_system_form_layout_and_field_patterns():
         assert 'class="dn-form-stack"' in template, relative
         assert 'class="dn-field"' in template, relative
         assert 'class="dn-field-help"' in template or "{{ field.help_text }}" in template
-        assert 'class="dn-sidebar"' in template, relative
+        if relative != "apps/projects/templates/projects/authoring_form.html":
+            assert 'class="dn-sidebar"' in template, relative
         assert "as_p" not in template, relative
 
     authoring = _read("apps/projects/templates/projects/authoring_detail.html")

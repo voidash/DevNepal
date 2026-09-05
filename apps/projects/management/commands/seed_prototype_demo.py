@@ -264,21 +264,24 @@ def seed_prototype_demo() -> dict[str, int]:
 
     sewa = _government_project(
         slug="sewa-portal-accessibility-remediation",
-        title_en="Sewa Portal Accessibility Remediation",
-        title_ne="सेवा पोर्टल पहुँचयोग्यता सुधार",
+        title_en="Civic Help Directory",
+        title_ne="नागरिक सहायता निर्देशिका",
         owner=publisher,
         ministry=doit,
         license_obj=license_obj,
         summary_en=(
-            "Bring the citizen services portal to WCAG 2.2 AA: keyboard operation, Nepali "
-            "screen-reader labels, error recovery on every form."
+            "Discover Government of Nepal public help programmes and improve their bilingual, "
+            "accessible programme data in public."
         ),
-        summary_ne="नागरिक सेवा फारामलाई किबोर्ड र स्क्रिन रिडरबाट प्रयोगयोग्य बनाउने।",
-        repository_url="https://github.com/doit-np/sewa-portal",
-        issue_tracker_url="https://github.com/doit-np/sewa-portal/issues",
-        documentation_url="https://github.com/doit-np/sewa-portal#readme",
+        summary_ne="नेपाल सरकारका सार्वजनिक सहायता कार्यक्रम खोज्न र तिनको खुला डेटा सुधार्न सहयोग गर्नुहोस्।",
+        repository_url="https://github.com/voidash/civic-help-directory",
+        issue_tracker_url="https://github.com/voidash/civic-help-directory/issues",
+        documentation_url="https://github.com/voidash/civic-help-directory#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         deadline=date(2026, 11, 30),
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+        difficulty=DifficultyLevel.BEGINNER,
+        estimated_effort=EffortBand.SMALL,
     )
     _maintainer(sewa, publisher, MaintainerRole.LEAD)
     _maintainer(sewa, sabina, MaintainerRole.MAINTAINER)
@@ -286,23 +289,23 @@ def seed_prototype_demo() -> dict[str, int]:
     sewa.skills.set(skills)
     _task(
         sewa,
-        'Add lang="ne" to Nepali error strings',
-        "Starter accessibility and localization task from the prototype issue #131.",
-        "https://github.com/doit-np/sewa-portal/issues/131",
+        "Add Nepali eligibility text for scholarship programs",
+        "Translate the scholarship eligibility guidance while preserving source links.",
+        "https://github.com/voidash/civic-help-directory/issues/7",
     )
     _task(
         sewa,
-        "Write a keyboard test script for passport renewal",
-        "QA-oriented non-code task from the prototype issue list.",
-        "https://github.com/doit-np/sewa-portal/issues/119",
+        "Check health subsidy contact details against official sources",
+        "Verify public contact information and cite the source used.",
+        "https://github.com/voidash/civic-help-directory/issues/8",
     )
     repository, _ = RepositoryConnection.objects.get_or_create(
         provider=Provider.GITHUB,
-        repository_id=9_026_001,
+        repository_id=1_357_413_723,
         defaults={
-            "installation_id": 9_026_001,
-            "repository_node_id": "R_demo_sewa_portal",
-            "full_name": "doit-np/sewa-portal",
+            "installation_id": 159_188_767,
+            "repository_node_id": "R_kgDOUOh9Ww",
+            "full_name": "voidash/civic-help-directory",
             "is_public": True,
             "project": sewa,
             "granted_scopes": ["metadata:read", "issues:read"],
@@ -312,22 +315,32 @@ def seed_prototype_demo() -> dict[str, int]:
             "activated_by": publisher,
         },
     )
+    RepositoryConnection.objects.filter(
+        repository_id=9_026_001,
+        full_name="doit-np/sewa-portal",
+    ).exclude(pk=repository.pk).update(
+        project=None,
+        is_public=False,
+        sync_state=SyncState.STOPPED,
+        deactivated_at=timezone.now(),
+        health_note="Retired prototype-only repository connection.",
+    )
     _starter_task(
         repository,
-        131,
-        'Add lang="ne" to Nepali error strings in FormError.tsx',
+        7,
+        "Add Nepali eligibility text for scholarship programs",
         ["good first issue"],
     )
     _starter_task(
         repository,
-        119,
-        "Write a keyboard test script for the passport renewal flow",
+        8,
+        "Check health subsidy contact details against official sources",
         ["help wanted"],
     )
     _starter_task(
         repository,
-        128,
-        "Focus is lost after the district select closes",
+        9,
+        "Document keyboard-first contribution workflow",
         ["good first issue"],
     )
 

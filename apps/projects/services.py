@@ -43,6 +43,7 @@ from apps.projects.enums import (
     ProjectStatus,
     ProjectType,
     ResponseSla,
+    ReviewDecision,
     ScanStatus,
 )
 from apps.projects.models import (
@@ -996,6 +997,79 @@ def publish(super_admin, project: Project, *, comment: str = "") -> Project:
     )
     _schedule_publication_notifications(project, version)
     return project
+
+
+def publish_by_publisher(publisher, project: Project) -> Project:
+    """GOV-001/GOV-004: let the owning ministry publish a GitHub-backed draft directly."""
+    _require_publisher(publisher, project, action="project.publisher_publish")
+    if project.project_type != ProjectType.GOVERNMENT:
+        raise ProjectLifecycleError("direct ministry publication requires a government project")
+
+    with transaction.atomic():
+        locked = Project.objects.select_for_update().get(pk=project.pk)
+        if locked.status != ProjectStatus.DRAFT:
+            raise ProjectLifecycleError("only a ministry draft can be published directly")
+        violations = _publisher_publish_readiness(locked)
+        if violations:
+            raise PublishReadinessError(violations)
+
+        version = create_version(locked, submitted_by=publisher)
+        now = timezone.now()
+        before_status = locked.status
+        locked.status = ProjectStatus.OPEN_FOR_CONTRIBUTION
+        locked.status_changed_at = now
+        locked.published_at = now
+        locked.current_version = version
+        locked.save(
+            update_fields=["status", "status_changed_at", "published_at", "current_version"]
+        )
+        version.published_at = now
+        version.published_by = publisher
+        version.save(update_fields=["published_at", "published_by"])
+        _review_row(
+            locked,
+            publisher,
+            ReviewDecision.PUBLISHED,
+            comment="Published by the owning ministry",
+            from_status=before_status,
+            to_status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        )
+        _audit_transition(
+            publisher,
+            locked,
+            "publisher_published",
+            _status_payload(locked, status=before_status),
+            _status_payload(locked, version=str(version.pk)),
+        )
+
+    _schedule_publication_notifications(locked, version)
+    return locked
+
+
+def _publisher_publish_readiness(project: Project) -> list[str]:
+    """GOV-004/GIT-010: require public repository proof without PMO-only ceremony."""
+    violations = []
+    for field in ("title_en", "title_ne", "summary_en", "summary_ne"):
+        if not getattr(project, field, "").strip():
+            violations.append(f"{field}_missing")
+    if project.license_id is None or not project.license.is_approved:
+        violations.append("approved_license_missing")
+    repository_name = parse_github_repo_slug(project.repository_url)
+    connection = (
+        project.repository_connections.filter(
+            full_name__iexact=repository_name or "",
+            deactivated_at__isnull=True,
+            is_public=True,
+        )
+        .exclude(sync_state="stopped")
+        .first()
+    )
+    if connection is None:
+        violations.append("public_repository_connection_missing")
+    for field in ("default_branch", "issue_tracker_url", "documentation_url"):
+        if not getattr(project, field, "").strip():
+            violations.append(f"{field}_missing")
+    return violations
 
 
 def publish_due_scheduled(now: datetime | None = None) -> list[Project]:

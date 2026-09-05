@@ -14,7 +14,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.unit
 def test_public_profile_exposes_only_public_payload(client):
-    """MEM-003/MEM-005: public profiles expose separate allowed sections, never email."""
+    """MEM-003/MEM-005: legacy profile data is not rendered on GitHub-only profiles."""
     user = UserFactory(email="private@example.com")
     profile = MemberProfileFactory(
         user=user,
@@ -28,6 +28,8 @@ def test_public_profile_exposes_only_public_payload(client):
     assert response.status_code == 200
     assert response.context["payload"]["headline"] == profile.headline
     assert response.context["payload"]["location"] == "Kathmandu"
+    assert b"Civic technologist" not in response.content
+    assert b"Kathmandu" not in response.content
     assert b"private@example.com" not in response.content
 
 

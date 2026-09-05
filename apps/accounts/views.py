@@ -60,7 +60,6 @@ from apps.accounts.services import (
 )
 from apps.audit.services import record_audit
 from apps.github_sync.models import GithubConnection
-from apps.github_sync.views import calendar_context
 from apps.taxonomy.models import Skill
 
 logger = logging.getLogger(__name__)
@@ -398,21 +397,23 @@ def onboarding_publish(request):
 
 
 def public_profile(request, username):
-    """MEM-003/MEM-005: render the fail-closed public profile projection only."""
+    """MEM-003/MEM-005/GIT-010: render only a consented public GitHub identity."""
     user = get_object_or_404(get_user_model(), username=username, is_active=True)
     profile = get_object_or_404(MemberProfile.objects.select_related("user"), user=user)
-    raw_year = request.GET.get("year")
-    year = int(raw_year) if raw_year and raw_year.isdigit() and len(raw_year) == 4 else None
+    github_profile = GithubConnection.objects.filter(user=user, revoked_at__isnull=True).first()
+    if github_profile is not None and "public_profile" not in github_profile.consent_scopes:
+        github_profile = None
     return render(
         request,
         "accounts/public_profile.html",
         {
+            "profile": profile,
+            "github_profile": github_profile,
             "payload": public_profile_payload(profile),
             "report_target": {
                 "content_type": ContentType.objects.get_for_model(user).pk,
                 "object_id": user.pk,
             },
-            **calendar_context(user, year),
         },
     )
 

@@ -1,0 +1,31 @@
+{
+	http_port 8080
+}
+
+(devnepal) {
+	encode zstd gzip
+
+	handle_path /static/* {
+		root * /Users/k2/github/DevNepal/staticfiles
+		file_server
+	}
+
+	handle_path /media/* {
+		root * /Users/k2/github/DevNepal/media
+		file_server
+	}
+
+	reverse_proxy 127.0.0.1:8000 {
+		header_up X-Forwarded-Proto https
+	}
+}
+
+http://devnepal.zapper.cloud:8080 {
+	bind 127.0.0.1
+	import devnepal
+}
+
+http://k2.fell-truck.ts.net:8080 {
+	bind 127.0.0.1
+	import devnepal
+}

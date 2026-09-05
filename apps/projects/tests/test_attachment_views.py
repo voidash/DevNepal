@@ -124,8 +124,8 @@ def test_foreign_publisher_cannot_upload_attachments(client):
 
 
 @pytest.mark.integration
-def test_authoring_detail_shows_scan_status_and_never_links_quarantined_files(client):
-    """GOV-003/SEC-007: scan status is visible; quarantined files are never exposed for download."""
+def test_publisher_workspace_omits_attachment_inventory_and_quarantined_file_links(client):
+    """GOV-003/SEC-007/GIT-010: GitHub-first publisher UI does not expose attachment inventory."""
     project = make_publishable()
     clean = ProjectAttachmentFactory(
         project=project,
@@ -145,12 +145,12 @@ def test_authoring_detail_shows_scan_status_and_never_links_quarantined_files(cl
     record_scan_result(quarantined, ScanStatus.FAILED)
     verify_mfa(client, project.owner)
 
-    response = client.get(attachment_url(project))
+    response = client.get(reverse("projects:authoring_detail", kwargs={"slug": project.slug}))
 
     assert response.status_code == 200
     content = response.content
-    assert b"requirements.txt" in content
-    assert b"bad-proposal.pdf" in content
-    assert b"Clean" in content
-    assert b"Quarantined" in content
+    assert b"GitHub activity" in content
+    assert b"requirements.txt" not in content
+    assert b"bad-proposal.pdf" not in content
+    assert b"Attachments" not in content
     assert b"project-attachments" not in content

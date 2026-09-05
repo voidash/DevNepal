@@ -101,61 +101,39 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
     assert response.status_code == 200
     assert b"Public technology," in response.content
     assert b"built in public." in response.content
-    assert b"Code stays on GitHub" in response.content
+    assert b"code stays on GitHub" in response.content
     assert b"Browse government projects" in response.content
     assert b"Government of Nepal" in response.content
     assert b"Collaborate on Nepal's digital future" not in response.content
 
 
 @pytest.mark.unit
-def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
-    """DSC-001/GOV-011/REC-001: home reproduces the approved trust and work model."""
+def test_home_exposes_the_compact_trust_and_contribution_model(client):
+    """DSC-001/GOV-011/REC-001: home makes the verified work model clear without a dashboard."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "DevNepal — platform at a glance" in content
-    assert "Ministries publishing" in content
-    assert "Projects open for contribution" in content
-    assert "Verified contributions" in content
     assert "Code is one of nine ways in" in content
-    assert "Community projects — listed by members" in content
-    assert "No government endorsement" in content
-    assert "Recognition counts only work accepted by a named maintainer" in content
+    assert "Open public work" in content
+    assert "Featured government projects" in content
+    assert "Community projects" in content
+    assert "never imply government endorsement" in content
+    assert "A named maintainer verifies accepted work" in content
     assert 'class="blueprint' in content
-    reference_image = Path(settings.BASE_DIR) / "static/images/devnepal-hydropower-reference.jpg"
-    assert reference_image.is_file()
-    assert reference_image.stat().st_size == 289216
-    assert 'width="1600" height="1187"' in content
+    assert "DevNepal — platform at a glance" not in content
+    assert "People — verified impact and the people behind it" not in content
 
 
 @pytest.mark.unit
-def test_home_empty_state_uses_a_bounded_editorial_image_without_misrepresenting_open_work(client):
-    """DSC-001/NFR-A11Y-01/NFR-PERF-01: empty-state imagery is contextual, labelled, optional."""
+def test_home_empty_state_keeps_a_single_action_without_editorial_distraction(client):
+    """DSC-001/NFR-A11Y-01: an empty catalogue gives visitors a clear, truthful next step."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
-    asset = Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.png"
-    modern_asset = (
-        Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.webp"
-    )
-
     assert response.status_code == 200
-    assert asset.is_file()
-    assert asset.stat().st_size > 0
-    assert modern_asset.is_file()
-    assert modern_asset.stat().st_size > 0
-    assert modern_asset.stat().st_size < asset.stat().st_size
-    assert 'class="dn-public-work-illustration"' in content
-    assert (
-        'type="image/webp" srcset="/static/images/devnepal-public-work-illustrations-v1.webp"'
-        in content
-    )
-    assert 'src="/static/images/devnepal-public-work-illustrations-v1.png"' in content
-    assert 'loading="lazy"' in content
-    assert 'decoding="async"' in content
-    assert 'width="1774" height="887"' in content
-    assert 'alt="Eight grayscale public-service scenes' in content
-    assert "Illustrated public-interest work areas, not a list of open projects." in content
+    assert "Government opportunities are being prepared." in content
+    assert 'class="dn-public-work-illustration"' not in content
+    assert f'href="{reverse("projects:government")}"' in content
 
 
 @pytest.mark.unit
@@ -346,7 +324,7 @@ def test_catalog_uses_the_a2_1_blueprint_filter_and_project_sheet(client):
     assert response.status_code == 200
     assert 'class="blueprint dn-sheet catalog-filter"' in content
     assert "Project catalog" in content
-    assert "Filters" in content
+    assert "Advanced filters" in content
     assert 'class="card blueprint"' in content
     assert government.title_en in content
     assert community.title_en in content
@@ -433,6 +411,22 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
     assert 'querySelectorAll("[data-auto-submit]")' in script
     assert 'addEventListener("change"' in script
     assert "form.requestSubmit()" in script
+
+
+@pytest.mark.unit
+def test_catalog_defers_secondary_controls_until_a_visitor_asks_for_them(client):
+    """DSC-001/DSC-002: first-time visitors see search and fit before advanced metadata."""
+    response = client.get(reverse("projects:government"))
+    content = response.content.decode()
+
+    toolbar = content.split('<div class="dn-catalog-toolbar">', 1)[1].split("</div>", 1)[0]
+    filters = content.split('<details class="dn-catalog-filters">', 1)[1].split("</details>", 1)[0]
+
+    assert 'name="q"' in toolbar
+    assert 'name="sort"' not in toolbar
+    assert 'name="layout"' not in toolbar
+    assert 'name="technology"' in filters
+    assert 'name="deadline_from"' in filters
 
 
 @pytest.mark.unit
