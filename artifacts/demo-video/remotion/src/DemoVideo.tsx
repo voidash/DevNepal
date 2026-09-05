@@ -52,7 +52,7 @@ const scenes: Scene[] = [
     eyebrow: 'VISITOR · ISSUES AND PUBLIC GITHUB PROFILE',
     title: 'Understand the issue before leaving DevNepal',
     caption:
-      'Visitors see live open issues inside DevNepal. Issue seven includes its goal and acceptance criteria, then links to GitHub. Contributor profiles contain only cached public GitHub information.',
+      'Visitors see open issues synchronized from GitHub inside DevNepal. Issue seven includes its goal and acceptance criteria, then links to GitHub. Contributor profiles contain only cached public GitHub information.',
     video: 'videos/03-visitor-issue-profile.webm',
     audio: 'voice/04-visitor-issue-profile.mp3',
   },
