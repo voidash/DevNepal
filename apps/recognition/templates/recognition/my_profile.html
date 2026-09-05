@@ -51,6 +51,52 @@
         {% endif %}
       </section>
 
+      <section class="section" aria-labelledby="corrections-heading">
+        <div class="dn-section-heading-row">
+          <div>
+            <p class="dn-section-kicker">{% trans "Recognition record" %}</p>
+            <h2 id="corrections-heading">{% trans "Corrections and appeals" %}</h2>
+          </div>
+        </div>
+        {% if corrections %}
+        <div class="dn-issue-list">
+          {% for correction in corrections %}
+          <div class="dn-issue-row{% if correction.status == 'applied' %} is-attention{% endif %}">
+            <span class="dn-state-dot" aria-hidden="true"></span>
+            <div>
+              <span class="dn-issue-title">{{ correction.get_kind_display }}</span>
+              <div class="dn-issue-meta">
+                {% blocktrans with admin=correction.applied_by.username %}Corrected by {{ admin }}{% endblocktrans %}
+                · <time datetime="{{ correction.applied_at|date:'c' }}">{{ correction.applied_at|localtime }}</time>
+              </div>
+              <p class="dn-issue-meta">{{ correction.member_note }}</p>
+              <div class="dn-issue-meta">{% trans "Reason" %}: {{ correction.reason }} · {% trans "Basis" %}: {{ correction.basis }}</div>
+            </div>
+            <div class="dn-issue-aside">
+              {% if correction.can_appeal %}
+              <span class="Label Label--attention">{% trans "Appeal available" %}</span>
+              <a href="{% url 'recognition:correction_appeal' correction.pk %}">{% trans "Appeal this correction" %}</a>
+              {% elif correction.status == 'applied' %}
+              <span class="Label Label--secondary">{% trans "Appeal window closed" %}</span>
+              {% elif correction.status == 'appealed' %}
+              <span class="Label Label--attention">{% trans "Appeal under review" %}</span>
+              {% elif correction.status == 'overturned' %}
+              <span class="Label Label--success">{% trans "Correction overturned" %}</span>
+              {% else %}
+              <span class="Label Label--secondary">{% trans "Correction upheld" %}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="dn-state-banner" role="status">
+          <strong>{% trans "No recognition corrections" %}</strong>
+          <p>{% trans "Every correction to your verified recognition will appear here with its reason and appeal path." %}</p>
+        </div>
+        {% endif %}
+      </section>
+
       <section class="section" aria-labelledby="badges-heading">
         <h2 id="badges-heading">{% trans "Badges" %}</h2>
         {% if awards %}

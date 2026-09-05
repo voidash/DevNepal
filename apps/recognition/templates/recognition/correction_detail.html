@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% trans "Recognition correction" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <header class="dn-page-header">
+    <p class="dn-section-kicker">{% trans "Recognition / anomaly review / correction" %}</p>
+    <h1 id="correction-heading">{% blocktrans with id=correction.pk %}Correction · #{{ id }}{% endblocktrans %}</h1>
+    <p class="dn-lede">{% blocktrans with member=correction.recipient.username %}Recognition record for {{ member }}{% endblocktrans %}</p>
+  </header>
+  <section class="dn-sheet blueprint" aria-labelledby="correction-summary-heading">
+    <div class="dn-sheet__header"><h2 id="correction-summary-heading">{{ correction.get_kind_display }}</h2><span class="Label Label--attention">{{ correction.get_status_display }}</span></div>
+    <dl class="dn-definition-list">
+      <div><dt>{% trans "Reason" %}</dt><dd>{{ correction.reason }}</dd></div>
+      <div><dt>{% trans "Basis" %}</dt><dd>{{ correction.basis }}</dd></div>
+      <div><dt>{% trans "Member notice" %}</dt><dd>{{ correction.member_note }}</dd></div>
+      <div><dt>{% trans "Applied by" %}</dt><dd>{{ correction.applied_by.username }} · {{ correction.applied_at|localtime }}</dd></div>
+      <div><dt>{% trans "Affected records" %}</dt><dd>{% for contribution in correction.contributions.all %}{{ contribution.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</dd></div>
+    </dl>
+  </section>
+  <div class="dn-form-layout">
+    <section class="dn-sheet blueprint" aria-labelledby="before-heading">
+      <h2 id="before-heading">{% trans "Before" %}</h2>
+      <table class="dn-data-table">
+        <thead><tr><th>{% trans "Contribution record" %}</th><th>{% trans "Score" %}</th><th>{% trans "State" %}</th></tr></thead>
+        <tbody>
+          {% for score in correction.before_snapshot.scores %}
+          <tr><td>{% blocktrans with id=score.contribution_id %}Record #{{ id }}{% endblocktrans %}</td><td>+{{ score.points }}</td><td>{% if score.reversed_at %}{% trans "Reversed" %}{% else %}{% trans "Applied" %}{% endif %}</td></tr>
+          {% empty %}
+          <tr><td colspan="3">{% trans "No scored records" %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    <section class="dn-sheet blueprint" aria-labelledby="after-heading">
+      <h2 id="after-heading">{% trans "After" %}</h2>
+      <table class="dn-data-table">
+        <thead><tr><th>{% trans "Contribution record" %}</th><th>{% trans "Score" %}</th><th>{% trans "State" %}</th></tr></thead>
+        <tbody>
+          {% for score in correction.after_snapshot.scores %}
+          <tr><td>{% blocktrans with id=score.contribution_id %}Record #{{ id }}{% endblocktrans %}</td><td>+{{ score.points }}</td><td>{% if score.reversed_at %}{% trans "Reversed" %}{% else %}{% trans "Applied" %}{% endif %}</td></tr>
+          {% empty %}
+          <tr><td colspan="3">{% trans "No scored records" %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </div>
+  {% if correction.status == 'appealed' %}
+  <section class="dn-sheet blueprint" aria-labelledby="appeal-heading">
+    <h2 id="appeal-heading">{% trans "Member appeal" %}</h2>
+    <p>{{ correction.appeal_text }}</p>
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="dn-state-banner is-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      {% for field in form %}<div class="dn-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<p class="field__error">{{ error }}</p>{% endfor %}</div>{% endfor %}
+      <div class="button-group"><button class="btn btn--primary" type="submit">{% trans "Resolve appeal" %}</button></div>
+    </form>
+  </section>
+  {% elif correction.appeal_decision_reason %}
+  <section class="dn-state-banner" role="status"><strong>{{ correction.get_status_display }}</strong><p>{{ correction.appeal_decision_reason }}</p></section>
+  {% endif %}
+</div>
+{% endblock %}
