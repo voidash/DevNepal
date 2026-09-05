@@ -401,6 +401,19 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             )
             return redirect("projects:authoring_detail", slug=project.slug)
         raise Http404("repository is not available for this member")
+    if project is not None and choice.project_id not in {None, project.pk}:
+        existing_connection = (
+            RepositoryConnection.objects.select_related("project")
+            .filter(pk=choice.connection_id)
+            .first()
+        )
+        existing_project = existing_connection.project if existing_connection else None
+        if existing_project is not None and existing_project.ministry_id == project.ministry_id:
+            messages.info(
+                request,
+                _("This repository is already connected. The existing project has been opened."),
+            )
+            return redirect("projects:authoring_detail", slug=existing_project.slug)
     binding_outcome = None
     try:
         with transaction.atomic():

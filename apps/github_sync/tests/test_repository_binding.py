@@ -204,6 +204,20 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     assert repository.project == project
     assert repository.activated_by == publisher.user
 
+    duplicate = ProjectFactory(
+        ministry=publisher.ministry,
+        repository_url="https://github.com/dhm-np/flood-alert-gateway",
+    )
+    reused = client.post(
+        reverse("github_sync:connect_repository"),
+        {"project_id": str(duplicate.pk)},
+    )
+
+    assert reused.status_code == 302
+    assert reused.url == reverse("projects:authoring_detail", args=[project.slug])
+    repository.refresh_from_db()
+    assert repository.project == project
+
 
 def test_cross_ministry_project_filter_is_not_found(client, settings):
     """AUTH-006/GIT-003: project ids cannot expose another ministry's App repositories."""
