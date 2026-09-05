@@ -147,6 +147,8 @@ def test_home_community_sheet_names_the_owner_not_a_ministry(client):
     assert f"@{community.owner.username}" in section
     assert "Official" not in section
     assert reverse("projects:detail", args=[community.slug]) in section
+    assert ">Owner<" in section
+    assert ">Project<" in section
 
 
 @pytest.mark.unit

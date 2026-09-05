@@ -125,6 +125,8 @@ def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
     assert "Code is one of nine ways in" in content
     assert "What is published here" in content
     assert "From listing to public record" in content
+    assert 'id="path-heading"' in content
+    assert "dn-way-chips" not in content
     assert "Choose your way in" not in content
     assert f'href="{reverse("projects:government")}"' in content
     assert f'href="{reverse("projects:community")}"' in content

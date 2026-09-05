@@ -7109,3 +7109,9 @@ msgstr "योगदान मार्ग पढ्नुहोस्, इश�
 
 msgid "Community support"
 msgstr "सामुदायिक सहयोग"
+
+msgid "Owner"
+msgstr "मालिक"
+
+msgid "Listing"
+msgstr "सूचीकरण"

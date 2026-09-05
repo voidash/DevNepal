@@ -83,6 +83,17 @@
         <span class="dn-section-kicker">{% trans "How it works" %}</span>
         <h2 id="contribution-path-heading">{% trans "Code is one of nine ways in" %}</h2>
         <p>{% trans "Choose work that fits, read its contribution route, and start on GitHub. A named maintainer verifies accepted work, and the record stays public." %}</p>
+        <ul class="dn-way-line" aria-label="{% trans 'All nine contribution types' %}">
+          <li><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Engineering" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "UI/UX" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=security">{% trans "Security" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=data">{% trans "Data" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Documentation" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=localization">{% trans "Localization" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=research">{% trans "Research" %}</a></li>
+          <li><a href="{% url 'projects:government' %}?contribution_type=community-support">{% trans "Community support" %}</a></li>
+        </ul>
         <a class="dn-arrow-link" href="{% url 'projects:about' %}">{% trans "How to contribute" %} →</a>
       </header>
       <div class="dn-contribution-grid">
@@ -92,23 +103,15 @@
         <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA & security" %}</a></h3><p>{% trans "Test plans, reproductions and responsible disclosure produce verifiable records." %}</p></article>
       </div>
     </div>
-    <ul class="dn-way-chips" aria-label="{% trans 'All nine contribution types' %}">
-      <li><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Engineering" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "UI/UX" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=security">{% trans "Security" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=data">{% trans "Data" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Documentation" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=localization">{% trans "Localization" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=research">{% trans "Research" %}</a></li>
-      <li><a href="{% url 'projects:government' %}?contribution_type=community-support">{% trans "Community support" %}</a></li>
-    </ul>
-    <ol class="dn-journey" aria-label="{% trans 'From listing to public record' %}">
-      <li class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry publishes" %}</strong><span>{% trans "A named officer lists the project with its repository, licence and response commitment." %}</span></li>
-      <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You pick an issue" %}</strong><span>{% trans "Open issues are synchronised from the project's public GitHub repository." %}</span></li>
-      <li class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute on GitHub" %}</strong><span>{% trans "Fork, branch and open a pull request. Discussion and review stay in the repository." %}</span></li>
-      <li class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "The work is recognised" %}</strong><span>{% trans "Merged work appears against the project and on your public contributor profile." %}</span></li>
-    </ol>
+    <div class="dn-path">
+      <h3 id="path-heading">{% trans "From listing to public record" %}</h3>
+      <ol class="dn-journey" aria-labelledby="path-heading">
+        <li class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry publishes" %}</strong><span>{% trans "A named officer lists the project with its repository, licence and response commitment." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You pick an issue" %}</strong><span>{% trans "Open issues are synchronised from the project's public GitHub repository." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute on GitHub" %}</strong><span>{% trans "Fork, branch and open a pull request. Discussion and review stay in the repository." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "The work is recognised" %}</strong><span>{% trans "Merged work appears against the project and on your public contributor profile." %}</span></li>
+      </ol>
+    </div>
   </div>
 </section>
 
@@ -124,6 +127,12 @@
     </header>
     <div class="dn-sheet blueprint">
       {% if featured_community_projects %}
+      <div class="dn-sheet__header dn-community-head">
+        <span>{% trans "Project" %}</span>
+        <span>{% trans "Owner" %}</span>
+        <span>{% trans "Technologies" %}</span>
+        <span>{% trans "Listing" %}</span>
+      </div>
       <div class="dn-community-rows">
         {% for project in featured_community_projects %}
         <article class="dn-community-row">
@@ -274,12 +283,18 @@
       <div class="dn-home-faq">
         <h3>{% trans "Frequently asked" %}</h3>
         <dl>
-          <dt>{% trans "How are contributions verified?" %}</dt>
-          <dd>{% trans "A maintainer or authorised reviewer checks the evidence and records a reasoned decision. A self-submitted claim is not official recognition by itself." %}</dd>
-          <dt>{% trans "Do I need a DevNepal account to contribute?" %}</dt>
-          <dd>{% trans "No. Work happens on the project's public GitHub repository. Only ministry officers sign in here to publish and maintain listings." %}</dd>
-          <dt>{% trans "Is every listed project a government project?" %}</dt>
-          <dd>{% trans "No. Government and community projects are labelled separately, and a community listing is not a government endorsement." %}</dd>
+          <div>
+            <dt>{% trans "How are contributions verified?" %}</dt>
+            <dd>{% trans "A maintainer or authorised reviewer checks the evidence and records a reasoned decision. A self-submitted claim is not official recognition by itself." %}</dd>
+          </div>
+          <div>
+            <dt>{% trans "Do I need a DevNepal account to contribute?" %}</dt>
+            <dd>{% trans "No. Work happens on the project's public GitHub repository. Only ministry officers sign in here to publish and maintain listings." %}</dd>
+          </div>
+          <div>
+            <dt>{% trans "Is every listed project a government project?" %}</dt>
+            <dd>{% trans "No. Government and community projects are labelled separately, and a community listing is not a government endorsement." %}</dd>
+          </div>
         </dl>
       </div>
     </div>
@@ -298,7 +313,7 @@
           <a class="btn" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
         </div>
       </article>
-      <article>
+      <article class="dn-get-started-ministry">
         <span class="dn-section-kicker">{% trans "For ministries" %}</span>
         <h2 id="ministry-cta-heading">{% trans "Have a project ready for public contribution?" %}</h2>
         <p>{% trans "A named officer connects the ministry's public repository and publishes the listing. DevNepal then keeps its issues, pull requests and contributors in view." %}</p>
