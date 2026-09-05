@@ -27,8 +27,8 @@
   --color-rule: var(--color-divider);
   --color-error: #8a3f3f;
   --color-success: #416b53;
-  --font-body: "Barlow", system-ui, sans-serif;
-  --font-heading: "Barlow Condensed", system-ui, sans-serif;
+  --font-body: "Barlow", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-heading: "Barlow Condensed", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-latin: var(--font-body);
   --font-nepali: "Noto Sans Devanagari", system-ui, sans-serif;
   --font-heading-weight: 600;
