@@ -922,8 +922,8 @@ def test_ministry_provisioning_and_official_contact_confirmation_round_trip(clie
 
 @pytest.mark.unit
 @pytest.mark.github_webhook
-def test_signed_github_delivery_lands_pending_and_forged_signature_is_unauthorized(client):
-    """GIT-004/GIT-012: signed deliveries ledger PENDING at the mounted hook; bad HMAC is 401."""
+def test_signed_github_delivery_is_processed_and_forged_signature_is_unauthorized(client):
+    """GIT-004/GIT-012: signed PR deliveries project immediately; bad HMAC is 401."""
     assert reverse("github_sync:webhook") == "/webhooks/github/"
     repository = RepositoryConnectionFactory(repository_node_id="R_kgDOFlowWebhook001")
     body = pr_merged_body(node_id=repository.repository_node_id)
@@ -951,7 +951,7 @@ def test_signed_github_delivery_lands_pending_and_forged_signature_is_unauthoriz
     rejected_event = ProviderEvent.objects.get(delivery_id="f2cba355-cc78-11e3-81ab-4c9367dc0958")
 
     assert accepted.status_code == 202
-    assert event.processing_state == ProcessingState.PENDING
+    assert event.processing_state == ProcessingState.PROCESSED
     assert event.repository_id == repository.pk
     assert rejected.status_code == 401
     assert rejected_event.processing_state == ProcessingState.REJECTED
