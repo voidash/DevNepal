@@ -73,3 +73,34 @@ def test_ministry_publisher_reaches_their_publishing_dashboard(client):
     assert reverse("projects:authoring_dashboard") in content
     assert reverse("audit:my_actions") in content
     assert f'href="{reverse("audit:audit_log")}"' not in content
+
+
+@pytest.mark.integration
+def test_a_signed_in_member_is_greeted_by_name(client):
+    """AUTH-006/DSC-001: the shared shell tells a signed-in person who they are signed in as."""
+    member = UserFactory(username="sabina-thapa", first_name="Sabina", last_name="Thapa")
+    client.force_login(member)
+
+    content = client.get(reverse("projects:home")).content.decode()
+
+    assert "Hi Sabina Thapa" in content
+
+
+@pytest.mark.integration
+def test_a_github_signup_without_a_full_name_is_greeted_by_their_handle(client):
+    """GIT-002/AUTH-006: a GitHub sign-up carries its handle as the username, so greet with it."""
+    member = UserFactory(username="octocat-np", first_name="", last_name="")
+    client.force_login(member)
+
+    content = client.get(reverse("projects:home")).content.decode()
+
+    assert "Hi octocat-np" in content
+
+
+@pytest.mark.integration
+def test_a_public_visitor_is_not_greeted(client):
+    """SEC-005: no name is shown before anyone signs in."""
+    content = client.get(reverse("projects:home")).content.decode()
+
+    assert "dn-greeting" not in content
+    assert "Hi " not in content

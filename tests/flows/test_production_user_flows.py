@@ -109,6 +109,18 @@ def verify_mfa_with_enrollment(client, user):
 # Visitor flows
 
 
+def main_content(response):
+    """Return only the page body, excluding the shared shell.
+
+    The shell greets the signed-in viewer by name, which is self-identification
+    rather than a ranking disclosure, so recognition privacy assertions look at
+    the page content alone (REC-003).
+    """
+    body = response.content
+    start = body.index(b'<main id="main-content"')
+    return body[start : body.index(b"</main>", start)]
+
+
 @pytest.mark.unit
 def test_visitor_browses_catalog_and_drafts_stay_hidden(client):
     """V1/DSC-001: approved projects are publicly visible and drafts are not."""
@@ -812,9 +824,9 @@ def test_recognition_profile_shows_private_work_and_public_leaderboard_explains_
     assert list(profile.context["scores"]) == [score]
     assert disabled.status_code == 200
     assert b"Public rankings are not enabled." in disabled.content
-    assert member.username.encode() not in disabled.content
+    assert member.username.encode() not in main_content(disabled)
     assert enabled.status_code == 200
-    assert member.username.encode() in enabled.content
+    assert member.username.encode() in main_content(enabled)
 
 
 @pytest.mark.unit
