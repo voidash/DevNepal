@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 
@@ -73,6 +76,15 @@ def test_dsc_005_project_shows_synced_github_issues_prs_and_contributors(client)
     assert "Document keyboard-only contribution workflow" in content
     assert "voidash" in content
     assert reverse("github_sync:public_profile", args=["voidash"]) in content
+
+
+def test_dsc_005_project_header_sits_close_under_the_product_nav():
+    """DSC-005: the project sheet starts close under the product header."""
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    header = ".dn-page-header:has(.dn-project-hero)"
+
+    assert f"{header} {{ padding-top: var(--space-4); }}" in css
+    assert f"{header} .dn-breadcrumbs {{ padding: var(--space-2) 0 var(--space-3); }}" in css
 
 
 def test_dsc_005_project_people_show_github_avatars_not_initials(client):
