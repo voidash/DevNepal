@@ -279,6 +279,9 @@ def seed_prototype_demo() -> dict[str, int]:
         documentation_url="https://github.com/voidash/civic-help-directory#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         deadline=date(2026, 11, 30),
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+        difficulty=DifficultyLevel.BEGINNER,
+        estimated_effort=EffortBand.SMALL,
     )
     _maintainer(sewa, publisher, MaintainerRole.LEAD)
     _maintainer(sewa, sabina, MaintainerRole.MAINTAINER)
@@ -311,6 +314,16 @@ def seed_prototype_demo() -> dict[str, int]:
             "task_snapshot_at": timezone.now(),
             "activated_by": publisher,
         },
+    )
+    RepositoryConnection.objects.filter(
+        repository_id=9_026_001,
+        full_name="doit-np/sewa-portal",
+    ).exclude(pk=repository.pk).update(
+        project=None,
+        is_public=False,
+        sync_state=SyncState.STOPPED,
+        deactivated_at=timezone.now(),
+        health_note="Retired prototype-only repository connection.",
     )
     _starter_task(
         repository,

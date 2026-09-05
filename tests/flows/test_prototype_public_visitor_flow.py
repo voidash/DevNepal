@@ -34,9 +34,10 @@ def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(clien
     assert detail.status_code == 200
     detail_content = detail.content.decode()
     assert "voidash/civic-help-directory" in detail_content
-    assert "Starter tasks from GitHub" in detail_content
-    assert "Sign in to apply" in detail_content
-    assert f"next={detail_url}" in detail_content
+    assert "Open tasks" in detail_content
+    assert "Add Nepali eligibility text for scholarship programs" in detail_content
+    assert "https://github.com/voidash/civic-help-directory/issues/7" in detail_content
+    assert "Sign in to apply" not in detail_content
 
 
 @pytest.mark.django_db
