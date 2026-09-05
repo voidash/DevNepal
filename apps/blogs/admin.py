@@ -1,10 +1,11 @@
 from django.contrib import admin
 
+from apps.administration.audit_admin import ReadOnlyModelAdmin
 from apps.blogs.models import BlogPost, BlogVersion
 
 
 @admin.register(BlogPost)
-class BlogPostAdmin(admin.ModelAdmin):
+class BlogPostAdmin(ReadOnlyModelAdmin, admin.ModelAdmin):
     list_display = (
         "title",
         "author",
@@ -19,7 +20,7 @@ class BlogPostAdmin(admin.ModelAdmin):
 
 
 @admin.register(BlogVersion)
-class BlogVersionAdmin(admin.ModelAdmin):
+class BlogVersionAdmin(ReadOnlyModelAdmin, admin.ModelAdmin):
     list_display = ("post", "version_number", "created_by", "created_at")
     list_filter = ("post__status",)
     search_fields = ("post__title",)

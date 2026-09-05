@@ -7,6 +7,7 @@ app_name = "blogs"
 urlpatterns = [
     path("blogs/", views.blog_list, name="list"),
     path("blogs/new/", views.blog_create, name="create"),
+    path("blogs/link/", views.link_external_article, name="link_external"),
     path("blogs/mine/", views.my_blog_list, name="mine"),
     path("blogs/<int:post_id>/", views.blog_detail, name="detail"),
     path("blogs/<int:post_id>/edit/", views.blog_edit, name="edit"),

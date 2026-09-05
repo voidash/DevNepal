@@ -27,6 +27,7 @@ class BlogPost(models.Model):
     content_markdown = NFCTextField(blank=True)
     content_rendered = models.TextField(blank=True, editable=False)
     canonical_url = NormalizedURLField(blank=True)
+    external_rights_confirmed_at = models.DateTimeField(null=True, blank=True)
     cover_image_url = NormalizedURLField(blank=True)
     cover_image_alt = NFCCharField(max_length=300, blank=True)
     tags = models.ManyToManyField(

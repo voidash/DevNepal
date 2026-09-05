@@ -17,6 +17,7 @@
         <p class="hero__lead">{% trans "DevNepal is where ministries open suitable technology projects to public contribution — and where Nepal’s developers, designers, writers and testers earn recognition that a ministry has actually verified. Code stays on GitHub; DevNepal holds identity, listings, participation and the record." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+          <a class="btn btn--ghost" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
           {% if github_oauth_enabled %}
           <form method="post" action="{% url 'accounts:github_connect' %}">
             {% csrf_token %}

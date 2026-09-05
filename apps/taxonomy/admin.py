@@ -2,11 +2,12 @@ import typing
 
 from django.contrib import admin
 
+from apps.administration.audit_admin import AuditedModelAdmin, ReadOnlyModelAdmin
 from apps.taxonomy.models import ApprovedLicense, Skill, SkillSuggestion, TaxonomyTerm
 
 
 @admin.register(Skill)
-class SkillAdmin(admin.ModelAdmin):
+class SkillAdmin(AuditedModelAdmin, admin.ModelAdmin):
     list_display = ("name", "slug", "is_active", "updated_at")
     list_filter = ("is_active",)
     search_fields = ("name", "slug")
@@ -14,7 +15,7 @@ class SkillAdmin(admin.ModelAdmin):
 
 
 @admin.register(TaxonomyTerm)
-class TaxonomyTermAdmin(admin.ModelAdmin):
+class TaxonomyTermAdmin(AuditedModelAdmin, admin.ModelAdmin):
     list_display = ("vocabulary", "label", "slug", "parent", "sort_order", "is_active")
     list_filter = ("vocabulary", "is_active")
     search_fields = ("label", "slug")
@@ -22,14 +23,14 @@ class TaxonomyTermAdmin(admin.ModelAdmin):
 
 
 @admin.register(ApprovedLicense)
-class ApprovedLicenseAdmin(admin.ModelAdmin):
+class ApprovedLicenseAdmin(AuditedModelAdmin, admin.ModelAdmin):
     list_display = ("spdx_id", "name", "is_approved", "is_default")
     list_filter = ("is_approved", "is_default")
     search_fields = ("spdx_id", "name")
 
 
 @admin.register(SkillSuggestion)
-class SkillSuggestionAdmin(admin.ModelAdmin):
+class SkillSuggestionAdmin(ReadOnlyModelAdmin, admin.ModelAdmin):
     list_display = (
         "term_name",
         "status",

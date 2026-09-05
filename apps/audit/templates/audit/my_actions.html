@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+
+{% block title %}{% trans "Audit log · my actions" %} | DevNepal{% endblock %}
+
+{% block content %}
+<main class="container" aria-labelledby="my-actions-heading">
+  <p class="dn-section-kicker">{% trans "Ministry publishing" %}</p>
+  <h1 id="my-actions-heading">{% trans "Audit log · my actions" %}</h1>
+  <p>{% trans "Append-only. Everything you did as a ministry officer, with time, target and reason." %}</p>
+  <div class="dn-state-banner" role="note">
+    {% trans "Your actions are attributable and cannot be edited or erased here. Organization history is limited to your selected ministry." %}
+  </div>
+
+  <form method="get" aria-label="{% trans 'Audit scope' %}">
+    <label for="audit-scope">{% trans "Show" %}</label>
+    <select id="audit-scope" name="scope">
+      <option value="mine"{% if filters.scope == "mine" %} selected{% endif %}>{% trans "My actions" %}</option>
+      <option value="organization"{% if filters.scope == "organization" %} selected{% endif %}>{% trans "Organization history" %}</option>
+    </select>
+    <label for="audit-ministry">{% trans "Organization" %}</label>
+    <select id="audit-ministry" name="ministry">
+      <option value="">{% trans "Select an organization" %}</option>
+      {% for ministry in ministries %}<option value="{{ ministry.pk }}"{% if filters.ministry == ministry.pk|stringformat:"s" %} selected{% endif %}>{{ ministry.localized_name }}</option>{% endfor %}
+    </select>
+    <label for="audit-category">{% trans "Record type" %}</label>
+    <select id="audit-category" name="category">
+      <option value="all"{% if filters.category == "all" %} selected{% endif %}>{% trans "All actions" %}</option>
+      <option value="organization"{% if filters.category == "organization" %} selected{% endif %}>{% trans "Organization" %}</option>
+      <option value="officers"{% if filters.category == "officers" %} selected{% endif %}>{% trans "Officers" %}</option>
+      <option value="projects"{% if filters.category == "projects" %} selected{% endif %}>{% trans "Projects" %}</option>
+    </select>
+    <label for="audit-result">{% trans "Result" %}</label>
+    <select id="audit-result" name="result">
+      <option value="">{% trans "All results" %}</option>
+      {% for value in result_choices %}<option value="{{ value }}"{% if filters.result == value %} selected{% endif %}>{{ value }}</option>{% endfor %}
+    </select>
+    <button type="submit">{% trans "Apply filters" %}</button>
+  </form>
+
+  <p role="status">{% blocktrans count count=events.paginator.count %}{{ count }} audit event{% plural %}{{ count }} audit events{% endblocktrans %}</p>
+  <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'My audit events' %}">
+    <table class="data-table">
+      <caption class="visually-hidden">{% trans "Append-only audit trail, newest first" %}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{% trans "When" %}</th>
+          <th scope="col">{% trans "Actor" %}</th>
+          <th scope="col">{% trans "Action" %}</th>
+          <th scope="col">{% trans "Target" %}</th>
+          <th scope="col">{% trans "Basis / reason" %}</th>
+          <th scope="col">{% trans "Result" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+        <tr>
+          <td><time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at|localtime }}</time></td>
+          <td>{{ event.actor.username|default:"-" }}</td>
+          <td>{{ event.action }}</td>
+          <td>{{ event.target_reference|default:"-" }}</td>
+          <td>{{ event.basis_reason|default:"-" }}</td>
+          <td><span class="dn-labels"><span>{{ event.result }}</span></span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">{% trans "No audit events match the current filters." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if events.paginator.num_pages > 1 %}
+  <nav aria-label="{% trans 'Audit log pages' %}">
+    {% if events.has_previous %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ events.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
+    <span aria-current="page">{% blocktrans with current=events.number total=events.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>
+    {% if events.has_next %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ events.next_page_number }}">{% trans "Next" %}</a>{% endif %}
+  </nav>
+  {% endif %}
+</main>
+{% endblock %}

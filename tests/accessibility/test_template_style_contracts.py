@@ -213,6 +213,8 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
         ".dn-footer a",
     ):
         assert selector in shell_css
+    assert "flex-wrap: wrap" in shell_css
+    assert ".dn-state-dot" in components_css
 
 
 @pytest.mark.unit
@@ -245,32 +247,32 @@ def _read(relative: str) -> str:
 def test_blog_templates_use_issue_rows_context_header_and_form_layout():
     """A8/NFR-A11Y-01/BLG-005/D13: blog surfaces reuse the shared design-system grammar.
 
-    Listings render as dn-issue-list rows with the shared status Octicon partial and
-    provenance Labels, the detail page gets a repository-style context header, and
-    the authoring form uses dn-form-layout with named fields.
+    Public discovery uses featured/stream rows with provenance, personal listings
+    retain workflow-state rows, and authoring uses named form fields.
     """
     blog_list = _read("apps/blogs/templates/blogs/blog_list.html")
     my_list = _read("apps/blogs/templates/blogs/my_blog_list.html")
     detail = _read("apps/blogs/templates/blogs/blog_detail.html")
     form = _read("apps/blogs/templates/blogs/blog_form.html")
 
-    for template in (blog_list, my_list):
-        assert 'class="dn-issue-list"' in template
-        assert 'class="dn-issue-row"' in template
-        assert '{% include "components/status_octicon.html"' in template
-        assert "{{ post.get_status_display }}" in template or "get_language_display" in template
+    assert 'class="public-discovery__feature blueprint"' in blog_list
+    assert 'class="public-discovery__row"' in blog_list
+    assert 'class="public-discovery__aside"' in blog_list
+    assert 'class="dn-issue-list"' in my_list
+    assert 'class="dn-issue-row"' in my_list
+    assert '{% include "components/status_octicon.html"' in my_list
+    assert "{{ post.get_status_display }}" in my_list
 
-    assert 'class="Label Label--outline">{% trans "Official" %}' in blog_list
+    assert '{% trans "Official" %}' in blog_list
     assert "{{ post.get_language_display }}" in blog_list
     assert "reading_time_minutes" in blog_list
     assert "canonical_url" in blog_list
     assert "noopener noreferrer external" in blog_list
 
-    assert 'class="dn-page-header"' in detail
-    assert 'class="dn-repo-title"' in detail
-    assert 'class="dn-repo-title-separator" aria-hidden="true">/<' in detail
+    assert 'class="public-discovery__breadcrumb"' in detail
+    assert 'class="public-discovery__article-header"' in detail
     assert '{% trans "Official government publication" %}' in detail
-    assert 'class="dn-sidebar"' in detail
+    assert 'class="public-discovery__aside"' in detail
 
     assert 'class="dn-form-layout"' in form
     assert 'class="dn-form-stack"' in form

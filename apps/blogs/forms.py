@@ -2,7 +2,12 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from apps.blogs.enums import BlogPostType
-from apps.blogs.services import BlogContentError, render_safe_markdown
+from apps.blogs.services import (
+    BlogContentError,
+    BlogExternalArticleUrlError,
+    clean_external_article_url,
+    render_safe_markdown,
+)
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.projects.enums import ProjectStatus, ProjectType
 from apps.projects.models import Project
@@ -53,6 +58,7 @@ class ListingForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         post = kwargs.pop("post", None)
+        create_native_only = kwargs.pop("create_native_only", False)
         super().__init__(*args, **kwargs)
         self.fields["tags"].queryset = TaxonomyTerm.objects.filter(
             vocabulary=TermVocabulary.TAG,
@@ -73,8 +79,10 @@ class ListingForm(forms.Form):
             }
         elif post is None and not self.is_bound:
             self.initial["post_type"] = BlogPostType.NATIVE
-        if post is not None:
+        if post is not None or create_native_only:
             self.fields["post_type"].disabled = True
+        if create_native_only:
+            self.fields["post_type"].initial = BlogPostType.NATIVE
 
     def clean(self):
         cleaned = super().clean()
@@ -119,6 +127,53 @@ class ListingForm(forms.Form):
                 _("A cover image URL is required when alternative text is provided."),
             )
         return cleaned
+
+
+class ExternalArticleForm(forms.Form):
+    canonical_url = forms.URLField(label=_("Article address"))
+    title = forms.CharField(label=_("Article title"), max_length=200)
+    excerpt = forms.CharField(
+        label=_("Summary"),
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+    tags = forms.ModelMultipleChoiceField(
+        label=_("Tags"),
+        queryset=TaxonomyTerm.objects.none(),
+        required=False,
+    )
+    language = forms.ChoiceField(label=_("Language"), choices=ContentLanguage.choices)
+    reading_time_minutes = forms.IntegerField(
+        label=_("Reading time (minutes)"),
+        min_value=0,
+    )
+    rights_confirmed = forms.BooleanField(
+        label=_("I am the author of this article, or have the right to list it."),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["tags"].queryset = TaxonomyTerm.objects.filter(
+            vocabulary=TermVocabulary.TAG,
+            is_active=True,
+        ).order_by("label")
+
+    def clean_canonical_url(self):
+        try:
+            return clean_external_article_url(self.cleaned_data["canonical_url"])
+        except BlogExternalArticleUrlError as exc:
+            raise forms.ValidationError(str(exc)) from exc
+
+
+class ExternalArticleAddressForm(forms.Form):
+    canonical_url = forms.URLField(label=_("Article address"))
+
+    def clean_canonical_url(self):
+        try:
+            return clean_external_article_url(self.cleaned_data["canonical_url"])
+        except BlogExternalArticleUrlError as exc:
+            raise forms.ValidationError(str(exc)) from exc
 
 
 class OfficialPublicationForm(forms.Form):

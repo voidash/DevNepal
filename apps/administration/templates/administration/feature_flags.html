@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Feature flags" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container">
+  <div class="dn-repo-title"><h1>{% trans "Feature flags" %}</h1><span class="Label">{% trans "Super Admin" %}</span></div>
+  <p class="dn-lede">{% trans "Open decisions held as switches: each one scoped, owned and reasoned. A switch that changes what members see requires a second Super Admin to confirm every change. Switches never bypass authorization or audit." %}</p>
+</div></div>
+<main class="section"><div class="dn-container">
+  <p><a href="{% url 'administration:console' %}">{% trans "Back to the administration console" %}</a></p>
+
+  {% if pending %}
+  <section aria-labelledby="pending-heading">
+    <h2 id="pending-heading">{% trans "Awaiting a second Super Admin" %}</h2>
+    <p class="dn-state-banner is-attention" role="status">{% blocktrans count counter=pending|length %}{{ counter }} change affects members and cannot be applied by the Super Admin who proposed it.{% plural %}{{ counter }} changes affect members and cannot be applied by the Super Admin who proposed them.{% endblocktrans %}</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Changes awaiting confirmation' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Proposed switch changes waiting for a second Super Admin" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Switch" %}</th>
+        <th scope="col">{% trans "Proposed state" %}</th>
+        <th scope="col">{% trans "Proposed by · reason" %}</th>
+        <th scope="col"><span class="visually-hidden">{% trans "Action" %}</span></th>
+      </tr></thead>
+      <tbody>{% for change in pending %}<tr>
+        <th scope="row">{{ change.flag.label }} · v{{ change.version }}</th>
+        <td>{% if change.to_enabled %}<span class="Label Label--accent">{% trans "On" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Off" %}</span>{% endif %}</td>
+        <td>{{ change.proposed_by.get_full_name|default:change.proposed_by.username }} · <time datetime="{{ change.proposed_at|date:'c' }}">{{ change.proposed_at|date:"j M" }}</time><br><span class="dn-lede">{{ change.reason }}</span></td>
+        <td>{% if change.proposed_by_id == user.pk %}<span class="Label Label--attention">{% trans "Needs another Super Admin" %}</span>{% else %}
+          <form method="post" action="{% url 'administration:feature_flag_approve' change.pk %}">{% csrf_token %}
+            <button class="btn btn--primary" type="submit">{% trans "Confirm" %}<span class="visually-hidden"> {{ change.flag.label }}</span></button>
+          </form>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="flag-list-heading">
+    <h2 id="flag-list-heading">{% trans "Switches" %}</h2>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Feature flags' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Every switch with its scope, state, owner and reason" %}</caption>
+      <thead><tr>
+        <th scope="col">{% trans "Flag" %}</th>
+        <th scope="col">{% trans "Scope" %}</th>
+        <th scope="col">{% trans "State" %}</th>
+        <th scope="col">{% trans "Owner · reason" %}</th>
+        <th scope="col"><span class="visually-hidden">{% trans "Action" %}</span></th>
+      </tr></thead>
+      <tbody>{% for flag in flags %}<tr>
+        <th scope="row">{{ flag.label }}<br><code>{{ flag.key }}</code>{% if flag.affects_members %} <span class="Label Label--outline">{% trans "Four-eyes" %}</span>{% endif %}</th>
+        <td>{{ flag.scope }}</td>
+        <td>{% if flag.is_enabled %}<span class="Label Label--accent">{% trans "On" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Off" %}</span>{% endif %}{% if flag.version %} · v{{ flag.version }}{% endif %}</td>
+        <td>{{ flag.owner|default:"—" }}{% if flag.reason %} · {{ flag.reason }}{% endif %}</td>
+        <td><form method="post" action="{% url 'administration:feature_flag_change' flag.key %}" class="dn-form-stack">{% csrf_token %}
+          <div class="dn-field">
+            <label for="reason-{{ flag.key }}">{% trans "Reason for this change" %}</label>
+            <textarea id="reason-{{ flag.key }}" name="reason" rows="2" required maxlength="1000"></textarea>
+          </div>
+          <button class="btn" type="submit">{% if flag.affects_members %}{% trans "Propose change" %}{% elif flag.is_enabled %}{% trans "Switch off" %}{% else %}{% trans "Switch on" %}{% endif %}<span class="visually-hidden"> {{ flag.label }}</span></button>
+        </form></td>
+      </tr>{% empty %}<tr><td colspan="5">{% trans "No switches are registered yet. Register one below." %}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="change-log-heading">
+    <h2 id="change-log-heading">{% trans "Change log" %}</h2>
+    <ul class="dn-change-log">{% for change in change_log %}
+      <li>
+        <strong>{{ change.flag.label }}</strong> · {% if change.to_enabled %}{% trans "On" %}{% else %}{% trans "Off" %}{% endif %} · v{{ change.version }} ·
+        <time datetime="{{ change.applied_at|date:'c' }}">{{ change.applied_at|date:"j M Y" }}</time> ·
+        {{ change.proposed_by.get_full_name|default:change.proposed_by.username }}
+        <br><span class="dn-lede">“{{ change.reason }}”{% if change.is_four_eyes %} · {% blocktrans with approver=change.approved_by.get_full_name|default:change.approved_by.username %}approved by {{ approver }} (four-eyes){% endblocktrans %}{% endif %}</span>
+      </li>
+    {% empty %}<li>{% trans "No switch has been changed yet." %}</li>{% endfor %}</ul>
+  </section>
+
+  <section aria-labelledby="flag-create-heading">
+    <h2 id="flag-create-heading">{% trans "Register a switch" %}</h2>
+    <form method="post" class="dn-form-stack">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}<div class="dn-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="dn-field-help">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>{% endfor %}
+      <button class="btn btn--primary" type="submit">{% trans "Register switch" %}</button>
+    </form>
+    <p class="dn-lede">{% trans "A new switch is created in the off position and stays off until it is switched on here." %}</p>
+  </section>
+
+</div></main>
+{% endblock %}

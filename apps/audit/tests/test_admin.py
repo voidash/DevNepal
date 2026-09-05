@@ -15,6 +15,11 @@ def audit_urlconf():
         yield
 
 
+@pytest.fixture(autouse=True)
+def _privileged_mfa_bypass(settings):
+    settings.PRIVILEGED_MFA_BYPASS = True
+
+
 @pytest.mark.integration
 def test_admin_changelist_is_visible_to_superusers_only(client):
     """ADM-008/SEC-008: the Django admin exposes the audit trail to Super Admins for viewing."""
@@ -32,7 +37,8 @@ def test_admin_changelist_is_visible_to_superusers_only(client):
     content = changelist.content.decode()
     assert changelist.status_code == 200
     assert "project.publish" in content
-    assert denied.status_code == 403
+    assert denied.status_code == 302
+    assert "/admin/login/" in denied.url
 
 
 @pytest.mark.integration

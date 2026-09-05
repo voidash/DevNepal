@@ -4,12 +4,23 @@ import uuid
 from django.db import models
 from django.utils.text import get_valid_filename
 
-from apps.contributions.enums import ContributionSource, ImpactTier, VerificationStatus
+from apps.contributions.enums import (
+    ContributionSource,
+    EvidenceScanStatus,
+    ImpactTier,
+    VerificationStatus,
+)
 from apps.taxonomy.fields import NFCCharField, NFCTextField
 
 
+def safe_evidence_filename(filename):
+    normalized = str(filename or "").replace("\\", "/").rsplit("/", maxsplit=1)[-1]
+    safe_name = get_valid_filename(normalized).replace("..", ".").lstrip(".")
+    return safe_name or "evidence"
+
+
 def evidence_upload_path(instance, filename):
-    safe_name = get_valid_filename(filename)
+    safe_name = safe_evidence_filename(filename)
     return f"contribution-evidence/{uuid.uuid4().hex}/{safe_name}"
 
 
@@ -34,6 +45,14 @@ class ContributionRecord(models.Model):
     evidence_url = models.URLField(blank=True, default="")
     evidence_file = models.FileField(
         upload_to=evidence_upload_path, null=True, blank=True, max_length=255
+    )
+    evidence_content_type = models.CharField(max_length=100, blank=True, default="")
+    evidence_size_bytes = models.PositiveBigIntegerField(default=0)
+    evidence_scan = models.CharField(
+        max_length=14,
+        choices=EvidenceScanStatus.choices,
+        default=EvidenceScanStatus.NOT_APPLICABLE,
+        db_index=True,
     )
     source = models.CharField(
         max_length=25,

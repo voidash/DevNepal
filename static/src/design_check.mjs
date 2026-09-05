@@ -22,8 +22,38 @@ const templates = (
 
 for (const template of templates) await access(template)
 
-const cssFiles = ['src/devnepal.css', 'src/base.css', 'src/components.css', 'src/tokens.css']
-const forbidden = ['linear-gradient(', 'radial-gradient(', 'backdrop-filter:', 'box-shadow: 0 20px']
+const templateSources = await Promise.all(templates.map((template) => readFile(template, 'utf8')))
+const referencedStylesheets = new Set(
+  templateSources.flatMap((html) =>
+    [...html.matchAll(/{% static ['"]([^'"]+\.css)['"] %}/g)].map((match) => match[1]),
+  ),
+)
+const orphanStylesheets = (await readdir(join(root, 'static', 'src')))
+  .filter((name) => name.endsWith('.css'))
+  .map((name) => `src/${name}`)
+  .filter((name) => !referencedStylesheets.has(name))
+
+if (orphanStylesheets.length > 0) {
+  throw new Error(`Unreferenced custom stylesheets found: ${orphanStylesheets.join(', ')}`)
+}
+
+const cssFiles = [
+  'src/devnepal.css',
+  'src/base.css',
+  'src/components.css',
+  'src/tokens.css',
+  'src/onboarding.css',
+  'src/public-discovery.css',
+]
+const forbidden = [
+  'linear-gradient(',
+  'radial-gradient(',
+  'backdrop-filter:',
+  'box-shadow:',
+  '--shadow-sm:',
+  '--shadow-md:',
+  '--discovery-rule:',
+]
 const legacyClasses = [
   'pattern-grid',
   'pattern-dots',
@@ -41,6 +71,16 @@ for (const cssFile of cssFiles) {
   for (const pattern of forbidden) {
     if (css.includes(pattern)) cssViolations.push(`${cssFile}: ${pattern}`)
   }
+}
+
+for (const cssFile of cssFiles.filter((cssFile) => cssFile !== 'src/tokens.css')) {
+  const css = await readFile(join(root, 'static', cssFile), 'utf8')
+  if (/#[\da-f]{3,8}\b/i.test(css)) cssViolations.push(`${cssFile}: raw color value`)
+}
+
+for (const cssFile of ['src/onboarding.css', 'src/public-discovery.css']) {
+  const css = await readFile(join(root, 'static', cssFile), 'utf8')
+  if (/\/\*/.test(css)) cssViolations.push(`${cssFile}: explanatory CSS comment`)
 }
 
 if (cssViolations.length > 0) {
@@ -83,6 +123,7 @@ if (templateViolations.length > 0) {
 
 const base = await readFile(join(root, 'templates/base.html'), 'utf8')
 for (const required of [
+  '<meta name="description"',
   'dn-product-header',
   'dn-primary-nav',
   'dn-skip-link',
@@ -90,6 +131,37 @@ for (const required of [
   'devnepal.css',
 ]) {
   if (!base.includes(required)) throw new Error(`templates/base.html is missing: ${required}`)
+}
+
+for (const viewName of [
+  'projects:home',
+  'projects:government',
+  'projects:community',
+  'projects:about',
+  'projects:list',
+  'accounts:member_directory',
+  'accounts:login',
+  'accounts:signup',
+  'accounts:dashboard',
+  'blogs:list',
+  'recognition:leaderboard',
+  'recognition:my_profile',
+  'notifications:list',
+  'projects:application_list',
+  'administration:console',
+  'administration:feature_flags',
+  'projects:review_queue',
+  'projects:authoring_dashboard',
+  'moderation:case_queue',
+  'contributions:verification_queue',
+  'ministries:organization_list',
+  'taxonomy:skill_suggestion_review_list',
+  'recognition:badge_list',
+  'audit:ops_dashboard',
+  'audit:audit_log',
+]) {
+  const marker = `request.resolver_match.view_name == '${viewName}'`
+  if (!base.includes(marker)) throw new Error(`templates/base.html lacks current-page state: ${viewName}`)
 }
 
 console.log(`Validated ${templates.length} templates and ${cssFiles.length} stylesheets against the DevNepal design-system contract.`)

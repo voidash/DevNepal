@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Link an article" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="external-article-heading">
+      <nav aria-label="{% trans 'Breadcrumb' %}"><a href="{% url 'blogs:mine' %}">{% trans "My technical blogs" %}</a><span aria-hidden="true"> / </span><span>{% trans "Link an article" %}</span></nav>
+      <h1 id="external-article-heading">{% trans "Link an article" %}</h1>
+      <p>{% trans "List writing published elsewhere without copying its full text to DevNepal." %}</p>
+      <form method="post" novalidate class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="dn-field">
+          <label for="{{ form.canonical_url.id_for_label }}">{{ form.canonical_url.label }} ({% trans "required" %})</label>
+          {{ form.canonical_url }}
+          {{ form.canonical_url.errors }}
+          <p class="dn-field-help">{% trans "Use the original HTTPS address. Medium, Dev.to, Hashnode, Substack, personal websites, and journals are supported." %}</p>
+        </div>
+        <button class="btn btn--secondary" type="submit" name="action" value="fetch">{% trans "Fetch article details" %}</button>
+        {% if source_metadata %}<p role="status">{% blocktrans with source=source_metadata.source_name %}Details fetched from {{ source }}. You can edit them before listing.{% endblocktrans %}</p>{% endif %}
+        <section class="dn-sidebar-section" aria-labelledby="article-details-heading">
+          <h2 id="article-details-heading">{% trans "Article details" %}</h2>
+          <p>{% trans "Enter the source metadata exactly as it appears on the original page. You can correct it before listing." %}</p>
+          <div class="dn-form-stack">
+            {% for field in form %}
+              {% if field.name != 'canonical_url' and field.name != 'rights_confirmed' %}
+              <div class="dn-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+                {{ field }}
+                {{ field.errors }}
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </section>
+        <div class="dn-field">
+          <label for="{{ form.rights_confirmed.id_for_label }}">{{ form.rights_confirmed }} {{ form.rights_confirmed.label }}</label>
+          {{ form.rights_confirmed.errors }}
+        </div>
+        <p class="dn-field-help">{% trans "Full-text imports are not available. Readers are sent to the original article, which remains its canonical source." %}</p>
+        <div>
+          <a class="btn btn--secondary" href="{% url 'blogs:mine' %}">{% trans "Cancel" %}</a>
+          <button class="btn btn--primary" type="submit" name="action" value="list">{% trans "List article" %}</button>
+        </div>
+      </form>
+    </section>
+    <aside class="dn-sidebar" aria-label="{% trans 'External article listing information' %}">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "External publication" %}</h2>
+        <p>{% trans "DevNepal marks this as an external article and retains the original URL as its provenance." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Safety" %}</h2>
+        <p>{% trans "Only public HTTPS addresses without embedded credentials can be listed." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

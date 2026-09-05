@@ -463,6 +463,10 @@ def test_publisher_drives_a_government_project_from_draft_to_public(client):
             "security_contact": "security@ministry.example",
         },
     )
+    RepositoryConnectionFactory(
+        project=project,
+        full_name="ministry/civic-help",
+    )
     maintainer_added = client.post(
         manage,
         {"action": "maintainer", "user": maintainer.pk, "role": "lead"},
@@ -594,13 +598,15 @@ def test_member_publishes_an_external_listing_that_visitors_can_browse(client):
     login(client, author.username)
 
     created = client.post(
-        reverse("blogs:create"),
+        reverse("blogs:link_external"),
         {
             "title": "Public infrastructure notes",
             "excerpt": "A link to the full article.",
             "canonical_url": "https://medium.com/@author/infrastructure",
             "language": "en",
             "reading_time_minutes": 4,
+            "rights_confirmed": "on",
+            "action": "list",
         },
     )
     post = BlogPost.objects.get(title="Public infrastructure notes")

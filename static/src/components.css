@@ -27,8 +27,8 @@
 .Label, .badge { display: inline-flex; align-items: center; width: fit-content; padding: 3px 10px; border: 1px solid transparent; border-radius: 0; color: var(--color-neutral-800); background: var(--color-neutral-100); font-size: 11px; font-weight: 500; letter-spacing: .02em; line-height: 1.4; white-space: nowrap; }
 .Label--accent, .Label--success { color: var(--color-accent-800); background: var(--color-accent-100); }
 .Label--outline { border-color: var(--color-accent); color: var(--color-accent-700); background: transparent; }
-.Label--attention { color: #735910; background: #f5edcf; }
-.Label--danger { color: #7e3232; background: #f4dddd; }
+.Label--attention { color: var(--color-attention); background: var(--color-attention-subtle); }
+.Label--danger { color: var(--color-error); background: var(--color-error-subtle); }
 .Label--secondary, .Label--severe { color: var(--color-neutral-700); background: var(--color-neutral-100); }
 .Counter { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; padding: 0 6px; border: 1px solid var(--color-divider); border-radius: 0; font-size: 11px; line-height: 18px; }
 .tag { display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid transparent; border-radius: 0; color: var(--color-neutral-800); background: var(--color-neutral-100); font-size: 11px; letter-spacing: .02em; line-height: 1.4; }
@@ -72,11 +72,13 @@
 .dn-issue-row + .dn-issue-row, .dn-review-row + .dn-review-row, .dn-setting-row + .dn-setting-row { border-top: 1px solid var(--color-divider); }
 .dn-issue-title { color: var(--color-text); font-weight: 500; }
 .dn-issue-meta, .dn-issue-aside { color: var(--color-neutral-700); font-size: 12px; }
+.dn-state-dot { width: 10px; height: 10px; margin-top: 5px; border: 2px solid var(--color-success); background: transparent; }
+.dn-state-dot.is-inactive { border-color: var(--color-error); }
 .dn-labels { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .dn-setting-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-6); align-items: center; padding: var(--space-4); }
 .dn-state-banner { padding: var(--space-4); }
 .dn-state-banner.is-success { border-color: var(--color-success); }
-.dn-state-banner.is-attention { border-color: #735910; }
+.dn-state-banner.is-attention { border-color: var(--color-attention); }
 .dn-state-banner.is-danger { border-color: var(--color-error); }
 
 .dn-project-grid, .dn-contribution-layout, .dn-review-grid, .dn-form-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--space-8); padding: var(--space-8) 0 var(--space-16); }

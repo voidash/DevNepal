@@ -12,7 +12,7 @@
       </div>
       <div class="public-discovery__actions">
         <p class="public-discovery__count" role="status">{% blocktrans count count=posts|length %}{{ count }} published listing{% plural %}{{ count }} published listings{% endblocktrans %}</p>
-        {% if user.is_authenticated %}<a class="btn btn--primary" href="{% url 'blogs:create' %}">{% trans "Write a post" %}</a>{% else %}<a class="btn btn--secondary" href="{% url 'accounts:login' %}?next={% url 'blogs:create' %}">{% trans "Sign in to write" %}</a>{% endif %}
+        {% if user.is_authenticated %}<a class="btn btn--primary" href="{% url 'blogs:create' %}">{% trans "Write a post" %}</a> <a class="btn btn--secondary" href="{% url 'blogs:link_external' %}">{% trans "Link an article" %}</a>{% else %}<a class="btn btn--secondary" href="{% url 'accounts:login' %}?next={% url 'blogs:create' %}">{% trans "Sign in to write" %}</a>{% endif %}
       </div>
     </header>
 
