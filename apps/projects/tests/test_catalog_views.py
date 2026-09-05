@@ -408,6 +408,34 @@ def test_catalog_matches_a2_1_status_sort_layout_and_active_filter_controls(clie
 
 
 @pytest.mark.unit
+def test_catalog_selection_controls_apply_without_a_distant_submit_button(client):
+    """A2.1/DSC-002/NFR-A11Y-01: catalog choices apply immediately with a no-JS fallback."""
+    response = client.get(reverse("projects:community"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    for field_name in (
+        "sort",
+        "layout",
+        "contribution_type",
+        "technology",
+        "skill",
+        "difficulty",
+        "effort",
+        "status",
+        "language",
+    ):
+        assert f'name="{field_name}" data-auto-submit' in content
+    assert 'src="/static/src/catalog-controls.js"' in content
+    assert "onchange=" not in content
+    assert '<button class="btn btn--secondary" type="submit">Apply filters</button>' in content
+    script = (Path(settings.BASE_DIR) / "static/src/catalog-controls.js").read_text()
+    assert 'querySelectorAll("[data-auto-submit]")' in script
+    assert 'addEventListener("change"' in script
+    assert "form.requestSubmit()" in script
+
+
+@pytest.mark.unit
 def test_project_slug_is_generated_on_any_save_path_when_blank():
     """DSC-003/DSC-001: a project saved without a slug always gets a stable unique slug."""
     first = Project.objects.create(
