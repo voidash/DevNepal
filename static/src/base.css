@@ -12,18 +12,14 @@ html {
   color-scheme: light;
 }
 
-/* Every filter and every quick chip on this site is a real navigation, so the
-   browser repaints the whole document each time one is used. Painting the same
-   ground behind the swap and crossfading it turns that repaint from a flash
-   into a change of state. */
 @view-transition {
   navigation: auto;
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 140ms;
-  animation-timing-function: ease;
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -212,4 +208,8 @@ textarea {
     background: var(--color-bg);
     color: var(--color-fg);
   }
+}
+
+.hero .dn-home-hero {
+  grid-template-columns: minmax(0, 1fr);
 }

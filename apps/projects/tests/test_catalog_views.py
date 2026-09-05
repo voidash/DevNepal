@@ -583,6 +583,39 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
     assert 'querySelectorAll("[data-auto-submit]")' in script
     assert 'addEventListener("change"' in script
     assert "form.requestSubmit()" in script
+    assert "fetch(" in script
+    assert "DOMParser" in script
+    assert "history.pushState" in script
+    assert "popstate" in script
+    assert "event.preventDefault()" in script
+    assert "AbortController" in script
+    assert "incoming?.abort()" in script
+    assert "window.location.assign(url)" in script
+    assert 'closest(".dn-catalog-results")' in script
+    assert "loadCatalog(window.location.href, { push: false })" in script
+    assert 'credentials: "same-origin"' in script
+    assert 'headers: { Accept: "text/html" }' in script
+    assert "catalog.replaceWith(next)" in script
+    assert "enhance(next)" in script
+    assert "new FormData(form)" in script
+    assert "url.origin === window.location.origin" in script
+    assert "url.pathname === window.location.pathname" in script
+    assert "event.button !== 0" in script
+    assert "event.metaKey || event.ctrlKey || event.shiftKey || event.altKey" in script
+    assert 'history.pushState({}, "", url)' in script
+    assert 'element.getAttribute("href") === focusHref' in script
+    assert 'next.querySelector("#projects-heading")' in script
+    catalog = (
+        Path(settings.BASE_DIR) / "apps/projects/templates/projects/project_list.html"
+    ).read_text()
+    results_open = catalog.index(
+        '<div class="dn-catalog-results dn-catalog-results--{{ layout }}">'
+    )
+    endfor = catalog.index("{% endfor %}", results_open)
+    results_close = catalog.index("</div>", endfor)
+    pagination = catalog.index('class="pagination dn-catalog-pagination"', results_close)
+    assert "{% url 'projects:detail' project.slug %}" in catalog[results_open:results_close]
+    assert pagination > results_close
 
 
 @pytest.mark.unit

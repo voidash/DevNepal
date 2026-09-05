@@ -205,6 +205,12 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
     assert "transition-duration: 0.01ms !important;" in base_css
     assert "animation-duration: 0.01ms !important;" in base_css
     assert "scroll-behavior: auto !important;" in base_css
+    assert "@view-transition" in base_css
+    assert "navigation: auto" in base_css
+    view_transition = base_css.split("@view-transition", 1)[1].split("@media", 1)[0]
+    assert "animation: none" in view_transition
+    assert "mix-blend-mode: normal" in view_transition
+    assert "140ms" not in view_transition
     assert "--target-min: 44px;" in tokens_css
     assert ".btn" in shell_css or ".btn" in components_css
     for selector in (
