@@ -18,9 +18,12 @@ def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(clien
 
     ordered_sections = (
         'id="hero-proof-heading"',
-        'id="opportunities-heading"',
         'id="contribution-path-heading"',
+        'id="path-heading"',
+        'id="opportunities-heading"',
         'id="community-heading"',
+        'id="safeguards-heading"',
+        'id="ministry-cta-heading"',
     )
     positions = [home_content.index(section) for section in ordered_sections]
     assert positions == sorted(positions)

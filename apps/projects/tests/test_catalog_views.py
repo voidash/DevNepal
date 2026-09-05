@@ -92,7 +92,7 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
     response = client.get(reverse("projects:home"))
     section = (
         response.content.split(b'aria-labelledby="opportunities-heading"', 1)[1]
-        .split(b'aria-labelledby="contribution-path-heading"', 1)[0]
+        .split(b'aria-labelledby="community-heading"', 1)[0]
         .decode()
     )
 
@@ -494,8 +494,8 @@ def test_catalog_uses_the_a2_1_blueprint_filter_and_project_sheet(client):
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert 'class="blueprint dn-sheet catalog-filter"' in content
-    assert "Project catalog" in content
+    assert 'class="dn-catalog-form catalog-filter"' in content
+    assert "dn-sheet__header" not in content
     assert "Advanced filters" in content
     assert 'class="card blueprint"' in content
     assert government.title_en in content
@@ -542,7 +542,6 @@ def test_catalog_matches_a2_1_status_sort_layout_and_active_filter_controls(clie
     content = response.content.decode()
     assert 'class="dn-catalog-results dn-catalog-results--list"' in content
     assert "Recently updated" in content
-    assert "Grid" in content and "List" in content
     assert "Active filters" in content
     assert "Difficulty: Beginner" in content
     assert "Clear all" in content
@@ -566,7 +565,6 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
     assert response.status_code == 200
     for field_name in (
         "sort",
-        "layout",
         "contribution_type",
         "technology",
         "skill",

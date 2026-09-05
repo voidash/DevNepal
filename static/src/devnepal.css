@@ -58,13 +58,14 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-people-table td span { color: var(--color-neutral-600); font-size: 12px; }
 
 /* ── landing page ────────────────────────────────────────────────────────────
-   The board's rhythm, kept: an editorial title block over cards for the open
-   sections, and a framed sheet with a header bar for the data-dense ones —
-   glance table, community rows, people cells, the two ways in. Sheets, cards
-   and tiles all share the 6px radius; nothing carries registration ticks. */
+   Chapters, not stripes: claim on paper, mechanism on the canvas, catalogues
+   on paper, directory on the canvas, terms on paper, then the two doors. */
 .section.dn-home { padding-block: var(--space-16); }
 .section.dn-home--band { background: var(--color-paper); }
-.section.dn-home--mute { background: var(--color-surface); }
+/* A chapter that continues the one above it shares its ground, so the two must
+   not open a second block of top padding between them. */
+.section.dn-home--follow { padding-top: 0; }
+.section.dn-home:has(+ .dn-home--follow) { padding-bottom: var(--space-8); }
 .dn-home-section-heading { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: end; justify-content: space-between; margin-bottom: 32px; padding-bottom: 0; border-bottom: 0; }
 .dn-home-section-heading > div { min-width: 0; }
 .dn-home-section-heading .dn-section-kicker { display: block; }
@@ -126,6 +127,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-contribution-grid h3 a:hover { color: var(--color-accent-700); }
 .dn-contribution-grid p { margin: 0; color: var(--color-neutral-800); font-size: 15px; line-height: 1.55; }
 .dn-contribution-grid .dn-labels { margin-top: auto; padding-top: 8px; }
+.dn-contribution-model + .dn-path { margin-top: var(--space-12); }
 
 /* Community: rows in a sheet, not a second wall of cards. */
 .dn-community-head { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.5fr); gap: 16px 32px; align-items: center; padding: 0 24px; }
@@ -147,7 +149,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-community-row__links .is-verified { color: var(--color-success); }
 .dn-community-rows .dn-empty { margin: 24px; }
 
-/* People: cells divided by hairlines inside the sheet. D12 keeps scores off. */
+/* People: spaced cards on the canvas. D12 keeps scores off. */
 .dn-people-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-5); margin: 0; }
 .dn-person-card { display: flex; flex-direction: column; gap: 6px; padding: 20px 24px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-paper); }
 .dn-person-card .dn-person-avatar { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 6px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-accent-100); color: var(--color-accent-800); font: 600 13px var(--font-heading); }
@@ -180,10 +182,14 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-public-work-story blockquote::after { content: "\201D"; }
 .dn-public-work-story figcaption { margin-top: 24px; color: var(--color-neutral-700); font-size: 15px; line-height: 24px; }
 
-/* Get started: two cells in one sheet. */
-.dn-get-started-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.dn-get-started-grid article { display: flex; flex-direction: column; gap: 12px; padding: 32px; }
-.dn-get-started-grid article + article { border-left: 1px solid var(--color-divider); }
+.dn-safeguards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+.dn-safeguards h3 { margin: 0 0 var(--space-4); font-family: var(--font-heading); font-size: var(--fs-xl); }
+.dn-safeguards ul { margin: 0; padding-left: 1.15em; color: var(--color-neutral-800); font-size: 15px; line-height: 1.55; }
+.dn-safeguards li + li { margin-top: var(--space-3); }
+
+.dn-get-started-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+.dn-get-started-grid article { display: flex; flex-direction: column; gap: 12px; padding: var(--space-8); }
+.dn-get-started-grid article + article { border-left: 0; }
 .dn-get-started-grid h3 { max-width: 20ch; margin: 0; font-size: 28px; line-height: 1.05; letter-spacing: .02em; }
 .dn-get-started-grid p { max-width: 56ch; margin: 0; color: var(--color-neutral-700); font-size: 15px; line-height: 1.55; }
 .dn-get-started-grid .hero__actions { align-items: center; gap: 8px 20px; margin-top: 8px; }
@@ -195,8 +201,9 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
   .dn-community-row__title { grid-column: 1 / -1; }
   .dn-writing-row { grid-template-columns: 1fr; gap: 10px; }
   .dn-writing-row__aside { align-items: start; text-align: left; }
+  .dn-safeguards { grid-template-columns: 1fr; }
   .dn-get-started-grid { grid-template-columns: 1fr; }
-  .dn-get-started-grid article + article { border-top: 1px solid var(--color-divider); border-left: 0; }
+  .dn-get-started-grid article + article { border-top: 0; border-left: 0; }
 }
 @media (max-width: 560px) {
   .dn-community-row { grid-template-columns: 1fr; }
@@ -289,18 +296,18 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-catalog-status-counts div { display: flex; flex-direction: column-reverse; }
 .dn-catalog-status-counts dt { color: var(--color-neutral-700); font-size: 13px; }
 .dn-catalog-status-counts dd { margin: 0; font-family: var(--font-heading); font-size: 20px; font-weight: 600; }
-.dn-catalog-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; padding: 20px 24px 24px; }
-.dn-catalog-search label, .dn-catalog-sort label, .dn-catalog-layout legend { display: block; margin-bottom: 5px; color: var(--color-neutral-700); font-size: 12px; }
-.dn-catalog-search input, .dn-catalog-sort select, .dn-catalog-filters select, .dn-catalog-filters input[type="date"] { width: 100%; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-bg); font: inherit; font-size: 14px; }
-.dn-catalog-layout, .dn-catalog-filters fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-.dn-catalog-segmented { display: flex; min-height: 40px; border: 1px solid var(--color-divider); }
-.dn-catalog-segmented label { margin: 0; cursor: pointer; }
-.dn-catalog-segmented label + label { border-left: 1px solid var(--color-divider); }
-.dn-catalog-segmented input, .dn-catalog-chips input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.dn-catalog-segmented span { display: flex; min-height: 38px; align-items: center; padding: 0 12px; }
-.dn-catalog-segmented input:checked + span { color: var(--color-paper); background: var(--color-accent-700); }
-.dn-catalog-segmented input:focus-visible + span, .dn-catalog-chips input:focus-visible + span { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.dn-catalog-body { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: var(--space-10); align-items: start; padding: var(--space-5); border-top: 1px solid var(--color-divider); }
+/* No sheet wraps the catalogue: the search field and the filter rail sit on the
+   page ground, and the only paper left is a card or a form control. */
+.dn-catalog-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); align-items: end; padding: 0 0 var(--space-5); }
+.dn-catalog-search label { display: block; margin-bottom: var(--space-1); color: var(--color-neutral-700); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.dn-catalog-search input, .dn-catalog-sort select, .dn-catalog-filters select, .dn-catalog-filters input[type="date"] { width: 100%; min-height: 40px; padding: 0 var(--space-3); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-paper); font: inherit; font-size: var(--fs-sm); }
+.dn-catalog-search input { min-height: 48px; padding-inline: var(--space-4); font-size: var(--fs-md); }
+.dn-catalog-search input::placeholder { color: var(--color-neutral-600); }
+.dn-catalog-toolbar .btn { min-height: 48px; padding-inline: var(--space-6); }
+.dn-catalog-filters fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.dn-catalog-chips input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.dn-catalog-chips input:focus-visible + span { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.dn-catalog-body { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: var(--space-10); align-items: start; padding: 0; border-top: 1px solid var(--color-divider); }
 .dn-catalog-filters { padding-top: 8px; font-size: 14px; }
 
 .dn-catalog-filters:not([open]) > summary { margin-bottom: 8px; border-bottom: 1px solid var(--color-divider); }
@@ -317,6 +324,13 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-catalog-chips label { cursor: pointer; }
 .dn-catalog-chips span { display: inline-flex; padding: 3px 10px; border: 1px solid var(--color-accent); color: var(--color-accent-800); font-size: 11px; }
 .dn-catalog-chips input:checked + span { border-color: var(--color-accent-700); color: var(--color-paper); background: var(--color-accent-700); }
+/* Difficulty and effort were stacked radio lists that made the rail twice the
+   height of the results it filters. As chips they are two rows each. */
+.dn-catalog-filters fieldset { margin-bottom: var(--space-4); }
+.dn-catalog-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.dn-catalog-dates legend { grid-column: 1 / -1; }
+.dn-catalog-dates label { display: block; margin: 0 0 var(--space-1); color: var(--color-neutral-600); font-size: var(--fs-xs); }
+.dn-catalog-dates input[type="date"] { padding-inline: var(--space-2); }
 .dn-catalog-main { min-width: 0; padding-top: 20px; }
 .dn-catalog-result-summary { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 14px; color: var(--color-neutral-700); font-size: 13px; }
 .dn-catalog-trust { display: inline-flex; align-items: center; gap: 6px; }
@@ -345,9 +359,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-catalog-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 28px; }
 
 @media (min-width: 721px) {
-  .dn-catalog-body:has(> .dn-catalog-filters[open]) { grid-template-columns: 260px minmax(0, 1fr); gap: 40px; align-items: start; }
-  .dn-catalog-body:has(> .dn-catalog-filters[open]) > .dn-catalog-filters { padding-top: 22px; }
-  .dn-catalog-body:has(> .dn-catalog-filters[open]) > 
+  .dn-catalog-body:has(> .dn-catalog-filters[open]) { grid-template-columns: 264px minmax(0, 1fr); gap: var(--space-10); align-items: start; }
 }
 @media (max-width: 960px) {
   .dn-catalog-heading { align-items: start; }
@@ -358,12 +370,9 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-catalog { padding-top: 24px; }
   .dn-catalog-heading { display: block; }
   .dn-catalog-status-counts { margin-top: 16px; }
-  .dn-catalog-toolbar { grid-template-columns: 1fr; padding-inline: 13.6px; }
+  .dn-catalog-toolbar { grid-template-columns: 1fr; }
   .dn-catalog-search { grid-column: auto; }
-  .dn-catalog-body { display: block; padding-inline: 13.6px; }
-  .dn-catalog-filters { padding-top: 0; border-bottom: 1px solid var(--color-divider); }
-  
-  
+  .dn-catalog-body { display: block; }
   .dn-catalog-result-summary, .dn-catalog-card__foot { flex-direction: column; }
   .dn-catalog-card__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 }
@@ -512,6 +521,16 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-greeting { display: inline-flex; align-items: center; min-height: 36px; padding-right: 4px; color: var(--color-text); font-size: 13px; text-decoration: none; white-space: nowrap; }
 .dn-greeting:hover { color: var(--color-accent); }
 .dn-greeting-item { color: var(--color-neutral-700); font-size: 13px; }
+/* A signed-in publisher carries a greeting and two buttons on the right. Between
+   the point where the desktop nav appears and the point where all of that fits,
+   the nav used to run underneath the buttons, so the greeting steps out and the
+   links close up until there is room for both. */
+@media (min-width: 1180px) and (max-width: 1399px) {
+  .dn-greeting { display: none; }
+  .dn-primary-nav ul { gap: var(--space-1); }
+  .dn-primary-nav a { padding: 0 var(--space-2); }
+}
+.dn-primary-nav { overflow: hidden; }
 
 /* GitHub-first project and profile surfaces. */
 .dn-github-project { display: grid; gap: var(--space-8); padding-block: var(--space-6) var(--space-16); }
@@ -663,10 +682,8 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 
 .dn-path { margin: 0; }
 .dn-path h2 { margin: 0 0 var(--space-6); font-family: var(--font-heading); font-size: var(--fs-2xl); line-height: 1.12; }
-ol.dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
-ol.dn-journey .dn-journey-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--space-2) var(--space-5); align-items: start; list-style: none; padding: var(--space-8); }
-ol.dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
-ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
+ol.dn-journey { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+ol.dn-journey .dn-journey-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--space-2) var(--space-5); align-items: start; list-style: none; padding: var(--space-6); }
 ol.dn-journey .dn-journey-step:hover { background: transparent; }
 ol.dn-journey .dn-journey-step .Counter { grid-row: 1 / span 2; justify-self: start; align-self: start; box-sizing: border-box; width: 28px; min-width: 28px; height: 28px; padding: 0; border-color: var(--color-accent-300); color: var(--color-accent-800); background: var(--color-accent-100); font-size: 12px; }
 ol.dn-journey .dn-journey-step strong { grid-column: 2; }
@@ -678,13 +695,7 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 .dn-community-boundary p { margin: 0; color: var(--color-neutral-700); }
 .dn-community-boundary--compact { padding: var(--space-6) var(--space-8); }
 
-.dn-trust-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.dn-trust-split > div { padding: var(--space-8); }
-.dn-trust-split > div + div { border-left: 1px solid var(--color-divider); }
-.dn-trust-split h3 { margin: 0 0 var(--space-4); font-family: var(--font-heading); font-size: var(--fs-xl); }
-.dn-trust-split ul { margin: 0; padding-left: 1.15em; color: var(--color-neutral-800); }
-.dn-trust-split li + li { margin-top: var(--space-3); }
-.dn-home-faq { padding: var(--space-8); border-top: 1px solid var(--color-divider); background: var(--color-neutral-100); }
+.dn-home-faq { margin-top: var(--space-10); padding: 0; border-top: 0; background: transparent; }
 .dn-home-faq h3 { margin: 0 0 var(--space-5); font-family: var(--font-heading); font-size: var(--fs-xl); }
 .dn-home-faq dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6) var(--space-8); margin: 0; max-width: none; }
 .dn-home-faq dl > div { min-width: 0; }
@@ -694,7 +705,7 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 .dn-writing-list .dn-writing-row:last-child { border-bottom: 0; }
 .dn-get-started-grid h2 { max-width: 22ch; margin: 0; font-size: 28px; line-height: 1.05; letter-spacing: .02em; }
 .dn-get-started-grid .dn-section-kicker { margin-bottom: 0; }
-.dn-get-started-ministry { background: var(--color-accent-100); }
+.dn-get-started-ministry { background: var(--color-accent-100); border-color: var(--color-accent-300); }
 .dn-get-started-ministry h2, .dn-get-started-ministry p { color: var(--color-accent-900); }
 .dn-closing-band { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: center; justify-content: space-between; padding: var(--space-10); border-color: var(--color-accent-300); background: var(--color-accent-100); }
 .dn-closing-band > div { max-width: 62ch; }
@@ -704,13 +715,17 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 @media (max-width: 1080px) {
   .dn-home-hero { grid-template-columns: 1fr; gap: var(--space-8); padding-block: var(--space-10) var(--space-12); }
   .dn-home-hero h1 { max-width: none; }
-  .dn-trust-split { grid-template-columns: 1fr; }
-  .dn-trust-split > div + div { border-top: 1px solid var(--color-divider); border-left: 0; }
+  ol.dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  ol.dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
+  ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   .dn-home-faq dl { grid-template-columns: 1fr; gap: var(--space-5); }
 }
 @media (max-width: 640px) {
   .section.dn-home { padding-block: var(--space-12); }
+  .section.dn-home--follow { padding-top: 0; }
   ol.dn-journey { grid-template-columns: 1fr; }
+  ol.dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
+  ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   ol.dn-journey .dn-journey-step + .dn-journey-step { border-top: 1px solid var(--color-divider); border-left: 0; }
   .dn-hero-proof li { grid-template-columns: 60px minmax(0, 1fr); }
   .dn-hero-proof strong { font-size: 32px; }
@@ -1009,15 +1024,26 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 }
 
 /* ── catalogue: a standing filter rail, not a drawer ─────────────────────── */
-.dn-catalog-filters { position: sticky; top: var(--space-24); padding-top: 0; font-size: var(--fs-sm); }
+.dn-catalog-filters { position: sticky; top: var(--space-24); padding-top: var(--space-6); font-size: var(--fs-sm); }
 .dn-catalog-filters > summary { display: none; }
 .dn-catalog-filter-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-divider); }
 .dn-catalog-filter-head strong { font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .dn-catalog-filters fieldset { margin-bottom: var(--space-5); }
 .dn-catalog-filters legend { margin-bottom: var(--space-2); color: var(--color-neutral-600); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .dn-catalog-filter-grid { display: contents; }
-.dn-catalog-filters > .btn { width: 100%; }
-.dn-catalog-main { padding-top: 0; }
+.dn-catalog-filters > .btn { width: 100%; margin-top: var(--space-2); }
+.dn-catalog-main { padding-top: var(--space-6); }
+
+/* A grey-filled control reads as disabled. Rail controls carry paper and a
+   hairline like every other surface, and answer to hover and focus. */
+.dn-catalog-filters select, .dn-catalog-filters input[type="date"] { min-height: 38px; }
+.dn-catalog-filters select:hover, .dn-catalog-filters input[type="date"]:hover, .dn-catalog-search input:hover { border-color: var(--color-accent-300); }
+.dn-catalog-filters select:focus-visible, .dn-catalog-filters input[type="date"]:focus-visible, .dn-catalog-search input:focus-visible { border-color: var(--color-accent-700); outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.dn-catalog-filters fieldset > label { margin-top: var(--space-2); }
+.dn-catalog-options input { accent-color: var(--color-accent-700); }
+.dn-catalog-chips span { padding: 4px var(--space-3); border-color: var(--color-divider-strong); border-radius: var(--radius-pill); color: var(--color-neutral-800); font-size: var(--fs-xs); font-weight: 600; }
+.dn-catalog-chips label:hover span { border-color: var(--color-accent-300); background: var(--color-accent-100); color: var(--color-accent-800); }
+.dn-catalog-chips input:checked + span { border-color: var(--color-accent-700); color: var(--color-paper); background: var(--color-accent-700); }
 
 /* ── catalogue card: only what decides a visit ───────────────────────────── */
 .dn-catalog-results { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: var(--space-4); }

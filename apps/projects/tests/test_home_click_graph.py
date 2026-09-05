@@ -111,14 +111,14 @@ def test_home_hero_keeps_air_between_the_claim_the_actions_and_the_officer_line(
 
 
 @pytest.mark.unit
-def test_home_chapters_use_ground_not_heading_hairlines():
-    """DSC-001: home chapters sit on alternating grounds instead of stacked heading rules."""
+def test_home_chapters_group_grounds_instead_of_striping_every_section():
+    """DSC-001: home chapters share a ground; follow-on sections do not open a new band."""
     root = Path(settings.BASE_DIR)
     css = (root / "static/src/devnepal.css").read_text()
     home = (root / "apps/projects/templates/projects/home.html").read_text()
-
-    assert 'class="section dn-home dn-home--band"' in home
-    assert 'class="section dn-home dn-home--mute"' in home
+    mechanism = home.split('aria-labelledby="contribution-path-heading"', 1)[1].split(
+        'aria-labelledby="opportunities-heading"', 1
+    )[0]
     heading_rule = css.split(".dn-home-section-heading {", 1)[1].split("}", 1)[0]
     facts_rule = css.split(".dn-featured-card__facts {", 1)[1].split("}", 1)[0]
     people_rule = css.split(".dn-people-grid {", 1)[1].split("}", 1)[0]
@@ -126,14 +126,45 @@ def test_home_chapters_use_ground_not_heading_hairlines():
         "}", 1
     )[0]
 
+    assert '<section class="section dn-home" aria-labelledby="contribution-path-heading">' in home
+    assert (
+        '<section class="section dn-home dn-home--band" aria-labelledby="opportunities-heading">'
+        in home
+    )
+    assert "dn-home--band dn-home--follow" in home
+    assert 'aria-labelledby="safeguards-heading"' in home
+    assert "dn-home--mute" not in home
+    assert 'id="path-heading"' in mechanism
+    assert "dn-journey" in mechanism
+    assert "dn-safeguards" in home
     assert ".section.dn-home--band { background: var(--color-paper); }" in css
-    assert ".section.dn-home--mute { background: var(--color-surface); }" in css
+    assert ".section.dn-home--follow { padding-top: 0; }" in css
     assert "border-bottom: 0;" in heading_rule
     assert "border-bottom: 1px" not in heading_rule
     assert "border-top: 0;" in facts_rule
     assert "background: var(--color-divider);" not in people_rule
     assert "gap: var(--space-5);" in people_rule
     assert "border-bottom: 0;" in kicker_rule
+
+
+@pytest.mark.unit
+def test_home_tells_one_story_from_hero_to_the_cta(client):
+    """DSC-001: home explains the mechanism, the catalogues, the directory, then the terms."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+    ordered = (
+        'id="hero-heading"',
+        'id="contribution-path-heading"',
+        'id="path-heading"',
+        'id="opportunities-heading"',
+        'id="community-heading"',
+        'id="safeguards-heading"',
+        'id="ministry-cta-heading"',
+    )
+    positions = [content.index(marker) for marker in ordered]
+
+    assert response.status_code == 200
+    assert positions == sorted(positions)
 
 
 @pytest.mark.unit
