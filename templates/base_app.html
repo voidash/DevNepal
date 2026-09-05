@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% comment %} The signed-in frame: a role rail beside the work. Public pages keep base.html
+   and its full-width sections; anything a signed-in person works in extends this
+   instead, so the rail is written once and every screen inherits it. {% endcomment %}
+{% block content %}
+<div class="dn-app">
+  {% include "components/sidebar.html" %}
+  <div class="dn-app-main">
+    {% block app_header %}{% endblock %}
+    {% block app_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
