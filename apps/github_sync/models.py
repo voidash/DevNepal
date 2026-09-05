@@ -43,6 +43,15 @@ class GithubConnection(models.Model):
     revoked_at = models.DateTimeField(null=True, blank=True)
     show_annual_calendar = models.BooleanField(default=False)
     calendar_fetched_at = models.DateTimeField(null=True, blank=True)
+    avatar_url = models.URLField(blank=True, default="")
+    html_url = models.URLField(blank=True, default="")
+    display_name = NFCCharField(255, blank=True, default="")
+    bio = NFCTextField(blank=True, default="")
+    location = NFCCharField(255, blank=True, default="")
+    company = NFCCharField(255, blank=True, default="")
+    public_repos = models.PositiveIntegerField(default=0)
+    followers = models.PositiveIntegerField(default=0)
+    public_profile_fetched_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering: typing.ClassVar[list[str]] = ["-connected_at"]
@@ -86,6 +95,8 @@ class RepositoryConnection(models.Model):
     access_revoked_reason = models.CharField(max_length=40, blank=True, default="")
     task_snapshot_at = models.DateTimeField(null=True, blank=True)
     task_snapshot_note = NFCTextField(blank=True)
+    public_snapshot_at = models.DateTimeField(null=True, blank=True)
+    public_snapshot_note = NFCTextField(blank=True)
     activated_by = models.ForeignKey(
         "accounts.User",
         null=True,
@@ -147,6 +158,92 @@ class GithubStarterTask(models.Model):
 
     def __str__(self) -> str:
         return f"{self.repository.full_name}#{self.number}: {self.title}"
+
+
+class GithubIssueSnapshot(models.Model):
+    """Bounded public issue cache for a public repository [GIT-003, GIT-010]."""
+
+    repository = models.ForeignKey(
+        RepositoryConnection, on_delete=models.CASCADE, related_name="issue_snapshots"
+    )
+    github_issue_id = models.BigIntegerField()
+    number = models.PositiveIntegerField()
+    title = NFCCharField(300)
+    body = NFCTextField(blank=True, default="")
+    state = models.CharField(max_length=20)
+    comments_count = models.PositiveIntegerField(default=0)
+    url = models.URLField()
+    labels = models.JSONField(default=list)
+    author_login = NFCCharField(100, blank=True, default="")
+    author_avatar_url = models.URLField(blank=True, default="")
+    source_updated_at = models.DateTimeField(null=True, blank=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["repository", "number"]
+        constraints: typing.ClassVar[list] = [
+            models.UniqueConstraint(
+                fields=["repository", "github_issue_id"], name="uniq_github_issue_snapshot"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.repository.full_name}#{self.number}: {self.title}"
+
+
+class GithubPullRequestSnapshot(models.Model):
+    """Bounded public pull-request cache for a public repository [GIT-003, GIT-010]."""
+
+    repository = models.ForeignKey(
+        RepositoryConnection, on_delete=models.CASCADE, related_name="pull_request_snapshots"
+    )
+    github_pull_request_id = models.BigIntegerField()
+    number = models.PositiveIntegerField()
+    title = NFCCharField(300)
+    body = NFCTextField(blank=True, default="")
+    state = models.CharField(max_length=20)
+    comments_count = models.PositiveIntegerField(default=0)
+    url = models.URLField()
+    author_login = NFCCharField(100, blank=True, default="")
+    author_avatar_url = models.URLField(blank=True, default="")
+    source_updated_at = models.DateTimeField(null=True, blank=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["repository", "number"]
+        constraints: typing.ClassVar[list] = [
+            models.UniqueConstraint(
+                fields=["repository", "github_pull_request_id"], name="uniq_github_pr_snapshot"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.repository.full_name}#{self.number}: {self.title}"
+
+
+class GithubRepositoryContributor(models.Model):
+    """Public aggregate contributor record, not a DevNepal identity claim [GIT-010]."""
+
+    repository = models.ForeignKey(
+        RepositoryConnection, on_delete=models.CASCADE, related_name="contributor_snapshots"
+    )
+    github_user_id = models.BigIntegerField()
+    login = NFCCharField(100)
+    avatar_url = models.URLField(blank=True, default="")
+    profile_url = models.URLField(blank=True, default="")
+    contributions = models.PositiveIntegerField(default=0)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["repository", "-contributions", "login"]
+        constraints: typing.ClassVar[list] = [
+            models.UniqueConstraint(
+                fields=["repository", "github_user_id"], name="uniq_github_repo_contributor"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.repository.full_name}: {self.login}"
 
 
 class ProviderEvent(models.Model):

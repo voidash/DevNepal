@@ -34,6 +34,9 @@ from apps.github_sync.errors import (
 )
 from apps.github_sync.models import (
     GithubConnection,
+    GithubIssueSnapshot,
+    GithubPullRequestSnapshot,
+    GithubRepositoryContributor,
     GithubStarterTask,
     ProviderEvent,
     RepositoryConnection,
@@ -54,6 +57,8 @@ SIGNATURE_NOTE_MISSING = "missing"
 IGNORED_UNSUPPORTED_NOTE = "ignored: unsupported event type, no verified activity"
 BOT_FILTER_NOTE = "ignored: bot actor, no contribution credit"
 STARTER_TASK_LABELS = frozenset({"good first issue", "help wanted"})
+PUBLIC_SNAPSHOT_BODY_LIMIT = 10_000
+PUBLIC_PROFILE_CONSENT = "public_profile"
 DEFAULT_VERIFIED_EVENT_TYPES = frozenset(
     {"pull_request", "issues", "pull_request_review", "release"}
 )
@@ -509,6 +514,198 @@ def _starter_labels(raw_labels: object) -> list[str]:
         }:
             labels.append(name)
     return labels
+
+
+@dataclass(frozen=True)
+class PublicRepositorySnapshotOutcome:
+    issues: int
+    pull_requests: int
+    contributors: int
+    synced_at: datetime.datetime
+
+
+def refresh_public_repository_snapshot(
+    connection: RepositoryConnection, client: GithubAppClient
+) -> PublicRepositorySnapshotOutcome:
+    """GIT-003/GIT-010: atomically refresh bounded public GitHub repository projections."""
+    now = timezone.now()
+    if not connection.is_public or connection.sync_state == SyncState.STOPPED:
+        return PublicRepositorySnapshotOutcome(0, 0, 0, now)
+    try:
+        metadata = client.repository_metadata(connection.installation_id, connection.full_name)
+        if (
+            metadata.get("private") is not False
+            or metadata.get("full_name") != connection.full_name
+        ):
+            raise GithubAppResponseError("GitHub repository is not the enrolled public repository")
+        issues = client.list_open_issues(connection.installation_id, connection.full_name)
+        pull_requests = client.list_open_pull_requests(
+            connection.installation_id, connection.full_name
+        )
+        contributors = client.list_contributors(connection.installation_id, connection.full_name)
+    except GithubAppError:
+        RepositoryConnection.objects.filter(pk=connection.pk).update(
+            public_snapshot_note=_("GitHub public repository snapshot could not be refreshed.")
+        )
+        logger.warning(
+            "public repository snapshot failed for repository=%s pk=%s",
+            connection.full_name,
+            connection.pk,
+        )
+        raise
+    issue_records = [
+        record for item in issues if (record := _issue_snapshot_record(connection, item))
+    ]
+    pull_records = [
+        record
+        for item in pull_requests
+        if (record := _pull_request_snapshot_record(connection, item))
+    ]
+    contributor_records = [
+        record for item in contributors if (record := _contributor_snapshot_record(item))
+    ]
+    with transaction.atomic():
+        _replace_snapshot_rows(GithubIssueSnapshot, connection, "github_issue_id", issue_records)
+        _replace_snapshot_rows(
+            GithubPullRequestSnapshot, connection, "github_pull_request_id", pull_records
+        )
+        _replace_snapshot_rows(
+            GithubRepositoryContributor, connection, "github_user_id", contributor_records
+        )
+        RepositoryConnection.objects.filter(pk=connection.pk).update(
+            public_snapshot_at=now, public_snapshot_note=""
+        )
+    return PublicRepositorySnapshotOutcome(
+        len(issue_records), len(pull_records), len(contributor_records), now
+    )
+
+
+def _replace_snapshot_rows(model, connection, identifier: str, records: list[dict]) -> None:
+    identifiers = []
+    for record in records:
+        value = record[identifier]
+        model.objects.update_or_create(
+            repository=connection, **{identifier: value}, defaults=record
+        )
+        identifiers.append(value)
+    stale = model.objects.filter(repository=connection)
+    if identifiers:
+        stale.exclude(**{f"{identifier}__in": identifiers}).delete()
+    else:
+        stale.delete()
+
+
+def _issue_snapshot_record(connection: RepositoryConnection, issue: object) -> dict | None:
+    if not isinstance(issue, dict) or "pull_request" in issue:
+        return None
+    return _work_snapshot_record(connection, issue, "issues", "github_issue_id")
+
+
+def _pull_request_snapshot_record(
+    connection: RepositoryConnection, pull_request: object
+) -> dict | None:
+    if not isinstance(pull_request, dict):
+        return None
+    return _work_snapshot_record(connection, pull_request, "pull", "github_pull_request_id")
+
+
+def _work_snapshot_record(connection, item, kind: str, identifier: str) -> dict | None:
+    try:
+        remote_id = int(item["id"])
+        number = int(item["number"])
+        comments = int(item.get("comments", 0))
+    except (KeyError, TypeError, ValueError):
+        return None
+    title = str(item.get("title") or "").strip()
+    state = str(item.get("state") or "").strip()
+    url = str(item.get("html_url") or "").strip()
+    expected_url = f"https://github.com/{connection.full_name}/{kind}/{number}"
+    if (
+        remote_id < 1
+        or number < 1
+        or comments < 0
+        or not title
+        or len(title) > 300
+        or state not in {"open", "closed"}
+        or url != expected_url
+    ):
+        return None
+    author = item.get("user") if isinstance(item.get("user"), dict) else {}
+    body = str(item.get("body") or "").strip()[:PUBLIC_SNAPSHOT_BODY_LIMIT]
+    updated_at = parse_datetime(str(item.get("updated_at") or ""))
+    if updated_at is not None and timezone.is_naive(updated_at):
+        updated_at = timezone.make_aware(updated_at, datetime.UTC)
+    record = {
+        identifier: remote_id,
+        "number": number,
+        "title": title,
+        "body": body,
+        "state": state,
+        "comments_count": comments,
+        "url": url,
+        "author_login": str(author.get("login") or "").strip()[:100],
+        "author_avatar_url": str(author.get("avatar_url") or "").strip(),
+        "source_updated_at": updated_at,
+    }
+    if kind == "issues":
+        record["labels"] = [
+            str(label.get("name") or "").strip()[:100]
+            for label in item.get("labels", [])
+            if isinstance(label, dict) and str(label.get("name") or "").strip()
+        ][:20]
+    return record
+
+
+def _contributor_snapshot_record(item: object) -> dict | None:
+    if not isinstance(item, dict):
+        return None
+    try:
+        remote_id = int(item["id"])
+        contributions = int(item["contributions"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    login = str(item.get("login") or "").strip()
+    if remote_id < 1 or contributions < 0 or not login or len(login) > 100:
+        return None
+    return {
+        "github_user_id": remote_id,
+        "login": login,
+        "avatar_url": str(item.get("avatar_url") or "").strip(),
+        "profile_url": str(item.get("html_url") or "").strip(),
+        "contributions": contributions,
+    }
+
+
+def refresh_github_public_profile(connection: GithubConnection, client: GithubAppClient) -> bool:
+    """GIT-002/GIT-010: refresh only a member's explicitly consented public GitHub profile."""
+    if not connection.is_active or PUBLIC_PROFILE_CONSENT not in connection.consent_scopes:
+        return False
+    try:
+        payload = client.get_public_user(connection.login)
+    except GithubAppError:
+        logger.warning("public GitHub profile snapshot failed for user=%s", connection.user_id)
+        raise
+    values = {
+        "avatar_url": str(payload.get("avatar_url") or "").strip(),
+        "html_url": str(payload.get("html_url") or "").strip(),
+        "display_name": str(payload.get("name") or "").strip()[:255],
+        "bio": str(payload.get("bio") or "").strip()[:PUBLIC_SNAPSHOT_BODY_LIMIT],
+        "location": str(payload.get("location") or "").strip()[:255],
+        "company": str(payload.get("company") or "").strip()[:255],
+        "public_repos": _nonnegative_int(payload.get("public_repos")),
+        "followers": _nonnegative_int(payload.get("followers")),
+        "public_profile_fetched_at": timezone.now(),
+    }
+    GithubConnection.objects.filter(pk=connection.pk).update(**values)
+    return True
+
+
+def _nonnegative_int(value: object) -> int:
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        return 0
+    return max(number, 0)
 
 
 def _installation_id(installation: dict) -> int:
