@@ -87,6 +87,19 @@ def test_list_open_issues_uses_the_installation_token_and_preserves_query_parame
     ]
 
 
+def test_get_public_user_uses_the_public_api_without_an_invalid_app_jwt():
+    """GIT-010: public GitHub profiles do not send App JWTs to the public user endpoint."""
+
+    def handler(request):
+        assert "Authorization" not in request["headers"]
+        assert request["url"] == "https://api.github.com/users/voidash"
+        return 200, {"id": 1, "login": "voidash"}
+
+    client = client_for(transport=FakeTransport(handler))
+
+    assert client.get_public_user("voidash") == {"id": 1, "login": "voidash"}
+
+
 def jwt_segment(segment: str):
     return json.loads(base64.urlsafe_b64decode(segment + "=" * (-len(segment) % 4)))
 

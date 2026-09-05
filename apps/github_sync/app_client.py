@@ -314,7 +314,7 @@ class GithubAppClient:
         value = str(login).strip()
         if not value or len(value) > 100:
             raise GithubAppResponseError("GitHub login was malformed")
-        payload = self._request("GET", f"/users/{quote(value, safe='')}")
+        payload = self._request("GET", f"/users/{quote(value, safe='')}", app_auth=False)
         if not isinstance(payload, dict) or payload.get("login") != value:
             raise GithubAppResponseError("GitHub public profile response was malformed")
         return payload
@@ -357,15 +357,25 @@ class GithubAppClient:
                 break
         return items
 
-    def _request(self, method: str, path: str, *, token: str | None = None) -> object:
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        token: str | None = None,
+        app_auth: bool = True,
+    ) -> object:
         if not self.is_configured:
             raise GithubAppNotConfiguredError("GitHub App credentials are not configured")
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "User-Agent": USER_AGENT,
-            "Authorization": f"token {token}" if token else f"Bearer {self._app_jwt()}",
         }
+        if token:
+            headers["Authorization"] = f"token {token}"
+        elif app_auth:
+            headers["Authorization"] = f"Bearer {self._app_jwt()}"
         payload = self._dispatch(
             {
                 "method": method,
