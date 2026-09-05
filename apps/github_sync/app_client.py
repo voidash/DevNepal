@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import NamedTuple
 from urllib import error as urllib_error
 from urllib import request as urllib_request
+from urllib.parse import quote
 
 from django.conf import settings
 
@@ -258,6 +259,14 @@ class GithubAppClient:
         token = self.mint_installation_token(installation_id)
         return self._paged_get("/installation/repositories", _extract_repositories, token=token)
 
+    def list_open_issues(self, installation_id: int, full_name: str) -> list[dict]:
+        """GIT-003/DSC-009: retrieve open issues through an in-memory App token."""
+        repository = _repository_path(full_name)
+        token = self.mint_installation_token(installation_id)
+        return self._paged_get(
+            f"/repos/{repository}/issues?state=open", _extract_items, token=token
+        )
+
     def mint_installation_token(self, installation_id: int) -> str:
         """GIT-001: mint a short-lived installation token, returned in memory only."""
         payload = self._request("POST", f"/app/installations/{installation_id}/access_tokens")
@@ -268,8 +277,11 @@ class GithubAppClient:
 
     def _paged_get(self, path: str, extract: Callable[[object], list[dict]], *, token=None):
         items: list[dict] = []
+        separator = "&" if "?" in path else "?"
         for page in range(1, MAX_PAGES + 1):
-            payload = self._request("GET", f"{path}?per_page={PAGE_SIZE}&page={page}", token=token)
+            payload = self._request(
+                "GET", f"{path}{separator}per_page={PAGE_SIZE}&page={page}", token=token
+            )
             batch = extract(payload)
             items.extend(batch)
             if len(batch) < PAGE_SIZE:
@@ -341,6 +353,13 @@ def _extract_repositories(payload: object) -> list[dict]:
     if isinstance(payload, dict) and isinstance(payload.get("repositories"), list):
         return [item for item in payload["repositories"] if isinstance(item, dict)]
     return []
+
+
+def _repository_path(full_name: str) -> str:
+    pieces = [piece for piece in str(full_name).split("/") if piece]
+    if len(pieces) != 2:
+        raise GithubAppResponseError("repository name was malformed")
+    return "/".join(quote(piece, safe="") for piece in pieces)
 
 
 def github_app_client() -> GithubAppClient:

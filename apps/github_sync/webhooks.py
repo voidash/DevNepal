@@ -30,6 +30,7 @@ class ParsedEvent:
     repository_name: str
     number: int | None
     event_id: str
+    triggered_by_login: str = ""
 
 
 def verify_signature(secret: str, payload_body: bytes, signature_header: str | None) -> bool:
@@ -53,20 +54,22 @@ def parse_event(event: str, payload: dict) -> ParsedEvent | None:
     sender = payload.get("sender") or {}
     repository = payload.get("repository") or {}
     actor_login = sender.get("login", "")
-    actor_type = sender.get("type", "")
-    is_bot = actor_login.endswith("[bot]") or actor_type == "Bot"
 
-    def parsed(kind, number, event_id):
+    def parsed(kind, number, event_id, *, credited_actor=None):
+        credited_actor = credited_actor or sender
+        credited_login = credited_actor.get("login", "")
+        credited_type = credited_actor.get("type", "")
         return ParsedEvent(
             kind=kind,
             action=action or "",
-            actor_login=actor_login,
-            actor_type=actor_type,
-            is_bot=is_bot,
+            actor_login=credited_login,
+            actor_type=credited_type,
+            is_bot=credited_login.endswith("[bot]") or credited_type == "Bot",
             repository_node_id=repository.get("node_id", ""),
             repository_name=repository.get("name", ""),
             number=number,
             event_id=str(event_id),
+            triggered_by_login=actor_login,
         )
 
     if event == "pull_request" and action == "closed":
@@ -75,7 +78,12 @@ def parse_event(event: str, payload: dict) -> ParsedEvent | None:
             return None
         if pull_request.get("merged") is True:
             number = pull_request.get("number")
-            return parsed(VerifiedEventKind.PR_MERGED, number, pull_request["id"])
+            return parsed(
+                VerifiedEventKind.PR_MERGED,
+                number,
+                pull_request["id"],
+                credited_actor=pull_request.get("user"),
+            )
         return None
 
     if event == "issues" and action == "closed":

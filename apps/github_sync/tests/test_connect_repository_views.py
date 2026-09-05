@@ -231,6 +231,7 @@ class TestConnectRepositoryEnrollment:
         assert enrolled.repository_node_id == "R_kgDOMain00001"
         assert enrolled.full_name == "cdjk/gov-portal"
         assert enrolled.granted_scopes == ["contents:read", "metadata:read"]
+        assert enrolled.is_public is True
         assert enrolled.project is None
         assert enrolled.activated_by == connection.user
         assert enrolled.sync_state == SyncState.IDLE

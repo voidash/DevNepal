@@ -12,18 +12,27 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+from django.utils.translation import gettext as _
 
 from apps.audit.services import record_audit
 from apps.github_sync.app_client import GithubAppClient, installation_granted_scopes
 from apps.github_sync.enums import DeliverySource, ProcessingState, Provider, SyncState
 from apps.github_sync.errors import (
     ConnectionNotFoundError,
+    GithubAppError,
     GithubAppResponseError,
     ReconciliationError,
+    RepositoryBindingError,
     WebhookReplayError,
     WebhookSignatureError,
 )
-from apps.github_sync.models import GithubConnection, ProviderEvent, RepositoryConnection
+from apps.github_sync.models import (
+    GithubConnection,
+    GithubStarterTask,
+    ProviderEvent,
+    RepositoryConnection,
+)
 from apps.github_sync.webhooks import (
     ParsedEvent,
     is_within_replay_window,
@@ -39,6 +48,7 @@ SIGNATURE_NOTE_MISSING = "missing"
 
 IGNORED_UNSUPPORTED_NOTE = "ignored: unsupported event type, no verified activity"
 BOT_FILTER_NOTE = "ignored: bot actor, no contribution credit"
+STARTER_TASK_LABELS = frozenset({"good first issue", "help wanted"})
 
 
 @dataclass(frozen=True)
@@ -64,6 +74,8 @@ class RepositoryChoice:
     private: bool
     granted_scopes: list[str]
     enrolled: bool
+    connection_id: int | None
+    project_id: int | None
 
 
 @dataclass(frozen=True)
@@ -74,8 +86,29 @@ class EnrollOutcome:
     created: bool
 
 
+@dataclass(frozen=True)
+class BindOutcome:
+    """GIT-003: result of associating one enrolled repository with a project."""
+
+    connection: RepositoryConnection
+    bound: bool
+
+
+@dataclass(frozen=True)
+class StarterTaskSyncOutcome:
+    """DSC-009: result of refreshing one repository's public task snapshot."""
+
+    stored: int
+    ignored: int
+    synced_at: datetime.datetime
+
+
 def member_repositories(
-    client: GithubAppClient, connection: GithubConnection
+    client: GithubAppClient,
+    connection: GithubConnection,
+    *,
+    actor=None,
+    project=None,
 ) -> list[RepositoryChoice]:
     """GIT-003: repositories the member may enroll, from their linked installations.
 
@@ -83,6 +116,11 @@ def member_repositories(
     the member's connected GitHub login. Tokens are minted per installation and
     stay in memory for the duration of this call (AUTH-008).
     """
+    target_repository = None
+    if project is not None:
+        authorize_repository_binding(actor, project)
+        target_repository = _project_repository_name(project)
+
     candidates: list[tuple[dict, str, int, list[str]]] = []
     for installation in client.list_installations():
         installation_id = _installation_id(installation)
@@ -94,14 +132,19 @@ def member_repositories(
     owned = [
         (repository, account, installation_id, scopes)
         for repository, account, installation_id, scopes in candidates
-        if _repository_belongs_to_member(repository, account, connection.login)
+        if (
+            _repository_matches_project(repository, target_repository)
+            if target_repository is not None
+            else _repository_belongs_to_member(repository, account, connection.login)
+        )
     ]
-    enrolled_ids = set(
-        RepositoryConnection.objects.filter(
+    enrolled = {
+        row.repository_id: row
+        for row in RepositoryConnection.objects.filter(
             provider=Provider.GITHUB,
             repository_id__in=[int(repository["id"]) for repository, _, _, _ in owned],
-        ).values_list("repository_id", flat=True)
-    )
+        ).only("id", "repository_id", "project_id")
+    }
     choices = [
         RepositoryChoice(
             installation_id=installation_id,
@@ -111,11 +154,119 @@ def member_repositories(
             full_name=str(repository.get("full_name") or ""),
             private=bool(repository.get("private")),
             granted_scopes=scopes,
-            enrolled=int(repository["id"]) in enrolled_ids,
+            enrolled=int(repository["id"]) in enrolled,
+            connection_id=(
+                enrolled[int(repository["id"])].pk if int(repository["id"]) in enrolled else None
+            ),
+            project_id=(
+                enrolled[int(repository["id"])].project_id
+                if int(repository["id"]) in enrolled
+                else None
+            ),
         )
         for repository, account, installation_id, scopes in owned
     ]
     return sorted(choices, key=lambda choice: choice.full_name)
+
+
+def binding_projects(actor):
+    """AUTH-006/GIT-003: projects the actor may safely associate with a repository."""
+    from django.db.models import Q
+
+    from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
+    from apps.projects.enums import ProjectType
+    from apps.projects.models import Project
+
+    if actor is None or not getattr(actor, "is_authenticated", False) or not actor.is_active:
+        return Project.objects.none()
+    personal = Q(project_type=ProjectType.PERSONAL, owner=actor)
+    if actor.is_superuser:
+        permitted = personal | Q(project_type=ProjectType.GOVERNMENT)
+    else:
+        permitted = personal | Q(
+            project_type=ProjectType.GOVERNMENT,
+            ministry__status=OrgStatus.ACTIVE,
+            ministry__publishers__user=actor,
+            ministry__publishers__status=PublisherStatus.ACTIVE,
+            ministry__publishers__contact_verification_status=ContactVerificationStatus.VERIFIED,
+        )
+    return (
+        Project.objects.filter(permitted).select_related("ministry").distinct().order_by("title_en")
+    )
+
+
+def authorize_repository_binding(actor, project) -> None:
+    """AUTH-006/GIT-003: enforce project ownership and privileged MFA boundaries."""
+    from apps.accounts.services import require_privileged_mfa
+    from apps.ministries.services import is_publisher_active
+    from apps.projects.enums import ProjectType
+
+    if actor is None or not getattr(actor, "is_authenticated", False) or not actor.is_active:
+        raise RepositoryBindingError("an active authenticated account is required")
+    if project.project_type == ProjectType.PERSONAL:
+        if project.owner_id != actor.pk:
+            raise RepositoryBindingError("only the community project owner may bind its repository")
+        return
+    if project.project_type != ProjectType.GOVERNMENT or project.ministry_id is None:
+        raise RepositoryBindingError("repository binding requires a supported project type")
+    if actor.is_superuser or is_publisher_active(actor, project.ministry):
+        require_privileged_mfa(
+            actor,
+            action="github_repository.bind_project",
+            obj=project,
+            error_type=RepositoryBindingError,
+        )
+        return
+    raise RepositoryBindingError("the actor is not authorized for the project's ministry")
+
+
+def bind_repository(actor, repository: RepositoryConnection, project) -> BindOutcome:
+    """GIT-001/GIT-003/AUTH-006: bind an enrolled App repository to an authorized project."""
+    from apps.projects.enums import ProjectType
+
+    authorize_repository_binding(actor, project)
+    expected = _project_repository_name(project)
+    if expected is None or repository.full_name.casefold() != expected.casefold():
+        raise RepositoryBindingError("the repository does not match the project's GitHub URL")
+
+    with transaction.atomic():
+        locked = RepositoryConnection.objects.select_for_update().get(pk=repository.pk)
+        if locked.deactivated_at is not None or locked.sync_state == SyncState.STOPPED:
+            raise RepositoryBindingError("a disconnected repository cannot be bound")
+        if project.project_type == ProjectType.PERSONAL and locked.activated_by_id != actor.pk:
+            raise RepositoryBindingError(
+                "community owners may bind only repositories they enrolled"
+            )
+        if locked.project_id == project.pk:
+            return BindOutcome(connection=locked, bound=False)
+        if locked.project_id is not None:
+            raise RepositoryBindingError("the repository is already bound to another project")
+        locked.project = project
+        locked.save(update_fields=["project", "updated_at"])
+        record_audit(
+            actor=actor,
+            action="github_repository.bind_project",
+            obj=locked,
+            before={"project_id": None},
+            after={
+                "project_id": project.pk,
+                "repository_id": locked.repository_id,
+                "full_name": locked.full_name,
+            },
+            correlation_id=uuid.uuid4().hex,
+        )
+    return BindOutcome(connection=locked, bound=True)
+
+
+def _project_repository_name(project) -> str | None:
+    from apps.projects.services import parse_github_repo_slug
+
+    return parse_github_repo_slug(project.repository_url)
+
+
+def _repository_matches_project(repository: dict, expected: str | None) -> bool:
+    full_name = str(repository.get("full_name") or "")
+    return bool(expected and full_name.casefold() == expected.casefold())
 
 
 def enroll_repository(
@@ -126,6 +277,7 @@ def enroll_repository(
     node_id: str,
     full_name: str,
     granted_scopes: list[str],
+    is_public: bool = False,
 ) -> EnrollOutcome:
     """GIT-001/GIT-003: create the single connection for a repository (idempotent).
 
@@ -147,6 +299,7 @@ def enroll_repository(
                 repository_id=repository_id,
                 repository_node_id=node_id,
                 full_name=full_name,
+                is_public=is_public,
                 granted_scopes=granted_scopes,
                 project=None,
                 activated_by=user,
@@ -171,6 +324,132 @@ def enroll_repository(
         )
         return EnrollOutcome(connection=connection, created=False)
     return EnrollOutcome(connection=connection, created=True)
+
+
+def refresh_starter_tasks(
+    connection: RepositoryConnection, client: GithubAppClient
+) -> StarterTaskSyncOutcome:
+    """DSC-009/GIT-003: persist a bounded public snapshot of labelled open issues.
+
+    This explicit sync boundary is deliberately separate from public rendering.
+    Only listed, public repositories are eligible. A provider failure is
+    recorded for an honest public freshness state, then propagated so a
+    scheduler can retry; it never affects webhook/replay state (GIT-005).
+    """
+    if connection.project_id is None or not connection.is_public:
+        return StarterTaskSyncOutcome(stored=0, ignored=0, synced_at=timezone.now())
+    try:
+        raw_issues = client.list_open_issues(connection.installation_id, connection.full_name)
+    except GithubAppError as exc:
+        note = _("GitHub starter-task snapshot could not be refreshed.")
+        RepositoryConnection.objects.filter(pk=connection.pk).update(task_snapshot_note=note)
+        logger.warning(
+            "starter-task snapshot failed for repository=%s pk=%s: %s",
+            connection.full_name,
+            connection.pk,
+            exc.__class__.__name__,
+        )
+        raise
+
+    records: list[dict] = []
+    ignored = 0
+    for issue in raw_issues:
+        record = _starter_task_record(connection, issue)
+        if record is None:
+            ignored += 1
+        else:
+            records.append(record)
+
+    now = timezone.now()
+    with transaction.atomic():
+        accepted_ids = []
+        for record in records:
+            task, _created = GithubStarterTask.objects.update_or_create(
+                repository=connection,
+                github_issue_id=record["github_issue_id"],
+                defaults=record,
+            )
+            accepted_ids.append(task.github_issue_id)
+        stale = GithubStarterTask.objects.filter(repository=connection)
+        if accepted_ids:
+            stale.exclude(github_issue_id__in=accepted_ids).delete()
+        else:
+            stale.delete()
+        RepositoryConnection.objects.filter(pk=connection.pk).update(
+            task_snapshot_at=now,
+            task_snapshot_note="",
+        )
+    return StarterTaskSyncOutcome(stored=len(records), ignored=ignored, synced_at=now)
+
+
+def starter_tasks_for_project(
+    project,
+) -> tuple[list[GithubStarterTask], list[RepositoryConnection]]:
+    """DSC-009/GIT-010: DB-only public task hand-off and its honest sync provenance."""
+    repositories = list(
+        RepositoryConnection.objects.filter(project=project, is_public=True)
+        .exclude(sync_state=SyncState.STOPPED)
+        .only(
+            "id",
+            "full_name",
+            "task_snapshot_at",
+            "task_snapshot_note",
+            "sync_state",
+            "last_synced_at",
+        )
+        .order_by("full_name")
+    )
+    if not repositories:
+        return [], []
+    tasks = list(
+        GithubStarterTask.objects.filter(repository_id__in=[item.pk for item in repositories])
+        .select_related("repository")
+        .order_by("repository__full_name", "number")
+    )
+    return tasks, repositories
+
+
+def _starter_task_record(connection: RepositoryConnection, issue: object) -> dict | None:
+    """GIT-010: allow only public, externally linkable labelled issue metadata."""
+    if not isinstance(issue, dict) or "pull_request" in issue:
+        return None
+    try:
+        issue_id = int(issue["id"])
+        number = int(issue["number"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    title = str(issue.get("title") or "").strip()
+    url = str(issue.get("html_url") or "").strip()
+    expected_prefix = f"https://github.com/{connection.full_name}/issues/{number}"
+    if issue_id < 1 or number < 1 or not title or len(title) > 300 or url != expected_prefix:
+        return None
+    labels = _starter_labels(issue.get("labels"))
+    if not labels:
+        return None
+    source_updated_at = parse_datetime(str(issue.get("updated_at") or ""))
+    if source_updated_at is not None and timezone.is_naive(source_updated_at):
+        source_updated_at = timezone.make_aware(source_updated_at, datetime.UTC)
+    return {
+        "github_issue_id": issue_id,
+        "number": number,
+        "title": title,
+        "url": url,
+        "labels": labels,
+        "source_updated_at": source_updated_at,
+    }
+
+
+def _starter_labels(raw_labels: object) -> list[str]:
+    if not isinstance(raw_labels, list):
+        return []
+    labels = []
+    for label in raw_labels:
+        name = str(label.get("name") if isinstance(label, dict) else label).strip()
+        if name.casefold() in STARTER_TASK_LABELS and name.casefold() not in {
+            item.casefold() for item in labels
+        }:
+            labels.append(name)
+    return labels
 
 
 def _installation_id(installation: dict) -> int:

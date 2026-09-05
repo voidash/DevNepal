@@ -40,3 +40,7 @@ class GithubAppAuthError(GithubAppError):
 
 class GithubAppResponseError(GithubAppError):
     """GIT-001: a GitHub App API call failed in transport or returned an unusable response."""
+
+
+class RepositoryBindingError(GithubAppError):
+    """GIT-003/AUTH-006: a repository cannot be associated with the requested project."""

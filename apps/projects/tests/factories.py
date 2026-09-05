@@ -254,6 +254,16 @@ def make_publishable(project: Project | None = None, **kwargs) -> Project:
     ProjectMaintainerFactory(project=project)
     ProjectTaskFactory(project=project)
     ProjectSuitabilityFactory(project=project, confirmed=True)
+    # Publication readiness depends on a verified GitHub App enrollment, not
+    # merely a user-entered URL. Import locally to avoid the test-factory cycle.
+    from apps.github_sync.tests.factories import RepositoryConnectionFactory
+
+    RepositoryConnectionFactory(
+        project=project,
+        full_name="/".join(project.repository_url.rstrip("/").split("/")[-2:]),
+        activated_by=project.owner,
+        is_public=True,
+    )
     project.license = ApprovedLicenseFactory(is_approved=True)
     project.outcome_summary = "The project delivered its planned public outcome."
     project.deliverables = [{"label": "Public release", "url": project.repository_url}]

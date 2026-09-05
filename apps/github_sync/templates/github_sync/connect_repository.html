@@ -10,6 +10,29 @@
   {% if error_banner %}
   <p class="dn-state-banner is-attention" role="alert">{% trans "GitHub could not be reached. Try again shortly." %}</p>
   {% endif %}
+  {% if binding_error %}
+  <p class="dn-state-banner is-attention" role="alert">{{ binding_error }}</p>
+  {% endif %}
+
+  <form method="get" action="{% url 'github_sync:connect_repository' %}" class="dn-form-stack">
+    <div class="dn-field">
+      <label for="repository-project">{% trans "Project to connect" %}</label>
+      <select id="repository-project" name="project_id">
+        <option value="">{% trans "Enroll for later" %}</option>
+        {% for project in projects %}
+        <option value="{{ project.pk }}"{% if selected_project.pk == project.pk %} selected{% endif %}>{{ project.localized_title }}</option>
+        {% endfor %}
+      </select>
+      <p class="dn-field-help">{% trans "Government repositories may be connected only by an authorized publisher for that ministry. Community repositories may be connected only by the listing owner." %}</p>
+    </div>
+    <button class="btn btn--secondary" type="submit">{% trans "Choose project" %}</button>
+  </form>
+
+  {% if selected_project %}
+  <p class="dn-state-banner" role="status">
+    {% blocktrans with project=selected_project.localized_title repository=selected_project.repository_url %}Connecting the repository configured for {{ project }}: {{ repository }}{% endblocktrans %}
+  </p>
+  {% endif %}
 
   <div class="dn-settings-list">
     <div class="dn-setting-row">
@@ -44,13 +67,30 @@
       </div>
       <span class="dn-issue-aside">
         {% if repo.enrolled %}
-        <span class="Label Label--success">{% trans "Enrolled" %}</span>
+          {% if selected_project %}
+            {% if repo.project_id == selected_project.pk %}
+            <span class="Label Label--success">{% trans "Connected to project" %}</span>
+            {% elif repo.project_id %}
+            <span class="Label Label--attention">{% trans "Assigned to another project" %}</span>
+            {% else %}
+            <form method="post" action="{% url 'github_sync:connect_repository' %}">
+              {% csrf_token %}
+              <input type="hidden" name="project_id" value="{{ selected_project.pk }}">
+              <input type="hidden" name="installation_id" value="{{ repo.installation_id }}">
+              <input type="hidden" name="repository_id" value="{{ repo.repository_id }}">
+              <button class="btn" type="submit">{% trans "Connect to project" %}</button>
+            </form>
+            {% endif %}
+          {% else %}
+          <span class="Label Label--success">{% trans "Enrolled" %}</span>
+          {% endif %}
         {% else %}
         <form method="post" action="{% url 'github_sync:connect_repository' %}">
           {% csrf_token %}
+          {% if selected_project %}<input type="hidden" name="project_id" value="{{ selected_project.pk }}">{% endif %}
           <input type="hidden" name="installation_id" value="{{ repo.installation_id }}">
           <input type="hidden" name="repository_id" value="{{ repo.repository_id }}">
-          <button class="btn" type="submit">{% trans "Enroll" %}</button>
+          <button class="btn" type="submit">{% if selected_project %}{% trans "Enroll and connect" %}{% else %}{% trans "Enroll" %}{% endif %}</button>
         </form>
         {% endif %}
       </span>

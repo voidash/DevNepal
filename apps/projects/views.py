@@ -21,6 +21,7 @@ from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
+from apps.github_sync.services import starter_tasks_for_project
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.ministries.services import is_publisher_active
@@ -369,6 +370,7 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         or (latest_update.created_at if latest_update else None)
         or project.published_at
     )
+    github_starter_tasks, github_repositories = starter_tasks_for_project(project)
     return {
         "project": project,
         "open_tasks": project.open_tasks,
@@ -380,6 +382,8 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         "last_activity_days_ago": ((moment - last_activity_at).days if last_activity_at else None),
         "response_overdue": response_overdue(project, now=moment) if live else False,
         "maintainer_stale": maintainer_response_stale(project, now=moment) if live else False,
+        "github_starter_tasks": github_starter_tasks,
+        "github_repositories": github_repositories,
         **extra,
     }
 
@@ -412,6 +416,7 @@ def _manageable_project_or_404(user, slug: str) -> Project:
             "milestones",
             "attachments",
             "updates",
+            "repository_connections",
         ),
         slug=normalize_nfc(slug),
         project_type=ProjectType.GOVERNMENT,

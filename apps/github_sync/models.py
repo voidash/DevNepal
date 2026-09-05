@@ -63,6 +63,10 @@ class RepositoryConnection(models.Model):
     repository_id = models.BigIntegerField()
     repository_node_id = models.CharField(100, blank=True, default="")
     full_name = NFCCharField(250)
+    # Existing connections are deliberately not assumed public. A new
+    # enrollment records the App privacy bit before issue metadata can become
+    # visible on a project page (GIT-010).
+    is_public = models.BooleanField(default=False)
     project = models.ForeignKey(
         "projects.Project",
         null=True,
@@ -77,6 +81,8 @@ class RepositoryConnection(models.Model):
     last_synced_at = models.DateTimeField(null=True, blank=True)
     sync_cursor = models.CharField(255, blank=True, default="")
     health_note = NFCTextField(blank=True)
+    task_snapshot_at = models.DateTimeField(null=True, blank=True)
+    task_snapshot_note = NFCTextField(blank=True)
     activated_by = models.ForeignKey(
         "accounts.User",
         null=True,
@@ -104,6 +110,40 @@ class RepositoryConnection(models.Model):
 
     def __str__(self) -> str:
         return self.full_name
+
+
+class GithubStarterTask(models.Model):
+    """Bounded public GitHub issue metadata for a listed project's task hand-off.
+
+    GitHub remains the source of truth. This is a cache of title, number,
+    selected labels and an external URL only: never issue bodies, comments, or
+    private repository data (GIT-010; DSC-009).
+    """
+
+    repository = models.ForeignKey(
+        RepositoryConnection, on_delete=models.CASCADE, related_name="starter_tasks"
+    )
+    github_issue_id = models.BigIntegerField()
+    number = models.PositiveIntegerField()
+    title = NFCCharField(300)
+    url = models.URLField()
+    labels = models.JSONField(default=list)
+    source_updated_at = models.DateTimeField(null=True, blank=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["repository", "number"]
+        constraints: typing.ClassVar[list] = [
+            models.UniqueConstraint(
+                fields=["repository", "github_issue_id"], name="uniq_github_starter_issue"
+            ),
+        ]
+        indexes: typing.ClassVar[list] = [
+            models.Index(fields=["repository", "number"], name="idx_startertask_repo_number"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.repository.full_name}#{self.number}: {self.title}"
 
 
 class ProviderEvent(models.Model):

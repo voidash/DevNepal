@@ -817,6 +817,21 @@ def check_publish_readiness(project: Project) -> list[str]:
         violations.append("license_not_approved")
     if not project.repository_url:
         violations.append("repository_url_missing")
+    else:
+        from apps.github_sync.enums import SyncState
+
+        repository_name = parse_github_repo_slug(project.repository_url)
+        has_active_connection = bool(
+            repository_name
+            and project.repository_connections.filter(
+                full_name__iexact=repository_name,
+                deactivated_at__isnull=True,
+            )
+            .exclude(sync_state=SyncState.STOPPED)
+            .exists()
+        )
+        if not has_active_connection:
+            violations.append("repository_connection_missing")
     if not project.documentation_url:
         violations.append("readme_missing")
     if not project.code_of_conduct_url:

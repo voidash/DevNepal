@@ -55,6 +55,24 @@ class TestConnectionStatusView:
         assert "Connected" in content
         assert "ghp_" not in content
 
+    def test_status_shows_repository_health_without_tokens(self, client):
+        """GIT-011/GIT-012: a member can inspect repository sync and snapshot freshness."""
+        connection = GithubConnectionFactory()
+        repository = RepositoryConnectionFactory(
+            activated_by=connection.user,
+            is_public=True,
+            task_snapshot_at=timezone.now(),
+            task_snapshot_note="GitHub starter-task snapshot could not be refreshed.",
+        )
+        client.force_login(connection.user)
+
+        response = client.get(reverse("github_sync:connection"))
+
+        assert response.status_code == 200
+        assert repository.full_name in response.content.decode()
+        assert "Repository access and sync health" in response.content.decode()
+        assert "GitHub starter-task snapshot could not be refreshed." in response.content.decode()
+
     def test_status_shows_disconnected_state_after_revocation(self, client):
         """GIT-011: a revoked connection renders the disconnected state, no disconnect action."""
         connection = GithubConnectionFactory(revoked_at=timezone.now())

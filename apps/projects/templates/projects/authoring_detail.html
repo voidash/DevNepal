@@ -49,6 +49,19 @@
     <h2 id="overview-heading">{% trans "Overview" %}</h2>
     <p>{{ project.ministry.localized_name }} · {{ project.get_status_display }}</p>
     {% if editable %}<p><a class="btn btn--secondary" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit project" %}</a></p>{% endif %}
+    <h3 id="repository-binding-heading">{% trans "GitHub repository" %}</h3>
+    <ul>
+      {% for repository in project.repository_connections.all %}
+      <li>
+        <strong>{{ repository.full_name }}</strong>
+        · {{ repository.get_sync_state_display }}
+        {% if repository.deactivated_at %}· {% trans "Disconnected" %}{% endif %}
+      </li>
+      {% empty %}<li>{% trans "No GitHub App repository is connected to this project." %}</li>{% endfor %}
+    </ul>
+    {% if editable %}
+    <p><a class="btn btn--secondary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect or review repository" %}</a></p>
+    {% endif %}
     {% if project.status == 'open_for_contribution' or project.status == 'paused' or project.status == 'completed' %}
     <p><a class="btn btn--primary" href="{% url 'projects:completion_summary' project.slug %}">{% if project.status == 'completed' %}{% trans "View completion summary" %}{% else %}{% trans "Prepare completion summary" %}{% endif %}</a></p>
     {% endif %}

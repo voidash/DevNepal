@@ -73,6 +73,22 @@ def test_authoring_tab_routes_render_only_their_section_for_the_owning_publisher
 
 
 @pytest.mark.integration
+def test_authoring_overview_exposes_repository_binding_and_project_scoped_action(client):
+    """GIT-003/GOV-007: publishers can inspect and change the project's App binding."""
+    project = make_publishable()
+    repository = project.repository_connections.get()
+    verify_mfa(client, project.owner)
+
+    response = client.get(reverse("projects:authoring_detail", kwargs={"slug": project.slug}))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert repository.full_name in content
+    expected = f"{reverse('github_sync:connect_repository')}?project_id={project.pk}"
+    assert f'href="{expected}"' in content
+
+
+@pytest.mark.integration
 def test_authoring_tab_routes_require_mfa_and_ministry_membership(client):
     """AUTH-005/AUTH-006: tab routes are MFA-gated and ministry-scoped like the overview."""
     project = make_publishable()

@@ -20,11 +20,23 @@ def sign_body(body: bytes, secret: str = WEBHOOK_SECRET) -> str:
     return f"sha256={digest}"
 
 
-def pr_merged_body(*, node_id="R_kgDOKExAmPlE", login="cdjk", number=42, pr_id=987654) -> bytes:
+def pr_merged_body(
+    *,
+    node_id="R_kgDOKExAmPlE",
+    login="cdjk",
+    author_login=None,
+    number=42,
+    pr_id=987654,
+) -> bytes:
     """GIT-007/D7: raw GitHub pull_request closed+merged webhook payload."""
     payload = {
         "action": "closed",
-        "pull_request": {"id": pr_id, "number": number, "merged": True},
+        "pull_request": {
+            "id": pr_id,
+            "number": number,
+            "merged": True,
+            "user": {"login": author_login or login, "type": "User"},
+        },
         "repository": {"id": 555001, "node_id": node_id, "name": "gov-portal"},
         "sender": {"login": login, "type": "User"},
     }
@@ -54,6 +66,7 @@ def parsed_payload(
         "repository_name": name,
         "number": number,
         "event_id": str(event_id),
+        "triggered_by_login": login,
     }
 
 

@@ -23,6 +23,31 @@
     </div>
     <div class="dn-setting-row">
       <div>
+        <strong>{% trans "Repository access and sync health" %}</strong>
+        <p>{% trans "Only public repository metadata is used for public starter-task snapshots. GitHub remains the source of truth for issues and pull requests." %}</p>
+      </div>
+      <a class="btn btn--secondary" href="{% url 'github_sync:connect_repository' %}">{% trans "Manage repositories" %}</a>
+    </div>
+    {% for repository in repositories %}
+    <div class="dn-setting-row">
+      <div>
+        <strong>{{ repository.full_name }}</strong>
+        <p>
+          {% if repository.is_public %}{% trans "Public repository" %}{% else %}{% trans "Private or unclassified repository" %}{% endif %}
+          · {{ repository.get_sync_state_display }}
+          {% if repository.last_synced_at %} · {% trans "Event sync" %} <time datetime="{{ repository.last_synced_at|date:'c' }}">{{ repository.last_synced_at|localtime }}</time>{% endif %}
+        </p>
+        {% if repository.task_snapshot_at %}<p>{% trans "Starter-task snapshot" %} <time datetime="{{ repository.task_snapshot_at|date:'c' }}">{{ repository.task_snapshot_at|localtime }}</time></p>{% endif %}
+        {% if repository.health_note %}<p class="dn-state-banner is-attention" role="status">{{ repository.health_note }}</p>{% endif %}
+        {% if repository.task_snapshot_note %}<p class="dn-state-banner is-attention" role="status">{{ repository.task_snapshot_note }}</p>{% endif %}
+      </div>
+      <span class="Label {% if repository.sync_state == 'idle' %}Label--success{% else %}Label--attention{% endif %}">{{ repository.get_sync_state_display }}</span>
+    </div>
+    {% empty %}
+    <div class="dn-setting-row"><div><strong>{% trans "No repositories enrolled" %}</strong><p>{% trans "Connect a GitHub App repository before DevNepal can receive repository events." %}</p></div></div>
+    {% endfor %}
+    <div class="dn-setting-row">
+      <div>
         <strong>{% trans "Connected at" %}</strong>
         <p><time datetime="{{ connection.connected_at|date:'c' }}">{{ connection.connected_at|localtime }}</time></p>
       </div>

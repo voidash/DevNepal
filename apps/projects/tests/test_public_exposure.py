@@ -92,6 +92,10 @@ READINESS_CASES = [
     ("license_missing", lambda p: setattr(p, "license", None)),
     ("license_not_approved", lambda p: setattr(p.license, "is_approved", False)),
     ("repository_url_missing", lambda p: setattr(p, "repository_url", "")),
+    (
+        "repository_connection_missing",
+        lambda p: p.repository_connections.all().delete(),
+    ),
     ("readme_missing", lambda p: setattr(p, "documentation_url", "")),
     ("code_of_conduct_missing", lambda p: setattr(p, "code_of_conduct_url", "")),
     ("security_path_missing", lambda p: setattr(p, "security_contact", "")),

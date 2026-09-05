@@ -66,10 +66,22 @@ class TestVerifySignature:
         assert not verify_signature(SECRET, KNOWN_BODY, bare)
 
 
-def pr_payload(action="closed", merged=True, login="cdjk", actor_type="User"):
+def pr_payload(
+    action="closed",
+    merged=True,
+    login="cdjk",
+    actor_type="User",
+    author_login=None,
+    author_type=None,
+):
     return {
         "action": action,
-        "pull_request": {"id": 987654, "number": 42, "merged": merged},
+        "pull_request": {
+            "id": 987654,
+            "number": 42,
+            "merged": merged,
+            "user": {"login": author_login or login, "type": author_type or actor_type},
+        },
         "repository": {"id": 555, "node_id": "R_kgDOKExAmPlE", "name": "gov-portal"},
         "sender": {"login": login, "type": actor_type},
     }
@@ -112,11 +124,35 @@ class TestParseEvent:
         assert parsed.kind == VerifiedEventKind.PR_MERGED
         assert parsed.action == "closed"
         assert parsed.actor_login == "cdjk"
+        assert parsed.triggered_by_login == "cdjk"
         assert parsed.repository_node_id == "R_kgDOKExAmPlE"
         assert parsed.repository_name == "gov-portal"
         assert parsed.number == 42
         assert parsed.event_id == "987654"
         assert parsed.is_bot is False
+
+    def test_merged_pull_request_credits_author_not_merging_sender(self):
+        """GIT-007/D7: a merged PR credits its author while retaining the merger provenance."""
+        parsed = parse_event(
+            "pull_request",
+            pr_payload(login="maintainer", author_login="contributor"),
+        )
+
+        assert parsed is not None
+        assert parsed.actor_login == "contributor"
+        assert parsed.triggered_by_login == "maintainer"
+
+    def test_merged_pull_request_filters_bot_author_even_when_merged_by_a_human(self):
+        """GIT-008: contribution bot filtering follows the PR author, not the merge actor."""
+        parsed = parse_event(
+            "pull_request",
+            pr_payload(login="maintainer", author_login="dependabot[bot]"),
+        )
+
+        assert parsed is not None
+        assert parsed.actor_login == "dependabot[bot]"
+        assert parsed.triggered_by_login == "maintainer"
+        assert parsed.is_bot is True
 
     def test_pull_request_closed_unmerged_is_ignored(self):
         """GIT-007/D7: pull_request closed without a merge produces no verified event."""

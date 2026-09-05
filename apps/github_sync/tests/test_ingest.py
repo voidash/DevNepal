@@ -159,6 +159,7 @@ class TestValidDelivery:
             "repository_name",
             "number",
             "event_id",
+            "triggered_by_login",
         }
         assert row.payload["kind"] == "pr_merged"
         assert row.payload["event_id"] == "987654"

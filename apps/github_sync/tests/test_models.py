@@ -111,6 +111,7 @@ class TestProviderEvent:
             "repository_name",
             "number",
             "event_id",
+            "triggered_by_login",
         }
 
     @pytest.mark.parametrize(

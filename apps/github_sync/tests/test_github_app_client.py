@@ -68,6 +68,24 @@ def token_transport():
     )
 
 
+def test_list_open_issues_uses_the_installation_token_and_preserves_query_parameters():
+    """GIT-003/DSC-009: starter-task sync reads open issue metadata via the App token."""
+    def handler(request):
+        if request["method"] == "POST":
+            return 201, {"token": INSTALLATION_TOKEN}
+        assert request["headers"]["Authorization"] == f"token {INSTALLATION_TOKEN}"
+        assert request["url"].endswith(
+            "/repos/doit-np/sewa-portal/issues?state=open&per_page=100&page=1"
+        )
+        return 200, [{"id": 1, "number": 1, "title": "Example"}]
+
+    client = client_for(transport=FakeTransport(handler))
+
+    assert client.list_open_issues(INSTALLATION_ID, "doit-np/sewa-portal") == [
+        {"id": 1, "number": 1, "title": "Example"}
+    ]
+
+
 def jwt_segment(segment: str):
     return json.loads(base64.urlsafe_b64decode(segment + "=" * (-len(segment) % 4)))
 
