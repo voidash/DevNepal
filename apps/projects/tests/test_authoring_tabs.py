@@ -4,12 +4,15 @@ from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.accounts.tests.factories import UserFactory
+from apps.github_sync.models import (
+    GithubIssueSnapshot,
+    GithubPullRequestSnapshot,
+    GithubRepositoryContributor,
+)
 from apps.ministries.tests.factories import MinistryPublisherFactory
 from apps.projects.enums import AttachmentKind, ProjectStatus, UpdateKind
 from apps.projects.tests.factories import (
     PersonalProjectFactory,
-    ProjectAttachmentFactory,
-    ProjectScreeningQuestionFactory,
     ProjectUpdateFactory,
     SuperAdminFactory,
     make_publishable,
@@ -17,12 +20,12 @@ from apps.projects.tests.factories import (
 
 pytestmark = pytest.mark.django_db
 
-AUTHORING_TABS = (
-    ("authoring_detail", "overview-heading"),
-    ("authoring_readiness", "readiness-heading"),
-    ("authoring_attachment", "attachments-heading"),
-    ("authoring_updates", "updates-heading"),
-    ("authoring_questions", "questions-heading"),
+AUTHORING_ROUTES = (
+    "authoring_detail",
+    "authoring_readiness",
+    "authoring_attachment",
+    "authoring_updates",
+    "authoring_questions",
 )
 
 
@@ -44,32 +47,56 @@ def verify_mfa(client, user):
     assert response.status_code == 302
 
 
+def add_github_activity(project, *, issue_count=1, pull_request_count=1):
+    repository = project.repository_connections.get()
+    for number in range(1, issue_count + 1):
+        GithubIssueSnapshot.objects.create(
+            repository=repository,
+            github_issue_id=700 + number,
+            number=number,
+            title=f"Accessibility task {number}",
+            state="open",
+            url=f"https://github.com/moit/service-directory/issues/{number}",
+        )
+    for number in range(1, pull_request_count + 1):
+        GithubPullRequestSnapshot.objects.create(
+            repository=repository,
+            github_pull_request_id=800 + number,
+            number=number,
+            title=f"Accessibility pull request {number}",
+            state="open",
+            url=f"https://github.com/moit/service-directory/pull/{number}",
+            author_login="voidash",
+        )
+    GithubRepositoryContributor.objects.create(
+        repository=repository,
+        github_user_id=900,
+        login="voidash",
+        profile_url="https://github.com/voidash",
+        contributions=9,
+    )
+
+
 @pytest.mark.integration
-def test_authoring_tab_routes_render_only_their_section_for_the_owning_publisher(client):
-    """GOV-004/GOV-005: each authoring tab is a real route rendering only its own section."""
+def test_publisher_authoring_routes_render_the_github_first_workspace(client):
+    """GOV-004/GIT-010: publisher routes retain access control while showing GitHub activity."""
     project = make_publishable()
+    add_github_activity(project)
     verify_mfa(client, project.owner)
 
-    for route_name, heading_id in AUTHORING_TABS:
+    for route_name in AUTHORING_ROUTES:
         path = reverse(f"projects:{route_name}", kwargs={"slug": project.slug})
         response = client.get(path)
 
         assert response.status_code == 200, route_name
         content = response.content.decode()
-        assert f'<h2 id="{heading_id}">' in content, route_name
-        assert content.count('aria-current="page"') == 1, route_name
-        assert f'aria-current="page" href="{path}"' in content, route_name
-
-    overview = client.get(
-        reverse("projects:authoring_detail", kwargs={"slug": project.slug})
-    ).content.decode()
-    assert '<h2 id="workflow-heading">' in overview
-    for route_name, _heading_id in AUTHORING_TABS[1:]:
-        content = client.get(
-            reverse(f"projects:{route_name}", kwargs={"slug": project.slug})
-        ).content.decode()
-        assert '<h2 id="overview-heading">' not in content, route_name
-        assert '<h2 id="workflow-heading">' not in content, route_name
+        assert "GitHub activity" in content, route_name
+        assert "moit/service-directory" in content, route_name
+        assert "Accessibility task 1" in content, route_name
+        assert "Accessibility pull request 1" in content, route_name
+        assert reverse("github_sync:public_profile", args=["voidash"]) in content, route_name
+        assert "Project workflow" not in content, route_name
+        assert "Review history" not in content, route_name
 
 
 @pytest.mark.integration
@@ -95,13 +122,13 @@ def test_authoring_tab_routes_require_mfa_and_ministry_membership(client):
     foreign_publisher = MinistryPublisherFactory()
 
     client.force_login(foreign_publisher.user)
-    for route_name, _ in AUTHORING_TABS:
+    for route_name in AUTHORING_ROUTES:
         response = client.get(reverse(f"projects:{route_name}", kwargs={"slug": project.slug}))
         assert response.status_code == 302, route_name
         assert response.url == reverse("accounts:mfa_setup"), route_name
 
     verify_mfa(client, foreign_publisher.user)
-    for route_name, _ in AUTHORING_TABS:
+    for route_name in AUTHORING_ROUTES:
         response = client.get(reverse(f"projects:{route_name}", kwargs={"slug": project.slug}))
         assert response.status_code == 404, route_name
 
@@ -111,49 +138,44 @@ def test_authoring_tab_routes_redirect_anonymous_visitors_to_login(client):
     """AUTH-001: anonymous visitors never see authoring tabs, only the login redirect."""
     project = make_publishable()
 
-    for route_name, _ in AUTHORING_TABS:
+    for route_name in AUTHORING_ROUTES:
         response = client.get(reverse(f"projects:{route_name}", kwargs={"slug": project.slug}))
         assert response.status_code == 302, route_name
         assert reverse("accounts:login") in response.url, route_name
 
 
 @pytest.mark.integration
-def test_authoring_tabs_carry_real_counters_on_every_tab(client):
-    """A8/GOV-004: tab counters show real record counts on every authoring tab."""
+def test_publisher_workspace_carries_real_github_counters_on_every_route(client):
+    """GOV-004/GIT-010: publisher routes retain synchronized issue and PR counts."""
     project = make_publishable()
-    ProjectAttachmentFactory(project=project, kind=AttachmentKind.REQUIREMENTS)
-    ProjectAttachmentFactory(project=project, kind=AttachmentKind.REQUIREMENTS)
-    ProjectUpdateFactory(project=project, kind=UpdateKind.PROGRESS)
-    ProjectUpdateFactory(project=project, kind=UpdateKind.MILESTONE)
-    ProjectUpdateFactory(project=project, kind=UpdateKind.RELEASE)
-    ProjectScreeningQuestionFactory(project=project)
-    ProjectScreeningQuestionFactory(project=project)
-    ProjectScreeningQuestionFactory(project=project)
-    ProjectScreeningQuestionFactory(project=project)
+    add_github_activity(project, issue_count=2, pull_request_count=3)
     verify_mfa(client, project.owner)
 
-    for route_name, _ in AUTHORING_TABS:
+    for route_name in AUTHORING_ROUTES:
         content = client.get(
             reverse(f"projects:{route_name}", kwargs={"slug": project.slug})
         ).content.decode()
-        assert '<span class="Counter">0</span>' in content, route_name
         assert '<span class="Counter">2</span>' in content, route_name
         assert '<span class="Counter">3</span>' in content, route_name
-        assert '<span class="Counter">4</span>' in content, route_name
+        assert "Repository contributors" in content, route_name
+        assert "9 commits" in content, route_name
 
 
 @pytest.mark.integration
-def test_attachment_route_renders_the_tab_on_get_and_uploads_on_post(client):
-    """GOV-003/GOV-004: the attachments route serves the tab via GET and uploads via POST."""
+def test_attachment_route_keeps_the_publisher_in_the_github_first_workspace(client):
+    """GOV-003/GOV-004: legacy attachment routes do not restore attachment UI for publishers."""
     project = make_publishable()
     verify_mfa(client, project.owner)
     url = reverse("projects:authoring_attachment", kwargs={"slug": project.slug})
 
-    tab = client.get(url)
-    assert tab.status_code == 200
-    content = tab.content.decode()
-    assert '<h2 id="attachments-heading">' in content
-    assert f'aria-current="page" href="{url}"' in content
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "GitHub activity" in content
+    assert "Connected GitHub repository" in content
+    assert "Upload attachment" not in content
+    assert '<h2 id="attachments-heading">' not in content
 
 
 @pytest.mark.integration
@@ -180,8 +202,8 @@ def test_attachment_upload_redirects_back_to_the_attachments_tab(client):
 
 
 @pytest.mark.integration
-def test_manage_errors_rerender_the_tab_that_posted(client):
-    """GOV-004: a failed update POST returns to the updates tab with the error visible."""
+def test_manage_errors_preserve_validation_without_restoring_legacy_publisher_forms(client):
+    """GOV-004: legacy management validation survives without restoring removed publisher forms."""
     project = make_publishable()
     verify_mfa(client, project.owner)
     manage_url = reverse("projects:authoring_manage", kwargs={"slug": project.slug})
@@ -189,14 +211,15 @@ def test_manage_errors_rerender_the_tab_that_posted(client):
     response = client.post(manage_url, {"action": "update", "title": "", "body": ""})
 
     assert response.status_code == 400
+    assert response.context["update_form"].errors
     content = response.content.decode()
-    assert '<h2 id="updates-heading">' in content
-    assert '<h2 id="overview-heading">' not in content
+    assert "GitHub activity" in content
+    assert "Post update" not in content
 
 
 @pytest.mark.integration
-def test_workflow_errors_rerender_the_overview_tab(client):
-    """GOV-005/AUTH-006: a refused lifecycle action returns to the overview workflow form."""
+def test_workflow_errors_preserve_validation_without_restoring_legacy_publisher_forms(client):
+    """GOV-005/AUTH-006: refused transitions stay validated without restored workflow UI."""
     project = make_publishable()
     super_admin = SuperAdminFactory()
     verify_mfa(client, project.owner)
@@ -213,14 +236,15 @@ def test_workflow_errors_rerender_the_overview_tab(client):
     response = client.post(workflow_url, {"action": "restore"})
 
     assert response.status_code == 400
+    assert response.context["workflow_form"].errors
     content = response.content.decode()
-    assert '<h2 id="workflow-heading">' in content
-    assert '<h2 id="updates-heading">' not in content
+    assert "GitHub activity" in content
+    assert "Next lifecycle action" not in content
 
 
 @pytest.mark.integration
-def test_authoring_tabs_no_longer_use_page_anchors(client):
-    """GOV-004: legacy #anchor links are gone; every tab is a real resolvable route."""
+def test_publisher_workspace_omits_legacy_workflow_navigation(client):
+    """GOV-004/GIT-010: publisher workspace exposes repository work, not legacy workflow tabs."""
     project = make_publishable()
     verify_mfa(client, project.owner)
 
@@ -232,9 +256,12 @@ def test_authoring_tabs_no_longer_use_page_anchors(client):
     assert 'href="#attachments"' not in content
     assert 'href="#updates"' not in content
     assert 'href="#questions"' not in content
-    for route_name, _ in AUTHORING_TABS:
-        path = reverse(f"projects:{route_name}", kwargs={"slug": project.slug})
-        assert f'href="{path}"' in content, route_name
+    assert "GitHub activity" in content
+    assert "Project workflow" not in content
+    assert "Readiness" not in content
+    assert "Attachments" not in content
+    assert "Updates" not in content
+    assert "Questions" not in content
 
 
 @pytest.mark.integration
