@@ -52,6 +52,39 @@ dialog.dn-dialog .dialog-body { padding: 24px 28px 8px; }
 dialog.dn-dialog .dialog-title { font: 600 24px/1.1 var(--font-heading); margin: 0 0 6px; }
 dialog.dn-dialog .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 28px 24px; }
 
+/* ── interaction — a drawing has no hover; an app must answer the pointer ── */
+.btn, .card, .tag, a, .seg-opt, .dn-side a, .dn-topnav-links a, .radio .dot, .input {
+  transition:
+    background-color var(--dn-t, 140ms) ease,
+    border-color var(--dn-t, 140ms) ease,
+    color var(--dn-t, 140ms) ease,
+    box-shadow var(--dn-t, 140ms) ease,
+    transform var(--dn-t, 140ms) ease;
+}
+@media (prefers-reduced-motion: reduce) { :root { --dn-t: 0ms; } }
+
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn-primary:hover { box-shadow: var(--shadow-sm); }
+
+/* Cards that lead somewhere lift; cards that merely hold content do not. */
+a.card, .card[data-goto], .card:has(> a:only-child), .card:has(.card-title a) { cursor: pointer; }
+a.card:hover, .card[data-goto]:hover, .card:has(> a:only-child):hover, .card:has(.card-title a):hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-text) 28%, transparent);
+}
+.card:focus-within { box-shadow: 0 0 0 2px var(--color-accent-300); }
+
+/* Tags that filter (radio inside) read as toggles. */
+.seg-opt:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+
+/* Tables: the row under the pointer. */
+.table tbody tr { transition: background-color var(--dn-t, 140ms) ease; }
+.table tbody tr:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+
+/* Links underline on hover only where they sit in prose; nav links have their own rule. */
+a:not([class]):hover { text-decoration-thickness: 2px; }
+
 /* ── small polish the boards never needed but a page does ───────────────── */
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

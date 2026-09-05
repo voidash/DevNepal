@@ -159,9 +159,26 @@ const OVERVIEW: Record<Actor, string> = {
   admin: "/admin",
 }
 
+/* Second pass for the canvas's "All 1,930 members →" and "Browse government
+   projects" phrasings: strip counts and verbs, then match on the noun. Order
+   matters — "community projects" must win over "projects". */
+const FUZZY: [RegExp, string][] = [
+  [/community project/, "/community"],
+  [/government project|open project|browse project|\bprojects?\b/, "/projects"],
+  [/leaderboard|badge|recognition/, "/recognition"],
+  [/\bmembers?\b|directory/, "/members"],
+  [/\bposts?\b|\bblogs?\b|writing/, "/blogs"],
+  [/how listing works|nominate|publisher|how to contribute|contribute/, "/how-to-contribute"],
+  [/join with github|sign in|create account/, "/sign-in"],
+]
+
 export function pathFor(linkText: string, actor: Actor = "public"): string | null {
   const key = linkText.replace(/\s+/g, " ").replace(/[→←›»]/g, "").trim().toLowerCase()
   if (!key) return null
   if (key === "overview") return OVERVIEW[actor]
-  return COMMON[key] ?? null
+  const exact = COMMON[key]
+  if (exact) return exact
+  const loose = key.replace(/^(all|browse|see|view|open|explore)\s+/, "").replace(/[\d,]+\s*/g, "")
+  for (const [re, path] of FUZZY) if (re.test(loose)) return path
+  return null
 }

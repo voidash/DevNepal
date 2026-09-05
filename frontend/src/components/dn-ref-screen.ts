@@ -108,11 +108,39 @@ function expand(root: ParentNode, scope: Scope) {
   }
 }
 
+/* The canvas serialises tables as <sc-raw-table>, <sc-raw-tr>, <sc-raw-td> …
+   so the HTML parser leaves their structure alone. A browser renders unknown
+   elements inline, which turns every table into one run-on line of text —
+   42 tables across the boards. Rename them back to what they are. */
+const RAW_TAGS: Record<string, string> = {
+  "sc-raw-table": "table",
+  "sc-raw-thead": "thead",
+  "sc-raw-tbody": "tbody",
+  "sc-raw-tfoot": "tfoot",
+  "sc-raw-tr": "tr",
+  "sc-raw-th": "th",
+  "sc-raw-td": "td",
+  "sc-raw-caption": "caption",
+}
+
+function restoreTables(root: ParentNode) {
+  for (const from of Object.keys(RAW_TAGS)) {
+    for (const el of Array.from(root.querySelectorAll(from))) {
+      const to = document.createElement(RAW_TAGS[from])
+      for (const attr of Array.from(el.attributes)) to.setAttribute(attr.name, attr.value)
+      if (!to.classList.contains("table") && to.tagName === "TABLE") to.classList.add("table")
+      while (el.firstChild) to.appendChild(el.firstChild)
+      el.replaceWith(to)
+    }
+  }
+}
+
 export function renderBoard(raw: string, actor: Actor, scope: Scope = referenceScope): string {
   const tpl = document.createElement("template")
   tpl.innerHTML = raw
   expand(tpl.content, scope)
   substituteNode(tpl.content, scope)
+  restoreTables(tpl.content)
 
   /* Every link on the canvas is href="#". Its text says where it meant to go;
      the router knows most of those places. Wired links become real

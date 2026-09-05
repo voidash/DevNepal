@@ -31,7 +31,15 @@ body { margin: 0; background: var(--color-bg); color: var(--color-text); }
   font: 600 9px/1 var(--font-body); letter-spacing: .14em; text-transform: uppercase;
   color: var(--color-accent-700);
 }
-.dn-topnav-links { display: flex; gap: 22px; align-items: center; flex: 1; flex-wrap: wrap; }
+/* One line, always. Wrapping stacked the five sections into a column at
+   narrow widths with the brand floating beside them; below 900px the section
+   links yield to the brand and tools (a menu comes with the mobile pass). */
+.dn-topnav-links { display: flex; gap: 22px; align-items: center; flex: 1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.dn-topnav-links::-webkit-scrollbar { display: none; }
+.dn-topnav-links a { white-space: nowrap; }
+@media (max-width: 900px) { .dn-topnav-links { display: none; } }
+/* A board never scrolls the page sideways; it scrolls inside its own frame. */
+.dn-content { overflow-x: auto; }
 .dn-topnav-links a {
   color: var(--color-text); text-decoration: none; font-size: 14px; padding: 6px 0;
   border-bottom: 2px solid transparent;

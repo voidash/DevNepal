@@ -150,6 +150,16 @@ export class DnApp extends LitElement {
     try { localStorage.setItem(LANG_KEY, lang) } catch { /* ignore */ }
   }
 
+  /* /sign-in is a place a link can point at, so it is a route — but the thing
+     it names is the dialog, not a page. Arriving there opens it over whatever
+     is underneath (the A2.3 board, which draws exactly this). */
+  protected updated() {
+    if (this.path === "/sign-in" && !this.session) {
+      const d = this.dialog
+      if (d && !d.querySelector("dialog[open]")) d.open()
+    }
+  }
+
   private screen(m: Match) {
     const tag = live[m.route.id]
     if (tag) {
