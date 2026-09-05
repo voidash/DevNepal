@@ -1,69 +1,140 @@
-/* Block-1 chrome around the reference boards. Temporary by design: dn-shell
-   replaces the rail in block 3. Uses Industry tokens so it re-skins with the
-   boards when industry-aliases.css lands. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   APP SHELL — in Industry's idiom. Every value here is one the canvas used;
+   the classes replace inline styles the boards repeated 115 times.
+   ═══════════════════════════════════════════════════════════════════════ */
 
-html, body { height: 100%; }
-body { overflow: hidden; }
+html, body { min-height: 100%; }
+body { margin: 0; background: var(--color-bg); color: var(--color-text); }
 
-.dn-canvas {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  height: 100vh;
-}
+/* ── frame ────────────────────────────────────────────────────────────── */
+.dn-frame { min-height: 100vh; display: flex; flex-direction: column; }
+.dn-body { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; }
+.dn-body.has-side { grid-template-columns: 248px minmax(0, 1fr); }
+@media (max-width: 900px) { .dn-body.has-side { grid-template-columns: minmax(0, 1fr); } .dn-body.has-side .dn-side { display: none; } }
+.dn-content { min-width: 0; }
 
-/* ── rail ─────────────────────────────────────────────────────────────── */
-.dn-rail {
-  overflow-y: auto;
-  border-right: 1px solid var(--color-divider);
+/* ── top nav ──────────────────────────────────────────────────────────── */
+.dn-topnav {
+  display: flex; align-items: center; gap: 22px;
+  padding: 12px 32px;
+  border-bottom: 1px solid var(--color-divider);
   background: var(--color-bg);
-  padding: 16px 12px 40px;
-  font-size: 13px;
+  position: sticky; top: 0; z-index: 20;
 }
-.dn-rail-head {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 4px 8px 16px;
-  font-family: var(--font-heading); font-size: 18px; line-height: 1.1;
+.dn-frame.is-public .dn-topnav { padding: 14px 48px; }
+.dn-brand {
+  display: flex; flex-direction: column; gap: 3px; line-height: 1;
+  font: var(--font-heading-weight) 22px/1 var(--font-heading);
+  color: var(--color-text); text-decoration: none;
 }
-.dn-rail-head .text-muted { font: 400 12px/1.4 var(--font-body); }
-.dn-rail-group { margin-top: 14px; }
-.dn-rail-group h6 { margin: 0 0 4px; padding: 0 8px; font-size: 11px; }
-.dn-rail-group ol { list-style: none; margin: 0; padding: 0; }
-.dn-rail a {
-  display: grid; grid-template-columns: 44px 1fr; gap: 8px; align-items: baseline;
-  padding: 6px 8px; border-radius: var(--radius-md);
-  color: var(--color-text); text-decoration: none; line-height: 1.35;
+.dn-brand-sub {
+  font: 600 9px/1 var(--font-body); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--color-accent-700);
 }
-.dn-rail a:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
-.dn-rail a[aria-current="page"] {
-  background: var(--color-accent-100); color: var(--color-accent-800); font-weight: 500;
+.dn-topnav-links { display: flex; gap: 22px; align-items: center; flex: 1; flex-wrap: wrap; }
+.dn-topnav-links a {
+  color: var(--color-text); text-decoration: none; font-size: 14px; padding: 6px 0;
+  border-bottom: 2px solid transparent;
 }
-.dn-code { font: 500 11px/1 var(--font-heading); letter-spacing: .04em; color: var(--color-accent-700); }
-.dn-rail a[aria-current="page"] .dn-code { color: inherit; }
+.dn-topnav-links a:hover { color: var(--color-accent); }
+.dn-topnav-links a[aria-current="page"] { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+.dn-topnav-tools { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 
-/* ── stage ────────────────────────────────────────────────────────────── */
-.dn-stage { overflow: auto; background: var(--color-neutral-200); }
-.dn-stage-head {
-  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  padding: 16px 24px 12px; border-bottom: 1px solid var(--color-divider);
-  background: var(--color-bg); position: sticky; top: 0; z-index: 2;
-}
-.dn-stage-head h4 { margin: 0; }
-.dn-stage-head p { margin: 0; flex-basis: 100%; font-size: 13px; }
+.dn-lang .seg-opt { background: none; border: 0; color: inherit; font: inherit; font-size: 13px; padding: 7px 12px; cursor: pointer; }
+.dn-lang .seg-opt[aria-checked="true"] { background: var(--color-accent); color: var(--color-bg); }
 
-/* Boards are drawn at 1440 wide; keep that, scroll sideways inside the stage. */
-.dn-ref { position: relative; width: max-content; min-width: 100%; padding: 24px; }
-.dn-ref > main, .dn-ref > div[data-screen-label] { background: var(--color-bg); }
-.dn-ref > main { width: 1440px; border: 1px solid var(--color-divider); box-shadow: var(--shadow-md); }
+.dn-bell { position: relative; }
+.dn-bell-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: var(--color-accent); border-radius: 50%; }
+
+.dn-person, .dn-account {
+  display: flex; gap: 10px; align-items: center; font-size: 13px; text-align: left;
+  background: none; border: 0; padding: 4px 6px 4px 4px; border-radius: var(--radius-md); cursor: pointer; color: inherit; font-family: inherit;
+}
+.dn-person:hover, .dn-account:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+.dn-avatar {
+  width: 32px; height: 32px; flex: none; border: 1px solid var(--color-divider);
+  display: grid; place-items: center; font: 600 12px var(--font-heading);
+  background: var(--color-accent-100); color: var(--color-accent-800);
+}
+.dn-person-text { display: flex; flex-direction: column; line-height: 1.2; }
+.dn-person-name { font-weight: 500; }
+.dn-person-role { font-size: 11px; color: var(--color-neutral-600); }
+
+/* ── sidebar ──────────────────────────────────────────────────────────── */
+.dn-side {
+  border-right: 1px solid var(--color-divider);
+  padding: 24px 16px; display: flex; flex-direction: column; gap: 2px; font-size: 14px;
+  position: sticky; top: 61px; align-self: start; max-height: calc(100vh - 61px); overflow-y: auto;
+}
+.dn-side-label {
+  font: 600 11px var(--font-body); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--color-neutral-600); padding: 0 12px 10px;
+}
+.dn-side-label:not(:first-child) { padding-top: 20px; }
+.dn-side a {
+  display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
+  padding: 8px 12px; text-decoration: none; color: inherit; border-left: 2px solid transparent;
+}
+.dn-side a:hover { background: color-mix(in srgb, var(--color-text) 5%, transparent); }
+.dn-side a[aria-current="page"] { color: var(--color-accent-900); background: var(--color-accent-100); border-left-color: var(--color-accent); }
+.dn-side-count { font-size: 11px; color: var(--color-neutral-600); }
+.dn-side a[aria-current="page"] .dn-side-count { color: inherit; opacity: .8; }
+
+.dn-side-org { padding: 0 12px 16px; margin-bottom: 8px; border-bottom: 1px solid var(--color-divider); }
+.dn-side-org-kicker {
+  display: flex; gap: 6px; align-items: center; margin-bottom: 6px;
+  font: 600 10px var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--color-accent-700);
+}
+.dn-side-org-name { font: 600 16px/1.2 var(--font-heading); }
+.dn-side-org-meta { font-size: 12px; color: var(--color-neutral-600); margin-top: 4px; }
+
+/* ── page header (Live screens) ───────────────────────────────────────── */
+.dn-page-header { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 20px; }
+.dn-page-header.has-desc { align-items: flex-start; }
+.dn-page-header h1 { margin: 0; }
+.dn-page-header p { margin: 4px 0 0; max-width: 70ch; }
+.dn-page-header-action { flex: none; }
+
+/* ── footer ───────────────────────────────────────────────────────────── */
+.dn-footer { border-top: 1px solid var(--color-divider); margin-top: 56px; background: var(--color-bg); }
+.dn-footer-inner {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px 72px;
+  padding: 40px 48px 32px; max-width: 1440px; margin: 0 auto;
+}
+@media (max-width: 900px) { .dn-footer-inner { grid-template-columns: 1fr; } }
+.dn-footer-brand p { max-width: 52ch; font-size: 14px; margin-top: 14px; }
+.dn-footer-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 700px) { .dn-footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dn-footer-cols h6 { margin: 0 0 10px; color: var(--color-neutral-600); }
+.dn-footer-cols a { display: block; color: var(--color-text); text-decoration: none; font-size: 14px; padding: 4px 0; }
+.dn-footer-cols a:hover { color: var(--color-accent); }
+.dn-footer-legal {
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 14px 48px 24px; max-width: 1440px; margin: 0 auto; font-size: 12px;
+  border-top: 1px solid var(--color-divider);
+}
+
+/* ── sign-in dialog ───────────────────────────────────────────────────── */
+.dn-providers { display: flex; flex-direction: column; gap: 8px; }
+.dn-provider { margin: 0; justify-content: center; }
+.dn-accounts { display: grid; gap: 4px; }
+.dn-account { width: 100%; padding: 8px 10px; }
+
+/* ── reference boards inside the shell ────────────────────────────────── */
+.dn-ref { position: relative; }
+.dn-ref > main { max-width: 1100px; }
+/* whole boards keep their drawn inner layout; the root just flows now */
+.dn-ref > div[data-screen-label] { border: 0 !important; box-shadow: none !important; background: transparent !important; }
 
 .dn-ref-chip {
-  position: sticky; top: 64px; left: 24px; z-index: 1;
+  position: fixed; right: 20px; bottom: 20px; z-index: 30;
   display: inline-flex; align-items: center; gap: 6px;
-  margin: 0 0 12px; padding: 5px 10px;
-  font: 500 12px/1 var(--font-body); letter-spacing: .02em;
-  color: var(--color-neutral-800); background: var(--color-neutral-100);
-  border: 1px dashed var(--color-neutral-500); border-radius: 999px;
+  padding: 6px 10px; font: 500 12px/1 var(--font-body); letter-spacing: .02em;
+  color: var(--color-neutral-800); background: var(--color-bg);
+  border: 1px dashed var(--color-neutral-500); border-radius: 999px; box-shadow: var(--shadow-sm);
 }
-.dn-ref-chip::before {
-  content: ""; width: 7px; height: 7px; border-radius: 50%;
-  background: var(--color-neutral-500);
-}
+.dn-ref-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--color-neutral-500); }
+.dn-ref a[data-ref-link] { cursor: default; }
+
+/* ── not found ────────────────────────────────────────────────────────── */
+.dn-notfound { padding: 64px 48px; max-width: 60ch; }

@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   INDUSTRY — EXTENSIONS
+   What the canvas's design system needs to be an app rather than a drawing,
+   written in its own idiom. Loads after industry.css; nothing here changes a
+   value the boards were drawn with — it fills gaps.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* The canvas set 2,173 Devanagari glyphs and loaded no Devanagari face, so
+     Nepali fell to whatever the OS had. Fallback is per glyph: Latin stays
+     Barlow, Devanagari takes Noto. */
+  --font-heading: "Barlow Condensed", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-body:    "Barlow", "Noto Sans Devanagari", system-ui, sans-serif;
+
+  /* Status hues. Industry has none — only accent and neutral tags — and a
+     working app needs "accepted" and "declined" to differ. Desaturated to sit
+     beside the steel blue rather than shout over it. */
+  --color-ok:   #3f7d5c;
+  --color-warn: #9a6b1f;
+  --color-err:  #a43d3d;
+}
+
+/* ── status tags ─────────────────────────────────────────────────────────── */
+.tag-success { background: color-mix(in srgb, var(--color-ok) 12%, var(--color-bg));   color: var(--color-ok);   border: 1px solid color-mix(in srgb, var(--color-ok) 35%, transparent); }
+.tag-warning { background: color-mix(in srgb, var(--color-warn) 12%, var(--color-bg)); color: var(--color-warn); border: 1px solid color-mix(in srgb, var(--color-warn) 35%, transparent); }
+.tag-error   { background: color-mix(in srgb, var(--color-err) 12%, var(--color-bg));  color: var(--color-err);  border: 1px solid color-mix(in srgb, var(--color-err) 35%, transparent); }
+.tag-info    { background: var(--color-accent-100); color: var(--color-accent-800); border: 1px solid var(--color-accent-300); }
+
+/* ── Devanagari metrics ─────────────────────────────────────────────────── */
+:lang(ne) {
+  line-height: 1.75;
+  letter-spacing: normal;
+  font-synthesis-weight: none;
+  line-break: strict;
+}
+
+/* ── native dialog in Industry clothing ─────────────────────────────────── */
+dialog.dn-dialog {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: 0;
+  width: min(520px, calc(100vw - 32px));
+  box-shadow: var(--shadow-lg);
+}
+dialog.dn-dialog::backdrop {
+  background: color-mix(in srgb, var(--color-text) 40%, transparent);
+  backdrop-filter: blur(2px);
+}
+dialog.dn-dialog .dialog-body { padding: 24px 28px 8px; }
+dialog.dn-dialog .dialog-title { font: 600 24px/1.1 var(--font-heading); margin: 0 0 6px; }
+dialog.dn-dialog .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 28px 24px; }
+
+/* ── small polish the boards never needed but a page does ───────────────── */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+button, input, select, textarea { font-family: inherit; }

@@ -2,16 +2,19 @@ import { LitElement, html, nothing } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import { unsafeHTML } from "lit/directives/unsafe-html.js"
 
+import type { Actor } from "../data/api"
 import { referenceScope } from "../data/seed"
+import { pathFor } from "../router"
 
 /**
  * A Reference screen: one board of the design canvas, extracted by
- * scripts/extract-canvas.py, mounted as-is.
+ * scripts/extract-canvas.py, mounted inside the real shell.
  *
  * Reference is the honest tier. The board looks right — it is the approved
- * drawing — and does nothing: no data binding to the store, no forms that
- * submit, links that only navigate. A screen leaves this tier when a Live
- * component claims its route.
+ * drawing — and does not write anything: no store, no forms that submit. Its
+ * links DO navigate, because their text says where they meant to go and the
+ * router knows those places. A screen leaves this tier when a Live component
+ * claims its route; the URL never changes.
  *
  * Renders into the light DOM on purpose. The board's markup is styled by
  * industry.css through global class names (.btn, .card, .tag …); a shadow
@@ -23,10 +26,8 @@ import { referenceScope } from "../data/seed"
  *   <sc-for list="{{ catalog }}" as="p">…{{ p.title }}…</sc-for>
  *   <sc-if value="{{ story }}">…</sc-if>
  *
- * Without this, the boards show "{{ p.title }}" — which is what they did.
- * Expanding from seed.ts rather than from placeholder text means a Reference
- * board and the Live screen beside it show the same ministries, the same
- * people and the same projects.
+ * Expanding from seed.ts rather than placeholder text means a Reference board
+ * and the Live screen beside it show the same ministries, people and projects.
  */
 const boards = import.meta.glob<string>("../screens/ref/*.html", {
   query: "?raw",
@@ -70,15 +71,12 @@ function substituteNode(root: Node, scope: Scope) {
   }
 }
 
-/** Expand the canvas's template elements in place, depth-first. */
+/** Expand the canvas's template elements in place, outermost loop first. */
 function expand(root: ParentNode, scope: Scope) {
-  // Loops first: their bodies may contain conditionals and nested loops.
   let loop: Element | null
   while ((loop = root.querySelector("sc-for"))) {
-    // Only take a loop with no loop ancestor still unexpanded.
-    if (loop.parentElement?.closest("sc-for")) {
-      loop = loop.parentElement.closest("sc-for")!
-    }
+    const outer = loop.parentElement?.closest("sc-for")
+    if (outer) loop = outer
     const listPath = (loop.getAttribute("list") ?? "").replace(EXPR, "$1").trim()
     const alias = loop.getAttribute("as") ?? "item"
     const list = resolve(listPath, scope)
@@ -95,7 +93,6 @@ function expand(root: ParentNode, scope: Scope) {
     loop.replaceWith(frag)
   }
 
-  // Conditionals: keep the children or drop the block.
   let cond: Element | null
   while ((cond = root.querySelector("sc-if"))) {
     const path = (cond.getAttribute("value") ?? "").replace(EXPR, "$1").trim()
@@ -111,19 +108,32 @@ function expand(root: ParentNode, scope: Scope) {
   }
 }
 
-export function renderBoard(raw: string, scope: Scope = referenceScope): string {
+export function renderBoard(raw: string, actor: Actor, scope: Scope = referenceScope): string {
   const tpl = document.createElement("template")
   tpl.innerHTML = raw
   expand(tpl.content, scope)
   substituteNode(tpl.content, scope)
 
-  /* Every link on the canvas is href="#". Left alone, each one scrolls to the
-     top and rewrites the URL hash — which is the router's. Neutralise them;
-     the Live tier gives links real targets. */
+  /* Every link on the canvas is href="#". Its text says where it meant to go;
+     the router knows most of those places. Wired links become real
+     navigation; the rest are made inert rather than left to scroll to the top
+     and clobber the URL. */
   for (const a of Array.from(tpl.content.querySelectorAll('a[href="#"]'))) {
-    a.setAttribute("href", "javascript:void 0")
-    a.setAttribute("data-ref-link", "")
+    const to = pathFor(a.textContent ?? "", actor)
+    if (to) {
+      a.setAttribute("href", to)
+    } else {
+      a.setAttribute("href", "javascript:void 0")
+      a.setAttribute("data-ref-link", "")
+      a.setAttribute("aria-disabled", "true")
+    }
   }
+  /* Buttons that read as navigation on the drawing. */
+  for (const b of Array.from(tpl.content.querySelectorAll("button"))) {
+    const to = pathFor(b.textContent ?? "", actor)
+    if (to) b.setAttribute("data-goto", to)
+  }
+
   const holder = document.createElement("div")
   holder.appendChild(tpl.content)
   return holder.innerHTML
@@ -135,6 +145,8 @@ export class DnRefScreen extends LitElement {
   @property({ type: String }) screen = ""
   /** Shown in the chip; the board's code from routes.json. */
   @property({ type: String }) label = ""
+  /** Whose screen this is — Overview means a different place per actor. */
+  @property({ type: String }) actor: Actor = "public"
 
   @state() private markup: string | null = null
   @state() private missing = false
@@ -143,8 +155,22 @@ export class DnRefScreen extends LitElement {
     return this
   }
 
+  connectedCallback() {
+    super.connectedCallback()
+    this.addEventListener("click", this.onClick)
+  }
+
+  private onClick = (e: MouseEvent) => {
+    const b = (e.target as Element).closest?.("button[data-goto]") as HTMLElement | null
+    if (!b) return
+    e.preventDefault()
+    this.dispatchEvent(new CustomEvent("dn-goto", { detail: b.dataset.goto, bubbles: true, composed: true }))
+    history.pushState({}, "", b.dataset.goto!)
+    window.dispatchEvent(new CustomEvent("dn:navigate"))
+  }
+
   protected willUpdate(changed: Map<string, unknown>) {
-    if (changed.has("screen")) void this.load()
+    if (changed.has("screen") || changed.has("actor")) void this.load()
   }
 
   private async load() {
@@ -156,7 +182,7 @@ export class DnRefScreen extends LitElement {
       return
     }
     const raw = await loader()
-    this.markup = renderBoard(raw)
+    this.markup = renderBoard(raw, this.actor)
   }
 
   render() {
@@ -167,10 +193,10 @@ export class DnRefScreen extends LitElement {
     }
     return html`
       <div class="dn-ref" data-screen=${this.screen}>
-        <span class="dn-ref-chip" title="Drawn, not wired. Becomes live when its component lands.">
+        ${this.markup ? unsafeHTML(this.markup) : nothing}
+        <span class="dn-ref-chip" title="Drawn, not wired yet. Navigation works; forms do not.">
           Reference · ${this.label || this.screen}
         </span>
-        ${this.markup ? unsafeHTML(this.markup) : nothing}
       </div>
     `
   }

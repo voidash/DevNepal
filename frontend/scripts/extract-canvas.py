@@ -136,6 +136,9 @@ def main() -> None:
             # catalog's filter column, a project's sidebar), not a rail.
             fragment = re.sub(r'<nav class="nav".*?</nav>', "", board, count=1, flags=re.S)
             fragment = re.sub(r"<footer\b.*?</footer>", "", fragment, flags=re.S)
+            # The board root is drawn at a fixed 1440; inside the app it is a
+            # page and should flow with the viewport.
+            fragment = re.sub(r'(<div id="[a-d]\d+-\d+"[^>]*style=")width:1440px;', r"\1", fragment, count=1)
         (OUT_REF / f"{m.group(1)}.html").write_text(clean(fragment), encoding="utf-8")
 
         sid, label = m.group(1), m.group(2)
