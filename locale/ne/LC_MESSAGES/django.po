@@ -54,11 +54,8 @@ msgstr "सार्वजनिक रूपमा देखाउनुहो�
 msgid "This URL is already linked on your profile."
 msgstr "यो URL पहिले नै तपाईंको प्रोफाइलमा लिङ्क गरिएको छ।"
 
-#, fuzzy
-#| msgid "%(count)s listing"
-#| msgid_plural "%(count)s listings"
 msgid "Account settings"
-msgstr "%(count)s सूची"
+msgstr "खाता सेटिङ"
 
 msgid "Dashboard"
 msgstr "ड्यासबोर्ड"
@@ -69,38 +66,37 @@ msgstr "तपाईंको विशेषाधिकारयुक्त �
 msgid ""
 "Control what people can see, what reaches your inbox, and which services are "
 "connected."
-msgstr "अरूले के देख्न सक्छन्, तपाईंको इनबक्समा के पुग्छ र कुन सेवाहरू जडान छन् भन्ने नियन्त्रण गर्नुहोस्।"
+msgstr ""
+"अरूले के देख्न सक्छन्, तपाईंको इनबक्समा के पुग्छ र कुन सेवाहरू जडान छन् भन्ने नियन्त्रण गर्नुहोस्।"
 
 msgid "Member dashboard"
 msgstr "सदस्य ड्यासबोर्ड"
 
-#, fuzzy
-#| msgid "Profile and visibility"
 msgid "Profile & visibility"
 msgstr "प्रोफाइल र दृश्यता"
 
 msgid ""
 "Edit your member profile, set visibility for individual fields, and check "
 "the public result."
-msgstr "आफ्नो सदस्य प्रोफाइल सम्पादन गर्नुहोस्, प्रत्येक फिल्डको दृश्यता सेट गर्नुहोस् र सार्वजनिक नतिजा जाँच्नुहोस्।"
+msgstr ""
+"आफ्नो सदस्य प्रोफाइल सम्पादन गर्नुहोस्, प्रत्येक फिल्डको दृश्यता सेट गर्नुहोस् र सार्वजनिक "
+"नतिजा जाँच्नुहोस्।"
 
-#, fuzzy
-#| msgid "Profile and visibility"
 msgid "Edit profile & visibility"
 msgstr "प्रोफाइल र दृश्यता"
 
 msgid "View public profile"
 msgstr "सार्वजनिक प्रोफाइल हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "Connected at"
 msgid "Connections & data"
-msgstr "जडान भएको मिति"
+msgstr "जडान र डेटा"
 
 msgid ""
 "Connecting GitHub is optional. It is separate from signing in and lets "
 "DevNepal link public contribution activity to your profile."
-msgstr "GitHub जडान वैकल्पिक हो। यो साइन इनबाट अलग हुन्छ र DevNepal लाई सार्वजनिक योगदान गतिविधि तपाईंको प्रोफाइलसँग जोड्न दिन्छ।"
+msgstr ""
+"GitHub जडान वैकल्पिक हो। यो साइन इनबाट अलग हुन्छ र DevNepal लाई सार्वजनिक योगदान "
+"गतिविधि तपाईंको प्रोफाइलसँग जोड्न दिन्छ।"
 
 msgid "GitHub connected as"
 msgstr "GitHub जोडिएको खाता:"
@@ -111,20 +107,18 @@ msgstr "GitHub जडान व्यवस्थापन गर्नुहो
 msgid ""
 "Connect only if you want public GitHub activity included in your DevNepal "
 "account."
-msgstr "तपाईंको DevNepal खातामा सार्वजनिक GitHub गतिविधि समावेश गर्न चाहनुहुन्छ भने मात्र जडान गर्नुहोस्।"
+msgstr ""
+"तपाईंको DevNepal खातामा सार्वजनिक GitHub गतिविधि समावेश गर्न चाहनुहुन्छ भने मात्र "
+"जडान गर्नुहोस्।"
 
 msgid "Connect with GitHub account"
 msgstr "GitHub खातासँग जोड्नुहोस्"
 
-#, fuzzy
-#| msgid "This decision is not available for the current application status."
 msgid "GitHub connection is not available on this installation."
-msgstr "हालको आवेदन अवस्थाका लागि यो निर्णय उपलब्ध छैन।"
+msgstr "यस स्थापनामा GitHub जडान उपलब्ध छैन।"
 
-#, fuzzy
-#| msgid "Save preferences"
 msgid "Preferences"
-msgstr "प्राथमिकताहरू सुरक्षित गर्नुहोस्"
+msgstr "प्राथमिकताहरू"
 
 msgid ""
 "Choose which messages you receive and how contribution recognition appears."
@@ -133,17 +127,12 @@ msgstr "तपाईंले कुन सन्देश प्राप्त
 msgid "Email preferences"
 msgstr "इमेल प्राथमिकताहरू"
 
-#, fuzzy
-#| msgid "Recognition policies"
 msgid "Recognition settings"
-msgstr "पहिचान नीतिहरू"
+msgstr "पहिचान सेटिङ"
 
 msgid "Sessions & account data"
 msgstr "सत्रहरू र खाता डेटा"
 
-#, fuzzy
-#| msgid ""
-#| "Review signed-in devices, download your data, or request account deletion."
 msgid ""
 "Review signed-in devices, download your data, or deactivate your account."
 msgstr ""
@@ -165,8 +154,6 @@ msgstr "खाता मेटाउन अनुरोध गर्नुहो
 msgid "Participation"
 msgstr "सहभागिता"
 
-#, fuzzy
-#| msgid "Review your applications and manage your community projects."
 msgid ""
 "Review applications and manage projects you maintain with the community."
 msgstr "आफ्ना आवेदनहरू समीक्षा गर्नुहोस् र सामुदायिक परियोजनाहरू व्यवस्थापन गर्नुहोस्।"
@@ -194,20 +181,18 @@ msgstr "परियोजनाहरू ब्राउज गर्नुह�
 msgid "Sign in"
 msgstr "लगइन गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Create account"
 msgid "Member account"
-msgstr "खाता खोल्नुहोस्"
+msgstr "सदस्य खाता"
 
-#, fuzzy
-#| msgid "Sign in to apply"
 msgid "Sign in to DevNepal"
-msgstr "आवेदन दिन साइन इन गर्नुहोस्"
+msgstr "DevNepal मा साइन इन गर्नुहोस्"
 
 msgid ""
 "Signing in proves who you are. It gives you access to your profile, "
 "applications, and contribution records."
-msgstr "साइन इनले तपाईंको पहिचान पुष्टि गर्छ। यसले तपाईंलाई आफ्नो प्रोफाइल, आवेदन र योगदान अभिलेखमा पहुँच दिन्छ।"
+msgstr ""
+"साइन इनले तपाईंको पहिचान पुष्टि गर्छ। यसले तपाईंलाई आफ्नो प्रोफाइल, आवेदन र योगदान "
+"अभिलेखमा पहुँच दिन्छ।"
 
 msgid "Sign-in and GitHub connection are separate controls."
 msgstr "साइन इन र GitHub जडान अलग नियन्त्रणहरू हुन्।"
@@ -215,17 +200,19 @@ msgstr "साइन इन र GitHub जडान अलग नियन्त
 msgid ""
 "A GitHub connection is optional and is managed after sign-in when you want "
 "eligible public work to be recognised. Your email is never shown publicly."
-msgstr "योग्य सार्वजनिक काम पहिचान गराउन चाहनुहुन्छ भने साइन इनपछि व्यवस्थापन गरिने GitHub जडान वैकल्पिक हो। तपाईंको इमेल कहिल्यै सार्वजनिक रूपमा देखाइँदैन।"
+msgstr ""
+"योग्य सार्वजनिक काम पहिचान गराउन चाहनुहुन्छ भने साइन इनपछि व्यवस्थापन गरिने GitHub "
+"जडान वैकल्पिक हो। तपाईंको इमेल कहिल्यै सार्वजनिक रूपमा देखाइँदैन।"
 
-#, fuzzy
-#| msgid "Disconnect GitHub"
 msgid "Sign in with GitHub"
-msgstr "GitHub विच्छेद गर्नुहोस्"
+msgstr "GitHub मार्फत साइन इन गर्नुहोस्"
 
 msgid ""
 "GitHub can verify your identity for sign-in. Review and manage the resulting "
 "GitHub connection from your account settings."
-msgstr "GitHub ले साइन इनका लागि तपाईंको पहिचान पुष्टि गर्न सक्छ। खाता सेटिङबाट बनेको GitHub जडान समीक्षा र व्यवस्थापन गर्नुहोस्।"
+msgstr ""
+"GitHub ले साइन इनका लागि तपाईंको पहिचान पुष्टि गर्न सक्छ। खाता सेटिङबाट बनेको GitHub "
+"जडान समीक्षा र व्यवस्थापन गर्नुहोस्।"
 
 msgid "or continue with username"
 msgstr "वा प्रयोगकर्ता नामबाट जारी राख्नुहोस्"
@@ -327,7 +314,9 @@ msgstr "प्रोफाइल सम्पादन गर्नुहोस�
 msgid ""
 "Add what helps people understand how you contribute, then choose visibility "
 "field by field."
-msgstr "अरूलाई तपाईंले कसरी योगदान गर्नुहुन्छ भन्ने बुझ्न मद्दत गर्ने विवरण थप्नुहोस्, त्यसपछि प्रत्येक फिल्डको दृश्यता छान्नुहोस्।"
+msgstr ""
+"अरूलाई तपाईंले कसरी योगदान गर्नुहुन्छ भन्ने बुझ्न मद्दत गर्ने विवरण थप्नुहोस्, त्यसपछि प्रत्येक "
+"फिल्डको दृश्यता छान्नुहोस्।"
 
 msgid "Private · always"
 msgstr "निजी · सधैँ"
@@ -337,10 +326,8 @@ msgid ""
 "boundary."
 msgstr "इमेल र साइन इन प्रदायक निजी रहन्छन्। यस फारामले त्यो सीमा परिवर्तन गर्दैन।"
 
-#, fuzzy
-#| msgid "Your role"
 msgid "Your profile"
-msgstr "तपाईंको भूमिका"
+msgstr "तपाईंको प्रोफाइल"
 
 msgid ""
 "These details help members find people with relevant experience and "
@@ -377,15 +364,15 @@ msgstr "रुचिहरू"
 msgid "Profile photograph"
 msgstr "प्रोफाइल तस्बिर"
 
-#, fuzzy
-#| msgid "Skills visibility"
 msgid "Field visibility"
-msgstr "सीपको दृश्यता"
+msgstr "फिल्ड दृश्यता"
 
 msgid ""
 "Choose visibility field by field: public, members only, or private. Preview "
 "as a visitor before saving."
-msgstr "प्रत्येक फिल्डको दृश्यता छान्नुहोस्: सार्वजनिक, सदस्यहरू मात्र, वा निजी। बचत गर्नुअघि आगन्तुकका रूपमा पूर्वावलोकन गर्नुहोस्।"
+msgstr ""
+"प्रत्येक फिल्डको दृश्यता छान्नुहोस्: सार्वजनिक, सदस्यहरू मात्र, वा निजी। बचत गर्नुअघि "
+"आगन्तुकका रूपमा पूर्वावलोकन गर्नुहोस्।"
 
 msgid "Show my profile in the member directory"
 msgstr "मेरो प्रोफाइल सदस्य निर्देशिकामा देखाउनुहोस्"
@@ -411,10 +398,8 @@ msgstr "तपाईंको नाम सार्वजनिक योगद
 msgid "Exclude me from the leaderboard"
 msgstr "मलाई लिडरबोर्डबाट बाहिर राख्नुहोस्"
 
-#, fuzzy
-#| msgid "Receive verified recognition"
 msgid "Review recognition settings"
-msgstr "प्रमाणित मान्यता पाउनुहोस्"
+msgstr "पहिचान सेटिङ समीक्षा गर्नुहोस्"
 
 msgid "External links"
 msgstr "बाह्य लिङ्कहरू"
@@ -422,7 +407,9 @@ msgstr "बाह्य लिङ्कहरू"
 msgid ""
 "Add work that helps people understand your experience. Each link has its own "
 "public setting."
-msgstr "मानिसलाई तपाईंको अनुभव बुझ्न मद्दत गर्ने काम थप्नुहोस्। प्रत्येक लिङ्कको आफ्नै सार्वजनिक सेटिङ हुन्छ।"
+msgstr ""
+"मानिसलाई तपाईंको अनुभव बुझ्न मद्दत गर्ने काम थप्नुहोस्। प्रत्येक लिङ्कको आफ्नै सार्वजनिक सेटिङ "
+"हुन्छ।"
 
 msgid "Remove this link"
 msgstr "यो लिङ्क हटाउनुहोस्"
@@ -430,15 +417,11 @@ msgstr "यो लिङ्क हटाउनुहोस्"
 msgid "Save profile"
 msgstr "प्रोफाइल सुरक्षित गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Review history"
 msgid "Preview as a visitor"
-msgstr "समीक्षा इतिहास"
+msgstr "आगन्तुकका रूपमा पूर्वावलोकन गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Request account deletion"
 msgid "Related account settings"
-msgstr "खाता मेटाउन अनुरोध गर्नुहोस्"
+msgstr "सम्बन्धित खाता सेटिङ"
 
 msgid "This shows which profile fields someone who is not signed in can see."
 msgstr "यसले साइन इन नगरेको व्यक्तिले कुन प्रोफाइल फिल्ड देख्न सक्छ भन्ने देखाउँछ।"
@@ -449,7 +432,9 @@ msgstr "यो पूर्वावलोकन बचत गरिएको �
 msgid ""
 "Only fields set to public appear here. Your email and sign-in provider are "
 "never shown."
-msgstr "सार्वजनिकमा सेट गरिएका फिल्ड मात्र यहाँ देखिन्छन्। तपाईंको इमेल र साइन इन प्रदायक कहिल्यै देखाइँदैनन्।"
+msgstr ""
+"सार्वजनिकमा सेट गरिएका फिल्ड मात्र यहाँ देखिन्छन्। तपाईंको इमेल र साइन इन प्रदायक कहिल्यै "
+"देखाइँदैनन्।"
 
 msgid "Links"
 msgstr "लिङ्कहरू"
@@ -514,10 +499,8 @@ msgstr "नचिनेको कुनै पनि सत्र खारे�
 msgid "Device"
 msgstr "यन्त्र"
 
-#, fuzzy
-#| msgid "Last maintainer activity"
 msgid "Last activity"
-msgstr "अन्तिम मर्मतकर्ता गतिविधि"
+msgstr "पछिल्लो गतिविधि"
 
 msgid "Revoked"
 msgstr "रद्द गरिएको"
@@ -525,10 +508,8 @@ msgstr "रद्द गरिएको"
 msgid "Revoke session"
 msgstr "सत्र रद्द गर्नुहोस्"
 
-#, fuzzy
-#| msgid "No active sessions are recorded."
 msgid "No active sessions"
-msgstr "कुनै सक्रिय सत्र रेकर्ड गरिएको छैन।"
+msgstr "कुनै सक्रिय सत्र छैन"
 
 msgid "No signed-in devices are currently recorded for this account."
 msgstr "यस खाताका लागि हाल कुनै साइन इन भएको उपकरण अभिलेख गरिएको छैन।"
@@ -536,28 +517,24 @@ msgstr "यस खाताका लागि हाल कुनै साइ�
 msgid "Account controls"
 msgstr "खाता नियन्त्रणहरू"
 
-#, fuzzy
-#| msgid "Back to community project"
 msgid "Back to account settings"
-msgstr "सामुदायिक परियोजनामा फर्कनुहोस्"
+msgstr "खाता सेटिङमा फर्कनुहोस्"
 
 msgid "Create account"
 msgstr "खाता खोल्नुहोस्"
 
-#, fuzzy
-#| msgid "Create account"
 msgid "Create account · 1 of 4"
-msgstr "खाता खोल्नुहोस्"
+msgstr "खाता खोल्नुहोस् · ४ मध्ये १"
 
-#, fuzzy
-#| msgid "Create account"
 msgid "Create your account"
-msgstr "खाता खोल्नुहोस्"
+msgstr "आफ्नो खाता खोल्नुहोस्"
 
 msgid ""
 "Start with the minimum account details. Profile skills, availability, "
 "location, and visibility come next and remain under your control."
-msgstr "न्यूनतम खाता विवरणबाट सुरु गर्नुहोस्। प्रोफाइलका सीप, उपलब्धता, स्थान र दृश्यता त्यसपछि आउँछन् र तपाईंको नियन्त्रणमै रहन्छन्।"
+msgstr ""
+"न्यूनतम खाता विवरणबाट सुरु गर्नुहोस्। प्रोफाइलका सीप, उपलब्धता, स्थान र दृश्यता त्यसपछि "
+"आउँछन् र तपाईंको नियन्त्रणमै रहन्छन्।"
 
 msgid "Know what is public before you continue."
 msgstr "जारी राख्नुअघि के सार्वजनिक हुन्छ बुझ्नुहोस्।"
@@ -565,7 +542,9 @@ msgstr "जारी राख्नुअघि के सार्वजनि
 msgid ""
 "Your username becomes your Public profile address. Email and sign-in "
 "provider are never shown publicly: Private · always."
-msgstr "तपाईंको प्रयोगकर्ता नाम तपाईंको सार्वजनिक प्रोफाइल ठेगाना बन्छ। इमेल र साइन इन प्रदायक कहिल्यै सार्वजनिक रूपमा देखाइँदैनन्: निजी · सधैँ।"
+msgstr ""
+"तपाईंको प्रयोगकर्ता नाम तपाईंको सार्वजनिक प्रोफाइल ठेगाना बन्छ। इमेल र साइन इन प्रदायक "
+"कहिल्यै सार्वजनिक रूपमा देखाइँदैनन्: निजी · सधैँ।"
 
 msgid "Sign up with GitHub"
 msgstr "GitHub मार्फत खाता खोल्नुहोस्"
@@ -573,7 +552,9 @@ msgstr "GitHub मार्फत खाता खोल्नुहोस्"
 msgid ""
 "Your verified GitHub email creates the private account record. Public "
 "activity recognition remains controllable from GitHub connection settings."
-msgstr "तपाईंको प्रमाणित GitHub इमेलले निजी खाता अभिलेख बनाउँछ। सार्वजनिक गतिविधि पहिचान GitHub जडान सेटिङबाट नियन्त्रणमै रहन्छ।"
+msgstr ""
+"तपाईंको प्रमाणित GitHub इमेलले निजी खाता अभिलेख बनाउँछ। सार्वजनिक गतिविधि पहिचान "
+"GitHub जडान सेटिङबाट नियन्त्रणमै रहन्छ।"
 
 msgid "or create with email"
 msgstr "वा इमेलबाट खाता बनाउनुहोस्"
@@ -590,12 +571,12 @@ msgstr "पासवर्ड पुष्टि"
 msgid ""
 "After signing in, add only what helps you contribute, choose visibility "
 "field by field, and preview the profile exactly as a visitor sees it."
-msgstr "साइन इनपछि, तपाईंलाई योगदान गर्न मद्दत गर्ने विवरण मात्र थप्नुहोस्, प्रत्येक फिल्डको दृश्यता छान्नुहोस् र आगन्तुकले जस्तै देख्ने गरी प्रोफाइल पूर्वावलोकन गर्नुहोस्।"
+msgstr ""
+"साइन इनपछि, तपाईंलाई योगदान गर्न मद्दत गर्ने विवरण मात्र थप्नुहोस्, प्रत्येक फिल्डको "
+"दृश्यता छान्नुहोस् र आगन्तुकले जस्तै देख्ने गरी प्रोफाइल पूर्वावलोकन गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Create an account"
 msgid "Already have an account?"
-msgstr "खाता बनाउनुहोस्"
+msgstr "पहिले नै खाता छ?"
 
 msgid "Your DevNepal account is ready. Sign in to continue."
 msgstr "तपाईंको देवनेपाल खाता तयार छ। जारी राख्न साइन इन गर्नुहोस्।"
@@ -615,10 +596,8 @@ msgstr "बहु-कारक प्रमाणीकरण पहिले �
 msgid "Invalid authentication code. Try again."
 msgstr "अमान्य प्रमाणीकरण कोड। पुनः प्रयास गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Ministry management"
 msgid "Ministry analytics"
-msgstr "मन्त्रालय व्यवस्थापन"
+msgstr "मन्त्रालय विश्लेषण"
 
 #, python-format
 msgid "%(ministry_name)s activity for %(month)s."
@@ -633,23 +612,17 @@ msgstr "मापन"
 msgid "Count"
 msgstr "संख्या"
 
-#, fuzzy
-#| msgid "No activity recorded yet"
 msgid "No activity was recorded for this month."
 msgstr "अझै कुनै गतिविधि रेकर्ड भएको छैन"
 
-#, fuzzy
-#| msgid "Project date"
 msgid "Project activity"
-msgstr "परियोजना मिति"
+msgstr "परियोजना गतिविधि"
 
 msgid "Project"
 msgstr "परियोजना"
 
-#, fuzzy
-#| msgid "Submit a report"
 msgid "Public analytics report"
-msgstr "रिपोर्ट पेश गर्नुहोस्"
+msgstr "सार्वजनिक विश्लेषण प्रतिवेदन"
 
 #, python-format
 msgid "Privacy-safe aggregate activity for %(month)s."
@@ -658,10 +631,8 @@ msgstr "%(month)s का लागि गोपनीयता-सुरक्�
 msgid "Groups with fewer than five events are withheld."
 msgstr "पाँचभन्दा कम घटना भएका समूहहरू रोकिएका छन्।"
 
-#, fuzzy
-#| msgid "Download data export"
 msgid "Download JSON export"
-msgstr "डाटा निर्यात डाउनलोड गर्नुहोस्"
+msgstr "JSON निर्यात डाउनलोड गर्नुहोस्"
 
 msgid "No publishable aggregate data is available for this month."
 msgstr "यस महिनाका लागि प्रकाशनयोग्य समग्र डेटा उपलब्ध छैन।"
@@ -669,22 +640,17 @@ msgstr "यस महिनाका लागि प्रकाशनयोग
 msgid ""
 "This report contains aggregate counts only and must not be used to identify "
 "people."
-msgstr "यस प्रतिवेदनमा समग्र गणना मात्र छन् र यसलाई मानिसको पहिचान गर्न प्रयोग गर्नु हुँदैन।"
+msgstr ""
+"यस प्रतिवेदनमा समग्र गणना मात्र छन् र यसलाई मानिसको पहिचान गर्न प्रयोग गर्नु हुँदैन।"
 
-#, fuzzy
-#| msgid "Project pages"
 msgid "Project views"
-msgstr "परियोजना पृष्ठहरू"
+msgstr "परियोजना दृश्यहरू"
 
-#, fuzzy
-#| msgid "Project sections"
 msgid "Project applications"
-msgstr "परियोजना खण्डहरू"
+msgstr "परियोजना आवेदनहरू"
 
-#, fuzzy
-#| msgid "Verified contributions"
 msgid "Accepted contributions"
-msgstr "प्रमाणित योगदानहरू"
+msgstr "स्वीकृत योगदानहरू"
 
 msgid "Enter a month in YYYY-MM format."
 msgstr "YYYY-MM ढाँचामा महिना प्रविष्ट गर्नुहोस्।"
@@ -863,15 +829,11 @@ msgstr "विगत २४ घण्टाका असफल र इन्क�
 msgid "DevNepal post"
 msgstr "DevNepal लेख"
 
-#, fuzzy
-#| msgid "External article listing"
 msgid "External article"
-msgstr "बाह्य लेख सूची"
+msgstr "बाह्य लेख"
 
-#, fuzzy
-#| msgid "Application timeline"
 msgid "Publication type"
-msgstr "आवेदन समयरेखा"
+msgstr "प्रकाशन प्रकार"
 
 msgid "Title"
 msgstr "शीर्षक"
@@ -886,10 +848,8 @@ msgid ""
 "Use headings, links, tables, code blocks, and images with alternative text."
 msgstr "शीर्षक, लिङ्क, तालिका, कोड ब्लक र वैकल्पिक पाठ भएका तस्बिर प्रयोग गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Read the external article"
 msgid "Canonical or external article URL"
-msgstr "बाह्य लेख पढ्नुहोस्"
+msgstr "प्रामाणिक वा बाह्य लेख URL"
 
 msgid "Cover image URL"
 msgstr "कभर तस्बिर URL"
@@ -906,24 +866,21 @@ msgstr "भाषा"
 msgid "Reading time (minutes)"
 msgstr "पढ्ने समय (मिनेट)"
 
-#, fuzzy
-#| msgid "External article listing"
 msgid "An external article URL is required."
-msgstr "बाह्य लेख सूची"
+msgstr "बाह्य लेख URL आवश्यक छ।"
 
 msgid ""
 "External articles are stored as links only; do not copy the article body."
 msgstr "बाह्य लेखहरू लिङ्कका रूपमा मात्र भण्डारण हुन्छन्; लेखको मुख्य भाग प्रतिलिपि नगर्नुहोस्।"
 
-#, fuzzy
-#| msgid "A revocation reason is required."
 msgid "A native article body is required."
-msgstr "रद्द गर्ने कारण आवश्यक छ।"
+msgstr "मौलिक लेखको मुख्य भाग आवश्यक छ।"
 
 msgid ""
 "Markdown could not be checked. Review image alternative text, URL schemes, "
 "and code fences."
-msgstr "Markdown जाँच्न सकिएन। तस्बिरको वैकल्पिक पाठ, URL योजना र कोड फेन्स समीक्षा गर्नुहोस्।"
+msgstr ""
+"Markdown जाँच्न सकिएन। तस्बिरको वैकल्पिक पाठ, URL योजना र कोड फेन्स समीक्षा गर्नुहोस्।"
 
 msgid "Alternative text is required when a cover image is provided."
 msgstr "कभर तस्बिर दिइएको भए वैकल्पिक पाठ आवश्यक छ।"
@@ -931,10 +888,8 @@ msgstr "कभर तस्बिर दिइएको भए वैकल्�
 msgid "A cover image URL is required when alternative text is provided."
 msgstr "वैकल्पिक पाठ दिइएको भए कभर तस्बिर URL आवश्यक छ।"
 
-#, fuzzy
-#| msgid "Member pages"
 msgid "Member article"
-msgstr "सदस्य पृष्ठहरू"
+msgstr "सदस्य लेख"
 
 msgid "External article listing"
 msgstr "बाह्य लेख सूची"
@@ -981,23 +936,17 @@ msgstr "नयाँ प्रविधि ब्लग"
 msgid "required"
 msgstr "आवश्यक"
 
-#, fuzzy
-#| msgid "Can review and merge"
 msgid "Preview and run checks"
-msgstr "समीक्षा र मर्ज गर्न सक्छ"
+msgstr "पूर्वावलोकन र जाँच चलाउनुहोस्"
 
 msgid "Save draft"
 msgstr "ड्राफ्ट सुरक्षित गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Can review and merge"
 msgid "Preview and checks"
-msgstr "समीक्षा र मर्ज गर्न सक्छ"
+msgstr "पूर्वावलोकन र जाँच"
 
-#, fuzzy
-#| msgid "Profile preview"
 msgid "Article preview"
-msgstr "प्रोफाइल पूर्वावलोकन"
+msgstr "लेख पूर्वावलोकन"
 
 msgid "Back to my technical blogs"
 msgstr "मेरा प्रविधि ब्लगहरूमा फर्कनुहोस्"
@@ -1018,15 +967,15 @@ msgstr "अप्रकाशित गर्नुहोस्"
 msgid "Archive"
 msgstr "संग्रहित गर्नुहोस्"
 
-#, fuzzy
-#| msgid "View applications"
 msgid "Two publication paths"
-msgstr "आवेदनहरू हेर्नुहोस्"
+msgstr "प्रकाशनका दुई मार्ग"
 
 msgid ""
 "Write a native DevNepal post in safe Markdown, or list an external article "
 "without copying its text."
-msgstr "सुरक्षित Markdown मा मौलिक DevNepal लेख लेख्नुहोस् वा यसको पाठ प्रतिलिपि नगरी बाह्य लेख सूचीबद्ध गर्नुहोस्।"
+msgstr ""
+"सुरक्षित Markdown मा मौलिक DevNepal लेख लेख्नुहोस् वा यसको पाठ प्रतिलिपि नगरी बाह्य "
+"लेख सूचीबद्ध गर्नुहोस्।"
 
 msgid "Review"
 msgstr "समीक्षा"
@@ -1036,10 +985,6 @@ msgid ""
 "safety reason."
 msgstr "मोडरेटरले सुरक्षा कारण देखाएर प्रतिबन्ध नलगाएसम्म प्रकाशित सूचीहरू दृश्यमान रहन्छन्।"
 
-#, fuzzy
-#| msgid ""
-#| "External technical writing from the community and the Government of "
-#| "Nepal. DevNepal links to the article at its canonical source."
 msgid ""
 "Technical writing from the community and the Government of Nepal: native "
 "DevNepal posts and clearly labelled external articles."
@@ -1098,10 +1043,8 @@ msgstr "प्रमाण लिङ्क"
 msgid "Provide a description or an evidence link."
 msgstr "विवरण वा प्रमाण लिङ्क उपलब्ध गराउनुहोस्।"
 
-#, fuzzy
-#| msgid "Contribution revoked"
 msgid "Contribution record"
-msgstr "योगदान रद्द गरिएको"
+msgstr "योगदान अभिलेख"
 
 msgid "Contribution sections"
 msgstr "योगदान खण्डहरू"
@@ -1115,10 +1058,8 @@ msgstr "निर्णय इतिहास"
 msgid "Contribution detail"
 msgstr "योगदान विवरण"
 
-#, fuzzy
-#| msgid "Consent recorded at"
 msgid "Decision was not recorded"
-msgstr "सहमति रेकर्ड गरिएको मिति"
+msgstr "निर्णय अभिलेखित भएन"
 
 msgid "Awaiting verification by a project maintainer"
 msgstr "परियोजना मर्मतकर्ताको प्रमाणीकरण पर्खँदै"
@@ -1126,42 +1067,39 @@ msgstr "परियोजना मर्मतकर्ताको प्र�
 msgid ""
 "No score is created while this record is a candidate. The contributor and "
 "authorized maintainers can see it."
-msgstr "यो अभिलेख उम्मेदवार रहँदासम्म कुनै स्कोर सिर्जना हुँदैन। योगदानकर्ता र अधिकृत मर्मतकर्ताले यसलाई देख्न सक्छन्।"
+msgstr ""
+"यो अभिलेख उम्मेदवार रहँदासम्म कुनै स्कोर सिर्जना हुँदैन। योगदानकर्ता र अधिकृत मर्मतकर्ताले "
+"यसलाई देख्न सक्छन्।"
 
-#, fuzzy
-#| msgid "Information requested"
 msgid "Clarification requested"
-msgstr "जानकारी अनुरोध गरिएको"
+msgstr "स्पष्टीकरण अनुरोध गरिएको"
 
 msgid ""
 "The reviewer needs more information before making a final decision. The "
 "reason appears in the timeline below."
-msgstr "अन्तिम निर्णय गर्नुअघि समीक्षकलाई थप जानकारी चाहिन्छ। कारण तलको समयरेखामा देखिन्छ।"
+msgstr ""
+"अन्तिम निर्णय गर्नुअघि समीक्षकलाई थप जानकारी चाहिन्छ। कारण तलको समयरेखामा देखिन्छ।"
 
-#, fuzzy
-#| msgid "Revoke contribution"
 msgid "Accepted contribution"
-msgstr "योगदान रद्द गर्नुहोस्"
+msgstr "स्वीकृत योगदान"
 
 msgid ""
 "This is a verified record. Its source, reviewer, decision, and recognition "
 "policy remain auditable."
-msgstr "यो प्रमाणित अभिलेख हो। यसको स्रोत, समीक्षक, निर्णय र पहिचान नीति लेखापरीक्षणयोग्य रहन्छन्।"
+msgstr ""
+"यो प्रमाणित अभिलेख हो। यसको स्रोत, समीक्षक, निर्णय र पहिचान नीति लेखापरीक्षणयोग्य "
+"रहन्छन्।"
 
-#, fuzzy
-#| msgid "Contribution type"
 msgid "Contribution not accepted"
-msgstr "योगदान प्रकार"
+msgstr "योगदान स्वीकार गरिएको छैन"
 
 msgid ""
 "The reviewer’s reason appears below. This record receives no recognition "
 "score."
 msgstr "समीक्षकको कारण तल देखिन्छ। यस अभिलेखले कुनै पहिचान स्कोर पाउँदैन।"
 
-#, fuzzy
-#| msgid "Recognition policies"
 msgid "Recognition reversed"
-msgstr "पहिचान नीतिहरू"
+msgstr "पहिचान उल्टाइएको"
 
 msgid ""
 "The verified record was revoked with a reason. The original decision remains "
@@ -1175,10 +1113,8 @@ msgstr "प्रमाण पेश गरिएको"
 msgid "by %(actor)s"
 msgstr "%(actor)s द्वारा"
 
-#, fuzzy
-#| msgid "No review decisions have been recorded."
 msgid "No written description was provided."
-msgstr "कुनै समीक्षा निर्णय रेकर्ड गरिएको छैन।"
+msgstr "कुनै लिखित विवरण दिइएन।"
 
 msgid "Open evidence link"
 msgstr "प्रमाण लिङ्क खोल्नुहोस्"
@@ -1186,18 +1122,14 @@ msgstr "प्रमाण लिङ्क खोल्नुहोस्"
 msgid "Verification recorded"
 msgstr "प्रमाणीकरण रेकर्ड गरिएको"
 
-#, fuzzy
-#| msgid "Verified"
 msgid "Verified by"
-msgstr "प्रमाणित"
+msgstr "द्वारा प्रमाणित"
 
 msgid "Contribution revoked"
 msgstr "योगदान रद्द गरिएको"
 
-#, fuzzy
-#| msgid "Submit evidence"
 msgid "Review evidence"
-msgstr "प्रमाण पेश गर्नुहोस्"
+msgstr "प्रमाण समीक्षा गर्नुहोस्"
 
 msgid ""
 "A contributor cannot approve their own submitted evidence without an "
@@ -1207,28 +1139,24 @@ msgstr "योग्य दोस्रो अनुमोदकबिना य
 msgid ""
 "A reason is required for every decision. It is shared with the contributor "
 "and kept in the audit history."
-msgstr "हरेक निर्णयका लागि कारण आवश्यक छ। यो योगदानकर्तासँग साझा गरिन्छ र लेखापरीक्षण इतिहासमा राखिन्छ।"
+msgstr ""
+"हरेक निर्णयका लागि कारण आवश्यक छ। यो योगदानकर्तासँग साझा गरिन्छ र लेखापरीक्षण "
+"इतिहासमा राखिन्छ।"
 
 msgid "Decision"
 msgstr "निर्णय"
 
-#, fuzzy
-#| msgid "Accepted"
 msgid "Accept"
-msgstr "स्वीकृत"
+msgstr "स्वीकार गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Requested information"
 msgid "Request clarification"
-msgstr "अनुरोध गरिएको जानकारी"
+msgstr "स्पष्टीकरण माग्नुहोस्"
 
 msgid "Reject"
 msgstr "अस्वीकार गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Open for contribution"
 msgid "Reason for the contributor"
-msgstr "योगदानका लागि खुला"
+msgstr "योगदानकर्ताका लागि कारण"
 
 msgid "Secondary approver"
 msgstr "द्वितीय अनुमोदक"
@@ -1239,7 +1167,8 @@ msgstr "लागू हुँदैन"
 msgid ""
 "Choose another eligible publisher or Super Admin when reviewing your own "
 "member-submitted evidence."
-msgstr "आफ्नै सदस्यले पेश गरेको प्रमाण समीक्षा गर्दा अर्को योग्य प्रकाशक वा Super Admin छान्नुहोस्।"
+msgstr ""
+"आफ्नै सदस्यले पेश गरेको प्रमाण समीक्षा गर्दा अर्को योग्य प्रकाशक वा Super Admin छान्नुहोस्।"
 
 msgid "Record decision"
 msgstr "निर्णय रेकर्ड गर्नुहोस्"
@@ -1247,10 +1176,6 @@ msgstr "निर्णय रेकर्ड गर्नुहोस्"
 msgid "Revoke contribution"
 msgstr "योगदान रद्द गर्नुहोस्"
 
-#, fuzzy
-#| msgid ""
-#| "Revoking a badge keeps the award history and records the reason in the "
-#| "audit log."
 msgid ""
 "Revocation reverses recognition but keeps the original decision and your "
 "reason in the audit history."
@@ -1259,10 +1184,8 @@ msgstr "बैज रद्द गर्दा प्रदान इतिह�
 msgid "Revocation reason"
 msgstr "रद्द गर्ने कारण"
 
-#, fuzzy
-#| msgid "Provenance"
 msgid "Record provenance"
-msgstr "उत्पत्ति स्रोत"
+msgstr "अभिलेखको उत्पत्ति"
 
 msgid "Contributor"
 msgstr "योगदानकर्ता"
@@ -1273,10 +1196,8 @@ msgstr "स्रोत"
 msgid "Submitted"
 msgstr "पेश गरिएको"
 
-#, fuzzy
-#| msgid "My recognition"
 msgid "Recognition"
-msgstr "मेरो पहिचान"
+msgstr "पहिचान"
 
 #, python-format
 msgid "%(counter)s point"
@@ -1284,48 +1205,41 @@ msgid_plural "%(counter)s points"
 msgstr[0] "%(counter)s अंक"
 msgstr[1] "%(counter)s अंकहरू"
 
-#, fuzzy, python-format
-#| msgid "policy v%(version)s"
+#, python-format
 msgid "Scored under policy v%(version)s."
 msgstr "नीति v%(version)s"
 
 msgid "Recognition uses the scoring policy attached to this accepted record."
 msgstr "पहिचानले यस स्वीकृत अभिलेखसँग जोडिएको स्कोरिङ नीति प्रयोग गर्छ।"
 
-#, fuzzy
-#| msgid "Matches your %s contribution history"
 msgid "View your recognition history"
-msgstr "तपाईंको %s योगदान इतिहाससँग मिल्छ"
+msgstr "आफ्नो पहिचान इतिहास हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "Decision history"
 msgid "View decision history"
-msgstr "निर्णय इतिहास"
+msgstr "निर्णय इतिहास हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "Record verification"
 msgid "Submit evidence for verification"
-msgstr "प्रमाणीकरण रेकर्ड गर्नुहोस्"
+msgstr "प्रमाणीकरणका लागि प्रमाण पेश गर्नुहोस्"
 
 msgid ""
 "Design, QA, documentation, translation, security, and research follow the "
 "same review path as accepted code."
-msgstr "डिजाइन, QA, दस्तावेजीकरण, अनुवाद, सुरक्षा र अनुसन्धानले स्वीकृत कोडसरह समीक्षा प्रक्रिया पछ्याउँछन्।"
+msgstr ""
+"डिजाइन, QA, दस्तावेजीकरण, अनुवाद, सुरक्षा र अनुसन्धानले स्वीकृत कोडसरह समीक्षा प्रक्रिया "
+"पछ्याउँछन्।"
 
-#, fuzzy
-#| msgid "This verification decision cannot be recorded."
 msgid "This creates a candidate record."
-msgstr "यो प्रमाणीकरण निर्णय रेकर्ड गर्न सकिँदैन।"
+msgstr "यसले उम्मेदवार अभिलेख सिर्जना गर्छ।"
 
 msgid ""
 "No score is created until a project maintainer accepts it. You can follow "
 "the decision and its reason from the contribution record."
-msgstr "परियोजना मर्मतकर्ताले स्वीकृत नगरेसम्म कुनै स्कोर सिर्जना हुँदैन। योगदान अभिलेखबाट निर्णय र यसको कारण हेर्न सक्नुहुन्छ।"
+msgstr ""
+"परियोजना मर्मतकर्ताले स्वीकृत नगरेसम्म कुनै स्कोर सिर्जना हुँदैन। योगदान अभिलेखबाट निर्णय र "
+"यसको कारण हेर्न सक्नुहुन्छ।"
 
-#, fuzzy
-#| msgid "Evidence submitted"
 msgid "Evidence was not submitted"
-msgstr "प्रमाण पेश गरिएको"
+msgstr "प्रमाण पेश गरिएको थिएन"
 
 msgid "Check the evidence details"
 msgstr "प्रमाणका विवरण जाँच्नुहोस्"
@@ -1333,46 +1247,36 @@ msgstr "प्रमाणका विवरण जाँच्नुहोस�
 msgid "Correct the fields marked below, then submit again."
 msgstr "तल चिन्ह लगाइएका फिल्ड सच्याउनुहोस्, त्यसपछि फेरि पेश गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Record verification"
 msgid "Submit for verification"
-msgstr "प्रमाणीकरण रेकर्ड गर्नुहोस्"
+msgstr "प्रमाणीकरणका लागि पेश गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Evidence link"
 msgid "Evidence guidance"
-msgstr "प्रमाण लिङ्क"
+msgstr "प्रमाण मार्गदर्शन"
 
-#, fuzzy
-#| msgid "Can review and merge"
 msgid "What reviewers need"
-msgstr "समीक्षा र मर्ज गर्न सक्छ"
+msgstr "समीक्षकलाई के चाहिन्छ"
 
 msgid ""
 "Describe what you changed, how you checked it, and where the reviewer can "
 "inspect the result. Provide a description, an evidence link, or both."
-msgstr "तपाईंले के परिवर्तन गर्नुभयो, कसरी जाँच्नुभयो र समीक्षकले नतिजा कहाँ जाँच्न सक्छ भन्ने वर्णन गर्नुहोस्। विवरण, प्रमाण लिङ्क वा दुवै दिनुहोस्।"
+msgstr ""
+"तपाईंले के परिवर्तन गर्नुभयो, कसरी जाँच्नुभयो र समीक्षकले नतिजा कहाँ जाँच्न सक्छ भन्ने वर्णन "
+"गर्नुहोस्। विवरण, प्रमाण लिङ्क वा दुवै दिनुहोस्।"
 
-#, fuzzy
-#| msgid "Verification boundary"
 msgid "Same verification boundary"
-msgstr "प्रमाणीकरण सीमा"
+msgstr "उही प्रमाणीकरण सीमा"
 
 msgid ""
 "An authorized maintainer can accept, reject, or request clarification. A "
 "contributor reviewing their own submission needs an eligible secondary "
 "approver."
-msgstr "अधिकृत मर्मतकर्ताले स्वीकार, अस्वीकार वा स्पष्टीकरण माग्न सक्छ। आफ्नै पेश्की समीक्षा गर्ने योगदानकर्तालाई योग्य दोस्रो अनुमोदक चाहिन्छ।"
+msgstr ""
+"अधिकृत मर्मतकर्ताले स्वीकार, अस्वीकार वा स्पष्टीकरण माग्न सक्छ। आफ्नै पेश्की समीक्षा गर्ने "
+"योगदानकर्तालाई योग्य दोस्रो अनुमोदक चाहिन्छ।"
 
-#, fuzzy
-#| msgid "Security and privacy"
 msgid "Rights and privacy"
-msgstr "सुरक्षा र गोपनीयता"
+msgstr "अधिकार र गोपनीयता"
 
-#, fuzzy
-#| msgid ""
-#| "Only submit evidence you have the right to share. Your name is recorded "
-#| "with the verification decision."
 msgid ""
 "Submit only evidence you have the right to share. Evidence is visible to you "
 "and authorized project reviewers."
@@ -1386,15 +1290,15 @@ msgstr "योगदान इतिहास"
 msgid "No verification history is available."
 msgstr "कुनै प्रमाणीकरण इतिहास उपलब्ध छैन।"
 
-#, fuzzy
-#| msgid "Verification code"
 msgid "Verification queue"
-msgstr "प्रमाणीकरण कोड"
+msgstr "प्रमाणीकरण लाम"
 
 msgid ""
 "Candidate evidence for projects you are authorized to review. Every decision "
 "requires a reason and remains in the audit history."
-msgstr "तपाईं समीक्षा गर्न अधिकृत परियोजनाका उम्मेदवार प्रमाणहरू। हरेक निर्णयका लागि कारण चाहिन्छ र त्यो लेखापरीक्षण इतिहासमा रहन्छ।"
+msgstr ""
+"तपाईं समीक्षा गर्न अधिकृत परियोजनाका उम्मेदवार प्रमाणहरू। हरेक निर्णयका लागि कारण "
+"चाहिन्छ र त्यो लेखापरीक्षण इतिहासमा रहन्छ।"
 
 msgid "No candidate evidence needs your review."
 msgstr "कुनै उम्मेदवार प्रमाणलाई तपाईंको समीक्षाको आवश्यकता छैन।"
@@ -2332,10 +2236,8 @@ msgstr "डेलिभरेबल %(line)s को लेबल २०० व�
 msgid "Use an HTTP or HTTPS URL on deliverable line %(line)s."
 msgstr "डेलिभरेबल लाइन %(line)s मा HTTP वा HTTPS URL प्रयोग गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Completion summary"
 msgid "Outcome summary"
-msgstr "समापन सारांश"
+msgstr "परिणाम सारांश"
 
 msgid "Deliverables and releases"
 msgstr "डेलिभरेबल र प्रकाशनहरू"
@@ -2343,10 +2245,8 @@ msgstr "डेलिभरेबल र प्रकाशनहरू"
 msgid "Add one per line as: Deliverable name | https://optional-link.example"
 msgstr "हरेक लाइनमा यसरी थप्नुहोस्: डेलिभरेबलको नाम | https://optional-link.example"
 
-#, fuzzy
-#| msgid "Nepali summary"
 msgid "Impact summary"
-msgstr "नेपाली सारांश"
+msgstr "प्रभाव सारांश"
 
 msgid "Lessons learned"
 msgstr "सिकाइहरू"
@@ -2468,18 +2368,14 @@ msgstr "डेलिभरेबल %(index)s लाई २०० वा कम 
 msgid "deliverable %(index)s must use an HTTP or HTTPS URL"
 msgstr "डेलिभरेबल %(index)s ले HTTP वा HTTPS URL प्रयोग गर्नुपर्छ"
 
-#, fuzzy
-#| msgid "Completion summary"
 msgid "outcome summary"
-msgstr "समापन सारांश"
+msgstr "परिणाम सारांश"
 
 msgid "deliverables"
 msgstr "डेलिभरेबलहरू"
 
-#, fuzzy
-#| msgid "Nepali summary"
 msgid "impact summary"
-msgstr "नेपाली सारांश"
+msgstr "प्रभाव सारांश"
 
 msgid "lessons learned"
 msgstr "सिकाइहरू"
@@ -2488,10 +2384,8 @@ msgstr "सिकाइहरू"
 msgid "completion requires: %(fields)s"
 msgstr "समापनका लागि आवश्यक: %(fields)s"
 
-#, fuzzy
-#| msgid "See all government projects"
 msgid "completion summaries apply to government projects"
-msgstr "सबै सरकारी परियोजनाहरू हेर्नुहोस्"
+msgstr "समापन सारांश सरकारी परियोजनामा लागू हुन्छन्"
 
 msgid "completion summary can be edited only while a project is open or paused"
 msgstr "परियोजना खुला वा रोकिएको अवस्थामा मात्र समापन सारांश सम्पादन गर्न सकिन्छ"
@@ -2514,15 +2408,9 @@ msgstr "तपाईंले सुरक्षित गरेको परि
 msgid "How to contribute"
 msgstr "कसरी योगदान गर्ने"
 
-#, fuzzy
-#| msgid "How to contribute"
 msgid "About · How to contribute"
-msgstr "कसरी योगदान गर्ने"
+msgstr "बारेमा · कसरी योगदान गर्ने"
 
-#, fuzzy
-#| msgid ""
-#| "A practical path from finding public-interest work to leaving a visible "
-#| "record of what changed."
 msgid ""
 "A practical path from finding public-interest work to leaving a visible "
 "record of what changed. DevNepal is the registry and collaboration layer; "
@@ -2534,7 +2422,9 @@ msgstr ""
 msgid ""
 "Find a fit · Read before acting · Close the loop through the project’s "
 "published route."
-msgstr "उपयुक्तता खोज्नुहोस् · कार्य गर्नुअघि पढ्नुहोस् · परियोजनाको प्रकाशित मार्गबाट प्रक्रिया पूरा गर्नुहोस्।"
+msgstr ""
+"उपयुक्तता खोज्नुहोस् · कार्य गर्नुअघि पढ्नुहोस् · परियोजनाको प्रकाशित मार्गबाट प्रक्रिया "
+"पूरा गर्नुहोस्।"
 
 msgid "01 · The process"
 msgstr "०१ · प्रक्रिया"
@@ -2542,35 +2432,29 @@ msgstr "०१ · प्रक्रिया"
 msgid "Contribution steps"
 msgstr "योगदानका चरणहरू"
 
-#, fuzzy
-#| msgid "Community project"
 msgid "A ministry lists a project"
-msgstr "सामुदायिक परियोजना"
+msgstr "मन्त्रालयले परियोजना सूचीबद्ध गर्छ"
 
 msgid ""
 "A named publisher documents the contribution route, public safeguards, and "
 "maintainer responsibility before publication."
-msgstr "प्रकाशनअघि नामित प्रकाशकले योगदान मार्ग, सार्वजनिक सुरक्षा उपाय र मर्मतकर्ताको जिम्मेवारी दस्तावेज गर्छ।"
+msgstr ""
+"प्रकाशनअघि नामित प्रकाशकले योगदान मार्ग, सार्वजनिक सुरक्षा उपाय र मर्मतकर्ताको "
+"जिम्मेवारी दस्तावेज गर्छ।"
 
-#, fuzzy
-#| msgid "Approve"
 msgid "PMO approves"
-msgstr "अनुमोदन गर्नुहोस्"
+msgstr "PMO ले स्वीकृत गर्छ"
 
 msgid ""
 "Only approved government listings carry the Official badge; the decision is "
 "attributable and recorded."
-msgstr "स्वीकृत सरकारी सूचीकरणले मात्र आधिकारिक बैज पाउँछन्; निर्णयको जिम्मेवारी स्पष्ट र अभिलेखित हुन्छ।"
+msgstr ""
+"स्वीकृत सरकारी सूचीकरणले मात्र आधिकारिक बैज पाउँछन्; निर्णयको जिम्मेवारी स्पष्ट र अभिलेखित "
+"हुन्छ।"
 
-#, fuzzy
-#| msgid "How to contribute"
 msgid "You contribute"
-msgstr "कसरी योगदान गर्ने"
+msgstr "तपाईं योगदान गर्नुहुन्छ"
 
-#, fuzzy
-#| msgid ""
-#| "Apply when a workstream is controlled, or follow the published direct-"
-#| "contribution instructions."
 msgid ""
 "Apply when a workstream is controlled, or follow the published direct-"
 "contribution instructions for an open task."
@@ -2578,16 +2462,9 @@ msgstr ""
 "कार्यधारा नियन्त्रित भएमा आवेदन दिनुहोस्, वा प्रकाशित प्रत्यक्ष-योगदान निर्देशन पालना "
 "गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Receive verified recognition"
 msgid "Work is verified and recognised"
-msgstr "प्रमाणित मान्यता पाउनुहोस्"
+msgstr "काम प्रमाणित र मान्यता प्राप्त हुन्छ"
 
-#, fuzzy
-#| msgid ""
-#| "A maintainer or authorised reviewer checks the evidence and records a "
-#| "reasoned decision. A self-submitted claim is not official recognition by "
-#| "itself."
 msgid ""
 "A maintainer reviews the evidence and records a reasoned decision; raw "
 "activity alone is not recognition."
@@ -2633,27 +2510,22 @@ msgstr "सूचीकरण रोजगारी प्रस्ताव, �
 msgid ""
 "DevNepal is not a code host; branches, issues, pull requests, and CI remain "
 "with the project’s repository."
-msgstr "DevNepal कोड होस्ट होइन; शाखा, इशु, पुल रिक्वेस्ट र CI परियोजनाको रिपोजिटरीमै रहन्छन्।"
+msgstr ""
+"DevNepal कोड होस्ट होइन; शाखा, इशु, पुल रिक्वेस्ट र CI परियोजनाको रिपोजिटरीमै रहन्छन्।"
 
 msgid ""
 "Community projects are not government endorsements simply because they are "
 "listed here."
 msgstr "यहाँ सूचीबद्ध हुँदैमा समुदाय परियोजना सरकारी समर्थन पाएको हुँदैन।"
 
-#, fuzzy
-#| msgid "Policies"
 msgid "03 · Policies"
-msgstr "नीतिहरू"
+msgstr "०३ · नीतिहरू"
 
-#, fuzzy
-#| msgid "Safety and reporting"
 msgid "Security and reporting"
-msgstr "सुरक्षा र रिपोर्टिङ"
+msgstr "सुरक्षा र प्रतिवेदन"
 
-#, fuzzy
-#| msgid "Confidential moderation cases"
 msgid "Confidential route available"
-msgstr "गोप्य मोडरेशन मुद्दाहरू"
+msgstr "गोप्य मार्ग उपलब्ध छ"
 
 msgid "Safety and reporting"
 msgstr "सुरक्षा र रिपोर्टिङ"
@@ -2669,10 +2541,8 @@ msgstr ""
 msgid "Report content confidentially"
 msgstr "सामग्री गोप्य रूपमा रिपोर्ट गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Frequently asked questions"
 msgid "04 · Frequently asked"
-msgstr "बारम्बार सोधिने प्रश्नहरू"
+msgstr "०४ · बारम्बार सोधिने"
 
 msgid "Frequently asked questions"
 msgstr "बारम्बार सोधिने प्रश्नहरू"
@@ -2712,11 +2582,6 @@ msgstr ""
 msgid "Support and next steps"
 msgstr "सहयोग र अर्को चरण"
 
-#, fuzzy
-#| msgid ""
-#| "Start with the project brief and its published contribution route. For "
-#| "account, safety, or moderation questions, use the relevant signed-in "
-#| "workflow or confidential report form so the right record is created."
 msgid ""
 "For account, safety, or moderation questions, use the relevant signed-in "
 "workflow or confidential report form so the right record is created."
@@ -2752,18 +2617,13 @@ msgstr "समयरेखा"
 msgid "Application detail"
 msgstr "आवेदन विवरण"
 
-#, fuzzy
-#| msgid "Verification status"
 msgid "Current application status"
-msgstr "प्रमाणीकरण अवस्था"
+msgstr "हालको आवेदन अवस्था"
 
-#, fuzzy, python-format
-#| msgid "Latest response"
+#, python-format
 msgid "Latest response: %(response)s"
-msgstr "हालको प्रतिक्रिया"
+msgstr "पछिल्लो प्रतिक्रिया: %(response)s"
 
-#, fuzzy
-#| msgid "No review decisions have been recorded."
 msgid "No decision response has been recorded yet."
 msgstr "कुनै समीक्षा निर्णय रेकर्ड गरिएको छैन।"
 
@@ -2788,44 +2648,37 @@ msgstr "निर्णय रेकर्ड गर्नुहोस्"
 msgid ""
 "Choose only an available decision. The applicant and authorized ministry "
 "users will see it in the append-only timeline."
-msgstr "उपलब्ध निर्णय मात्र छान्नुहोस्। आवेदक र अधिकृत मन्त्रालय प्रयोगकर्ताले यसलाई थप-मात्र हुने समयरेखामा देख्नेछन्।"
+msgstr ""
+"उपलब्ध निर्णय मात्र छान्नुहोस्। आवेदक र अधिकृत मन्त्रालय प्रयोगकर्ताले यसलाई थप-मात्र हुने "
+"समयरेखामा देख्नेछन्।"
 
-#, fuzzy
-#| msgid "Available repositories"
 msgid "Available decision"
-msgstr "उपलब्ध रिपोजिटरीहरू"
+msgstr "उपलब्ध निर्णय"
 
 msgid "Response"
 msgstr "प्रतिक्रिया"
 
-#, fuzzy, python-format
-#| msgid "%(count)s case"
-#| msgid_plural "%(count)s cases"
+#, python-format
 msgid "%(count)s records"
 msgstr "%(count)s मुद्दा"
 
-#, fuzzy
-#| msgid "Applications"
 msgid "Application workspace"
-msgstr "आवेदनहरू"
+msgstr "आवेदन कार्यक्षेत्र"
 
-#, fuzzy
-#| msgid "View applications"
 msgid "All visible applications"
-msgstr "आवेदनहरू हेर्नुहोस्"
+msgstr "सबै देखिने आवेदनहरू"
 
 msgid "Project authoring"
 msgstr "परियोजना लेखन"
 
-#, fuzzy
-#| msgid "Application sections"
 msgid "C3 · Application decisions"
-msgstr "आवेदन खण्डहरू"
+msgstr "C3 · आवेदन निर्णयहरू"
 
 msgid ""
 "These records show the applicant, current state, and complete decision "
 "timeline available to your role."
-msgstr "यी अभिलेखले आवेदक, हालको अवस्था र तपाईंको भूमिकालाई उपलब्ध पूर्ण निर्णय समयरेखा देखाउँछन्।"
+msgstr ""
+"यी अभिलेखले आवेदक, हालको अवस्था र तपाईंको भूमिकालाई उपलब्ध पूर्ण निर्णय समयरेखा देखाउँछन्।"
 
 #, python-format
 msgid "Applicant: %(applicant)s"
@@ -2846,10 +2699,8 @@ msgid ""
 "responses, and decisions."
 msgstr "यो समयरेखा पेश्की, जानकारी अनुरोध, प्रतिक्रिया र निर्णयहरूको पूर्ण अभिलेख हो।"
 
-#, fuzzy
-#| msgid "Application detail"
 msgid "Return to application detail"
-msgstr "आवेदन विवरण"
+msgstr "आवेदन विवरणमा फर्कनुहोस्"
 
 msgid "No events have been recorded."
 msgstr "कुनै घटना रेकर्ड गरिएको छैन।"
@@ -2871,25 +2722,17 @@ msgstr "आवेदन फिर्ता गर्नुहोस्"
 msgid "Government project authoring"
 msgstr "सरकारी परियोजना लेखन"
 
-#, fuzzy
-#| msgid "Ministry"
 msgid "Ministry workspace"
-msgstr "मन्त्रालय"
+msgstr "मन्त्रालय कार्यक्षेत्र"
 
-#, fuzzy
-#| msgid "Project authoring"
 msgid "Project authoring sections"
-msgstr "परियोजना लेखन"
+msgstr "परियोजना लेखन खण्डहरू"
 
-#, fuzzy
-#| msgid "Government project authoring"
 msgid "Government publishing"
-msgstr "सरकारी परियोजना लेखन"
+msgstr "सरकारी प्रकाशन"
 
-#, fuzzy
-#| msgid "Project date"
 msgid "Project drafts and review"
-msgstr "परियोजना मिति"
+msgstr "परियोजना मस्यौदा र समीक्षा"
 
 msgid "Create draft"
 msgstr "ड्राफ्ट बनाउनुहोस्"
@@ -2921,15 +2764,15 @@ msgstr "अद्यावधिकहरू"
 msgid "Questions"
 msgstr "प्रश्नहरू"
 
-#, fuzzy
-#| msgid "Create project draft"
 msgid "Current project state"
-msgstr "परियोजना ड्राफ्ट बनाउनुहोस्"
+msgstr "हालको परियोजना अवस्था"
 
 msgid ""
 "Complete the readiness evidence, then submit this draft for Super Admin "
 "review."
-msgstr "तयारीसम्बन्धी प्रमाण पूरा गर्नुहोस्, त्यसपछि यो मस्यौदा Super Admin समीक्षाका लागि पेश गर्नुहोस्।"
+msgstr ""
+"तयारीसम्बन्धी प्रमाण पूरा गर्नुहोस्, त्यसपछि यो मस्यौदा Super Admin समीक्षाका लागि पेश "
+"गर्नुहोस्।"
 
 msgid ""
 "This submission is with the Super Admin. The review history below is the "
@@ -2939,27 +2782,37 @@ msgstr "यो पेश्की Super Admin सँग छ। तलको स�
 msgid ""
 "Changes requested: address the recorded review comments, save the revision, "
 "then resubmit."
-msgstr "परिवर्तन अनुरोध गरिएको छ: अभिलेखित समीक्षा टिप्पणी सम्बोधन गर्नुहोस्, संशोधन बचत गर्नुहोस् र फेरि पेश गर्नुहोस्।"
+msgstr ""
+"परिवर्तन अनुरोध गरिएको छ: अभिलेखित समीक्षा टिप्पणी सम्बोधन गर्नुहोस्, संशोधन बचत "
+"गर्नुहोस् र फेरि पेश गर्नुहोस्।"
 
 msgid ""
 "The reviewed version is approved. A Super Admin can publish once all "
 "readiness evidence remains valid."
-msgstr "समीक्षा गरिएको संस्करण स्वीकृत छ। सबै तयारी प्रमाण वैध रहेपछि Super Admin ले प्रकाशित गर्न सक्छ।"
+msgstr ""
+"समीक्षा गरिएको संस्करण स्वीकृत छ। सबै तयारी प्रमाण वैध रहेपछि Super Admin ले प्रकाशित "
+"गर्न सक्छ।"
 
 msgid ""
 "This listing is live. Keep its updates, tasks, and response commitments "
 "accurate for contributors."
-msgstr "यो सूचीकरण सक्रिय छ। यसको अद्यावधिक, कार्य र प्रतिक्रिया प्रतिबद्धता योगदानकर्ताका लागि सही राख्नुहोस्।"
+msgstr ""
+"यो सूचीकरण सक्रिय छ। यसको अद्यावधिक, कार्य र प्रतिक्रिया प्रतिबद्धता योगदानकर्ताका "
+"लागि सही राख्नुहोस्।"
 
 msgid ""
 "This listing is paused. It remains visible, but new participation should not "
 "be accepted until it is resumed."
-msgstr "यो सूचीकरण रोकिएको छ। यो देखिने रहन्छ, तर पुनः सुरु नभएसम्म नयाँ सहभागिता स्वीकार गर्नु हुँदैन।"
+msgstr ""
+"यो सूचीकरण रोकिएको छ। यो देखिने रहन्छ, तर पुनः सुरु नभएसम्म नयाँ सहभागिता स्वीकार गर्नु "
+"हुँदैन।"
 
 msgid ""
 "This listing is complete. Preserve its outcome and update history before "
 "archiving it."
-msgstr "यो सूचीकरण पूरा भएको छ। अभिलेखमा राख्नुअघि यसको परिणाम र अद्यावधिक इतिहास सुरक्षित राख्नुहोस्।"
+msgstr ""
+"यो सूचीकरण पूरा भएको छ। अभिलेखमा राख्नुअघि यसको परिणाम र अद्यावधिक इतिहास सुरक्षित "
+"राख्नुहोस्।"
 
 msgid ""
 "This listing has been cancelled. Its recorded history remains available for "
@@ -2969,25 +2822,21 @@ msgstr "यो सूचीकरण रद्द भएको छ। यसक�
 msgid ""
 "This listing is archived and read-only. A Super Admin may restore it only "
 "through the recorded lifecycle."
-msgstr "यो सूचीकरण अभिलेखित र पढ्न मात्र मिल्ने छ। Super Admin ले अभिलेखित जीवनचक्रबाट मात्र यसलाई पुनर्स्थापित गर्न सक्छ।"
+msgstr ""
+"यो सूचीकरण अभिलेखित र पढ्न मात्र मिल्ने छ। Super Admin ले अभिलेखित जीवनचक्रबाट मात्र "
+"यसलाई पुनर्स्थापित गर्न सक्छ।"
 
 msgid "Edit project"
 msgstr "परियोजना सम्पादन गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Completion summary"
 msgid "View completion summary"
-msgstr "समापन सारांश"
+msgstr "समापन सारांश हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "Completion summary"
 msgid "Prepare completion summary"
-msgstr "समापन सारांश"
+msgstr "समापन सारांश तयार गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Pending verification"
 msgid "Open verification queue"
-msgstr "प्रमाणीकरण प्रतीक्षामा"
+msgstr "प्रमाणीकरण लाम खोल्नुहोस्"
 
 msgid "Maintainers"
 msgstr "मर्मतकर्ताहरू"
@@ -3016,15 +2865,15 @@ msgstr "कुनै माइलस्टोन थपिएको छैन।
 msgid "Add milestone"
 msgstr "माइलस्टोन थप्नुहोस्"
 
-#, fuzzy
-#| msgid "Lifecycle action"
 msgid "Next lifecycle action"
-msgstr "जीवनचक्र कार्य"
+msgstr "अर्को जीवनचक्र कार्य"
 
 msgid ""
 "Only actions available for the current state and your role are shown. Every "
 "transition is recorded in the review history."
-msgstr "हालको अवस्था र तपाईंको भूमिकालाई उपलब्ध कार्य मात्र देखाइन्छन्। हरेक परिवर्तन समीक्षा इतिहासमा अभिलेखित हुन्छ।"
+msgstr ""
+"हालको अवस्था र तपाईंको भूमिकालाई उपलब्ध कार्य मात्र देखाइन्छन्। हरेक परिवर्तन समीक्षा "
+"इतिहासमा अभिलेखित हुन्छ।"
 
 msgid "Apply action"
 msgstr "कार्य लागू गर्नुहोस्"
@@ -3032,10 +2881,9 @@ msgstr "कार्य लागू गर्नुहोस्"
 msgid "Review history"
 msgstr "समीक्षा इतिहास"
 
-#, fuzzy, python-format
-#| msgid "Reviewer"
+#, python-format
 msgid "by %(reviewer)s"
-msgstr "समीक्षक"
+msgstr "%(reviewer)s द्वारा"
 
 msgid "No review decisions have been recorded."
 msgstr "कुनै समीक्षा निर्णय रेकर्ड गरिएको छैन।"
@@ -3052,7 +2900,9 @@ msgstr "प्रकाशनका लागि तयार"
 msgid ""
 "All required readiness evidence is recorded. The Super Admin approval and "
 "publication actions remain auditable lifecycle steps."
-msgstr "सबै आवश्यक तयारी प्रमाण अभिलेखित छन्। Super Admin स्वीकृति र प्रकाशन कार्य लेखापरीक्षणयोग्य जीवनचक्र चरण रहन्छन्।"
+msgstr ""
+"सबै आवश्यक तयारी प्रमाण अभिलेखित छन्। Super Admin स्वीकृति र प्रकाशन कार्य "
+"लेखापरीक्षणयोग्य जीवनचक्र चरण रहन्छन्।"
 
 msgid "Suitability checklist"
 msgstr "उपयुक्तता जाँचसूची"
@@ -3085,7 +2935,9 @@ msgstr "प्रगति अद्यावधिकहरू"
 msgid ""
 "Publish progress, milestones, releases, and completion context so "
 "contributors can see an honest listing over time."
-msgstr "प्रगति, कोसेढुङ्गा, प्रकाशन र समापन सन्दर्भ प्रकाशित गर्नुहोस्, ताकि योगदानकर्ताले समयसँगै यथार्थ सूचीकरण देखून्।"
+msgstr ""
+"प्रगति, कोसेढुङ्गा, प्रकाशन र समापन सन्दर्भ प्रकाशित गर्नुहोस्, ताकि योगदानकर्ताले समयसँगै "
+"यथार्थ सूचीकरण देखून्।"
 
 msgid "Related link"
 msgstr "सम्बन्धित लिङ्क"
@@ -3132,7 +2984,9 @@ msgstr "सरकारी परियोजना सम्पादन गर
 msgid ""
 "Save the structured draft first. Readiness evidence, review, and publication "
 "happen from the project workflow after this step."
-msgstr "पहिले संरचित मस्यौदा बचत गर्नुहोस्। यस चरणपछि परियोजना कार्यप्रवाहबाट तयारी प्रमाण, समीक्षा र प्रकाशन हुन्छ।"
+msgstr ""
+"पहिले संरचित मस्यौदा बचत गर्नुहोस्। यस चरणपछि परियोजना कार्यप्रवाहबाट तयारी प्रमाण, "
+"समीक्षा र प्रकाशन हुन्छ।"
 
 msgid "This project is read-only in its current lifecycle state."
 msgstr "यो परियोजना हालको जीवनचक्र अवस्थामा पढ्नेमात्र छ।"
@@ -3153,15 +3007,9 @@ msgstr "तयारी प्रमाण, मर्मतकर्ता, क�
 msgid "Submit for Super Admin review from the project workflow."
 msgstr "परियोजना कार्यप्रवाहबाट Super Admin समीक्षाका लागि पेश गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "review window"
 msgid "Review hand-off"
-msgstr "समीक्षा अवधि"
+msgstr "समीक्षा हस्तान्तरण"
 
-#, fuzzy
-#| msgid ""
-#| "Super Admins review completeness and documented suitability. Legal "
-#| "responsibility remains with the publishing ministry."
 msgid ""
 "Super Admins review completeness and documented suitability. If changes are "
 "requested, revise this draft and resubmit. Legal responsibility remains with "
@@ -3235,46 +3083,40 @@ msgstr "सामुदायिक परियोजना सम्पाद�
 msgid "Back to community project"
 msgstr "सामुदायिक परियोजनामा फर्कनुहोस्"
 
-#, fuzzy
-#| msgid "About this project"
 msgid "Complete the project"
-msgstr "यस परियोजनाबारे"
+msgstr "परियोजना पूरा गर्नुहोस्"
 
 msgid ""
 "The completion summary is published on the public listing. Save it as a "
 "draft here, review every field, then mark the project completed."
-msgstr "समापन सारांश सार्वजनिक सूचीकरणमा प्रकाशित हुन्छ। यसलाई यहाँ मस्यौदाका रूपमा बचत गर्नुहोस्, हरेक फिल्ड समीक्षा गर्नुहोस् र परियोजनालाई पूरा भएको चिन्ह लगाउनुहोस्।"
+msgstr ""
+"समापन सारांश सार्वजनिक सूचीकरणमा प्रकाशित हुन्छ। यसलाई यहाँ मस्यौदाका रूपमा बचत "
+"गर्नुहोस्, हरेक फिल्ड समीक्षा गर्नुहोस् र परियोजनालाई पूरा भएको चिन्ह लगाउनुहोस्।"
 
 msgid "The project was not completed"
 msgstr "परियोजना पूरा भएन"
 
-#, fuzzy
-#| msgid "Save draft"
 msgid "Save completion draft"
-msgstr "ड्राफ्ट सुरक्षित गर्नुहोस्"
+msgstr "समापन मस्यौदा बचत गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Completed"
 msgid "Mark completed"
-msgstr "सम्पन्न"
+msgstr "पूरा भएको चिन्ह लगाउनुहोस्"
 
-#, fuzzy
-#| msgid "Completion summary"
 msgid "Completion summary is read-only"
-msgstr "समापन सारांश"
+msgstr "समापन सारांश पढ्न मात्र मिल्ने छ"
 
 msgid ""
 "Completed projects preserve their published outcome record. Reopening "
 "requires Super Admin approval."
-msgstr "पूरा भएका परियोजनाले आफ्नो प्रकाशित परिणाम अभिलेख सुरक्षित राख्छन्। फेरि खोल्न Super Admin स्वीकृति आवश्यक छ।"
+msgstr ""
+"पूरा भएका परियोजनाले आफ्नो प्रकाशित परिणाम अभिलेख सुरक्षित राख्छन्। फेरि खोल्न Super "
+"Admin स्वीकृति आवश्यक छ।"
 
 msgid "Not written yet"
 msgstr "अझै लेखिएको छैन"
 
-#, fuzzy
-#| msgid "Submit for review"
 msgid "Public summary preview"
-msgstr "समीक्षाका लागि पेश गर्नुहोस्"
+msgstr "सार्वजनिक सारांश पूर्वावलोकन"
 
 msgid "Impact"
 msgstr "प्रभाव"
@@ -3285,7 +3127,9 @@ msgstr "समापनले के परिवर्तन गर्छ"
 msgid ""
 "The listing stops accepting new applications. The public history, verified "
 "contributor records, and completion summary remain available."
-msgstr "सूचीकरणले नयाँ आवेदन स्वीकार्न बन्द गर्छ। सार्वजनिक इतिहास, प्रमाणित योगदानकर्ता अभिलेख र समापन सारांश उपलब्ध रहन्छन्।"
+msgstr ""
+"सूचीकरणले नयाँ आवेदन स्वीकार्न बन्द गर्छ। सार्वजनिक इतिहास, प्रमाणित योगदानकर्ता अभिलेख "
+"र समापन सारांश उपलब्ध रहन्छन्।"
 
 msgid ""
 "The transition and summary revision are recorded under your name in the "
@@ -3301,8 +3145,6 @@ msgstr "नेपाल सरकार · प्रधानमन्त्र�
 msgid "Digital Collaboration Initiative · pilot 2026"
 msgstr "डिजिटल सहकार्य पहल · पाइलट २०२६"
 
-#, fuzzy
-#| msgid "All technologies"
 msgid "Public technology,"
 msgstr "सबै प्रविधिहरू"
 
@@ -3314,22 +3156,20 @@ msgid ""
 "contribution — and where Nepal’s developers, designers, writers and testers "
 "earn recognition that a ministry has actually verified. Code stays on "
 "GitHub; DevNepal holds identity, listings, participation and the record."
-msgstr "DevNepal मा मन्त्रालयहरूले उपयुक्त प्रविधि परियोजना सार्वजनिक योगदानका लागि खोल्छन् — र नेपालका विकासकर्ता, डिजाइनर, लेखक र परीक्षकले मन्त्रालयले वास्तवमै प्रमाणित गरेको पहिचान पाउँछन्। कोड GitHub मै रहन्छ; DevNepal ले पहिचान, सूचीकरण, सहभागिता र अभिलेख राख्छ।"
+msgstr ""
+"DevNepal मा मन्त्रालयहरूले उपयुक्त प्रविधि परियोजना सार्वजनिक योगदानका लागि खोल्छन् — "
+"र नेपालका विकासकर्ता, डिजाइनर, लेखक र परीक्षकले मन्त्रालयले वास्तवमै प्रमाणित गरेको "
+"पहिचान पाउँछन्। कोड GitHub मै रहन्छ; DevNepal ले पहिचान, सूचीकरण, सहभागिता र अभिलेख "
+"राख्छ।"
 
-#, fuzzy
-#| msgid "See all government projects"
 msgid "Browse government projects"
-msgstr "सबै सरकारी परियोजनाहरू हेर्नुहोस्"
+msgstr "सरकारी परियोजना हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "Disconnect GitHub"
 msgid "Join with GitHub"
-msgstr "GitHub विच्छेद गर्नुहोस्"
+msgstr "GitHub मार्फत सामेल हुनुहोस्"
 
-#, fuzzy
-#| msgid "Ministry"
 msgid "Ministry officer?"
-msgstr "मन्त्रालय"
+msgstr "मन्त्रालय अधिकारी?"
 
 msgid "How listing works"
 msgstr "सूचीकरण कसरी काम गर्छ"
@@ -3340,10 +3180,8 @@ msgstr "DevNepal — मञ्च एक नजरमा"
 msgid "Pilot"
 msgstr "पाइलट"
 
-#, fuzzy
-#| msgid "Update body"
 msgid "Updated daily"
-msgstr "अद्यावधिक मुख्य सामग्री"
+msgstr "दैनिक अद्यावधिक"
 
 msgid "Sheet 01 of 07"
 msgstr "पाना ०१ / ०७"
@@ -3363,10 +3201,8 @@ msgstr "प्रकाशन गर्ने मन्त्रालयहर�
 msgid "Named officers, MFA enforced; every action attributable"
 msgstr "नामित अधिकारी, MFA अनिवार्य; हरेक कार्य उत्तरदायी"
 
-#, fuzzy
-#| msgid "Open for contribution"
 msgid "Projects open for contribution"
-msgstr "योगदानका लागि खुला"
+msgstr "योगदानका लागि खुला परियोजनाहरू"
 
 msgid "Only reviewed public work is counted"
 msgstr "समीक्षा गरिएको सार्वजनिक काम मात्र गणना हुन्छ"
@@ -3374,10 +3210,8 @@ msgstr "समीक्षा गरिएको सार्वजनिक क
 msgid "Accepted by a named maintainer — not commit counts"
 msgstr "नामित मर्मतकर्ताले स्वीकृत गरेको — कमिट गणना होइन"
 
-#, fuzzy
-#| msgid "Preview public profile"
 msgid "Public member profiles"
-msgstr "सार्वजनिक प्रोफाइल पूर्वावलोकन"
+msgstr "सार्वजनिक सदस्य प्रोफाइलहरू"
 
 msgid "Visible by each member’s own choice"
 msgstr "हरेक सदस्यको आफ्नै रोजाइअनुसार देखिने"
@@ -3385,7 +3219,9 @@ msgstr "हरेक सदस्यको आफ्नै रोजाइअन
 msgid ""
 "Figures refresh daily. Recognition counts only work accepted by a named "
 "maintainer on a DevNepal-listed project."
-msgstr "तथ्याङ्क दैनिक अद्यावधिक हुन्छन्। पहिचानले DevNepal मा सूचीबद्ध परियोजनामा नामित मर्मतकर्ताले स्वीकार गरेको काम मात्र गणना गर्छ।"
+msgstr ""
+"तथ्याङ्क दैनिक अद्यावधिक हुन्छन्। पहिचानले DevNepal मा सूचीबद्ध परियोजनामा नामित "
+"मर्मतकर्ताले स्वीकार गरेको काम मात्र गणना गर्छ।"
 
 msgid "Government opportunities"
 msgstr "सरकारी योगदान अवसरहरू"
@@ -3421,10 +3257,8 @@ msgstr ""
 msgid "Illustrated public-interest work areas, not a list of open projects."
 msgstr "चित्रित सार्वजनिक-हितका कार्य क्षेत्रहरू; यी खुला परियोजनाहरूको सूची होइनन्।"
 
-#, fuzzy
-#| msgid "Apply to contribute"
 msgid "03 · Ways to contribute"
-msgstr "योगदानका लागि आवेदन दिनुहोस्"
+msgstr "०३ · योगदान गर्ने तरिका"
 
 msgid "Code is one of nine ways in"
 msgstr "कोड योगदानका नौ मार्गमध्ये एक हो"
@@ -3434,7 +3268,10 @@ msgid ""
 "Code goes through GitHub and is verified when a named maintainer merges it; "
 "everything else is submitted as evidence and accepted by the ministry’s "
 "reviewer."
-msgstr "सार्वजनिक स्कोरिङ नीतिअन्तर्गत हरेक योगदान प्रकारलाई समान तौल दिइन्छ। कोड GitHub मार्फत जान्छ र नामित मर्मतकर्ताले मर्ज गरेपछि प्रमाणित हुन्छ; बाँकी सबै प्रमाणका रूपमा पेश गरिन्छ र मन्त्रालयको समीक्षकले स्वीकार गर्छ।"
+msgstr ""
+"सार्वजनिक स्कोरिङ नीतिअन्तर्गत हरेक योगदान प्रकारलाई समान तौल दिइन्छ। कोड GitHub "
+"मार्फत जान्छ र नामित मर्मतकर्ताले मर्ज गरेपछि प्रमाणित हुन्छ; बाँकी सबै प्रमाणका रूपमा पेश "
+"गरिन्छ र मन्त्रालयको समीक्षकले स्वीकार गर्छ।"
 
 msgid "Code & data"
 msgstr "कोड र डेटा"
@@ -3442,7 +3279,9 @@ msgstr "कोड र डेटा"
 msgid ""
 "Pick a labelled starter issue and open a pull request. A merge by a named "
 "maintainer becomes a verified contribution."
-msgstr "लेबल गरिएको सुरुआती इशु छान्नुहोस् र पुल रिक्वेस्ट खोल्नुहोस्। नामित मर्मतकर्ताको मर्ज प्रमाणित योगदान बन्छ।"
+msgstr ""
+"लेबल गरिएको सुरुआती इशु छान्नुहोस् र पुल रिक्वेस्ट खोल्नुहोस्। नामित मर्मतकर्ताको मर्ज "
+"प्रमाणित योगदान बन्छ।"
 
 msgid "Engineering"
 msgstr "इन्जिनियरिङ"
@@ -3456,7 +3295,9 @@ msgstr "डिजाइन र अनुसन्धान"
 msgid ""
 "Audits, flows, interface work and user research are submitted as evidence "
 "and accepted by the ministry reviewer."
-msgstr "लेखापरीक्षण, प्रवाह, इन्टरफेस काम र प्रयोगकर्ता अनुसन्धान प्रमाणका रूपमा पेश गरिन्छन् र मन्त्रालय समीक्षकले स्वीकार गर्छन्।"
+msgstr ""
+"लेखापरीक्षण, प्रवाह, इन्टरफेस काम र प्रयोगकर्ता अनुसन्धान प्रमाणका रूपमा पेश गरिन्छन् र "
+"मन्त्रालय समीक्षकले स्वीकार गर्छन्।"
 
 msgid "UI/UX"
 msgstr "UI/UX"
@@ -3467,17 +3308,15 @@ msgstr "दस्तावेज र नेपाली"
 msgid ""
 "Documentation, translation and localisation count exactly like code. No "
 "contribution type is disadvantaged."
-msgstr "दस्तावेजीकरण, अनुवाद र स्थानीयकरण कोडसरह नै गणना हुन्छन्। कुनै योगदान प्रकारलाई बेफाइदा हुँदैन।"
+msgstr ""
+"दस्तावेजीकरण, अनुवाद र स्थानीयकरण कोडसरह नै गणना हुन्छन्। कुनै योगदान प्रकारलाई बेफाइदा "
+"हुँदैन।"
 
-#, fuzzy
-#| msgid "Location"
 msgid "Localization"
-msgstr "स्थान"
+msgstr "स्थानीयकरण"
 
-#, fuzzy
-#| msgid "Security contact"
 msgid "QA, security & community"
-msgstr "सुरक्षा सम्पर्क"
+msgstr "QA, सुरक्षा र समुदाय"
 
 msgid ""
 "Test plans, reproductions, responsible disclosure and community facilitation "
@@ -3487,26 +3326,22 @@ msgstr "परीक्षण योजना, पुनरुत्पादन
 msgid "QA"
 msgstr "QA"
 
-#, fuzzy
-#| msgid "Security contact"
 msgid "Security"
-msgstr "सुरक्षा सम्पर्क"
+msgstr "सुरक्षा"
 
-#, fuzzy
-#| msgid "Community and project update emails"
 msgid "Community projects — listed by members"
-msgstr "सामुदायिक र परियोजना अद्यावधिक इमेलहरू"
+msgstr "सामुदायिक परियोजना — सदस्यद्वारा सूचीबद्ध"
 
-#, fuzzy
-#| msgid "Edit government project"
 msgid "No government endorsement"
-msgstr "सरकारी परियोजना सम्पादन गर्नुहोस्"
+msgstr "सरकारी समर्थन छैन"
 
 msgid ""
 "Member projects are listed by their owners and are not reviewed by PMO. "
 "Ownership is verified through the owner’s connected GitHub account where "
 "possible."
-msgstr "सदस्य परियोजना तिनका मालिकले सूचीबद्ध गर्छन् र PMO ले समीक्षा गर्दैन। सम्भव भए स्वामित्व मालिकको जोडिएको GitHub खाताबाट प्रमाणित हुन्छ।"
+msgstr ""
+"सदस्य परियोजना तिनका मालिकले सूचीबद्ध गर्छन् र PMO ले समीक्षा गर्दैन। सम्भव भए स्वामित्व "
+"मालिकको जोडिएको GitHub खाताबाट प्रमाणित हुन्छ।"
 
 msgid "Hydropower dam in Nepal, duotoned in steel blue."
 msgstr "नेपालको जलविद्युत बाँध, इस्पात नीलो दुई-रङमा।"
@@ -3515,7 +3350,10 @@ msgid ""
 "The first accepted fix to the Sewa portal came from a volunteer in Hetauda "
 "who had never set foot in our office. She could see exactly what we needed, "
 "and we could see exactly what she did. That is the whole idea."
-msgstr "सेवा पोर्टलको पहिलो स्वीकृत सुधार हेटौँडाकी स्वयंसेवकबाट आयो, जो हाम्रो कार्यालय कहिल्यै आएकी थिइनन्। उनले हामीलाई के चाहिएको हो ठ्याक्कै देख्न सकिन् र हामीले उनले के गरिन् ठ्याक्कै देख्न सक्यौँ। यही नै मुख्य विचार हो।"
+msgstr ""
+"सेवा पोर्टलको पहिलो स्वीकृत सुधार हेटौँडाकी स्वयंसेवकबाट आयो, जो हाम्रो कार्यालय कहिल्यै "
+"आएकी थिइनन्। उनले हामीलाई के चाहिएको हो ठ्याक्कै देख्न सकिन् र हामीले उनले के गरिन् ठ्याक्कै "
+"देख्न सक्यौँ। यही नै मुख्य विचार हो।"
 
 msgid "— Rajan Koirala, maintainer, Department of Information Technology"
 msgstr "— राजन कोइराला, मर्मतकर्ता, सूचना प्रविधि विभाग"
@@ -3531,61 +3369,41 @@ msgstr "तपाईंका सीप, योगदान, सुरक्ष�
 msgid "No deadline"
 msgstr "म्याद छैन"
 
-#, fuzzy
-#| msgid "New to DevNepal?"
 msgid "Everywhere on DevNepal"
-msgstr "देवनेपालमा नयाँ हुनुहुन्छ?"
+msgstr "DevNepal भरि"
 
 msgid "Every destination on the platform, one click from home."
 msgstr "मञ्चको हरेक गन्तव्य, गृहपृष्ठबाट एक क्लिकमा।"
 
-#, fuzzy
-#| msgid "Disconnected"
 msgid "Discover"
-msgstr "विच्छेदित"
+msgstr "खोज्नुहोस्"
 
-#, fuzzy
-#| msgid "All Projects"
 msgid "All projects"
-msgstr "सबै परियोजनाहरू"
+msgstr "सबै परियोजना"
 
-#, fuzzy
-#| msgid "Government Projects"
 msgid "Government projects"
-msgstr "सरकारी परियोजनाहरू"
+msgstr "सरकारी परियोजना"
 
-#, fuzzy
-#| msgid "Community project"
 msgid "Community projects"
 msgstr "सामुदायिक परियोजना"
 
-#, fuzzy
-#| msgid "Technical blogs"
 msgid "Tech blogs"
-msgstr "प्रविधि ब्लगहरू"
+msgstr "प्रविधि ब्लग"
 
-#, fuzzy
-#| msgid "Member dashboard"
 msgid "Member directory"
-msgstr "सदस्य ड्यासबोर्ड"
+msgstr "सदस्य निर्देशिका"
 
 msgid "Leaderboard"
 msgstr "लिडरबोर्ड"
 
-#, fuzzy
-#| msgid "Your role"
 msgid "Your workspace"
-msgstr "तपाईंको भूमिका"
+msgstr "तपाईंको कार्यक्षेत्र"
 
-#, fuzzy
-#| msgid "Display settings"
 msgid "Profile settings"
-msgstr "प्रदर्शन सेटिङ"
+msgstr "प्रोफाइल सेटिङ"
 
-#, fuzzy
-#| msgid "Applications"
 msgid "My applications"
-msgstr "आवेदनहरू"
+msgstr "मेरा आवेदनहरू"
 
 msgid "My recognition"
 msgstr "मेरो पहिचान"
@@ -3593,10 +3411,8 @@ msgstr "मेरो पहिचान"
 msgid "Suggest a skill"
 msgstr "सीप सुझाव दिनुहोस्"
 
-#, fuzzy
-#| msgid "Edit community project"
 msgid "List a community project"
-msgstr "सामुदायिक परियोजना सम्पादन गर्नुहोस्"
+msgstr "सामुदायिक परियोजना सूचीबद्ध गर्नुहोस्"
 
 msgid "Sessions and devices"
 msgstr "सत्र र उपकरणहरू"
@@ -3604,20 +3420,14 @@ msgstr "सत्र र उपकरणहरू"
 msgid "Get started"
 msgstr "सुरु गर्नुहोस्"
 
-#, fuzzy
-#| msgid "Badge administration"
 msgid "Administration"
-msgstr "बैज प्रशासन"
+msgstr "प्रशासन"
 
-#, fuzzy
-#| msgid "Grant publisher"
 msgid "Ministries and publishers"
-msgstr "प्रकाशक अधिकार दिनुहोस्"
+msgstr "मन्त्रालय र प्रकाशकहरू"
 
-#, fuzzy
-#| msgid "Moderation cases"
 msgid "Moderation queue"
-msgstr "मोडरेशन मुद्दाहरू"
+msgstr "मध्यस्थता लाम"
 
 msgid "Recognition policies"
 msgstr "पहिचान नीतिहरू"
@@ -3640,37 +3450,28 @@ msgstr "गोपनीयता नियन्त्रणहरू"
 msgid "Project sections"
 msgstr "परियोजना खण्डहरू"
 
-#, fuzzy
-#| msgid "Projects"
 msgid "Project sheet"
-msgstr "परियोजनाहरू"
+msgstr "परियोजना पाना"
 
-#, fuzzy, python-format
-#| msgid "Data classification"
+#, python-format
 msgid "Data: %(classification)s"
-msgstr "डाटा वर्गीकरण"
+msgstr "डेटा: %(classification)s"
 
 #, python-format
 msgid "Sign-off: %(signoff)s"
 msgstr "स्वीकृति: %(signoff)s"
 
-#, fuzzy
-#| msgid "Open direct contribution"
 msgid "Project contribution facts"
-msgstr "प्रत्यक्ष योगदानका लागि खुला"
+msgstr "परियोजना योगदान तथ्य"
 
-#, fuzzy
-#| msgid "First-response commitment not yet published"
 msgid "Contribution route not yet published"
-msgstr "पहिलो प्रतिक्रिया प्रतिबद्धता अझै प्रकाशित भएको छैन"
+msgstr "योगदान मार्ग अझै प्रकाशित गरिएको छैन"
 
 msgid "Expected effort"
 msgstr "अनुमानित प्रयास"
 
-#, fuzzy
-#| msgid "Grant publisher"
 msgid "Effort not yet published"
-msgstr "प्रकाशक अधिकार दिनुहोस्"
+msgstr "प्रयास अझै प्रकाशित गरिएको छैन"
 
 msgid "First response"
 msgstr "पहिलो प्रतिक्रिया"
@@ -3697,7 +3498,9 @@ msgstr "%(ministry)s द्वारा प्रकाशित"
 msgid ""
 "This project has stopped accepting new participation. Its outcomes and "
 "delivery record remain public below."
-msgstr "यस परियोजनाले नयाँ सहभागिता स्वीकार्न बन्द गरेको छ। यसको परिणाम र कार्यसम्पादन अभिलेख तल सार्वजनिक रहन्छ।"
+msgstr ""
+"यस परियोजनाले नयाँ सहभागिता स्वीकार्न बन्द गरेको छ। यसको परिणाम र कार्यसम्पादन अभिलेख "
+"तल सार्वजनिक रहन्छ।"
 
 msgid "Accountability"
 msgstr "जवाफदेहिता"
@@ -3747,10 +3550,8 @@ msgstr "अझै कुनै गतिविधि रेकर्ड भए�
 msgid "View all updates"
 msgstr "सबै अद्यावधिकहरू हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "Expected outcome"
 msgid "Completed outcomes"
-msgstr "अपेक्षित परिणाम"
+msgstr "पूरा भएका परिणामहरू"
 
 msgid "Governance and sign-off"
 msgstr "सुशासन र स्वीकृति"
@@ -3770,15 +3571,11 @@ msgstr "समापन मापदण्ड"
 msgid "Contributor sign-off"
 msgstr "योगदानकर्ता स्वीकृति"
 
-#, fuzzy
-#| msgid "Vulnerability disclosure URL"
 msgid "Vulnerability disclosure"
-msgstr "सुरक्षा कमजोरी प्रकटीकरण URL"
+msgstr "सुरक्षा कमजोरी प्रकटीकरण"
 
-#, fuzzy
-#| msgid "Before you submit"
 msgid "Do not submit"
-msgstr "पेश गर्नुअघि"
+msgstr "पेश नगर्नुहोस्"
 
 msgid "No project-specific security contact has been published."
 msgstr "परियोजनासम्बन्धी कुनै सुरक्षा सम्पर्क प्रकाशित गरिएको छैन।"
@@ -3798,10 +3595,8 @@ msgstr "आचारसंहिता पढ्नुहोस्"
 msgid "Open tasks"
 msgstr "खुला कार्यहरू"
 
-#, fuzzy
-#| msgid "Submit evidence"
 msgid "Sign in to submit evidence"
-msgstr "प्रमाण पेश गर्नुहोस्"
+msgstr "प्रमाण पेश गर्न साइन इन गर्नुहोस्"
 
 msgid "Starter task"
 msgstr "सुरुआती कार्य"
@@ -3830,10 +3625,8 @@ msgstr "परिवर्तनबारे मलाई सूचित गर
 msgid "Save project"
 msgstr "परियोजना सुरक्षित गर्नुहोस्"
 
-#, fuzzy
-#| msgid "No public projects listed."
 msgid "Public project registry"
-msgstr "कुनै सार्वजनिक परियोजना सूचीबद्ध छैन।"
+msgstr "सार्वजनिक परियोजना दर्ता"
 
 msgid "All Projects"
 msgstr "सबै परियोजनाहरू"
@@ -3841,12 +3634,16 @@ msgstr "सबै परियोजनाहरू"
 msgid ""
 "Approved ministry opportunities for public contribution. Official listings "
 "identify their ministry, response commitment, and contribution route."
-msgstr "सार्वजनिक योगदानका लागि स्वीकृत मन्त्रालय अवसरहरू। आधिकारिक सूचीकरणले मन्त्रालय, प्रतिक्रिया प्रतिबद्धता र योगदान मार्ग देखाउँछन्।"
+msgstr ""
+"सार्वजनिक योगदानका लागि स्वीकृत मन्त्रालय अवसरहरू। आधिकारिक सूचीकरणले मन्त्रालय, "
+"प्रतिक्रिया प्रतिबद्धता र योगदान मार्ग देखाउँछन्।"
 
 msgid ""
 "Member-owned collaboration opportunities. Community listings are clearly "
 "distinct from Government of Nepal projects."
-msgstr "सदस्य-स्वामित्वका सहकार्य अवसरहरू। सामुदायिक सूचीकरणहरू नेपाल सरकारका परियोजनाभन्दा स्पष्ट रूपमा अलग छन्।"
+msgstr ""
+"सदस्य-स्वामित्वका सहकार्य अवसरहरू। सामुदायिक सूचीकरणहरू नेपाल सरकारका परियोजनाभन्दा "
+"स्पष्ट रूपमा अलग छन्।"
 
 msgid ""
 "Find a contribution opportunity with a clear owner, maintained tasks, and a "
@@ -3854,15 +3651,11 @@ msgid ""
 msgstr ""
 "स्पष्ट स्वामी, व्यवस्थित कार्य र देखिने सार्वजनिक परिणाम भएको योगदान अवसर खोज्नुहोस्।"
 
-#, fuzzy
-#| msgid "Project authoring"
 msgid "Project catalog"
-msgstr "परियोजना लेखन"
+msgstr "परियोजना सूची"
 
-#, fuzzy
-#| msgid "Apply filters"
 msgid "Filters"
-msgstr "फिल्टर लागू गर्नुहोस्"
+msgstr "फिल्टर"
 
 msgid "Search projects"
 msgstr "परियोजनाहरू खोज्नुहोस्"
@@ -4131,25 +3924,17 @@ msgstr "प्रदान गर्नुहोस्"
 msgid "No badges have been created."
 msgstr "कुनै बैज सिर्जना गरिएको छैन।"
 
-#, fuzzy
-#| msgid ""
-#| "Members earn recognition for verified contributions to DevNepal-listed "
-#| "projects."
 msgid ""
 "Ranks verified, accepted contributions to DevNepal-listed projects under the "
 "public scoring policy."
 msgstr ""
 "देवनेपालमा सूचीबद्ध परियोजनाहरूमा प्रमाणित योगदानका लागि सदस्यहरूले पहिचान कमाउँछन्।"
 
-#, fuzzy
-#| msgid "Contribution sections"
 msgid "Recognition sections"
-msgstr "योगदान खण्डहरू"
+msgstr "पहिचान खण्डहरू"
 
-#, fuzzy
-#| msgid "Scoring policies"
 msgid "Scoring policy"
-msgstr "अंकन नीतिहरू"
+msgstr "स्कोरिङ नीति"
 
 msgid "Rankings"
 msgstr "क्रमहरू"
@@ -4166,10 +3951,8 @@ msgstr "सार्वजनिक मान्यता नीति सक्
 msgid "Rank %(rank)s"
 msgstr "वरियता %(rank)s"
 
-#, fuzzy
-#| msgid "No verified contribution scores yet."
 msgid "Accepted contribution score"
-msgstr "अझै प्रमाणित योगदान अंक छैन।"
+msgstr "स्वीकृत योगदान स्कोर"
 
 msgid "No ranked contributions are available."
 msgstr "कुनै क्रमित योगदान उपलब्ध छैन।"
@@ -4178,40 +3961,30 @@ msgid ""
 "Rankings appear after accepted work is scored under the active public policy."
 msgstr "सक्रिय सार्वजनिक नीतिअन्तर्गत स्वीकृत कामको स्कोर भएपछि श्रेणीकरण देखिन्छ।"
 
-#, fuzzy
-#| msgid "Recognition policies"
 msgid "Recognition rules"
-msgstr "पहिचान नीतिहरू"
+msgstr "पहिचान नियमहरू"
 
-#, fuzzy
-#| msgid "Create account"
 msgid "What counts"
-msgstr "खाता खोल्नुहोस्"
+msgstr "के गणना हुन्छ"
 
 msgid ""
 "Design, QA, documentation, translation, security, and research count "
 "alongside accepted code."
 msgstr "डिजाइन, QA, दस्तावेजीकरण, अनुवाद, सुरक्षा र अनुसन्धान स्वीकृत कोडसँगै गणना हुन्छन्।"
 
-#, fuzzy
-#| msgid "What DevNepal does not promise"
 msgid "What does not count"
-msgstr "देवनेपालले के प्रतिज्ञा गर्दैन"
+msgstr "के गणना हुँदैन"
 
 msgid ""
 "Commits, bot events, and self-reported activity are not scored. Work counts "
 "only after an authorized reviewer accepts it."
-msgstr "कमिट, बट घटना र स्वयं-प्रतिवेदित गतिविधिको स्कोर हुँदैन। अधिकृत समीक्षकले स्वीकार गरेपछि मात्र काम गणना हुन्छ।"
+msgstr ""
+"कमिट, बट घटना र स्वयं-प्रतिवेदित गतिविधिको स्कोर हुँदैन। अधिकृत समीक्षकले स्वीकार गरेपछि "
+"मात्र काम गणना हुन्छ।"
 
-#, fuzzy
-#| msgid "Your role"
 msgid "Your choice"
-msgstr "तपाईंको भूमिका"
+msgstr "तपाईंको रोजाइ"
 
-#, fuzzy
-#| msgid ""
-#| "Opting out removes you from public rankings while keeping your private "
-#| "contribution history."
 msgid ""
 "Members can leave public rankings without deleting their private "
 "contribution and badge history."
@@ -4219,43 +3992,35 @@ msgstr ""
 "बाहिर निस्कँदा तपाईं सार्वजनिक क्रमबाट हट्नुहुन्छ, तर तपाईंको निजी योगदान इतिहास "
 "सुरक्षित रहन्छ।"
 
-#, fuzzy
-#| msgid "My recognition"
 msgid "Manage recognition display"
-msgstr "मेरो पहिचान"
+msgstr "पहिचान प्रदर्शन व्यवस्थापन गर्नुहोस्"
 
-#, fuzzy
-#| msgid "My recognition"
 msgid "Your recognition"
-msgstr "मेरो पहिचान"
+msgstr "तपाईंको पहिचान"
 
 msgid ""
 "Verified, accepted work only. Every score names the policy version that "
 "produced it, and every badge keeps its award history."
-msgstr "प्रमाणित, स्वीकृत काम मात्र। हरेक स्कोरले त्यसलाई उत्पन्न गर्ने नीति संस्करण देखाउँछ र हरेक बैजले आफ्नो पुरस्कार इतिहास राख्छ।"
+msgstr ""
+"प्रमाणित, स्वीकृत काम मात्र। हरेक स्कोरले त्यसलाई उत्पन्न गर्ने नीति संस्करण देखाउँछ र हरेक "
+"बैजले आफ्नो पुरस्कार इतिहास राख्छ।"
 
-#, fuzzy
-#| msgid "Opt out of the public leaderboard"
 msgid "Not listed on the public leaderboard"
-msgstr "सार्वजनिक लिडरबोर्डबाट बाहिर निस्कनुहोस्"
+msgstr "सार्वजनिक श्रेणीकरणमा सूचीबद्ध छैन"
 
-#, fuzzy
-#| msgid ""
-#| "Your verified contribution scores and badge history are private to you."
 msgid ""
 "Your verified contributions, scores, badges, and private history are "
 "unchanged."
 msgstr "तपाईंका प्रमाणित योगदान अंक र बैज इतिहास तपाईंलाई मात्र देखिन्छ।"
 
-#, fuzzy
-#| msgid "Opt out of the public leaderboard"
 msgid "Listed on the public leaderboard"
-msgstr "सार्वजनिक लिडरबोर्डबाट बाहिर निस्कनुहोस्"
+msgstr "सार्वजनिक श्रेणीकरणमा सूचीबद्ध छ"
 
 msgid ""
 "Your public name and accepted-contribution score can appear while public "
 "rankings are enabled."
-msgstr "सार्वजनिक श्रेणीकरण सक्षम रहँदा तपाईंको सार्वजनिक नाम र स्वीकृत योगदान स्कोर देखिन सक्छ।"
+msgstr ""
+"सार्वजनिक श्रेणीकरण सक्षम रहँदा तपाईंको सार्वजनिक नाम र स्वीकृत योगदान स्कोर देखिन सक्छ।"
 
 #, python-format
 msgid "policy v%(version)s"
@@ -4267,31 +4032,23 @@ msgstr "फिर्ता गरिएको"
 msgid "Scored"
 msgstr "अंकित"
 
-#, fuzzy
-#| msgid "No verified contribution scores yet."
 msgid "No verified contribution scores yet"
-msgstr "अझै प्रमाणित योगदान अंक छैन।"
+msgstr "अझै प्रमाणित योगदान स्कोर छैन"
 
 msgid ""
 "Submitted evidence appears here only after an authorized maintainer accepts "
 "it and an active policy scores it."
-msgstr "अधिकृत मर्मतकर्ताले स्वीकारेपछि र सक्रिय नीतिले स्कोर गरेपछि मात्र पेश गरिएको प्रमाण यहाँ देखिन्छ।"
+msgstr ""
+"अधिकृत मर्मतकर्ताले स्वीकारेपछि र सक्रिय नीतिले स्कोर गरेपछि मात्र पेश गरिएको प्रमाण यहाँ "
+"देखिन्छ।"
 
-#, fuzzy, python-format
-#| msgid "criteria version %(counter)s"
-#| msgid_plural "criteria version %(counter)s"
+#, python-format
 msgid "criteria version %(version)s"
-msgstr "मापदण्ड संस्करण %(counter)s"
+msgstr "मापदण्ड संस्करण %(version)s"
 
-#, fuzzy
-#| msgid "Location visibility"
 msgid "Recognition & visibility"
-msgstr "स्थानको दृश्यता"
+msgstr "पहिचान र दृश्यता"
 
-#, fuzzy
-#| msgid ""
-#| "Opting out removes you from public rankings while keeping your private "
-#| "contribution history."
 msgid ""
 "Public leaderboard display is your choice. Opting out removes your name and "
 "score from public rankings while keeping your private history."
@@ -4299,23 +4056,17 @@ msgstr ""
 "बाहिर निस्कँदा तपाईं सार्वजनिक क्रमबाट हट्नुहुन्छ, तर तपाईंको निजी योगदान इतिहास "
 "सुरक्षित रहन्छ।"
 
-#, fuzzy
-#| msgid "Waitlisted"
 msgid "Not listed"
-msgstr "पर्खाइ सूचीमा"
+msgstr "सूचीबद्ध छैन"
 
 msgid "To rejoin, update the leaderboard setting in Profile & visibility."
 msgstr "पुनः सामेल हुन प्रोफाइल र दृश्यतामा श्रेणीकरण सेटिङ अद्यावधिक गर्नुहोस्।"
 
-#, fuzzy
-#| msgid "Waitlisted"
 msgid "Listed"
-msgstr "पर्खाइ सूचीमा"
+msgstr "सूचीबद्ध छ"
 
-#, fuzzy
-#| msgid "Opt out of the public leaderboard"
 msgid "Leave the public leaderboard"
-msgstr "सार्वजनिक लिडरबोर्डबाट बाहिर निस्कनुहोस्"
+msgstr "सार्वजनिक श्रेणीकरण छोड्नुहोस्"
 
 msgid "What stays private"
 msgstr "के निजी रहन्छ"
@@ -4323,12 +4074,12 @@ msgstr "के निजी रहन्छ"
 msgid ""
 "Your complete recognition history and reversed records remain private "
 "regardless of leaderboard display."
-msgstr "श्रेणीकरण प्रदर्शन जेसुकै भए पनि तपाईंको पूर्ण पहिचान इतिहास र उल्टाइएका अभिलेख निजी रहन्छन्।"
+msgstr ""
+"श्रेणीकरण प्रदर्शन जेसुकै भए पनि तपाईंको पूर्ण पहिचान इतिहास र उल्टाइएका अभिलेख निजी "
+"रहन्छन्।"
 
-#, fuzzy
-#| msgid "Profile and visibility"
 msgid "Review profile visibility"
-msgstr "प्रोफाइल र दृश्यता"
+msgstr "प्रोफाइल दृश्यता समीक्षा गर्नुहोस्"
 
 msgid ""
 "Activate a documented, versioned scoring policy. Activation supersedes the "
@@ -4353,86 +4104,66 @@ msgstr "नीति दस्तावेज"
 msgid "No policies have been activated."
 msgstr "कुनै नीति सक्रिय गरिएको छैन।"
 
-#, fuzzy
-#| msgid "Published"
 msgid "Published criteria"
-msgstr "प्रकाशित"
+msgstr "प्रकाशित मापदण्ड"
 
-#, fuzzy
-#| msgid "Recognition policies"
 msgid "Recognition record"
-msgstr "पहिचान नीतिहरू"
+msgstr "पहिचान अभिलेख"
 
 msgid "Type"
 msgstr "प्रकार"
 
-#, fuzzy
-#| msgid "Criteria version"
 msgid "Current criteria version"
-msgstr "मापदण्ड संस्करण"
+msgstr "हालको मापदण्ड संस्करण"
 
-#, fuzzy
-#| msgid "Revoke award"
 msgid "Active awards"
-msgstr "अवार्ड रद्द गर्नुहोस्"
+msgstr "सक्रिय पुरस्कारहरू"
 
-#, fuzzy
-#| msgid "Scoring policies"
 msgid "Read scoring policy"
-msgstr "अंकन नीतिहरू"
+msgstr "स्कोरिङ नीति पढ्नुहोस्"
 
-#, fuzzy
-#| msgid "Public value"
 msgid "Public badges"
-msgstr "सार्वजनिक मूल्य"
+msgstr "सार्वजनिक बैजहरू"
 
 msgid ""
 "Badges recognize verified work. Each definition publishes its current "
 "criteria and version."
-msgstr "बैजले प्रमाणित कामलाई पहिचान गर्छन्। हरेक परिभाषाले आफ्नो हालको मापदण्ड र संस्करण प्रकाशित गर्छ।"
+msgstr ""
+"बैजले प्रमाणित कामलाई पहिचान गर्छन्। हरेक परिभाषाले आफ्नो हालको मापदण्ड र संस्करण "
+"प्रकाशित गर्छ।"
 
-#, fuzzy, python-format
-#| msgid "version %(version)s"
+#, python-format
 msgid "Criteria version %(version)s"
 msgstr "संस्करण %(version)s"
 
-#, fuzzy
-#| msgid "View profile"
 msgid "View criteria"
-msgstr "प्रोफाइल हेर्नुहोस्"
+msgstr "मापदण्ड हेर्नुहोस्"
 
-#, fuzzy
-#| msgid "No publishers are assigned."
 msgid "No public badges are active."
-msgstr "कुनै प्रकाशक तोकिएको छैन।"
+msgstr "कुनै सार्वजनिक बैज सक्रिय छैन।"
 
-#, fuzzy
-#| msgid "Public value"
 msgid "Public record"
-msgstr "सार्वजनिक मूल्य"
+msgstr "सार्वजनिक अभिलेख"
 
-#, fuzzy, python-format
-#| msgid "version %(version)s"
+#, python-format
 msgid "Active policy · version %(version)s"
 msgstr "संस्करण %(version)s"
 
 msgid ""
 "Only contributions accepted by an authorized maintainer receive points. "
 "Scores remain pinned to this policy version for auditability."
-msgstr "अधिकृत मर्मतकर्ताले स्वीकार गरेका योगदानले मात्र अङ्क पाउँछन्। लेखापरीक्षणका लागि स्कोर यस नीति संस्करणमै स्थिर रहन्छन्।"
+msgstr ""
+"अधिकृत मर्मतकर्ताले स्वीकार गरेका योगदानले मात्र अङ्क पाउँछन्। लेखापरीक्षणका लागि स्कोर यस "
+"नीति संस्करणमै स्थिर रहन्छन्।"
 
 msgid "Rule"
 msgstr "नियम"
 
-#, fuzzy
-#| msgid "Policy document"
 msgid "Open policy document"
-msgstr "नीति दस्तावेज"
+msgstr "नीति दस्तावेज खोल्नुहोस्"
 
-#, fuzzy
-#| msgid "Scoring policies"
 msgid "No scoring policy is active."
-msgstr "अंकन नीतिहरू"
+msgstr "कुनै स्कोरिङ नीति सक्रिय छैन।"
 
 msgid "This term is already awaiting review."
 msgstr "यो शब्द पहिले नै समीक्षा प्रतीक्षामा छ।"
@@ -4542,250 +4273,3 @@ msgstr "नेपाल सरकारको सार्वजनिक सह
 
 msgid "All content available in English and Nepali"
 msgstr "सबै सामग्री अङ्ग्रेजी र नेपालीमा उपलब्ध छ"
-
-#~ msgid "Manage your profile, applications, and saved projects."
-#~ msgstr "आफ्नो प्रोफाइल, आवेदन र सुरक्षित गरिएका परियोजनाहरू व्यवस्थापन गर्नुहोस्।"
-
-#~ msgid ""
-#~ "Update your public details and choose what other members can discover."
-#~ msgstr ""
-#~ "आफ्ना सार्वजनिक विवरणहरू अद्यावधिक गर्नुहोस् र अन्य सदस्यहरूले के हेर्न सक्छन् त्यो "
-#~ "छान्नुहोस्।"
-
-#~ msgid "Manage sessions"
-#~ msgstr "सत्रहरू व्यवस्थापन गर्नुहोस्"
-
-#~ msgid "Connect your GitHub account to link public activity to your profile."
-#~ msgstr "सार्वजनिक गतिविधि आफ्नो प्रोफाइलसँग जोड्न आफ्नो GitHub खाता जोड्नुहोस्।"
-
-#~ msgid "Use your DevNepal account to manage your profile and contributions."
-#~ msgstr "तपाईंको प्रोफाइल र योगदान व्यवस्थापन गर्न आफ्नो देवनेपाल खाता प्रयोग गर्नुहोस्।"
-
-#~ msgid ""
-#~ "Link GitHub, Medium, a personal website, or a portfolio. Unsaved rows are "
-#~ "applied when you save the profile."
-#~ msgstr ""
-#~ "GitHub, Medium, व्यक्तिगत वेबसाइट वा पोर्टफोलियो लिङ्क गर्नुहोस्। सुरक्षित नगरिएका "
-#~ "पङ्क्तिहरू प्रोफाइल सुरक्षित गर्दा लागू हुन्छन्।"
-
-#~ msgid "Your sessions"
-#~ msgstr "तपाईंका सत्रहरू"
-
-#~ msgid "Create your DevNepal account"
-#~ msgstr "तपाईंको देवनेपाल खाता बनाउनुहोस्"
-
-#~ msgid "Join the community building Nepal's public projects."
-#~ msgstr "नेपालका सार्वजनिक परियोजना बनाउने समुदायमा सामेल हुनुहोस्।"
-
-#~ msgid "Article URL"
-#~ msgstr "लेख URL"
-
-#~ msgid "Save listing"
-#~ msgstr "सूची सुरक्षित गर्नुहोस्"
-
-#~ msgid "External link listing"
-#~ msgstr "बाह्य लिङ्क सूची"
-
-#~ msgid ""
-#~ "DevNepal stores the link and metadata only. The article itself stays at "
-#~ "its canonical source."
-#~ msgstr "देवनेपालले लिङ्क र मेटाडाटा मात्र भण्डारण गर्छ। लेख आफै यसको मूल स्रोतमै रहन्छ।"
-
-#~ msgid "History"
-#~ msgstr "इतिहास"
-
-#~ msgid "View history"
-#~ msgstr "इतिहास हेर्नुहोस्"
-
-#~ msgid "Submit contribution evidence"
-#~ msgstr "योगदान प्रमाण पेश गर्नुहोस्"
-
-#~ msgid "Evidence is not verified until an authorized maintainer accepts it."
-#~ msgstr "अधिकृत मर्मतकर्ताले स्वीकार नगरेसम्म प्रमाण प्रमाणित हुँदैन।"
-
-#~ msgid "Rights"
-#~ msgstr "अधिकारहरू"
-
-#~ msgid "About DevNepal"
-#~ msgstr "देवनेपालबारे"
-
-#~ msgid "Find a fit"
-#~ msgstr "आफूलाई मिल्ने काम खोज्नुहोस्"
-
-#~ msgid ""
-#~ "Choose work with a named owner, a clear need, and a public response "
-#~ "commitment."
-#~ msgstr ""
-#~ "जिम्मेवार व्यक्ति, स्पष्ट आवश्यकता र सार्वजनिक प्रतिक्रिया प्रतिबद्धता भएको काम "
-#~ "छान्नुहोस्।"
-
-#~ msgid "Read before acting"
-#~ msgstr "काम सुरु गर्नुअघि पढ्नुहोस्"
-
-#~ msgid ""
-#~ "Check the brief, repository, code of conduct, licence, and prerequisites."
-#~ msgstr "संक्षिप्त विवरण, रिपोजिटरी, आचारसंहिता, इजाजतपत्र र पूर्वसर्त जाँच्नुहोस्।"
-
-#~ msgid "Choose your path"
-#~ msgstr "आफ्नो बाटो छान्नुहोस्"
-
-#~ msgid "Close the loop"
-#~ msgstr "कामको चक्र पूरा गर्नुहोस्"
-
-#~ msgid ""
-#~ "Keep communication in the approved channel and submit evidence when a "
-#~ "project asks for it."
-#~ msgstr "स्वीकृत माध्यममै संवाद राख्नुहोस् र परियोजनाले मागेमा प्रमाण बुझाउनुहोस्।"
-
-#~ msgid ""
-#~ "Recognition follows review and evidence; there is no raw-commit "
-#~ "leaderboard."
-#~ msgstr "सम्मान समीक्षा र प्रमाणपछि मात्र हुन्छ; कच्चा कमिटमा आधारित लिडरबोर्ड छैन।"
-
-#~ msgid "Open the support and reporting workflow"
-#~ msgstr "सहयोग र रिपोर्टिङ कार्यप्रवाह खोल्नुहोस्"
-
-#~ msgid "Application records you are authorized to view."
-#~ msgstr "तपाईंले हेर्न अधिकृत आवेदन रेकर्डहरू।"
-
-#~ msgid ""
-#~ "Bilingual title and summary, repository ownership, and license evidence "
-#~ "are required before review."
-#~ msgstr ""
-#~ "समीक्षाअघि द्विभाषी शीर्षक र सार, रिपोजिटरी स्वामित्व, र लाइसेन्स प्रमाण आवश्यक छ।"
-
-#~ msgid "Review scope"
-#~ msgstr "समीक्षा दायरा"
-
-#~ msgid "Find public-interest work with a clear way to contribute."
-#~ msgstr "योगदान गर्ने स्पष्ट बाटो भएको सार्वजनिक हितको काम खोज्नुहोस्।"
-
-#~ msgid ""
-#~ "DevNepal helps you assess the named owner, contribution path, and public "
-#~ "response commitment before you decide how to take part. Browse government "
-#~ "and community work in English or Nepali."
-#~ msgstr ""
-#~ "देवनेपालले सहभागी हुने निर्णय गर्नु अघि नामित जिम्मेवार व्यक्ति, योगदान मार्ग र "
-#~ "सार्वजनिक प्रतिक्रिया प्रतिबद्धता बुझ्न मद्दत गर्छ। सरकारी र सामुदायिक काम अङ्ग्रेजी "
-#~ "वा नेपालीमा हेर्नुहोस्।"
-
-#~ msgid "Named owner"
-#~ msgstr "तोकिएको जिम्मेवार व्यक्ति"
-
-#~ msgid "See who is accountable for the work."
-#~ msgstr "कामका लागि को जवाफदेही छ हेर्नुहोस्।"
-
-#~ msgid "Clear contribution route"
-#~ msgstr "स्पष्ट योगदान मार्ग"
-
-#~ msgid "Know whether to apply or start directly."
-#~ msgstr "आवेदन दिने वा सिधै सुरु गर्ने थाहा पाउनुहोस्।"
-
-#~ msgid "Know when to expect an acknowledgement."
-#~ msgstr "प्रारम्भिक प्रतिक्रिया कहिले आउँछ थाहा पाउनुहोस्।"
-
-#~ msgid "A clear path to contribute"
-#~ msgstr "योगदान गर्ने स्पष्ट बाटो"
-
-#~ msgid ""
-#~ "DevNepal keeps the people, decisions, and evidence around public-interest "
-#~ "work visible."
-#~ msgstr ""
-#~ "देवनेपालले सार्वजनिक हितका कामसँग सम्बन्धित मानिस, निर्णय र प्रमाणलाई देखिने बनाउँछ।"
-
-#~ msgid "Find prepared work"
-#~ msgstr "तयार गरिएको काम खोज्नुहोस्"
-
-#~ msgid ""
-#~ "Look for an official project with an owner, a public contact path, and a "
-#~ "response commitment."
-#~ msgstr ""
-#~ "जिम्मेवार व्यक्ति, सार्वजनिक सम्पर्क माध्यम र प्रतिक्रिया प्रतिबद्धता भएको आधिकारिक "
-#~ "परियोजना खोज्नुहोस्।"
-
-#~ msgid "Understand the scope"
-#~ msgstr "कामको दायरा बुझ्नुहोस्"
-
-#~ msgid ""
-#~ "Read the contribution guidance, task or workstream, and prerequisites "
-#~ "before you begin."
-#~ msgstr "सुरु गर्नु अघि योगदान मार्गदर्शन, काम वा कार्यधारा र पूर्वआवश्यकता पढ्नुहोस्।"
-
-#~ msgid "Contribute through the right route"
-#~ msgstr "उचित माध्यमबाट योगदान गर्नुहोस्"
-
-#~ msgid ""
-#~ "Apply where a workstream is controlled, or follow the published direct-"
-#~ "contribution instructions."
-#~ msgstr ""
-#~ "कार्यधारा नियन्त्रित भएमा आवेदन दिनुहोस्, वा प्रकाशित प्रत्यक्ष-योगदान निर्देशन पालना "
-#~ "गर्नुहोस्।"
-
-#~ msgid ""
-#~ "Accepted code and non-code work is recorded with its evidence and "
-#~ "decision."
-#~ msgstr "स्वीकृत कोड र गैर-कोड काम यसको प्रमाण र निर्णयसहित अभिलेख गरिन्छ।"
-
-#~ msgid "Named maintainer"
-#~ msgstr "नामाङ्कित मर्मतकर्ता"
-
-#~ msgid "Verified contribution leaderboard"
-#~ msgstr "प्रमाणित योगदान लिडरबोर्ड"
-
-#~ msgid ""
-#~ "You are opted out of the public leaderboard. Your private history is "
-#~ "retained."
-#~ msgstr ""
-#~ "तपाईं सार्वजनिक लिडरबोर्डबाट बाहिर हुनुहुन्छ। तपाईंको निजी इतिहास सुरक्षित रहन्छ।"
-
-#~ msgid "You are included in the public leaderboard while it is enabled."
-#~ msgstr "सक्रिय रहँदा तपाईं सार्वजनिक लिडरबोर्डमा समावेश हुनुहुन्छ।"
-
-#~ msgid "Public leaderboard display"
-#~ msgstr "सार्वजनिक लिडरबोर्ड प्रदर्शन"
-
-#~ msgid "Opted out"
-#~ msgstr "बाहिर निस्किएको"
-
-#~ msgid "Public digital collaboration service"
-#~ msgstr "सार्वजनिक डिजिटल सहयोग सेवा"
-
-#~ msgid "देवनेपाल"
-#~ msgstr "देवनेपाल"
-
-#~ msgid "Delete your account"
-#~ msgstr "आफ्नो खाता मेट्नुहोस्"
-
-#~ msgid "or"
-#~ msgstr "वा"
-
-#~ msgid "Collaborate on Nepal's digital future"
-#~ msgstr "नेपालको डिजिटल भविष्य निर्माणमा सहयोग गर्नुहोस्"
-
-#~ msgid ""
-#~ "DevNepal connects developers with Government of Nepal projects. "
-#~ "Contribute code, ideas, and expertise — in English and Nepali."
-#~ msgstr ""
-#~ "देवनेपालले विकासकर्ताहरूलाई नेपाल सरकारका परियोजनाहरूसँग जोड्छ। कोड, विचार र "
-#~ "विशेषज्ञता योगदान गर्नुहोस् — अङ्ग्रेजी र नेपाली दुवै भाषामा।"
-
-#~ msgid "GitHub account"
-#~ msgstr "GitHub खाता"
-
-#~ msgid "Deactivate"
-#~ msgstr "निष्क्रिय गर्नुहोस्"
-
-#~ msgid "Footer"
-#~ msgstr "फुटर"
-
-#~ msgid "View project"
-#~ msgstr "परियोजना हेर्नुहोस्"
-
-#~ msgid "About"
-#~ msgstr "हाम्रोबारे"
-
-#~ msgid "Get help"
-#~ msgstr "सहायता लिनुहोस्"
-
-#~ msgid "Contact"
-#~ msgstr "सम्पर्क"
