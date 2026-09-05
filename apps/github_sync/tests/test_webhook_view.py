@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 import pytest
@@ -6,8 +7,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.github_sync.enums import ProcessingState
-from apps.github_sync.models import ProviderEvent
-from apps.github_sync.tests.factories import WEBHOOK_SECRET, pr_merged_body, sign_body
+from apps.github_sync.models import GithubIssueSnapshot, ProviderEvent
+from apps.github_sync.tests.factories import (
+    WEBHOOK_SECRET,
+    RepositoryConnectionFactory,
+    pr_merged_body,
+    sign_body,
+)
 from apps.github_sync.views import MAX_WEBHOOK_BODY_BYTES
 
 pytestmark = [pytest.mark.integration, pytest.mark.github_webhook, pytest.mark.django_db]
@@ -39,6 +45,77 @@ def post_webhook(client, body, headers):
 
 
 class TestGithubWebhookView:
+    def test_signed_issue_open_refreshes_the_public_projection_before_acknowledgement(
+        self, client, monkeypatch
+    ):
+        """GIT-003/GIT-005: reloading after an issue webhook shows current GitHub data."""
+        connection = RepositoryConnectionFactory(
+            is_public=True,
+            repository_node_id="R_kgDOImmediateIssue",
+            full_name="voidash/civic-help-directory",
+        )
+        calls = []
+
+        class SnapshotClient:
+            def repository_metadata(self, installation_id, full_name):
+                calls.append((installation_id, full_name))
+                return {
+                    "full_name": full_name,
+                    "private": False,
+                    "default_branch": "main",
+                }
+
+            def list_open_issues(self, installation_id, full_name):
+                return [
+                    {
+                        "id": 88001,
+                        "number": 18,
+                        "title": "Visible without a manual refresh",
+                        "body": "The signed webhook refreshed this cache.",
+                        "state": "open",
+                        "comments": 0,
+                        "html_url": f"https://github.com/{full_name}/issues/18",
+                        "updated_at": "2026-09-06T10:00:00Z",
+                        "user": {
+                            "login": "voidash",
+                            "avatar_url": "https://avatars.githubusercontent.com/u/1",
+                        },
+                        "labels": [{"name": "help wanted"}],
+                    }
+                ]
+
+            def list_open_pull_requests(self, installation_id, full_name):
+                return []
+
+            def list_contributors(self, installation_id, full_name):
+                return []
+
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", SnapshotClient)
+        body = json.dumps(
+            {
+                "action": "opened",
+                "issue": {"id": 88001, "number": 18, "state": "open"},
+                "repository": {
+                    "id": 555001,
+                    "node_id": connection.repository_node_id,
+                    "name": "civic-help-directory",
+                },
+                "sender": {"login": "voidash", "type": "User"},
+            }
+        ).encode("utf-8")
+        headers = webhook_headers(
+            body,
+            HTTP_X_GITHUB_EVENT="issues",
+            HTTP_X_GITHUB_DELIVERY="immediate-issue-refresh",
+        )
+
+        response = post_webhook(client, body, headers)
+
+        assert response.status_code == 202
+        assert calls == [(connection.installation_id, connection.full_name)]
+        assert ProviderEvent.objects.get().processing_state == ProcessingState.PROCESSED
+        assert GithubIssueSnapshot.objects.get(repository=connection).number == 18
+
     def test_valid_delivery_is_accepted_and_queued(self, client):
         """GIT-004/GIT-005: a signed, fresh delivery receives a quick idempotent acknowledgement."""
         body = pr_merged_body()

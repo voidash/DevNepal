@@ -8,6 +8,9 @@ from apps.github_sync.enums import VerifiedEventKind
 
 SIGNATURE_PREFIX = "sha256="
 DEFAULT_MAX_SKEW_SECONDS = 300
+ISSUE_LIFECYCLE_ACTIONS = frozenset(
+    {"opened", "edited", "reopened", "closed", "labeled", "unlabeled", "deleted"}
+)
 
 
 class DedupKeys(NamedTuple):
@@ -31,6 +34,14 @@ class ParsedEvent:
     number: int | None
     event_id: str
     triggered_by_login: str = ""
+
+
+@dataclass(frozen=True)
+class ParsedIssueLifecycleEvent:
+    """GIT-003/GIT-005: minimal signed issue change data needed to refresh a projection."""
+
+    action: str
+    repository_node_id: str
 
 
 def verify_signature(secret: str, payload_body: bytes, signature_header: str | None) -> bool:
@@ -108,6 +119,26 @@ def parse_event(event: str, payload: dict) -> ParsedEvent | None:
         return parsed(VerifiedEventKind.RELEASE_PUBLISHED, None, release["id"])
 
     return None
+
+
+def parse_issue_lifecycle_event(event: str, payload: dict) -> ParsedIssueLifecycleEvent | None:
+    """GIT-003/GIT-005: recognize issue changes that invalidate a public repository cache."""
+    if event != "issues":
+        return None
+    action = payload.get("action")
+    if action not in ISSUE_LIFECYCLE_ACTIONS:
+        return None
+    issue = payload.get("issue") or {}
+    repository = payload.get("repository") or {}
+    try:
+        issue_id = int(issue["id"])
+        issue_number = int(issue["number"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    repository_node_id = str(repository.get("node_id") or "").strip()
+    if issue_id < 1 or issue_number < 1 or not repository_node_id:
+        return None
+    return ParsedIssueLifecycleEvent(action=action, repository_node_id=repository_node_id)
 
 
 def is_within_replay_window(

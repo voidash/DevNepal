@@ -4,6 +4,7 @@ import importlib
 import json
 import logging
 import uuid
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import timedelta
 from typing import NamedTuple, Protocol
@@ -43,9 +44,12 @@ from apps.github_sync.models import (
     RepositoryConnection,
 )
 from apps.github_sync.webhooks import (
+    ISSUE_LIFECYCLE_ACTIONS,
     ParsedEvent,
+    ParsedIssueLifecycleEvent,
     is_within_replay_window,
     parse_event,
+    parse_issue_lifecycle_event,
     verify_signature,
 )
 
@@ -1091,6 +1095,29 @@ def _ingest(
             correlation_id=correlation_id,
         )
     parsed = parse_event(event, payload_dict) if payload_dict is not None else None
+    issue_lifecycle = (
+        parse_issue_lifecycle_event(event, payload_dict) if payload_dict is not None else None
+    )
+
+    if parsed is None and issue_lifecycle is not None:
+        repository = RepositoryConnection.objects.filter(
+            provider=provider, repository_node_id=issue_lifecycle.repository_node_id
+        ).first()
+        row = ProviderEvent.objects.create(
+            provider=provider,
+            event_type=event,
+            delivery_id=delivery_id,
+            provider_event_id=delivery_id,
+            repository=repository,
+            source=DeliverySource.WEBHOOK,
+            signature_valid=True,
+            signature_note=SIGNATURE_NOTE_VALID,
+            payload=asdict(issue_lifecycle),
+            payload_digest=digest,
+            processing_state=ProcessingState.PENDING,
+            correlation_id=correlation_id,
+        )
+        return row, None
 
     if parsed is None:
         row = ProviderEvent.objects.create(
@@ -1174,21 +1201,65 @@ def _ingest(
     return row, None
 
 
-def process_pending(limit: int = 50) -> ProcessPendingResult:
+def process_pending(
+    limit: int = 50, *, event_ids: Sequence[uuid.UUID] | None = None
+) -> ProcessPendingResult:
     """GIT-005/A5/A9: drain PENDING ledger rows into candidate contributions.
 
     Unmapped repositories fail loudly; bot actors are filtered before any
     contribution record (GIT-008); a missing contributions service (parallel
     build) leaves rows PENDING and is reported instead of dropping work.
     """
-    events = (
-        ProviderEvent.objects.select_related("repository", "repository__project")
-        .filter(processing_state=ProcessingState.PENDING)
-        .order_by("received_at", "id")[:limit]
+    events_query = ProviderEvent.objects.select_related("repository", "repository__project").filter(
+        processing_state=ProcessingState.PENDING
     )
+    if event_ids is not None:
+        events_query = events_query.filter(pk__in=event_ids)
+    events = events_query.order_by("received_at", "id")[:limit]
     processed = failed = blocked = 0
     blocked_event_ids: list[str] = []
     for event in events:
+        issue_lifecycle = _stored_issue_lifecycle_event(event.payload)
+        if issue_lifecycle is not None:
+            connection = (
+                RepositoryConnection.objects.select_related("project")
+                .filter(
+                    provider=event.provider,
+                    repository_node_id=issue_lifecycle.repository_node_id,
+                )
+                .first()
+            )
+            if connection is None:
+                event.repository = None
+                event.processing_state = ProcessingState.FAILED
+                event.last_error = "failed: repository not mapped to a connected project"
+                event.processing_attempts += 1
+                event.save(
+                    update_fields=[
+                        "repository",
+                        "processing_state",
+                        "last_error",
+                        "processing_attempts",
+                    ]
+                )
+                failed += 1
+                continue
+            event.repository = connection
+            event.processing_attempts += 1
+            _refresh_public_snapshot_after_issue_lifecycle(connection, event)
+            event.processing_state = ProcessingState.PROCESSED
+            event.processed_at = timezone.now()
+            event.save(
+                update_fields=[
+                    "repository",
+                    "processing_state",
+                    "processing_attempts",
+                    "processed_at",
+                ]
+            )
+            processed += 1
+            continue
+
         parsed = ParsedEvent(**event.payload) if event.payload else None
         if parsed is None:
             event.processing_state = ProcessingState.FAILED
@@ -1265,6 +1336,9 @@ def process_pending(limit: int = 50) -> ProcessPendingResult:
             failed += 1
             continue
 
+        if event.event_type == "issues" and parsed.action in ISSUE_LIFECYCLE_ACTIONS:
+            _refresh_public_snapshot_after_issue_lifecycle(connection, event)
+
         try:
             from apps.contributions.services import record_candidate_from_github
         except ImportError:
@@ -1307,6 +1381,38 @@ def process_pending(limit: int = 50) -> ProcessPendingResult:
     return ProcessPendingResult(
         processed=processed, failed=failed, blocked=blocked, blocked_event_ids=blocked_event_ids
     )
+
+
+def _stored_issue_lifecycle_event(payload: object) -> ParsedIssueLifecycleEvent | None:
+    if not isinstance(payload, dict):
+        return None
+    try:
+        event = ParsedIssueLifecycleEvent(**payload)
+    except TypeError:
+        return None
+    if event.action not in ISSUE_LIFECYCLE_ACTIONS or not event.repository_node_id:
+        return None
+    return event
+
+
+def _refresh_public_snapshot_after_issue_lifecycle(
+    connection: RepositoryConnection, event: ProviderEvent
+) -> None:
+    if (
+        not connection.is_public
+        or connection.project_id is None
+        or connection.sync_state == SyncState.STOPPED
+        or connection.deactivated_at is not None
+    ):
+        return
+    try:
+        refresh_public_repository_snapshot(connection, github_app_client())
+    except GithubAppError:
+        logger.warning(
+            "issue lifecycle public snapshot refresh failed (repository=%s event=%s)",
+            connection.pk,
+            event.pk,
+        )
 
 
 def disconnect(user) -> GithubConnection:

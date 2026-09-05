@@ -19,6 +19,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from apps.accounts.permissions import privileged_mfa_required
 from apps.audit.services import record_audit
 from apps.github_sync.app_client import github_app_client
+from apps.github_sync.enums import ProcessingState
 from apps.github_sync.errors import (
     ConnectionNotFoundError,
     GithubAppError,
@@ -40,6 +41,7 @@ from apps.github_sync.services import (
     enroll_repository,
     ingest_webhook,
     member_repositories,
+    process_pending,
     refresh_public_repository_snapshot,
 )
 from apps.ministries.services import is_publisher_active
@@ -121,11 +123,20 @@ def github_webhook(request: HttpRequest) -> HttpResponse:
         return HttpResponse(status=413)
 
     try:
-        ingest_webhook("github", event, delivery_id, signature, timestamp, body)
+        provider_event = ingest_webhook("github", event, delivery_id, signature, timestamp, body)
     except WebhookSignatureError:
         return HttpResponse(status=401)
     except WebhookReplayError:
         return HttpResponse(status=409)
+    if event == "issues" and provider_event.processing_state == ProcessingState.PENDING:
+        try:
+            process_pending(limit=1, event_ids=[provider_event.pk])
+        except Exception:
+            logger.exception(
+                "immediate GitHub issue projection refresh failed (event=%s)",
+                provider_event.pk,
+            )
+            return HttpResponse(status=503)
     return HttpResponse(status=202)
 
 
