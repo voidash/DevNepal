@@ -1,4 +1,5 @@
 import pytest
+from django.test import override_settings
 from django.urls import reverse
 
 from apps.github_sync.models import (
@@ -7,6 +8,7 @@ from apps.github_sync.models import (
     GithubRepositoryContributor,
 )
 from apps.github_sync.tests.factories import RepositoryConnectionFactory
+from apps.ministries.tests.factories import MinistryPublisherFactory
 from apps.projects.enums import ProjectStatus
 from apps.projects.tests.factories import ProjectFactory, ProjectVersionFactory
 
@@ -81,7 +83,10 @@ def test_dsc_005_visitor_reads_full_synced_issue_before_starting_on_github(clien
         github_issue_id=7,
         number=7,
         title="Add Nepali eligibility text",
-        body="Translate every public eligibility rule and preserve the source links.",
+        body=(
+            "## Goal\n\nTranslate every public eligibility rule.\n\n"
+            "## Acceptance criteria\n\n- Preserve source links.\n- Keep JSON valid."
+        ),
         state="open",
         comments_count=2,
         url="https://github.com/voidash/civic-help-directory/issues/7",
@@ -94,6 +99,63 @@ def test_dsc_005_visitor_reads_full_synced_issue_before_starting_on_github(clien
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert issue.body in content
+    assert "<h2>Goal</h2>" in content
+    assert "<h2>Acceptance criteria</h2>" in content
+    assert "<ul>" in content
+    assert "<li>Preserve source links.</li>" in content
+    assert "## Goal" not in content
     assert issue.url in content
     assert "Start contributing on GitHub" in content
+
+
+@override_settings(PRIVILEGED_MFA_BYPASS=True)
+def test_gov_004_publisher_workspace_shows_the_connected_github_repository_activity(client):
+    """GOV-004/GIT-010: a ministry sees GitHub issues, pull requests and contributors in place."""
+    assignment = MinistryPublisherFactory()
+    project = ProjectFactory(
+        owner=assignment.user,
+        ministry=assignment.ministry,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
+    repository = RepositoryConnectionFactory(
+        project=project,
+        full_name="voidash/civic-help-directory",
+        is_public=True,
+        deactivated_at=None,
+    )
+    GithubIssueSnapshot.objects.create(
+        repository=repository,
+        github_issue_id=7,
+        number=7,
+        title="Add Nepali eligibility text",
+        state="open",
+        url="https://github.com/voidash/civic-help-directory/issues/7",
+    )
+    GithubPullRequestSnapshot.objects.create(
+        repository=repository,
+        github_pull_request_id=10,
+        number=10,
+        title="Document keyboard-only contribution workflow",
+        state="open",
+        url="https://github.com/voidash/civic-help-directory/pull/10",
+        author_login="voidash",
+    )
+    GithubRepositoryContributor.objects.create(
+        repository=repository,
+        github_user_id=1,
+        login="voidash",
+        profile_url="https://github.com/voidash",
+        contributions=9,
+    )
+    client.force_login(assignment.user)
+
+    response = client.get(reverse("projects:authoring_detail", args=[project.slug]))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Add Nepali eligibility text" in content
+    assert "Document keyboard-only contribution workflow" in content
+    assert reverse("github_sync:public_profile", args=["voidash"]) in content
+    assert reverse("projects:detail", args=[project.slug]) in content
+    assert "Review history" not in content
+    assert "Assign maintainer" not in content

@@ -59,6 +59,17 @@ def test_demo_fill_script_only_mutates_existing_controls_without_submitting_or_f
     assert "form.submit" not in script
     assert "requestSubmit" not in script
     assert "fetch(" not in script
-    assert "ministry" not in script
+    assert 'namedItem("ministry")' in script
+    assert "availableOptions.length === 1" in script
     assert "dispatchEvent" in script
     assert "option.selected = labels.includes" in script
+
+
+def test_demo_fill_uses_the_rendered_mit_licence_label(client):
+    """GOV-002: the demo helper selects the approved MIT licence shown by the form."""
+    assignment = MinistryPublisherFactory()
+    _verify_mfa(client, assignment.user)
+
+    response = client.get(reverse("projects:authoring_create"))
+
+    assert '"license":["MIT (MIT License)"]' in response.content.decode()

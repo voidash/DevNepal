@@ -357,6 +357,16 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-authoring-more > summary { padding: 16px 18px; cursor: pointer; font-family: var(--font-heading); font-weight: 600; }
 .dn-authoring-more[open] > summary { border-bottom: 1px solid var(--color-divider); }
 .dn-authoring-more > .dn-field { margin: 18px; }
+.dn-publisher-project { display: grid; gap: 28px; padding-block: 36px 64px; }
+.dn-publisher-project__summary, .dn-publisher-repository > header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+.dn-publisher-project__summary h2, .dn-publisher-repository h2 { margin: 0; }
+.dn-publisher-repository { padding: 22px; }
+.dn-publisher-repository__columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin: 24px 0; padding-block: 22px; border-block: 1px solid var(--color-divider); }
+.dn-publisher-repository h3 { font-size: 18px; }
+.dn-publisher-repository ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.dn-publisher-repository li { display: grid; gap: 2px; }
+.dn-publisher-repository li a { color: var(--color-text); }
+.dn-publisher-repository li span { color: var(--color-neutral-600); font-size: 12px; }
 
 @media (max-width: 640px) {
   .dn-github-project .dn-issue-row { grid-template-columns: 1fr; }
@@ -372,4 +382,6 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
   .dn-provider-profile__actions { justify-items: start; max-width: none; text-align: left; }
   .dn-provider-profile__layout { gap: 28px; margin-top: 36px; }
   .dn-provider-profile__repositories article { grid-template-columns: 1fr; gap: 8px; }
+  .dn-publisher-project__summary, .dn-publisher-repository > header { display: grid; }
+  .dn-publisher-repository__columns { grid-template-columns: 1fr; }
 }

@@ -36,6 +36,16 @@ if (button instanceof HTMLButtonElement && detailsElement && status instanceof H
         control.dispatchEvent(new Event("change", { bubbles: true }));
       }
 
+      const ministry = form.elements.namedItem("ministry");
+      if (ministry instanceof HTMLSelectElement) {
+        const availableOptions = Array.from(ministry.options).filter((option) => option.value);
+        if (availableOptions.length === 1) {
+          ministry.value = availableOptions[0].value;
+          ministry.dispatchEvent(new Event("input", { bubbles: true }));
+          ministry.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }
+
       status.textContent = status.dataset.filledMessage || "";
       status.hidden = false;
     });

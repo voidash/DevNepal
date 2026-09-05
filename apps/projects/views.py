@@ -21,6 +21,7 @@ from apps.accounts.services import mfa_verified
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
 from apps.blogs.enums import BlogModerationState, BlogStatus
+from apps.blogs.markdown import MarkdownValidationError, render_markdown
 from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
@@ -614,10 +615,24 @@ def github_issue_detail(request: HttpRequest, slug: str, number: int) -> HttpRes
         repository__deactivated_at__isnull=True,
         number=number,
     )
+    try:
+        issue_body_html = render_markdown(issue.body)
+    except MarkdownValidationError:
+        logger.warning(
+            "public GitHub issue markdown could not be rendered (repository=%s issue=%s)",
+            issue.repository.full_name,
+            issue.number,
+        )
+        issue_body_html = None
     return render(
         request,
         "projects/github_issue_detail.html",
-        {"project": issue.repository.project, "repository": issue.repository, "issue": issue},
+        {
+            "project": issue.repository.project,
+            "repository": issue.repository,
+            "issue": issue,
+            "issue_body_html": issue_body_html,
+        },
     )
 
 
@@ -723,7 +738,9 @@ def _manageable_project_or_404(user, slug: str) -> Project:
             "milestones",
             "attachments",
             "updates",
-            "repository_connections",
+            "repository_connections__issue_snapshots",
+            "repository_connections__pull_request_snapshots",
+            "repository_connections__contributor_snapshots",
         ),
         slug=normalize_nfc(slug),
         project_type=ProjectType.GOVERNMENT,

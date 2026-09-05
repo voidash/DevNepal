@@ -26,6 +26,9 @@ def test_safe_markdown_supports_required_authoring_features():
     rendered = render_safe_markdown(
         """# Accessible forms
 
+- Labels stay visible
+- Errors identify the field
+
 [WCAG guidance](https://www.w3.org/WAI/WCAG22/quickref/)
 
 ![A form showing visible error messages](https://example.gov.np/form.png)
@@ -41,6 +44,7 @@ print("checked")
     )
 
     assert "<h1>Accessible forms</h1>" in rendered
+    assert "<ul><li>Labels stay visible</li><li>Errors identify the field</li></ul>" in rendered
     assert '<a href="https://www.w3.org/WAI/WCAG22/quickref/"' in rendered
     assert 'alt="A form showing visible error messages"' in rendered
     assert "<table>" in rendered

@@ -26,7 +26,7 @@
     </header>
 
     <div class="dn-github-issue__body">
-      {% if issue.body %}{{ issue.body|linebreaks }}{% else %}<p>{% trans "No description was provided for this issue." %}</p>{% endif %}
+      {% if issue_body_html %}{{ issue_body_html|safe }}{% elif issue.body %}{{ issue.body|linebreaks }}{% else %}<p>{% trans "No description was provided for this issue." %}</p>{% endif %}
     </div>
 
     <footer>

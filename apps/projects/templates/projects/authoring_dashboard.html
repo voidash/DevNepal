@@ -19,9 +19,9 @@
     <header class="card__head">
       <div>
         <p class="dn-section-kicker">{% trans "Government publishing" %}</p>
-        <h2>{% trans "Project drafts and review" %}</h2>
+        <h2>{% trans "Ministry projects" %}</h2>
       </div>
-      {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create draft" %}</a>{% endif %}
+      {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
       {% if user.is_superuser %}<a class="btn btn--secondary" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>{% endif %}
     </header>
     <div class="table-scroll">
