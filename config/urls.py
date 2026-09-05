@@ -13,6 +13,7 @@ urlpatterns = [
 
 urlpatterns += i18n_patterns(
     path("", include("apps.projects.urls")),
+    path("", include("apps.github_sync.public_urls")),
     path("", include("apps.analytics.urls")),
     path("", include("apps.accounts.urls")),
     path("", include("apps.administration.urls")),

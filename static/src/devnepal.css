@@ -3,19 +3,21 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-skip-link:focus { left: 8px; }
 
 .dn-product-header { border-bottom: 1px solid var(--color-divider); background: var(--color-bg); color: var(--color-text); }
-.dn-header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 13.6px; width: min(var(--container-max), calc(100% - 40px)); min-height: 64px; margin: 0 auto; padding: 10.2px 0; }
+.dn-header-inner { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 13.6px; width: min(var(--container-max), calc(100% - 40px)); min-height: 64px; margin: 0 auto; padding: 10.2px 0; }
 .dn-brand { display: inline-flex; flex: none; align-items: center; min-height: 44px; color: var(--color-text); text-decoration: none; }
 .dn-brand-copy { display: flex; flex-direction: column; gap: 3.4px; line-height: 1; }
 .dn-brand-copy strong { font-family: var(--font-heading); font-size: 22px; font-weight: 600; }
 .dn-brand-copy small { color: var(--color-accent-700); font-size: 9px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .dn-brand-mark { display: none; }
 
-.dn-primary-nav { min-width: 0; margin-left: auto; }
+.dn-primary-nav { min-width: 0; justify-self: end; }
 .dn-primary-nav ul { display: flex; align-items: center; gap: 13.6px; margin: 0; padding: 0; list-style: none; }
 .dn-primary-nav a { display: inline-flex; align-items: center; min-height: 36px; color: var(--color-text); font-size: 14px; text-decoration: none; white-space: nowrap; }
 .dn-primary-nav a:hover { color: var(--color-accent-700); }
 .dn-primary-nav a[aria-current="page"] { color: var(--color-accent-700); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 7px; }
 .dn-header-actions { display: flex; flex: none; align-items: center; gap: 8px; }
+.dn-header-actions > * { min-width: 0; }
+.dn-greeting { max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lang-switch { display: inline-flex; overflow: hidden; border: 1px solid var(--color-divider); border-radius: 0; }
 .lang-switch button { min-width: 36px; min-height: 34px; padding: 0 10px; border: 0; border-radius: 0; color: var(--color-text); background: transparent; font-family: var(--font-body); font-size: 13px; cursor: pointer; }
 .lang-switch button + .lang-switch__divider + button { border-left: 1px solid var(--color-divider); }
@@ -103,7 +105,8 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-public-work-story blockquote { margin: 0; font-family: var(--font-heading); font-size: 34px; font-weight: 600; line-height: 44px; }
 .dn-public-work-story figcaption { margin-top: 24px; color: var(--color-neutral-700); font-size: 15px; line-height: 24px; }
 
-.dn-form-stack { display: grid; gap: var(--space-4); }
+.dn-form-stack { display: grid; min-width: 0; gap: var(--space-4); }
+.dn-form-stack > * { min-width: 0; }
 .dn-auth-page { max-width: 760px; margin-inline: auto; }
 .dn-auth-page .dn-page-header { padding: 0 0 24px; border-bottom: 0; }
 .dn-auth-page > .dn-state-banner { margin-bottom: 24px; padding: 20px 24px; }
@@ -137,8 +140,10 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 @media (min-width: 1024px) { .dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 1180px) { .dn-primary-nav { display: block; } }
 @media (max-width: 1179px) {
+  .dn-header-inner { grid-template-columns: minmax(0, 1fr) max-content; }
   .dn-primary-nav { display: none; }
-  .mobile-nav { display: block; order: 5; flex-basis: 100%; width: 100%; }
+  .dn-header-actions > :not(.lang-switch) { display: none; }
+  .mobile-nav { display: block; grid-column: 1 / -1; width: 100%; }
   .mobile-nav summary { display: flex; min-height: 44px; align-items: center; padding: 0 10.2px; border: 1px solid var(--color-divider); font-family: var(--font-heading); font-size: 14px; font-weight: 600; cursor: pointer; }
   .mobile-nav ul { margin: 0; padding: 0; border: 1px solid var(--color-divider); border-top: 0; list-style: none; }
   .mobile-nav li + li { border-top: 1px solid var(--color-divider); }
@@ -146,7 +151,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
   .mobile-nav a[aria-current="page"] { padding-left: 7.2px; border-left: 3px solid var(--color-accent); background: var(--color-surface); }
 }
 @media (max-width: 800px) { .dn-contribution-model, .dn-contribution-grid, .dn-public-work-story, .dn-community-project-grid, .dn-blog-card-grid, .dn-get-started-grid { grid-template-columns: 1fr; gap: 20.4px; } .dn-sheet__header > * { padding: 10.2px 13.6px; } .dn-community-project-grid article + article { border-left: 0; } }
-@media (max-width: 520px) { .dn-header-inner { width: min(var(--container-max), calc(100% - 24px)); gap: 8px; } .dn-brand-copy strong { font-size: 20px; } .dn-brand-copy small { max-width: 24ch; white-space: normal; } .dn-header-actions { margin-left: auto; } .dn-header-actions > :not(.lang-switch) { display: none; } .dn-header-actions .btn { min-width: 36px; } .dn-sheet__header > *:not(:first-child) { display: none; } }
+@media (max-width: 520px) { .dn-header-inner { width: min(var(--container-max), calc(100% - 24px)); gap: 8px; } .dn-brand-copy strong { font-size: 20px; } .dn-brand-copy small { max-width: 24ch; white-space: normal; } .dn-header-actions { justify-self: end; } .dn-header-actions > :not(.lang-switch) { display: none; } .dn-header-actions .btn { min-width: 36px; } .dn-sheet__header > *:not(:first-child) { display: none; } }
 
 /* A2.1 project catalog — kept namespaced so authoring and public cards retain their layouts. */
 .dn-catalog { padding: 40px 0 56px; }
@@ -194,7 +199,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-catalog-active a { margin-left: auto; }
 .dn-catalog-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
 .dn-catalog-results--list { grid-template-columns: 1fr; }
-.dn-catalog-results > .card { gap: 12px; padding: 22px; }
+.dn-catalog-results > .card { width: 100%; min-width: 0; gap: 12px; padding: 22px; }
 .dn-catalog-card__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .dn-catalog-card__identity h2 { margin: 0; font-size: 22px; line-height: 1.15; }
 .dn-catalog-card__identity h2 a { color: var(--color-text); text-decoration-thickness: 1px; }
@@ -280,6 +285,8 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-definition-list dt { font-weight: 500; }
 .dn-definition-list dd { margin: 0 0 6.8px; color: var(--color-neutral-700); }
 .btn--secondary { border-color: var(--color-divider); color: var(--color-text); background: transparent; }
+.btn--ghost { border-color: transparent; color: var(--color-accent-800); background: transparent; }
+.btn--ghost:hover { border-color: var(--color-divider); background: var(--color-surface); }
 .dn-flash-stack { display: grid; gap: 6.8px; margin-top: var(--space-4); }
 .dn-change-log { display: grid; gap: 10.2px; margin: 0 0 var(--space-4); padding: 0; list-style: none; }
 .dn-change-log li { padding-bottom: 10.2px; border-bottom: 1px solid var(--color-divider); font-size: 13px; }
@@ -294,13 +301,14 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-github-project .dn-issue-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .dn-github-project .dn-issue-row h3 { margin: 6px 0 2px; font-size: 18px; }
 .dn-github-project .dn-issue-row h3 a { color: var(--color-text); text-decoration: none; }
+.dn-github-project .dn-issue-row > *, .dn-github-project .dn-issue-row h3, .dn-github-project .dn-issue-row h3 a { min-width: 0; overflow-wrap: anywhere; }
 .dn-github-project .dn-issue-row h3 a:hover { color: var(--color-accent); text-decoration: underline; }
 .dn-github-project .dn-issue-row p { margin: 0; color: var(--color-neutral-700); font-size: 13px; }
 .dn-github-contributors { display: flex; flex-wrap: wrap; gap: 10px; }
 .dn-github-contributor { display: flex; gap: 10px; align-items: center; min-width: 210px; padding: 10px 14px; border: 1px solid var(--color-divider); color: var(--color-text); text-decoration: none; }
 .dn-github-contributor:hover { border-color: var(--color-accent); }
 .dn-github-contributor img { border-radius: 50%; }
-.dn-github-contributor span, .dn-github-contributor small { display: block; }
+.dn-github-contributor span, .dn-github-contributor small { display: block; min-width: 0; overflow-wrap: anywhere; }
 .dn-github-contributor small { margin-top: 2px; color: var(--color-neutral-700); }
 .dn-github-project details.dn-sheet { max-width: 920px; }
 .dn-github-project details.dn-sheet > summary { padding: 18px 22px; cursor: pointer; font-family: var(--font-heading); font-weight: 600; }
@@ -357,8 +365,11 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-authoring-more > summary { padding: 16px 18px; cursor: pointer; font-family: var(--font-heading); font-weight: 600; }
 .dn-authoring-more[open] > summary { border-bottom: 1px solid var(--color-divider); }
 .dn-authoring-more > .dn-field { margin: 18px; }
+.dn-empty-state { padding: 22px; border: 1px solid var(--color-divider); background: var(--color-surface); }
+.dn-empty-state > :last-child { margin-bottom: 0; }
 .dn-publisher-project { display: grid; gap: 28px; padding-block: 36px 64px; }
 .dn-publisher-project__summary, .dn-publisher-repository > header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+.dn-publisher-project__summary > *, .dn-publisher-repository > header > * { min-width: 0; }
 .dn-publisher-project__summary h2, .dn-publisher-repository h2 { margin: 0; }
 .dn-publisher-repository { padding: 22px; }
 .dn-publisher-repository__columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; margin: 24px 0; padding-block: 22px; border-block: 1px solid var(--color-divider); }
@@ -382,6 +393,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
   .dn-provider-profile__actions { justify-items: start; max-width: none; text-align: left; }
   .dn-provider-profile__layout { gap: 28px; margin-top: 36px; }
   .dn-provider-profile__repositories article { grid-template-columns: 1fr; gap: 8px; }
+  .dn-github-contributor { width: 100%; min-width: 0; }
   .dn-publisher-project__summary, .dn-publisher-repository > header { display: grid; }
   .dn-publisher-repository__columns { grid-template-columns: 1fr; }
 }

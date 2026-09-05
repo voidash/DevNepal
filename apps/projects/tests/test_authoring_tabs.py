@@ -94,7 +94,7 @@ def test_publisher_authoring_routes_render_the_github_first_workspace(client):
         assert "moit/service-directory" in content, route_name
         assert "Accessibility task 1" in content, route_name
         assert "Accessibility pull request 1" in content, route_name
-        assert reverse("github_sync:public_profile", args=["voidash"]) in content, route_name
+        assert reverse("github_sync_public:public_profile", args=["voidash"]) in content, route_name
         assert "Project workflow" not in content, route_name
         assert "Review history" not in content, route_name
 

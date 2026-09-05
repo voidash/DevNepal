@@ -41,11 +41,11 @@
 .tag-outline { border-color: var(--color-accent); color: var(--color-accent-700); background: transparent; }
 .tag-neutral { color: var(--color-neutral-800); background: var(--color-neutral-100); }
 
-.field, .dn-field { display: grid; gap: 5px; margin-bottom: var(--space-4); }
+.field, .dn-field { display: grid; min-width: 0; gap: 5px; margin-bottom: var(--space-4); }
 .field label, .field legend, .dn-field label { color: color-mix(in srgb, var(--color-text) 70%, transparent); font-size: 12px; font-weight: 500; }
-.field input, .field select, .field textarea, .form-control, .filterbar input, .filterbar select { width: 100%; min-height: 36px; padding: 6px 10px; border: 1px solid var(--color-divider); border-radius: 0; color: var(--color-text); background: var(--color-surface); font: inherit; font-size: 14px; }
-.field textarea { min-height: 96px; resize: vertical; }
-.field input:hover, .field select:hover, .field textarea:hover, .form-control:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
+.field input, .field select, .field textarea, .dn-field input, .dn-field select, .dn-field textarea, .form-control, .filterbar input, .filterbar select { width: 100%; max-width: 100%; min-height: 36px; padding: 6px 10px; border: 1px solid var(--color-divider); border-radius: 0; color: var(--color-text); background: var(--color-surface); font: inherit; font-size: 14px; }
+.field textarea, .dn-field textarea { min-height: 96px; resize: vertical; }
+.field input:hover, .field select:hover, .field textarea:hover, .dn-field input:hover, .dn-field select:hover, .dn-field textarea:hover, .form-control:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
 .field__error { color: var(--color-error); }
 .filterbar { display: grid; gap: var(--space-4); padding: var(--space-4); margin-bottom: var(--space-6); }
 .filterbar__query { display: grid; gap: 5px; }
@@ -61,6 +61,7 @@
 .hero h1 { font-size: clamp(48px, 7.7vw, 96px); line-height: .96; letter-spacing: .01em; text-transform: uppercase; }
 .hero__lead { max-width: 60ch; color: var(--color-neutral-800); font-size: 18px; line-height: 1.55; }
 .dn-home-hero { display: block; padding: 0; }
+html[lang="ne"] .hero h1 { max-width: 19ch; font-size: clamp(40px, 5.8vw, 72px); line-height: 1.16; text-transform: none; }
 .dn-hero-proof { padding: 20.4px; border: 1px solid var(--color-divider); background: transparent; }
 .dn-hero-proof ul { margin: 0; padding: 0; list-style: none; }
 .dn-hero-proof li { display: flex; gap: 10.2px; padding: 13.6px 0; }
@@ -100,5 +101,5 @@
 
 @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1180px) { .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .filterbar { grid-template-columns: 2fr 1fr 1fr auto; align-items: end; } }
-@media (max-width: 800px) { .dn-home-hero, .dn-project-grid, .dn-contribution-layout, .dn-review-grid, .dn-form-layout { grid-template-columns: 1fr; } .dn-home-hero { gap: 40.8px; padding: 54.4px 0; } }
-@media (max-width: 520px) { .container, .dn-container { width: min(var(--container-max), calc(100% - 24px)); } .hero h1 { font-size: clamp(42px, 15vw, 64px); } .btn--primary { width: 100%; } .dn-issue-list-header, .dn-issue-row, .dn-review-row { grid-template-columns: 20px minmax(0, 1fr); } .dn-issue-aside, .dn-review-row .btn { grid-column: 2; } .dn-accountability, .dn-source-grid, .dn-journey, .dn-flow-summary, .dn-contract-list { grid-template-columns: 1fr; } .dn-accountability-item + .dn-accountability-item, .dn-source + .dn-source, .dn-journey-step + .dn-journey-step, .dn-flow-summary > div + div, .dn-contract-list > div + div { border-top: 1px solid var(--color-divider); border-left: 0; } .dn-setting-row { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .dn-home-hero, .dn-project-grid, .dn-contribution-layout, .dn-review-grid, .dn-form-layout { grid-template-columns: 1fr; } .hero__panel { padding: 40px 0 48px; } }
+@media (max-width: 520px) { .container, .dn-container { width: min(var(--container-max), calc(100% - 24px)); } .hero h1 { font-size: clamp(40px, 13vw, 56px); } html[lang="ne"] .hero h1 { max-width: 16ch; font-size: clamp(32px, 10.5vw, 42px); line-height: 1.2; } .hero__lead { font-size: 16px; } .btn--primary { width: 100%; } .dn-issue-list-header, .dn-issue-row, .dn-review-row { grid-template-columns: 20px minmax(0, 1fr); } .dn-issue-aside, .dn-review-row .btn { grid-column: 2; } .dn-accountability, .dn-source-grid, .dn-journey, .dn-flow-summary, .dn-contract-list { grid-template-columns: 1fr; } .dn-accountability-item + .dn-accountability-item, .dn-source + .dn-source, .dn-journey-step + .dn-journey-step, .dn-flow-summary > div + div, .dn-contract-list > div + div { border-top: 1px solid var(--color-divider); border-left: 0; } .dn-setting-row { grid-template-columns: 1fr; } }

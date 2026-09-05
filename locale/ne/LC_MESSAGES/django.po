@@ -4961,7 +4961,7 @@ msgstr "डिजिटल सहकार्य पहल · पाइलट �
 
 #: apps/projects/templates/projects/home.html:16
 msgid "Public technology,"
-msgstr "सबै प्रविधिहरू"
+msgstr "सार्वजनिक प्रविधि,"
 
 #: apps/projects/templates/projects/home.html:16
 msgid "built in public."
@@ -5072,7 +5072,7 @@ msgstr "सरकारी परियोजना हेर्नुहोस�
 #: apps/projects/templates/projects/home.html:60
 #| msgid "Browse government projects"
 msgid "Featured government projects"
-msgstr "सरकारी परियोजना हेर्नुहोस्"
+msgstr "विशेष सरकारी परियोजनाहरू"
 
 #: apps/projects/templates/projects/home.html:61
 msgid ""
@@ -7451,3 +7451,252 @@ msgstr "जिम्मेवारी, छलफल, कमिट र पुल
 #, python-format
 msgid "Ministry: %(name)s"
 msgstr "मन्त्रालय: %(name)s"
+
+msgid "Public collaboration initiative"
+msgstr "सार्वजनिक सहकार्य पहल"
+
+msgid "Browse approved government work with a named owner, a clear contribution route and a public response commitment. Where a project publishes a repository, code stays on GitHub; DevNepal records participation and verification."
+msgstr "तोकिएको जिम्मेवार निकाय, स्पष्ट योगदान मार्ग र सार्वजनिक प्रतिक्रिया प्रतिबद्धतासहित स्वीकृत सरकारी काम हेर्नुहोस्। परियोजनाले रिपोजिटरी प्रकाशित गरेको अवस्थामा कोड GitHub मै रहन्छ; DevNepal ले सहभागिता र प्रमाणीकरण अभिलेख गर्छ।"
+
+msgid "Open public work"
+msgstr "खुला सार्वजनिक काम"
+
+msgid "Only PMO-approved ministry projects are listed here. Open each project to see its owner, contribution route, response commitment and published repository, where available."
+msgstr "प्रधानमन्त्री कार्यालयबाट स्वीकृत मन्त्रालयका परियोजनाहरू मात्र यहाँ सूचीबद्ध छन्। जिम्मेवार निकाय, योगदान मार्ग, प्रतिक्रिया प्रतिबद्धता र उपलब्ध भएमा प्रकाशित रिपोजिटरी हेर्न परियोजना खोल्नुहोस्।"
+
+msgid "Repository published"
+msgstr "रिपोजिटरी प्रकाशित"
+
+msgid "Responds %(response)s"
+msgstr "%(response)s भित्र जवाफ"
+
+msgid "How it works"
+msgstr "यसले कसरी काम गर्छ"
+
+msgid "A public project by %(ministry)s"
+msgstr "%(ministry)s को सार्वजनिक परियोजना"
+
+msgid "Choose an issue"
+msgstr "एउटा इस्यु छान्नुहोस्"
+
+msgid "View open issues"
+msgstr "खुला इस्युहरू हेर्नुहोस्"
+
+msgid "View on GitHub"
+msgstr "GitHub मा हेर्नुहोस्"
+
+msgid "Response overdue: the maintainers have not answered within their published response window."
+msgstr "प्रतिक्रिया ढिलाइ: मर्मतकर्ताहरूले प्रकाशित प्रतिक्रिया अवधिभित्र जवाफ दिएका छैनन्।"
+
+msgid "Stale project: no maintainer activity has been recorded for an extended period."
+msgstr "निष्क्रिय परियोजना: लामो समयदेखि मर्मतकर्ता गतिविधि अभिलेख गरिएको छैन।"
+
+msgid "%(counter)s day ago"
+msgid_plural "%(counter)s days ago"
+msgstr[0] "%(counter)s दिन पहिले"
+msgstr[1] "%(counter)s दिन पहिले"
+
+msgid "Contribute"
+msgstr "योगदान गर्नुहोस्"
+
+msgid "Open issues from GitHub"
+msgstr "GitHub का खुला इस्युहरू"
+
+msgid "synced"
+msgstr "सिङ्क गरिएको"
+
+msgid "ago"
+msgstr "पहिले"
+
+msgid "Opened by @%(author)s · %(comments)s comments"
+msgstr "@%(author)s द्वारा खोलिएको · %(comments)s टिप्पणी"
+
+msgid "Read issue"
+msgstr "इस्यु पढ्नुहोस्"
+
+msgid "Open pull requests"
+msgstr "खुला पुल रिक्वेस्टहरू"
+
+msgid "Live work in review"
+msgstr "समीक्षामा रहेको काम"
+
+msgid "Opened by @%(author)s"
+msgstr "@%(author)s द्वारा खोलिएको"
+
+msgid "People working on this repository"
+msgstr "यस रिपोजिटरीमा काम गरिरहेका व्यक्तिहरू"
+
+msgid "Public GitHub contributors"
+msgstr "सार्वजनिक GitHub योगदानकर्ताहरू"
+
+msgid "%(counter)s contribution"
+msgid_plural "%(counter)s contributions"
+msgstr[0] "%(counter)s योगदान"
+msgstr[1] "%(counter)s योगदानहरू"
+
+msgid "Issue #%(number)s"
+msgstr "इस्यु #%(number)s"
+
+msgid "opened by @%(author)s"
+msgstr "@%(author)s द्वारा खोलिएको"
+
+msgid "%(counter)s comment"
+msgid_plural "%(counter)s comments"
+msgstr[0] "%(counter)s टिप्पणी"
+msgstr[1] "%(counter)s टिप्पणीहरू"
+
+msgid "No description was provided for this issue."
+msgstr "यस इस्युका लागि कुनै विवरण दिइएको छैन।"
+
+msgid "Start contributing on GitHub"
+msgstr "GitHub मा योगदान सुरु गर्नुहोस्"
+
+msgid "GitHub is the source of truth for assignment, discussion, and pull requests."
+msgstr "जिम्मेवारी, छलफल र पुल रिक्वेस्टका लागि GitHub नै आधिकारिक स्रोत हो।"
+
+msgid "%(counter)s public repository"
+msgid_plural "%(counter)s public repositories"
+msgstr[0] "%(counter)s सार्वजनिक रिपोजिटरी"
+msgstr[1] "%(counter)s सार्वजनिक रिपोजिटरीहरू"
+
+msgid "%(counter)s follower"
+msgid_plural "%(counter)s followers"
+msgstr[0] "%(counter)s फलोअर"
+msgstr[1] "%(counter)s फलोअरहरू"
+
+msgid "github.com/%(login)s"
+msgstr "github.com/%(login)s"
+
+msgid "Public information from GitHub. DevNepal never displays private repositories or activity."
+msgstr "GitHub बाट प्राप्त सार्वजनिक जानकारी। DevNepal ले निजी रिपोजिटरी वा गतिविधि कहिल्यै देखाउँदैन।"
+
+msgid "Work on DevNepal repositories"
+msgstr "DevNepal रिपोजिटरीहरूमा काम"
+
+msgid "GitHub source"
+msgstr "GitHub स्रोत"
+
+msgid "%(counter)s commit"
+msgid_plural "%(counter)s commits"
+msgstr[0] "%(counter)s कमिट"
+msgstr[1] "%(counter)s कमिटहरू"
+
+msgid "No activity has been synchronized from a listed repository yet."
+msgstr "सूचीबद्ध रिपोजिटरीबाट अहिलेसम्म कुनै गतिविधि सिङ्क गरिएको छैन।"
+
+msgid "About this profile"
+msgstr "यस प्रोफाइलबारे"
+
+msgid "This is a cached public GitHub profile, not a claim that this person has a DevNepal member account."
+msgstr "यो क्यास गरिएको सार्वजनिक GitHub प्रोफाइल हो; यस व्यक्तिसँग DevNepal सदस्य खाता छ भन्ने दाबी होइन।"
+
+msgid "GitHub public API"
+msgstr "GitHub सार्वजनिक API"
+
+msgid "Ministry publishing"
+msgstr "मन्त्रालय प्रकाशन"
+
+msgid "Ministry projects"
+msgstr "मन्त्रालयका परियोजनाहरू"
+
+msgid "Create project"
+msgstr "परियोजना सिर्जना गर्नुहोस्"
+
+msgid "Ministry project"
+msgstr "मन्त्रालयको परियोजना"
+
+msgid "GitHub activity"
+msgstr "GitHub गतिविधि"
+
+msgid "View public project"
+msgstr "सार्वजनिक परियोजना हेर्नुहोस्"
+
+msgid "Connected GitHub repository"
+msgstr "जडान गरिएको GitHub रिपोजिटरी"
+
+msgid "Open issues"
+msgstr "खुला इस्युहरू"
+
+msgid "No open issues synchronized."
+msgstr "कुनै खुला इस्यु सिङ्क गरिएको छैन।"
+
+msgid "by @%(author)s"
+msgstr "@%(author)s द्वारा"
+
+msgid "No open pull requests synchronized."
+msgstr "कुनै खुला पुल रिक्वेस्ट सिङ्क गरिएको छैन।"
+
+msgid "Repository contributors"
+msgstr "रिपोजिटरीका योगदानकर्ताहरू"
+
+msgid "No contributors synchronized."
+msgstr "कुनै योगदानकर्ता सिङ्क गरिएको छैन।"
+
+msgid "Connect the GitHub repository"
+msgstr "GitHub रिपोजिटरी जडान गर्नुहोस्"
+
+msgid "Connect the public repository to synchronize its issues, pull requests, and contributors."
+msgstr "यसका इस्यु, पुल रिक्वेस्ट र योगदानकर्ता सिङ्क गर्न सार्वजनिक रिपोजिटरी जडान गर्नुहोस्।"
+
+msgid "Back to ministry projects"
+msgstr "मन्त्रालयका परियोजनाहरूमा फर्कनुहोस्"
+
+msgid "Connect the public GitHub repository, check the project details, then publish it."
+msgstr "सार्वजनिक GitHub रिपोजिटरी जडान गर्नुहोस्, परियोजना विवरण जाँच्नुहोस् र त्यसपछि प्रकाशित गर्नुहोस्।"
+
+msgid "This older submission is still in review. Return it to draft before using the direct ministry flow."
+msgstr "यो पुरानो पेस्की अझै समीक्षामा छ। प्रत्यक्ष मन्त्रालय प्रवाह प्रयोग गर्नुअघि यसलाई मस्यौदामा फर्काउनुहोस्।"
+
+msgid "The reviewed version is approved and ready to publish."
+msgstr "समीक्षा गरिएको संस्करण स्वीकृत छ र प्रकाशनका लागि तयार छ।"
+
+msgid "This listing is archived and read-only."
+msgstr "यो सूची अभिलेख गरिएको छ र पढ्न मात्र मिल्छ।"
+
+msgid "All required readiness evidence is recorded."
+msgstr "तयारीका सबै आवश्यक प्रमाण अभिलेख गरिएका छन्।"
+
+msgid "Create a government project"
+msgstr "सरकारी परियोजना सिर्जना गर्नुहोस्"
+
+msgid "Connect a public GitHub repository. DevNepal will show its open issues, pull requests, and contributors."
+msgstr "सार्वजनिक GitHub रिपोजिटरी जडान गर्नुहोस्। DevNepal ले यसका खुला इस्यु, पुल रिक्वेस्ट र योगदानकर्ता देखाउँछ।"
+
+msgid "Only the ministry, bilingual title and summary, repository, licence, and contribution route are needed to begin."
+msgstr "सुरु गर्न मन्त्रालय, द्विभाषिक शीर्षक र सारांश, रिपोजिटरी, इजाजतपत्र र योगदान मार्ग मात्र आवश्यक छन्।"
+
+msgid "Fill demo details"
+msgstr "डेमो विवरण भर्नुहोस्"
+
+msgid "Demo details added. Review every field before saving."
+msgstr "डेमो विवरण थपियो। सुरक्षित गर्नुअघि प्रत्येक फिल्ड समीक्षा गर्नुहोस्।"
+
+msgid "More project details"
+msgstr "परियोजनाका थप विवरण"
+
+msgid "Save changes"
+msgstr "परिवर्तन सुरक्षित गर्नुहोस्"
+
+msgid "Publishing dashboard"
+msgstr "प्रकाशन ड्यासबोर्ड"
+
+msgid "Advanced filters"
+msgstr "उन्नत फिल्टरहरू"
+
+msgid "Select a ministry"
+msgstr "मन्त्रालय छान्नुहोस्"
+
+msgid "Idle"
+msgstr "प्रतीक्षारत"
+
+msgid "Syncing"
+msgstr "सिङ्क हुँदै"
+
+msgid "Degraded"
+msgstr "कमजोर"
+
+msgid "Stopped"
+msgstr "रोकिएको"
+
+msgid "Error"
+msgstr "त्रुटि"

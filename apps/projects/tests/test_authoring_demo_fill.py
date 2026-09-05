@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from django.conf import settings
 from django.urls import reverse
+from django.utils import translation
 from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
@@ -73,3 +74,20 @@ def test_demo_fill_uses_the_rendered_mit_licence_label(client):
     response = client.get(reverse("projects:authoring_create"))
 
     assert '"license":["MIT (MIT License)"]' in response.content.decode()
+
+
+def test_ministry_selector_uses_nepali_names_and_placeholder(client):
+    """NFR-I18N-01: the publisher form localizes its data choices, not only its labels."""
+    assignment = MinistryPublisherFactory()
+    assignment.ministry.name_ne = "सूचना प्रविधि विभाग"
+    assignment.ministry.save(update_fields=["name_ne"])
+    _verify_mfa(client, assignment.user)
+
+    with translation.override("ne"):
+        response = client.get(reverse("projects:authoring_create"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "मन्त्रालय छान्नुहोस्" in content
+    assert "सूचना प्रविधि विभाग" in content
+    assert assignment.ministry.name_en not in content

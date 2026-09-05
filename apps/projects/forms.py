@@ -34,6 +34,13 @@ SUITABILITY_LABELS = {
 }
 
 
+class LocalizedMinistryChoiceField(forms.ModelChoiceField):
+    """Render ministry choices in the request's active language."""
+
+    def label_from_instance(self, obj: MinistryOrganization) -> str:
+        return obj.localized_name
+
+
 class ProjectAuthoringForm(forms.ModelForm):
     class Meta:
         model = Project
@@ -111,8 +118,10 @@ class ProjectAuthoringForm(forms.ModelForm):
 
 
 class GovernmentDraftCreateForm(ProjectAuthoringForm):
-    ministry = forms.ModelChoiceField(
-        queryset=MinistryOrganization.objects.none(), label=_("Ministry")
+    ministry = LocalizedMinistryChoiceField(
+        queryset=MinistryOrganization.objects.none(),
+        label=_("Ministry"),
+        empty_label=_("Select a ministry"),
     )
 
     def __init__(self, *args, actor, **kwargs):

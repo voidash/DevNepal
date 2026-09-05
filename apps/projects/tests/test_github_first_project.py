@@ -72,7 +72,7 @@ def test_dsc_005_project_shows_synced_github_issues_prs_and_contributors(client)
     )
     assert "Document keyboard-only contribution workflow" in content
     assert "voidash" in content
-    assert reverse("github_sync:public_profile", args=["voidash"]) in content
+    assert reverse("github_sync_public:public_profile", args=["voidash"]) in content
 
 
 def test_dsc_005_visitor_reads_full_synced_issue_before_starting_on_github(client):
@@ -155,7 +155,25 @@ def test_gov_004_publisher_workspace_shows_the_connected_github_repository_activ
     assert response.status_code == 200
     assert "Add Nepali eligibility text" in content
     assert "Document keyboard-only contribution workflow" in content
-    assert reverse("github_sync:public_profile", args=["voidash"]) in content
+    assert reverse("github_sync_public:public_profile", args=["voidash"]) in content
     assert reverse("projects:detail", args=[project.slug]) in content
     assert "Review history" not in content
     assert "Assign maintainer" not in content
+
+
+@override_settings(PRIVILEGED_MFA_BYPASS=True)
+def test_gov_004_new_project_workspace_links_to_repository_connection(client):
+    """GOV-004/GIT-003: a new ministry project has an actionable repository next step."""
+    assignment = MinistryPublisherFactory()
+    project = ProjectFactory(
+        owner=assignment.user,
+        ministry=assignment.ministry,
+        status=ProjectStatus.DRAFT,
+    )
+    client.force_login(assignment.user)
+
+    response = client.get(reverse("projects:authoring_detail", args=[project.slug]))
+
+    expected = f"{reverse('github_sync:connect_repository')}?project_id={project.pk}"
+    assert response.status_code == 200
+    assert f'href="{expected}"' in response.content.decode()

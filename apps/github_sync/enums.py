@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class Provider(models.TextChoices):
@@ -6,11 +7,11 @@ class Provider(models.TextChoices):
 
 
 class SyncState(models.TextChoices):
-    IDLE = "idle", "Idle"
-    SYNCING = "syncing", "Syncing"
-    DEGRADED = "degraded", "Degraded"
-    STOPPED = "stopped", "Stopped"
-    ERROR = "error", "Error"
+    IDLE = "idle", _("Idle")
+    SYNCING = "syncing", _("Syncing")
+    DEGRADED = "degraded", _("Degraded")
+    STOPPED = "stopped", _("Stopped")
+    ERROR = "error", _("Error")
 
 
 class DeliverySource(models.TextChoices):

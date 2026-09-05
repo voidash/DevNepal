@@ -5,7 +5,6 @@ from apps.github_sync import views
 app_name = "github_sync"
 
 urlpatterns = [
-    path("github/people/<str:login>/", views.public_profile, name="public_profile"),
     path("webhooks/github/", views.github_webhook, name="webhook"),
     path("github/connection/", views.connection_status, name="connection"),
     path(

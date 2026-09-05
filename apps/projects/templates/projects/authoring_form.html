@@ -15,22 +15,13 @@
       <form method="post" class="dn-form-stack">
         {% csrf_token %}
         {% if is_create %}
-        {% trans "Civic Help Directory" as demo_title_en %}
-        {% trans "नागरिक सहायता निर्देशिका" as demo_title_ne %}
-        {% trans "A public directory of Government of Nepal help programmes, including scholarships, health subsidies, and agricultural support." as demo_summary_en %}
-        {% trans "नेपाल सरकारका छात्रवृत्ति, स्वास्थ्य सहायता र कृषि सहयोग कार्यक्रमहरूको सार्वजनिक निर्देशिका।" as demo_summary_ne %}
-        {% trans "People can struggle to find authoritative information about public help programmes and their official sources." as demo_problem_statement %}
-        {% trans "People seeking public help programmes and contributors maintaining verified source links." as demo_target_users %}
-        {% trans "A clear, source-linked public directory that makes government help programmes easier to discover." as demo_expected_outcome %}
-        {% trans "Programme entries link to official sources and contributors can maintain the open data." as demo_success_indicators %}
-        {% trans "Review the data format, choose a good first issue, then fork, branch, and open a pull request." as demo_prerequisites %}
         {% trans "Fill demo details" as fill_demo_details %}
         {% trans "Demo details added. Review every field before saving." as demo_details_added %}
         <div class="dn-field">
           <button class="btn btn--secondary" id="fill-demo-details" type="button">{{ fill_demo_details }}</button>
           <p id="demo-fill-status" role="status" hidden data-filled-message="{{ demo_details_added }}"></p>
         </div>
-        <script id="authoring-demo-details" type="application/json">{"fields":{"title_en":"{{ demo_title_en|escapejs }}","title_ne":"{{ demo_title_ne|escapejs }}","summary_en":"{{ demo_summary_en|escapejs }}","summary_ne":"{{ demo_summary_ne|escapejs }}","description_md":"{{ demo_summary_en|escapejs }}","problem_statement":"{{ demo_problem_statement|escapejs }}","target_users":"{{ demo_target_users|escapejs }}","expected_outcome":"{{ demo_expected_outcome|escapejs }}","success_indicators":"{{ demo_success_indicators|escapejs }}","difficulty":"beginner","estimated_effort":"small","contribution_mode":"open_direct","prerequisites":"{{ demo_prerequisites|escapejs }}","repository_url":"https://github.com/voidash/civic-help-directory","default_branch":"main","issue_tracker_url":"https://github.com/voidash/civic-help-directory/issues","documentation_url":"https://github.com/voidash/civic-help-directory#readme","data_classification":"public"},"choice_labels":{"contribution_types":["Data","Documentation"],"skills":["Data Analysis","Documentation"],"license":["MIT (MIT License)"]}}</script>
+        <script id="authoring-demo-details" type="application/json">{"fields":{"title_en":"Civic Help Directory","title_ne":"नागरिक सहायता निर्देशिका","summary_en":"A public directory of Government of Nepal help programmes, including scholarships, health subsidies, and agricultural support.","summary_ne":"नेपाल सरकारका छात्रवृत्ति, स्वास्थ्य सहायता र कृषि सहयोग कार्यक्रमहरूको सार्वजनिक निर्देशिका।","description_md":"A public directory of Government of Nepal help programmes, including scholarships, health subsidies, and agricultural support.","problem_statement":"People can struggle to find authoritative information about public help programmes and their official sources.","target_users":"People seeking public help programmes and contributors maintaining verified source links.","expected_outcome":"A clear, source-linked public directory that makes government help programmes easier to discover.","success_indicators":"Programme entries link to official sources and contributors can maintain the open data.","difficulty":"beginner","estimated_effort":"small","contribution_mode":"open_direct","prerequisites":"Review the data format, choose a good first issue, then fork, branch, and open a pull request.","repository_url":"https://github.com/voidash/civic-help-directory","default_branch":"main","issue_tracker_url":"https://github.com/voidash/civic-help-directory/issues","documentation_url":"https://github.com/voidash/civic-help-directory#readme","data_classification":"public"},"choice_labels":{"contribution_types":["Data","Documentation"],"skills":["Data Analysis","Documentation"],"license":["MIT (MIT License)"]}}</script>
         <script type="module" src="{% static 'src/authoring-demo-fill.js' %}"></script>
         {% endif %}
         {{ form.non_field_errors }}

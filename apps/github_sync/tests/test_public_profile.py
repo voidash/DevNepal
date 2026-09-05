@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from django.utils import translation
 
 from apps.github_sync.models import GithubPublicProfileSnapshot, GithubRepositoryContributor
 from apps.github_sync.tests.factories import RepositoryConnectionFactory
@@ -37,7 +38,7 @@ def test_git_010_public_github_profile_uses_provider_data_and_tracked_repository
         contributions=9,
     )
 
-    response = client.get(reverse("github_sync:public_profile", args=[profile.login]))
+    response = client.get(reverse("github_sync_public:public_profile", args=[profile.login]))
 
     content = response.content.decode()
     assert response.status_code == 200
@@ -56,6 +57,26 @@ def test_git_010_public_github_profile_uses_provider_data_and_tracked_repository
 
 def test_git_010_unknown_public_github_profile_is_not_invented(client):
     """GIT-010: DevNepal returns 404 rather than inventing an unsynced GitHub identity."""
-    response = client.get(reverse("github_sync:public_profile", args=["unknown-person"]))
+    response = client.get(reverse("github_sync_public:public_profile", args=["unknown-person"]))
 
     assert response.status_code == 404
+
+
+def test_git_010_localized_profile_route_preserves_the_selected_language(client):
+    """GIT-010: public project links keep the active language on GitHub profiles."""
+    profile = GithubPublicProfileSnapshot.objects.create(
+        github_user_id=2,
+        login="nepali-contributor",
+        html_url="https://github.com/nepali-contributor",
+    )
+
+    with translation.override("ne"):
+        profile_url = reverse(
+            "github_sync_public:public_profile",
+            args=[profile.login],
+        )
+    response = client.get(profile_url)
+
+    assert profile_url.startswith("/ne/")
+    assert response.status_code == 200
+    assert response.wsgi_request.LANGUAGE_CODE == "ne"
