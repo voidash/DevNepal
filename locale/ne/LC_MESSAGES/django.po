@@ -7020,3 +7020,6 @@ msgstr "नेपाल सरकारको सार्वजनिक सह
 #: templates/base.html:129
 msgid "All content available in English and Nepali"
 msgstr "सबै सामग्री अङ्ग्रेजी र नेपालीमा उपलब्ध छ"
+
+msgid "Ways to contribute"
+msgstr "योगदान गर्ने तरिका"

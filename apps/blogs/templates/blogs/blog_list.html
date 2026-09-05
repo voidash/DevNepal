@@ -46,7 +46,7 @@
           </article>
           {% endif %}
         {% empty %}
-        <div class="dn-state-banner" role="status"><strong>{% trans "No technical blogs have been published yet." %}</strong><p>{% trans "Published member and official writing will appear here with its source label." %}</p></div>
+        {% url "projects:about" as how_url %}{% include "components/dn_empty.html" with title=_("No technical blogs have been published yet.") body=_("Published member and official writing will appear here with its source label.") action_url=how_url action_label=_("How to contribute") %}
         {% endfor %}
       </div>
       <aside class="public-discovery__aside" aria-label="{% trans 'About technical blogs' %}">

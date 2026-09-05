@@ -62,22 +62,41 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-contribution-model { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; align-items: start; }
 .dn-contribution-model > header { display: block; }
 .dn-contribution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
-.dn-community-boundary { padding-top: 40.8px; border-top: 1px solid var(--color-divider); }
-.dn-community-boundary__body { max-width: 60ch; padding: 24px; }
-.dn-community-project-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.dn-community-project-grid article { min-width: 0; padding: 22px; border-bottom: 1px solid var(--color-divider); }
-.dn-community-project-grid article + article { border-left: 1px solid var(--color-divider); }
+.dn-community-boundary { padding: 0; border: 0; }
+.dn-community-boundary__body { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; max-width: none; margin-top: 16px; padding: 0; color: var(--color-neutral-700); font-size: 14px; }
+.dn-community-boundary__body p { margin: 0; max-width: 70ch; }
+.dn-community-project-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1099px) { .dn-community-project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dn-community-project-grid article { display: flex; flex-direction: column; min-width: 0; padding: 20px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-bg); }
 .dn-community-project-title { display: flex; gap: 10px; align-items: start; justify-content: space-between; }
 .dn-community-project-title h3 { margin: 0; font-size: 20px; }
 .dn-community-project-title a { color: var(--color-text); text-decoration: none; }
 .dn-community-project-title span, .dn-community-owner, .dn-community-project-meta { color: var(--color-neutral-600); font-size: 11px; }
 .dn-community-project-title span { white-space: nowrap; }
-.dn-community-project-grid article > p { min-height: 3.2em; }
+.dn-community-project-grid article > p { min-height: 3.2em; color: var(--color-neutral-700); font-size: 14px; }
 .dn-community-project-meta { display: flex; gap: 12px; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--color-divider); }
 .dn-people-table td:nth-child(1), .dn-people-table td:nth-child(n + 3) { width: 100px; font-family: var(--font-heading); font-size: 18px; }
 .dn-people-table td span { color: var(--color-neutral-600); font-size: 12px; }
 .dn-sheet-actions { display: flex; flex-wrap: wrap; gap: 24px; padding: 14px 24px; border-top: 1px solid var(--color-divider); }
 .dn-home-section-heading { display: flex; gap: 20px; align-items: end; justify-content: space-between; margin-bottom: 22px; }
+.dn-home-section-heading p { max-width: 62ch; margin: 6px 0 0; color: var(--color-neutral-700); }
+.dn-home-section-heading > a { white-space: nowrap; }
+/* Glance strip: four figures under the hero, unboxed. The board has no metrics sheet; this is the honest minimum. */
+.dn-glance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 20px 0 8px; border-top: 1px solid var(--color-divider); }
+.dn-glance > div { display: flex; flex-direction: column-reverse; gap: 2px; }
+.dn-glance dt { color: var(--color-neutral-700); font-size: 13px; }
+.dn-glance dd { margin: 0; font-family: var(--font-heading); font-size: 28px; font-weight: 600; line-height: 1.1; }
+@media (max-width: 719px) { .dn-glance { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dn-glance-note { margin: 6px 0 0; color: var(--color-neutral-600); font-size: 12px; }
+/* People as cards, not a ranked table: D12 keeps scores off public pages. */
+.dn-people-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1099px) { .dn-people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dn-person-card { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-bg); }
+.dn-person-card .dn-person-avatar { width: 40px; height: 40px; display: grid; place-items: center; margin-bottom: 6px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-accent-100); color: var(--color-accent-800); font: 600 14px var(--font-heading); }
+.dn-person-card h3 { margin: 0; font-size: 18px; }
+.dn-person-card h3 a { color: var(--color-text); text-decoration: none; }
+.dn-person-card p { margin: 0; color: var(--color-neutral-700); font-size: 13px; }
+.dn-person-card .dn-person-meta { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--color-divider); color: var(--color-neutral-600); font-size: 12px; }
 .dn-home-section-heading h2 { margin: 3px 0 0; }
 .dn-blog-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .dn-blog-card-grid article { min-height: 250px; padding: 24px; }
@@ -182,9 +201,14 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-catalog-active { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 16px; font-size: 12px; }
 .dn-catalog-active strong { margin-right: 4px; }
 .dn-catalog-active a { margin-left: auto; }
-.dn-catalog-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.dn-catalog-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 1099px) { .dn-catalog-results { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 719px) { .dn-catalog-results { grid-template-columns: 1fr; } }
 .dn-catalog-results--list { grid-template-columns: 1fr; }
-.dn-catalog-results > .card { gap: 12px; padding: 22px; }
+.dn-catalog-results > .card { gap: 12px; padding: 24px; }
+/* Card heads wrap: an Official tag carrying a full ministry name beside a status badge overflowed the card at two-up widths. */
+.dn-catalog-card__head { flex-wrap: wrap; gap: 6px 8px; }
+.dn-catalog-card__head .tag, .dn-catalog-card__head .Label { white-space: normal; text-align: left; }
 .dn-catalog-card__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .dn-catalog-card__identity h2 { margin: 0; font-size: 22px; line-height: 1.15; }
 .dn-catalog-card__identity h2 a { color: var(--color-text); text-decoration-thickness: 1px; }
