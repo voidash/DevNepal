@@ -24,3 +24,9 @@ class ContactChallengeStatus(models.TextChoices):
     COMPLETED = "completed", _("Completed")
     EXPIRED = "expired", _("Expired")
     SUPERSEDED = "superseded", _("Superseded")
+
+
+class OnboardingRequestStatus(models.TextChoices):
+    NEW = "new", _("New request")
+    PROVISIONED = "provisioned", _("Provisioned")
+    DECLINED = "declined", _("Declined")

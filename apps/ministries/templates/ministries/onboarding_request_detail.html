@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% blocktrans with reference=onboarding_request.reference %}Onboarding request · {{ reference }}{% endblocktrans %} | DevNepal{% endblock %}
+{% block content %}
+<main class="dn-onboarding">
+  <div class="dn-onboarding__shell">
+    <header class="dn-onboarding__heading">
+      <p>{% blocktrans with reference=onboarding_request.reference %}Ministry organizations / Requests / {{ reference }}{% endblocktrans %}</p>
+      <h1>{% blocktrans with reference=onboarding_request.reference %}Onboarding request · {{ reference }}{% endblocktrans %}</h1>
+    </header>
+    <section class="dn-onboarding__sheet" aria-labelledby="request-name">
+      <div class="dn-onboarding__status">
+        <div>
+          <span class="Label {% if onboarding_request.status == 'new' %}Label--outline{% elif onboarding_request.status == 'provisioned' %}Label--success{% else %}Label--danger{% endif %}">{{ onboarding_request.get_status_display }}</span>
+          <span class="dn-lede">{% blocktrans with reference=onboarding_request.reference date=onboarding_request.created_at %}{{ reference }} · logged {{ date }}{% endblocktrans %}</span>
+        </div>
+      </div>
+      <div>
+        <h2 id="request-name">{{ onboarding_request.name_en }}</h2>
+        <p class="dn-lede">{{ onboarding_request.name_ne }} · {% if onboarding_request.duplicate_organization %}{% trans "already on DevNepal" %}{% else %}{% trans "not yet on DevNepal" %}{% endif %}</p>
+      </div>
+      <section class="dn-onboarding__note" aria-labelledby="nomination-heading">
+        <h2 id="nomination-heading">{% trans "Nomination letter" %}</h2>
+        <p><strong>{{ onboarding_request.nomination_reference }}</strong> · {% blocktrans with signatory=onboarding_request.signatory_name %}signed by {{ signatory }}{% endblocktrans %}</p>
+        <div class="dn-onboarding__grid">
+          <div><strong>{% trans "Nominated officer" %}</strong><p>{{ onboarding_request.nominated_officer_name }} · {{ onboarding_request.nominated_officer_title }}</p></div>
+          <div><strong>{% trans "Official email" %}</strong><p>{{ onboarding_request.official_email }}</p></div>
+          <div><strong>{% trans "Purpose" %}</strong><p>{{ onboarding_request.purpose }}</p></div>
+          <div><strong>{% trans "Focal contact" %}</strong><p>{{ onboarding_request.focal_contact }}</p></div>
+        </div>
+      </section>
+      <section class="dn-onboarding__note" aria-labelledby="checks-heading">
+        <h2 id="checks-heading">{% trans "PMO checks" %}</h2>
+        <ul>
+          <li>{% if onboarding_request.domain_verified %}✓{% else %}□{% endif %} {% blocktrans with domain=onboarding_request.official_domain %}Domain {{ domain }} is a registered government domain{% endblocktrans %}</li>
+          <li>{% if onboarding_request.named_person_verified %}✓{% else %}□{% endif %} {% trans "Named person, official mailbox — not a shared address" %}</li>
+          <li>{% if onboarding_request.signatory_verified %}✓{% else %}□{% endif %} {% trans "Letter signatory verified with the ministry’s focal contact by phone" %}</li>
+          <li>{% if onboarding_request.duplicate_organization %}□{% else %}✓{% endif %} {% trans "Organization does not already exist on DevNepal" %}</li>
+        </ul>
+      </section>
+      {% if action_error %}<div class="dn-state-banner is-danger">{{ action_error }}</div>{% endif %}
+      {% if onboarding_request.status == 'declined' %}<div class="dn-state-banner is-danger"><strong>{% trans "Declined" %}</strong><p>{{ onboarding_request.decline_reason }}</p></div>{% endif %}
+      {% if onboarding_request.status == 'provisioned' %}<div class="dn-state-banner is-success"><strong>{% trans "Organization provisioned" %}</strong><p><a href="{% url 'ministries:organization_detail' onboarding_request.provisioned_organization.slug %}">{{ onboarding_request.provisioned_organization.localized_name }}</a></p></div>{% endif %}
+      {% if onboarding_request.status == 'new' %}
+        <div class="dn-onboarding__actions">
+          <details>
+            <summary>{% trans "Decline with reason" %}</summary>
+            <form method="post" action="{% url 'ministries:onboarding_request_decline' onboarding_request.reference %}">
+              {% csrf_token %}
+              <div class="dn-onboarding__field"><label for="{{ decline_form.reason.id_for_label }}">{{ decline_form.reason.label }}</label>{{ decline_form.reason }}{{ decline_form.reason.errors }}</div>
+              {{ decline_form.non_field_errors }}
+              <button class="btn" type="submit">{% trans "Decline request" %}</button>
+            </form>
+          </details>
+          {% if onboarding_request.duplicate_organization %}
+            <span class="dn-lede">{% trans "Provisioning is blocked because this organization already exists." %}</span>
+          {% else %}
+            <form method="post" action="{% url 'ministries:onboarding_request_provision' onboarding_request.reference %}">
+              {% csrf_token %}
+              <button class="btn btn--primary" type="submit">{% trans "Provision organization" %}</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</main>
+{% endblock %}

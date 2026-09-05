@@ -8,16 +8,19 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 from django.utils.text import slugify
+from django.utils.translation import gettext as _
 
 from apps.accounts.services import require_privileged_mfa
 from apps.audit.services import record_audit
 from apps.ministries.enums import (
     ContactChallengeStatus,
     ContactVerificationStatus,
+    OnboardingRequestStatus,
     OrgStatus,
     PublisherStatus,
 )
 from apps.ministries.models import (
+    MinistryOnboardingRequest,
     MinistryOrganization,
     MinistryPublisher,
     OfficialContactChallenge,
@@ -31,6 +34,10 @@ DEFAULT_CONTACT_VERIFICATION_TTL = timedelta(hours=24)
 
 class MinistryProvisioningError(Exception):
     """Organization provisioning, activation, suspension, or revocation failed."""
+
+
+class MinistryOnboardingRequestError(MinistryProvisioningError):
+    """A D1.1 onboarding request cannot be logged or transitioned."""
 
 
 class PublisherAssignmentError(Exception):
@@ -91,6 +98,194 @@ def _official_domain(ministry: MinistryOrganization) -> str:
 
 def _email_domain(email: str) -> str:
     return (email.rsplit("@", 1)[-1] or "").lower()
+
+
+def _website_domain(website_url: str) -> str:
+    host = (urlsplit(website_url).hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    return host
+
+
+def _verify_onboarding_request(
+    *,
+    website_url: str,
+    official_email: str,
+    nominated_officer_name: str,
+    signatory_name: str,
+    signatory_verified: bool,
+) -> tuple[bool, bool]:
+    domain = _website_domain(website_url)
+    if not domain.endswith(".gov.np"):
+        raise MinistryOnboardingRequestError(
+            _("the official website must use a registered .gov.np domain")
+        )
+    if _email_domain(official_email) != domain:
+        raise MinistryOnboardingRequestError(
+            _("the nominated officer email must match the official website domain")
+        )
+    local_part = official_email.partition("@")[0].lower()
+    if local_part in {"admin", "contact", "info", "it", "office", "support"}:
+        raise MinistryOnboardingRequestError(
+            _("the nominated officer must use a named, non-shared mailbox")
+        )
+    if len((nominated_officer_name or "").strip()) < 3:
+        raise MinistryOnboardingRequestError(_("the nominated officer must be a named person"))
+    if not (signatory_name or "").strip() or not signatory_verified:
+        raise MinistryOnboardingRequestError(
+            _("the letter signatory must be verified with the ministry focal contact")
+        )
+    return True, True
+
+
+def _onboarding_reference(request: MinistryOnboardingRequest) -> str:
+    return f"REQ-{timezone.localdate().year}-{request.pk:03d}"
+
+
+def log_onboarding_request(
+    super_admin,
+    *,
+    name_en: str,
+    name_ne: str = "",
+    abbreviation: str = "",
+    website_url: str,
+    official_email: str,
+    nominated_officer_name: str,
+    nominated_officer_title: str,
+    purpose: str,
+    focal_contact: str,
+    nomination_reference: str,
+    signatory_name: str,
+    signatory_verified: bool,
+) -> MinistryOnboardingRequest:
+    """AUTH-004/D1.1: log a verified ministry request before organization provisioning."""
+    _require_super_admin(super_admin, action="ministry.onboarding_request.log")
+    domain_verified, named_person_verified = _verify_onboarding_request(
+        website_url=website_url,
+        official_email=official_email,
+        nominated_officer_name=nominated_officer_name,
+        signatory_name=signatory_name,
+        signatory_verified=signatory_verified,
+    )
+    with transaction.atomic():
+        request = MinistryOnboardingRequest.objects.create(
+            reference=f"pending-{secrets.token_hex(12)}",
+            name_en=name_en,
+            name_ne=name_ne,
+            abbreviation=abbreviation,
+            website_url=website_url,
+            official_email=official_email,
+            nominated_officer_name=nominated_officer_name,
+            nominated_officer_title=nominated_officer_title,
+            purpose=purpose,
+            focal_contact=focal_contact,
+            nomination_reference=nomination_reference,
+            signatory_name=signatory_name,
+            domain_verified=domain_verified,
+            named_person_verified=named_person_verified,
+            signatory_verified=signatory_verified,
+            logged_by=super_admin,
+        )
+        request.reference = _onboarding_reference(request)
+        request.save(update_fields=["reference", "updated_at"])
+        record_audit(
+            actor=super_admin,
+            action="ministry.onboarding_request.logged",
+            obj=request,
+            after={
+                "reference": request.reference,
+                "name_en": request.name_en,
+                "official_domain": _website_domain(request.website_url),
+                "domain_verified": request.domain_verified,
+                "named_person_verified": request.named_person_verified,
+                "signatory_verified": request.signatory_verified,
+            },
+        )
+    return request
+
+
+def provision_onboarding_request(
+    super_admin, request: MinistryOnboardingRequest
+) -> MinistryOrganization:
+    """AUTH-004/D1.1/D1.2: provision one validated request into the existing ministry lifecycle."""
+    _require_super_admin(
+        super_admin,
+        action="ministry.onboarding_request.provision",
+        obj=request,
+    )
+    with transaction.atomic():
+        request = MinistryOnboardingRequest.objects.select_for_update().get(pk=request.pk)
+        if request.status != OnboardingRequestStatus.NEW:
+            raise MinistryOnboardingRequestError(
+                _("only a new onboarding request can be provisioned")
+            )
+        if request.duplicate_organization is not None:
+            raise MinistryOnboardingRequestError(_("this organization already exists on DevNepal"))
+        try:
+            organization = provision_ministry(
+                super_admin,
+                name_en=request.name_en,
+                name_ne=request.name_ne,
+                abbreviation=request.abbreviation,
+                description=request.purpose,
+                contact_email=request.official_email,
+                website_url=request.website_url,
+            )
+        except MinistryProvisioningError as exc:
+            raise MinistryOnboardingRequestError(
+                _("the organization could not be provisioned")
+            ) from exc
+        request.status = OnboardingRequestStatus.PROVISIONED
+        request.provisioned_organization = organization
+        request.provisioned_at = timezone.now()
+        request.save(
+            update_fields=[
+                "status",
+                "provisioned_organization",
+                "provisioned_at",
+                "updated_at",
+            ]
+        )
+        record_audit(
+            actor=super_admin,
+            action="ministry.onboarding_request.provisioned",
+            obj=request,
+            after={
+                "reference": request.reference,
+                "organization_id": organization.pk,
+                "organization_slug": organization.slug,
+            },
+        )
+    return organization
+
+
+def decline_onboarding_request(
+    super_admin, request: MinistryOnboardingRequest, *, reason: str
+) -> MinistryOnboardingRequest:
+    """AUTH-004/SEC-008: retain an accountable refusal for a new onboarding request."""
+    _require_super_admin(
+        super_admin,
+        action="ministry.onboarding_request.decline",
+        obj=request,
+    )
+    cleaned_reason = (reason or "").strip()
+    if not cleaned_reason:
+        raise MinistryOnboardingRequestError(_("a non-empty reason is required"))
+    with transaction.atomic():
+        request = MinistryOnboardingRequest.objects.select_for_update().get(pk=request.pk)
+        if request.status != OnboardingRequestStatus.NEW:
+            raise MinistryOnboardingRequestError(_("only a new onboarding request can be declined"))
+        request.status = OnboardingRequestStatus.DECLINED
+        request.decline_reason = cleaned_reason
+        request.declined_at = timezone.now()
+        request.save(update_fields=["status", "decline_reason", "declined_at", "updated_at"])
+        record_audit(
+            actor=super_admin,
+            action="ministry.onboarding_request.declined",
+            obj=request,
+            after={"reference": request.reference, "reason": request.decline_reason},
+        )
+    return request
 
 
 def _discard_contact_verification_notification(*, publisher: MinistryPublisher, token: str) -> None:
