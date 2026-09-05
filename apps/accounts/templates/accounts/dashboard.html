@@ -1,17 +1,15 @@
 {% extends "base_app.html" %}
 {% load i18n %}
 {% block title %}{% trans "Overview" %} | DevNepal{% endblock %}
+
 {% block app_header %}
 <header class="dn-app-header">
   <div>
-    <span class="dn-section-kicker">{% blocktrans with name=user.get_full_name|default:user.username %}Namaste, {{ name }}{% endblocktrans %}</span>
     <h1 id="dashboard-heading">{% trans "Dashboard" %}</h1>
-    <p>{% if user.is_superuser %}{% trans "Queues waiting on PMO, and the platform records behind them." %}{% elif user.publisher_assignments.exists %}{% trans "Your ministry's listings, the volunteers waiting on a reply, and the work waiting to be verified." %}{% else %}{% trans "Where your applications stand, what you have earned, and what you control." %}{% endif %}</p>
-    {% if requires_mfa %}<p>{% trans "Your privileged session is protected by multi-factor authentication." %}</p>{% endif %}
   </div>
   <div class="dn-app-header-actions">
     {% if user.is_superuser %}<a class="btn btn--primary" href="{% url 'projects:review_queue' %}">{% trans "Review queue" %}</a>
-    {% elif user.publisher_assignments.exists %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "New project draft" %}</a>
+    {% elif user.publisher_assignments.exists %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "New project" %}</a>
     {% else %}<a class="btn btn--primary" href="{% url 'projects:government' %}">{% trans "Find a project" %}</a>{% endif %}
   </div>
 </header>
@@ -21,31 +19,40 @@
 
 {% if user.is_superuser %}
 {# ── Super Admin ─────────────────────────────────────────────────────────── #}
+<div class="dn-identity">
+  <h2>{% trans "Office of the Prime Minister and Council of Ministers" %}</h2>
+  <p>{% trans "Digital Collaboration Initiative" %} · {{ user.get_full_name|default:user.username }} · {% trans "MFA enforced" %} · {% trans "every privileged action is recorded and cannot be removed" %}</p>
+</div>
+
+<dl class="dn-tiles">
+  <div class="dn-tile"><dt>{% trans "Awaiting review" %}</dt><dd class="is-none">—</dd><span class="dn-tile-note">{% trans "ministry submissions in the queue" %}</span></div>
+  <div class="dn-tile"><dt>{% trans "Open cases" %}</dt><dd class="is-none">—</dd><span class="dn-tile-note">{% trans "reports, appeals and anomalies" %}</span></div>
+  <div class="dn-tile"><dt>{% trans "Ministries" %}</dt><dd class="is-none">—</dd><span class="dn-tile-note">{% trans "provisioned with named officers" %}</span></div>
+</dl>
+
 <section class="dn-work" aria-labelledby="queues-heading">
-  <h2 id="queues-heading" class="visually-hidden">{% trans "Queues that need you" %}</h2>
+  <h2 id="queues-heading">{% trans "Queues that need you" %}</h2>
   <div class="dn-card-grid">
     <article class="card blueprint">
-      <span class="dn-section-kicker">{% trans "Projects" %}</span>
       <h3>{% trans "Review queue" %}</h3>
       <p>{% trans "Ministry submissions waiting on PMO. Approve, request changes, or schedule publication." %}</p>
       <a class="btn btn--secondary" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>
     </article>
     <article class="card blueprint">
-      <span class="dn-section-kicker">{% trans "Community" %}</span>
       <h3>{% trans "Reports & moderation" %}</h3>
       <p>{% trans "Reported listings, posts and profiles, with the appeal each subject may raise." %}</p>
       <a class="btn btn--secondary" href="{% url 'moderation:case_queue' %}">{% trans "Open cases" %}</a>
     </article>
     <article class="card blueprint">
-      <span class="dn-section-kicker">{% trans "Integrity" %}</span>
       <h3>{% trans "Recognition anomalies" %}</h3>
       <p>{% trans "Velocity and duplicate-pattern flags on scored contributions, with corrections and appeals." %}</p>
       <a class="btn btn--secondary" href="{% url 'recognition:anomaly_review' %}">{% trans "Review anomalies" %}</a>
     </article>
   </div>
 </section>
+
 <section class="dn-work" aria-labelledby="platform-heading">
-  <h2 id="platform-heading">{% trans "Platform" %}</h2>
+  <h2 id="platform-heading">{% trans "Platform records" %}</h2>
   <div class="dn-card-grid">
     <article class="card blueprint">
       <h3>{% trans "Ministry organizations" %}</h3>
@@ -68,28 +75,43 @@
 {% elif user.publisher_assignments.exists %}
 {# ── Ministry Publisher ──────────────────────────────────────────────────── #}
 {% for assignment in user.publisher_assignments.all %}{% if forloop.first %}
-<div class="dn-notice" role="note">
-  <strong>{{ assignment.ministry.localized_name }}</strong>
-  <span>{{ assignment.title }} · {% trans "every action you take is recorded under your name" %}</span>
+<div class="dn-identity">
+  {% if assignment.ministry.name_ne %}<span class="dn-identity-ne" lang="ne">{{ assignment.ministry.name_ne }}</span>{% endif %}
+  <h2>{{ assignment.ministry.name_en }}</h2>
+  <p>{{ assignment.official_email }} · {% blocktrans count officers=assignment.ministry.publishers.count %}{{ officers }} named officer{% plural %}{{ officers }} named officers{% endblocktrans %} · {% trans "MFA enforced" %} · {% trans "provisioned by PMO" %}</p>
 </div>
 {% endif %}{% endfor %}
+
+<dl class="dn-tiles">
+  <div class="dn-tile"><dt>{% trans "Projects" %}</dt><dd class="is-none">—</dd><span class="dn-tile-note">{% trans "drafts, in review and live" %}</span></div>
+  <div class="dn-tile"><dt>{% trans "Applications" %}</dt><dd class="is-none">—</dd><span class="dn-tile-note">{% trans "awaiting your first response" %}</span></div>
+  <div class="dn-tile"><dt>{% trans "To verify" %}</dt><dd class="is-none">—</dd><span class="dn-tile-note">{% trans "merged work and submitted evidence" %}</span></div>
+</dl>
+
+<div class="dn-callout">
+  <span class="dn-callout-kicker">{% trans "Start here" %}</span>
+  <h2>{% trans "Draft a government project" %}</h2>
+  <p>{% trans "You will need a public repository owned by the ministry, an approved licence, and a second named maintainer. PMO reviews within five working days." %}</p>
+  <div class="hero__actions">
+    <a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "New project draft" %}</a>
+    <a class="btn" href="{% url 'projects:ministry_onboarding' %}">{% trans "Publishing guide" %}</a>
+  </div>
+</div>
+
 <section class="dn-work" aria-labelledby="publisher-work-heading">
   <h2 id="publisher-work-heading">{% trans "Your work" %}</h2>
   <div class="dn-card-grid">
     <article class="card blueprint">
-      <span class="dn-section-kicker">{% trans "Listings" %}</span>
       <h3>{% trans "Projects" %}</h3>
       <p>{% trans "Draft a listing, send it to PMO review, and manage what your ministry has published." %}</p>
       <a class="btn btn--secondary" href="{% url 'projects:authoring_dashboard' %}">{% trans "Open projects" %}</a>
     </article>
     <article class="card blueprint">
-      <span class="dn-section-kicker">{% trans "People" %}</span>
       <h3>{% trans "Applications" %}</h3>
       <p>{% trans "Volunteers waiting on a decision. Your ministry commits to a first response — keep it, or pause the listing." %}</p>
       <a class="btn btn--secondary" href="{% url 'projects:application_list' %}">{% trans "Open applications" %}</a>
     </article>
     <article class="card blueprint">
-      <span class="dn-section-kicker">{% trans "Verification" %}</span>
       <h3>{% trans "Verification queue" %}</h3>
       <p>{% trans "Merged pull requests and submitted evidence, waiting for a named maintainer to accept them." %}</p>
       <a class="btn btn--secondary" href="{% url 'contributions:verification_queue' %}">{% trans "Open queue" %}</a>
@@ -97,37 +119,65 @@
   </div>
 </section>
 
+<section class="dn-panel" aria-labelledby="officers-heading">
+  <header>
+    <h2 id="officers-heading">{% trans "Officers" %}</h2>
+    <p>{% trans "Colleagues never use your login. To add someone, PMO approves against a nomination and invites them the same way you were." %}</p>
+  </header>
+  {% for assignment in user.publisher_assignments.all %}{% if forloop.first %}
+  {% for officer in assignment.ministry.publishers.all %}
+  <div class="dn-panel-row">
+    <div class="dn-panel-row-copy">
+      <strong>{{ officer.user.get_full_name|default:officer.user.username }}{% if officer.user == user %} ({% trans "you" %}){% endif %}</strong>
+      <span>{{ officer.title }}</span>
+    </div>
+    <span class="tag {% if officer.status == 'active' %}tag-accent{% else %}tag-neutral{% endif %}">{{ officer.get_status_display }}</span>
+  </div>
+  {% endfor %}
+  {% endif %}{% endfor %}
+</section>
+
 {% else %}
 {# ── Member ──────────────────────────────────────────────────────────────── #}
-<dl class="dn-glance" aria-label="{% trans 'Your record' %}">
-  <div><dt>{% trans "Applications" %}</dt><dd>{{ user.applications.count }}</dd><p>{% trans "Sent to ministries, with every decision on your timeline" %}</p></div>
-  <div><dt>{% trans "Badges" %}</dt><dd>{{ user.badge_awards.count }}</dd><p>{% trans "Issued against public criteria, with the date earned" %}</p></div>
-  <div><dt>{% trans "Blog posts" %}</dt><dd>{{ user.blog_posts.count }}</dd><p>{% trans "Published under your Member label" %}</p></div>
+<div class="dn-identity">
+  <h2>{{ user.get_full_name|default:user.username }}</h2>
+  <p>@{{ user.username }}{% if profile.headline %} · {{ profile.headline }}{% endif %}{% if profile.location %} · {{ profile.location }}{% endif %}{% if not profile.directory_discoverable %} · {% trans "profile not yet public" %}{% endif %}</p>
+</div>
+
+<dl class="dn-tiles">
+  <div class="dn-tile"><dt>{% trans "Applications" %}</dt><dd{% if not user.applications.count %} class="is-none"{% endif %}>{% if user.applications.count %}{{ user.applications.count }}{% else %}—{% endif %}</dd><span class="dn-tile-note">{% trans "every decision lands on your timeline" %}</span></div>
+  <div class="dn-tile"><dt>{% trans "Badges" %}</dt><dd{% if not user.badge_awards.count %} class="is-none"{% endif %}>{% if user.badge_awards.count %}{{ user.badge_awards.count }}{% else %}—{% endif %}</dd><span class="dn-tile-note">{% trans "issued against public criteria" %}</span></div>
+  <div class="dn-tile"><dt>{% trans "Blog posts" %}</dt><dd{% if not user.blog_posts.count %} class="is-none"{% endif %}>{% if user.blog_posts.count %}{{ user.blog_posts.count }}{% else %}—{% endif %}</dd><span class="dn-tile-note">{% trans "published under your Member label" %}</span></div>
 </dl>
 
-<section class="dn-work" aria-labelledby="applications-heading">
-  <div class="dn-home-section-heading">
-    <div><h2 id="applications-heading">{% trans "Your applications" %}</h2></div>
-    <a href="{% url 'projects:application_list' %}">{% trans "All applications" %} →</a>
-  </div>
-  {% if user.applications.exists %}
-  <div class="dn-issue-list">
-    {% for application in user.applications.all|slice:":5" %}
-    <div class="dn-issue-row">
-      {% include "components/status_octicon.html" with project_status=application.project.status %}
-      <div>
-        <a class="dn-issue-title" href="{% url 'projects:application_detail' application.pk %}">{{ application.project.localized_title }}</a>
-        <div class="dn-issue-meta">{% if application.project.ministry %}{{ application.project.ministry.localized_name }}{% endif %}</div>
-        <div class="dn-labels"><span class="tag{% if application.status == 'accepted' %} tag-accent{% elif application.status == 'declined' or application.status == 'withdrawn' %} tag-neutral{% else %} tag-outline{% endif %}">{{ application.get_status_display }}</span></div>
-      </div>
-      <div class="dn-issue-aside"><time datetime="{{ application.created_at|date:'c' }}">{{ application.created_at|date:"DATE_FORMAT" }}</time></div>
+{% if user.applications.exists %}
+<section class="dn-panel" aria-labelledby="applications-heading">
+  <header>
+    <h2 id="applications-heading">{% trans "Your applications" %}</h2>
+    <p>{% trans "Where each one stands, and who decided." %}</p>
+  </header>
+  {% for application in user.applications.all|slice:":5" %}
+  <div class="dn-panel-row">
+    <div class="dn-panel-row-copy">
+      <strong><a href="{% url 'projects:application_detail' application.pk %}">{{ application.project.localized_title }}</a></strong>
+      <span>{% if application.project.ministry %}{{ application.project.ministry.localized_name }} · {% endif %}<time datetime="{{ application.created_at|date:'c' }}">{{ application.created_at|date:"DATE_FORMAT" }}</time></span>
     </div>
-    {% endfor %}
+    <span class="tag{% if application.status == 'accepted' %} tag-accent{% elif application.status == 'declined' or application.status == 'withdrawn' %} tag-neutral{% else %} tag-outline{% endif %}">{{ application.get_status_display }}</span>
   </div>
-  {% else %}
-  {% url 'projects:government' as government_url %}{% include "components/dn_empty.html" with title=_("You have not applied to a project yet.") body=_("Browse open government work, pick a workstream that fits your hours, and apply. Ministries commit to a first response time on every listing.") action_url=government_url action_label=_("Browse government projects") %}
-  {% endif %}
+  {% endfor %}
+  <a href="{% url 'projects:application_list' %}">{% trans "All applications" %} →</a>
 </section>
+{% else %}
+<div class="dn-callout">
+  <span class="dn-callout-kicker">{% trans "Start here" %}</span>
+  <h2>{% trans "Your first verified contribution" %}</h2>
+  <p>{% trans "Browse open government work, pick a workstream that fits your hours, and apply. Ministries commit to a first response time on every listing, and code is one of nine ways in." %}</p>
+  <div class="hero__actions">
+    <a class="btn btn--primary" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+    <a class="btn" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
+  </div>
+</div>
+{% endif %}
 
 <section class="dn-work" aria-labelledby="member-next-heading">
   <h2 id="member-next-heading">{% trans "Keep going" %}</h2>
@@ -146,7 +196,7 @@
       <p>{% trans "Connecting GitHub is optional. It is separate from signing in and lets DevNepal link public contribution activity to your profile." %}</p>
       {% if github_oauth_enabled %}
         {% if github_connection %}
-        <p>{% trans "GitHub connected as" %} <strong>{{ github_connection.login }}</strong>. {% trans "Merged pull requests on connected repositories arrive here as candidate records." %}</p>
+        <p>{% trans "Connected as" %} <strong>{{ github_connection.login }}</strong></p>
         <a class="btn btn--secondary" href="{% url 'github_sync:connection' %}">{% trans "Manage connection" %}</a>
         {% else %}
         <p id="github-connect-notice">{% trans "Connect only if you want public GitHub activity included in your DevNepal account." %}</p>
@@ -155,7 +205,6 @@
       {% else %}
       <p>{% trans "GitHub connection is not available on this installation. Non-code work is submitted as evidence and counts the same." %}</p>
       {% endif %}
-      <a href="{% url 'accounts:privacy_export' %}">{% trans "Download your data" %}</a>
     </article>
     <article class="card blueprint">
       <h3>{% trans "Recognition & inbox" %}</h3>
