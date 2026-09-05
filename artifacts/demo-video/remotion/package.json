@@ -4,6 +4,7 @@
   "scripts": {
     "record:brave": "node scripts/record-brave-flow.mjs",
     "record:refresh": "node scripts/record-live-refresh.mjs",
+    "verify:live": "node scripts/verify-live-demo.mjs",
     "capture:long": "node scripts/capture-long-demo.mjs",
     "voice:kala": "node scripts/generate-voiceover.mjs",
     "voice:long": "node scripts/generate-long-voiceover.mjs",
