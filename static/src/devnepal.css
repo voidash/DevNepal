@@ -1105,4 +1105,8 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
   .dn-catalog-filters .dn-catalog-filter-head { display: none; }
   .dn-catalog-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
 }
-.dn-catalog-results > .card .dn-catalog-card__facts div { white-space: nowrap; }
+.dn-catalog-results > .card .dn-catalog-card__facts div { min-width: 0; white-space: normal; }
+
+@media (max-width: 720px) {
+  .dn-catalog-results { grid-template-columns: 1fr; }
+}
