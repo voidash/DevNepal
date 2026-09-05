@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "record:brave": "node scripts/record-brave-flow.mjs",
-    "voice:piper": "node scripts/generate-voiceover.mjs",
+    "voice:kala": "node scripts/generate-voiceover.mjs",
     "render": "remotion render src/index.ts DevNepalNarrated ../DevNepal-GitHub-flow-demo.mp4",
     "render:silent": "remotion render src/index.ts DevNepalSilent ../DevNepal-GitHub-flow-preview.mp4"
   },
