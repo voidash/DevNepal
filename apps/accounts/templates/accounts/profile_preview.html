@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Preview as a visitor" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section" aria-labelledby="profile-preview-heading">
+  <div class="container">
+    <header>
+      <h1 id="profile-preview-heading">{% trans "Preview as a visitor" %}</h1>
+      <p>{% trans "This shows which profile fields someone who is not signed in can see." %}</p>
+    </header>
+
+    <div class="dn-state-banner" role="note">
+      <h2>{% trans "This preview is not saved" %}</h2>
+      <p>{% trans "Only fields set to public appear here. Your email and sign-in provider are never shown." %}</p>
+    </div>
+
+    <article class="card" aria-labelledby="preview-member-name">
+      <h2 class="card__title" id="preview-member-name">{{ payload.username }}</h2>
+      {% if payload.headline %}<p class="card__summary">{{ payload.headline }}</p>{% endif %}
+      {% if payload.bio %}<p>{{ payload.bio }}</p>{% endif %}
+      {% if payload.location %}<p><strong>{% trans "Location" %}</strong>: {{ payload.location }}</p>{% endif %}
+      {% if payload.province %}<p><strong>{% trans "Province" %}</strong>: {{ payload.province }}</p>{% endif %}
+
+      {% if payload.skills %}
+      <section aria-labelledby="preview-skills-heading">
+        <h3 id="preview-skills-heading">{% trans "Skills" %}</h3>
+        <ul>
+          {% for skill in payload.skills %}<li>{{ skill.name }}{% if skill.self_rating %} · {{ skill.self_rating }}{% endif %}</li>{% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if payload.links %}
+      <section aria-labelledby="preview-links-heading">
+        <h3 id="preview-links-heading">{% trans "Links" %}</h3>
+        <ul>
+          {% for link in payload.links %}<li><a href="{{ link.url }}">{{ link.label|default:link.link_type }}</a></li>{% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+    </article>
+
+    <p>{% blocktrans with percent=completeness.percent %}Profile completeness: {{ percent }}%{% endblocktrans %}</p>
+    <a class="btn btn--primary" href="{% url 'accounts:profile_edit' %}">{% trans "Return to editing" %}</a>
+  </div>
+</section>
+{% endblock %}

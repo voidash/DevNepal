@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Project authoring" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
+      <h1>{% trans "Government project authoring" %}</h1>
+      <span class="Label">{% trans "Ministry workspace" %}</span>
+    </div>
+    <nav class="dn-tabs" aria-label="{% trans 'Project authoring sections' %}">
+      <a class="dn-tab" aria-current="page" href="{% url 'projects:authoring_dashboard' %}">{% trans "Projects" %} <span class="Counter">{{ projects|length }}</span></a>
+      <a class="dn-tab" href="{% url 'projects:application_list' %}">{% trans "Applications" %}</a>
+    </nav>
+  </div>
+</div>
+<main class="section">
+  <div class="dn-container">
+    <header class="card__head">
+      <div>
+        <p class="dn-section-kicker">{% trans "Government publishing" %}</p>
+        <h2>{% trans "Project drafts and review" %}</h2>
+      </div>
+      {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create draft" %}</a>{% endif %}
+    </header>
+    <div class="table-scroll">
+    <table class="dn-data-table">
+      <thead><tr><th>{% trans "Project" %}</th><th>{% trans "Ministry" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+      <tbody>
+        {% for project in projects %}
+        <tr>
+          <td><a class="card__title-link" href="{% url 'projects:authoring_detail' project.slug %}"><strong>{{ project.localized_title }}</strong></a></td>
+          <td>{{ project.ministry.localized_name }}</td>
+          <td><span class="Label">{{ project.get_status_display }}</span></td>
+          <td><a class="btn btn-sm" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit" %}</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">{% trans "No government projects are available for your ministry assignments." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

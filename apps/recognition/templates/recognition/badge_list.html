@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Badge administration" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-page-header">
+    <h1 id="badge-heading">{% trans "Badge administration" %}</h1>
+    <p class="dn-lede">{% trans "Documented badge criteria, awards, and revocation state (REC-007)." %}</p>
+    <div class="button-group">
+      <a class="btn btn--primary" href="{% url 'recognition:badge_create' %}">{% trans "Create badge" %}</a>
+      <a class="btn btn--secondary" href="{% url 'recognition:anomaly_review' %}">{% trans "Anomaly review" %}</a>
+      <a class="btn btn--secondary" href="{% url 'recognition:policy_create' %}">{% trans "Scoring policies" %}</a>
+    </div>
+  </div>
+  <section class="section" aria-labelledby="badge-list-heading">
+    <h2 id="badge-list-heading" class="visually-hidden">{% trans "Badges" %}</h2>
+    {% if badges %}
+    <div class="dn-issue-list">
+      {% for badge in badges %}
+      <div class="dn-issue-row">
+        <span class="dn-state-dot{% if not badge.is_active %}" style="border-color: var(--devnepal-gov-red){% endif %}" aria-hidden="true"></span>
+        <div>
+          <a class="dn-issue-title" href="{% url 'recognition:badge_edit' badge.slug %}">{{ badge.name }}</a>
+          <div class="dn-issue-meta">
+            <code>{{ badge.slug }}</code> · {% blocktrans count counter=badge.criteria_version %}criteria version {{ counter }}{% plural %}criteria version {{ counter }}{% endblocktrans %} · {{ badge.get_kind_display }}
+          </div>
+        </div>
+        <div class="dn-issue-aside">
+          <span class="Label{% if badge.is_active %} Label--success{% else %} Label--danger{% endif %}">{% if badge.is_active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}</span>
+          <a href="{% url 'recognition:badge_edit' badge.slug %}">{% trans "Edit" %}</a>
+          <a href="{% url 'recognition:badge_award' badge.slug %}">{% trans "Award" %}</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dn-state-banner" role="status">{% trans "No badges have been created." %}</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

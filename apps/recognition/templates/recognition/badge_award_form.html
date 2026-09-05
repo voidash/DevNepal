@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Award badge" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="badge-award-heading">
+      <h1 id="badge-award-heading">{% trans "Award badge" %}</h1>
+      <p class="dn-lede">{% blocktrans with badge_name=badge.name %}Award “{{ badge_name }}” to a member. The reason is recorded in the immutable audit log.{% endblocktrans %}</p>
+      {% if form.non_field_errors %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "There is a problem" %}</h2>
+        <ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="button-group">
+          <button class="btn btn--primary" type="submit">{% trans "Award badge" %}</button>
+          <a class="btn btn--secondary" href="{% url 'recognition:badge_edit' badge.slug %}">{% trans "Back to badge" %}</a>
+        </div>
+      </form>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Awarding is audited" %}</h2>
+        <p>{% trans "Awarding an already active badge is ignored, so a duplicate submission never creates a second award." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Documented criteria" %}</h2>
+        <p>{{ badge.criteria_md }}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

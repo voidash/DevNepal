@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Community project authoring" %} | DevNepal{% endblock %}
+{% block content %}
+<main class="section"><div class="container">
+  <header class="section__header"><h1>{% trans "My community projects" %}</h1><a class="btn btn--primary" href="{% url 'projects:community_create' %}">{% trans "Create community project" %}</a></header>
+  <p>{% trans "Community projects are member-owned and are not endorsed by the Government of Nepal." %}</p>
+  <section aria-labelledby="terms-heading" class="dn-state-banner{% if terms_accepted %} is-success{% endif %}">
+    <h2 id="terms-heading">{% trans "Community terms" %}</h2>
+    <p>{% blocktrans with version=terms_version %}Current community terms version: {{ version }}{% endblocktrans %}</p>
+    {% if terms_accepted %}
+    <p>{% trans "You have accepted the current community terms." %}</p>
+    {% else %}
+    <p>{% trans "You must accept the community terms before you can publish a community project." %}</p>
+    <form action="{% url 'projects:community_accept_terms' %}" method="post">{% csrf_token %}<button class="btn btn--primary" type="submit">{% trans "Accept community terms" %}</button></form>
+    {% endif %}
+  </section>
+  <table><thead><tr><th>{% trans "Project" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead><tbody>
+    {% for project in projects %}<tr><td><a href="{% url 'projects:community_detail' project.slug %}">{{ project.localized_title }}</a></td><td>{{ project.get_status_display }}</td><td><a href="{% url 'projects:community_edit' project.slug %}">{% trans "Edit" %}</a></td></tr>
+    {% empty %}<tr><td colspan="3">{% trans "You have not created any community projects." %}</td></tr>{% endfor %}
+  </tbody></table>
+</div></main>
+{% endblock %}

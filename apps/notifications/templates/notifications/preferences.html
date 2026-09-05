@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Email preferences" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="email-preferences-heading">
+      <h1 id="email-preferences-heading">{% trans "Email preferences" %}</h1>
+      <div class="dn-state-banner" role="note">
+        <p>{% trans "Security and administrative notices are always sent and cannot be disabled." %}</p>
+      </div>
+      <form method="post" action="{% url 'notifications:email_preferences' %}" class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="dn-settings-list">
+          {% for field in form %}
+          <div class="dn-setting-row">
+            <div>
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field.errors }}
+              {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+            </div>
+            {{ field }}
+          </div>
+          {% endfor %}
+        </div>
+        <button class="btn btn--primary" type="submit">{% trans "Save preferences" %}</button>
+      </form>
+      <p><a href="{% url 'notifications:list' %}">{% trans "Back to notifications" %}</a></p>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Non-essential email" %}</h2>
+        <p>{% trans "These switches control convenience email only. Workflow notices you cannot turn off are delivered regardless." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Digest frequency" %}</h2>
+        <p>{% trans "Bundle community and project updates into a single periodic email instead of separate messages." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

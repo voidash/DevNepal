@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "My technical blogs" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <header class="dn-contribution-header">
+    <h1>{% trans "My technical blogs" %}</h1>
+    <p><a class="btn" href="{% url 'blogs:create' %}">{% trans "New technical blog" %}</a></p>
+    <p role="status">{% blocktrans count count=posts|length %}{{ count }} listing{% plural %}{{ count }} listings{% endblocktrans %}</p>
+  </header>
+  <div class="dn-issue-list">
+    {% for post in posts %}
+    <div class="dn-issue-row">
+      {% include "components/status_octicon.html" with project_status=post.status %}
+      <div>
+        <a class="dn-issue-title" href="{% url 'blogs:edit' post.pk %}">{{ post.title }}</a>
+        <div class="dn-issue-meta">{{ post.get_status_display }}</div>
+        <div class="dn-labels">
+          <span class="Label">{{ post.get_language_display }}</span>
+          <span class="Label">{{ post.get_post_type_display }}</span>
+          {% if post.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% endif %}
+        </div>
+      </div>
+      <div class="dn-issue-aside">
+        <time datetime="{{ post.updated_at|date:"Y-m-d" }}">{{ post.updated_at|date:"DATE_FORMAT" }}</time>
+      </div>
+    </div>
+    {% empty %}
+    <div class="dn-issue-row"><span aria-hidden="true"></span><div>{% trans "You have not created any technical blogs yet." %}</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

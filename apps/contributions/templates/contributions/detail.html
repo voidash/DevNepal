@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ contribution.title }} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <p>{% trans "Contribution record" %}</p>
+    <div class="dn-repo-title">
+      <a href="{% url 'projects:detail' contribution.project.slug %}">{{ contribution.project.localized_title }}</a>
+      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
+      <h1>{{ contribution.title }}</h1>
+      <span class="Label">{% include "components/status_octicon.html" with project_status=contribution.status %} {{ contribution.get_status_display }}</span>
+    </div>
+    <nav class="dn-tabs" aria-label="{% trans 'Contribution sections' %}">
+      <a class="dn-tab" aria-current="page" href="#contribution-detail">{% trans "Detail" %}</a>
+      <a class="dn-tab" href="{% url 'contributions:history' contribution.pk %}">{% trans "Decision history" %}</a>
+    </nav>
+  </div>
+</div>
+
+<div class="dn-container dn-contribution-layout">
+  <section id="contribution-detail" aria-labelledby="contribution-heading">
+    <h2 id="contribution-heading" class="visually-hidden">{% trans "Contribution detail" %}</h2>
+    {% if error %}
+    <div class="error-summary" role="alert">
+      <h2>{% trans "Decision was not recorded" %}</h2>
+      <p>{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if contribution.status == "candidate" %}
+    <div class="dn-state-banner is-attention" role="status">
+      <strong>{% trans "Awaiting verification by a project maintainer" %}</strong>
+      <p>{% trans "No score is created while this record is a candidate. The contributor and authorized maintainers can see it." %}</p>
+    </div>
+    {% elif contribution.status == "pending_info" %}
+    <div class="dn-state-banner is-attention" role="status">
+      <strong>{% trans "Clarification requested" %}</strong>
+      <p>{% trans "The reviewer needs more information before making a final decision. The reason appears in the timeline below." %}</p>
+    </div>
+    {% elif contribution.status == "accepted" %}
+    <div class="dn-state-banner is-success" role="status">
+      <strong>{% trans "Accepted contribution" %}</strong>
+      <p>{% trans "This is a verified record. Its source, reviewer, decision, and recognition policy remain auditable." %}</p>
+    </div>
+    {% elif contribution.status == "rejected" %}
+    <div class="dn-state-banner is-danger" role="status">
+      <strong>{% trans "Contribution not accepted" %}</strong>
+      <p>{% trans "The reviewer’s reason appears below. This record receives no recognition score." %}</p>
+    </div>
+    {% elif contribution.status == "revoked" %}
+    <div class="dn-state-banner is-danger" role="status">
+      <strong>{% trans "Recognition reversed" %}</strong>
+      <p>{% trans "The verified record was revoked with a reason. The original decision remains in the audit history." %}</p>
+    </div>
+    {% endif %}
+
+    <ol class="dn-timeline">
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <strong>{% trans "Evidence submitted" %}</strong>
+          <time datetime="{{ contribution.created_at|date:'c' }}">{{ contribution.created_at }}</time>
+          <span>{% blocktrans with actor=contribution.contributor.username %}by {{ actor }}{% endblocktrans %}</span>
+        </div>
+        <div class="dn-timeline-item-body">
+          {% if contribution.description %}<p>{{ contribution.description }}</p>{% else %}<p>{% trans "No written description was provided." %}</p>{% endif %}
+          {% if contribution.evidence_url %}<p><a href="{{ contribution.evidence_url }}" rel="noopener noreferrer">{% trans "Open evidence link" %}</a></p>{% endif %}
+        </div>
+      </li>
+      {% if contribution.verified_by or contribution.verification_note or contribution.verified_at %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <strong>{% trans "Verification recorded" %}</strong>
+          {% if contribution.verified_at %}<time datetime="{{ contribution.verified_at|date:'c' }}">{{ contribution.verified_at }}</time>{% endif %}
+          {% if contribution.verified_by %}<span>{% trans "Verified by" %} {{ contribution.verified_by.username }}</span>{% endif %}
+        </div>
+        <div class="dn-timeline-item-body">
+          {% if contribution.verification_note %}<p>{{ contribution.verification_note }}</p>{% endif %}
+        </div>
+      </li>
+      {% endif %}
+      {% if contribution.revocation_reason %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header"><strong>{% trans "Contribution revoked" %}</strong></div>
+        <div class="dn-timeline-item-body"><p>{{ contribution.revocation_reason }}</p></div>
+      </li>
+      {% endif %}
+    </ol>
+
+    {% if can_verify and contribution.status != "accepted" %}
+    <form action="{% url 'contributions:verify' contribution.pk %}" method="post" class="dn-form-stack" aria-labelledby="review-evidence-heading">
+      {% csrf_token %}
+      <h2 id="review-evidence-heading">{% trans "Review evidence" %}</h2>
+      <div class="dn-state-banner" role="note">
+        <strong>{% trans "A contributor cannot approve their own submitted evidence without an eligible secondary approver." %}</strong>
+        <p>{% trans "A reason is required for every decision. It is shared with the contributor and kept in the audit history." %}</p>
+      </div>
+      <fieldset class="dn-field">
+        <legend>{% trans "Decision" %}</legend>
+        {% for value, label in decision_choices %}
+        <label><input type="radio" name="decision" value="{{ value }}" required{% if forloop.first %} checked{% endif %}> {% if value == "accepted" %}{% trans "Accept" %}{% elif value == "pending_info" %}{% trans "Request clarification" %}{% elif value == "rejected" %}{% trans "Reject" %}{% else %}{{ label }}{% endif %}</label>
+        {% endfor %}
+      </fieldset>
+      <div class="dn-field">
+        <label for="contribution-reason">{% trans "Reason for the contributor" %} ({% trans "required" %})</label>
+        <textarea id="contribution-reason" name="reason" required></textarea>
+      </div>
+      <div class="dn-field">
+        <label for="contribution-second-approver">{% trans "Secondary approver" %}</label>
+        <select id="contribution-second-approver" name="second_approval_by">
+          <option value="">{% trans "Not applicable" %}</option>
+          {% for user in second_approvers %}<option value="{{ user.pk }}">{{ user.username }}</option>{% endfor %}
+        </select>
+        <p class="dn-field-help">{% trans "Choose another eligible publisher or Super Admin when reviewing your own member-submitted evidence." %}</p>
+      </div>
+      <button class="btn btn--primary" type="submit">{% trans "Record decision" %}</button>
+    </form>
+    {% endif %}
+
+    {% if can_revoke %}
+    <form action="{% url 'contributions:revoke' contribution.pk %}" method="post" class="dn-form-stack" aria-labelledby="revoke-contribution-heading">
+      {% csrf_token %}
+      <h2 id="revoke-contribution-heading">{% trans "Revoke contribution" %}</h2>
+      <p>{% trans "Revocation reverses recognition but keeps the original decision and your reason in the audit history." %}</p>
+      <div class="dn-field"><label for="contribution-revocation-reason">{% trans "Revocation reason" %}</label><textarea id="contribution-revocation-reason" name="reason" required></textarea></div>
+      <button class="btn btn--secondary" type="submit">{% trans "Revoke contribution" %}</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <aside class="dn-sidebar">
+    <section class="dn-sidebar-section">
+      <h2>{% trans "Record provenance" %}</h2>
+      <dl>
+        <dt>{% trans "Project" %}</dt><dd>{{ contribution.project.localized_title }}</dd>
+        <dt>{% trans "Contributor" %}</dt><dd>{{ contribution.contributor.username }}</dd>
+        <dt>{% trans "Contribution type" %}</dt><dd>{{ contribution.contribution_type.label }}</dd>
+        <dt>{% trans "Source" %}</dt><dd>{{ contribution.get_source_display }}</dd>
+        <dt>{% trans "Submitted" %}</dt><dd>{{ contribution.created_at }}</dd>
+        <dt>{% trans "Status" %}</dt><dd>{{ contribution.get_status_display }}</dd>
+        {% if contribution.verified_by %}<dt>{% trans "Verified by" %}</dt><dd>{{ contribution.verified_by.username }}</dd>{% endif %}
+      </dl>
+    </section>
+    {% if contribution.status == "accepted" %}
+    <section class="dn-sidebar-section">
+      <h2>{% trans "Recognition" %}</h2>
+      {% if contribution.score %}
+      <p><strong>{% blocktrans count counter=contribution.score.points %}{{ counter }} point{% plural %}{{ counter }} points{% endblocktrans %}</strong></p>
+      <p>{% blocktrans with version=contribution.score.policy.version %}Scored under policy v{{ version }}.{% endblocktrans %}</p>
+      {% else %}
+      <p>{% trans "Recognition uses the scoring policy attached to this accepted record." %}</p>
+      {% endif %}
+      <a href="{% url 'recognition:my_profile' %}">{% trans "View your recognition history" %}</a>
+    </section>
+    {% endif %}
+    <section class="dn-sidebar-section">
+      <a class="btn btn--secondary" href="{% url 'contributions:history' contribution.pk %}">{% trans "View decision history" %}</a>
+    </section>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ project.localized_title }} | {% trans "Updates" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
+      <a href="{% url 'projects:detail' project.slug %}">{% if project.ministry %}{{ project.ministry.localized_name }}{% else %}{% trans "Community" %}{% endif %}</a>
+      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
+      <h1>{{ project.localized_title }}</h1>
+      <span class="Label">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+    </div>
+    <nav class="dn-tabs" aria-label="{% trans 'Project sections' %}">
+      <a class="dn-tab" href="{% url 'projects:detail' project.slug %}">{% trans "Overview" %}</a>
+      <a class="dn-tab" aria-current="page" href="{% url 'projects:updates' project.slug %}">{% trans "Updates" %} <span class="Counter">{{ updates|length }}</span></a>
+    </nav>
+  </div>
+</div>
+<div class="dn-container">
+  <section id="updates" aria-labelledby="updates-heading">
+    <h2 id="updates-heading">{% trans "Updates" %}</h2>
+    {% if updates %}
+    <ol class="dn-timeline">
+      {% for update in updates %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <span class="Label Label--accent">{{ update.get_kind_display }}</span>
+          <strong>{{ update.title }}</strong>
+          <time datetime="{{ update.created_at|date:"Y-m-d" }}">{{ update.created_at|date:"DATE_FORMAT" }}</time>
+        </div>
+        <div class="dn-timeline-item-body">
+          <p>{{ update.body }}</p>
+          {% if update.link %}<a href="{{ update.link }}">{% trans "Related link" %}</a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p>{% trans "No updates have been posted." %}</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ badge.name }} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title"><a href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><span class="dn-repo-title-separator" aria-hidden="true">/</span><h1>{{ badge.name }}</h1><span class="Label">{% trans "Active" %}</span></div>
+  </div>
+</div>
+<main class="section">
+  <div class="dn-container dn-form-layout">
+    <section class="dn-sheet blueprint" aria-labelledby="badge-criteria-heading">
+      <div class="dn-sheet__header"><h2 id="badge-criteria-heading">{% trans "Published criteria" %}</h2><span>{% blocktrans with version=badge.criteria_version %}Version {{ version }}{% endblocktrans %}</span></div>
+      <div class="dn-readme-body">
+        <p>{{ badge.description }}</p>
+        <div class="dn-readme">{{ badge.criteria_md|linebreaks }}</div>
+      </div>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section"><h2>{% trans "Recognition record" %}</h2><dl><dt>{% trans "Type" %}</dt><dd>{{ badge.get_kind_display }}</dd><dt>{% trans "Current criteria version" %}</dt><dd>{{ badge.criteria_version }}</dd><dt>{% trans "Active awards" %}</dt><dd>{{ active_award_count }}</dd></dl></section>
+      <a class="btn" href="{% url 'recognition:public_policy' %}">{% trans "Read scoring policy" %}</a>
+    </aside>
+  </div>
+</main>
+{% endblock %}

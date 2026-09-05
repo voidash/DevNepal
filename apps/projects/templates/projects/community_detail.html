@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ project.localized_title }} | {% trans "Community project" %}{% endblock %}
+{% block content %}
+<main class="section"><div class="container">
+  <header class="section__header"><span class="badge badge--community">{% trans "Community project" %}</span><h1>{{ project.localized_title }}</h1><p>{{ project.get_status_display }}</p>{% if editable %}<a class="btn btn--secondary" href="{% url 'projects:community_edit' project.slug %}">{% trans "Edit project" %}</a>{% endif %}</header>
+  <p>{% trans "This is a member-owned community project and is not endorsed by the Government of Nepal." %}</p>
+  {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
+  <section aria-labelledby="ownership-heading"><h2 id="ownership-heading">{% trans "Repository ownership" %}</h2><p>{% trans "Verification status" %}: {{ project.get_ownership_verification_display }}</p>{% if project.repository_url %}<form action="{% url 'projects:community_verify_github' project.slug %}" method="post">{% csrf_token %}<button class="btn btn--secondary" type="submit">{% trans "Verify GitHub ownership" %}</button></form>{% else %}<p>{% trans "Add a GitHub repository URL to enable ownership verification." %}</p>{% endif %}</section>
+  <section aria-labelledby="lifecycle-heading"><h2 id="lifecycle-heading">{% trans "Lifecycle action" %}</h2><form action="{% url 'projects:community_workflow' project.slug %}" method="post" class="field-group">{% csrf_token %}{{ workflow_form.non_field_errors }}<div class="field"><label for="{{ workflow_form.action.id_for_label }}">{{ workflow_form.action.label }}</label>{{ workflow_form.action }}{{ workflow_form.action.errors }}</div><div class="field"><label for="{{ workflow_form.reason.id_for_label }}">{{ workflow_form.reason.label }}</label>{{ workflow_form.reason }}{{ workflow_form.reason.errors }}</div><button class="btn btn--primary" type="submit">{% trans "Apply action" %}</button></form></section>
+  <p><a href="{% url 'projects:community_dashboard' %}">{% trans "Back to my community projects" %}</a></p>
+</div></main>
+{% endblock %}

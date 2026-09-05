@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<main>
+  <h1>{% blocktrans with case_id=case.pk %}Moderation case {{ case_id }}{% endblocktrans %}</h1>
+  {% if error %}<p class="dn-state-banner is-danger" role="alert">{{ error }}</p>{% endif %}
+  <dl>
+    <dt>{% trans "Status" %}</dt><dd>{{ case.get_status_display }}</dd>
+    <dt>{% trans "Reason" %}</dt><dd>{{ case.report.get_reason_display }}</dd>
+    <dt>{% trans "Details" %}</dt><dd>{{ case.report.details }}</dd>
+    <dt>{% trans "Evidence URL" %}</dt><dd>{{ case.report.evidence_url }}</dd>
+  </dl>
+  <form method="post" action="{% url 'moderation:case_assign' case.pk %}">{% csrf_token %}<button type="submit">{% trans "Assign to me" %}</button></form>
+  <h2>{% trans "Decision" %}</h2>
+  <form method="post" action="{% url 'moderation:case_decide' case.pk %}">{% csrf_token %}{{ decision_form.as_p }}<button type="submit">{% trans "Record decision" %}</button></form>
+  <h2>{% trans "Appeal resolution" %}</h2>
+  <form method="post" action="{% url 'moderation:appeal_resolve' case.pk %}">{% csrf_token %}{{ resolution_form.as_p }}<button type="submit">{% trans "Resolve appeal" %}</button></form>
+  <h2>{% trans "Export confidential record" %}</h2>
+  <details class="dn-form-stack">
+    <summary>{% trans "Export case record (JSON)" %}</summary>
+    <form method="post" action="{% url 'moderation:case_export' case.pk %}" class="dn-form-stack">
+      {% csrf_token %}
+      <div class="dn-field">
+        {{ export_form.purpose.label_tag }}
+        {{ export_form.purpose }}
+        {% if export_form.purpose.errors %}<p class="dn-state-banner is-danger" role="alert">{{ export_form.purpose.errors }}</p>{% endif %}
+        <p class="dn-field-help">{{ export_form.purpose.help_text }}</p>
+      </div>
+      <p><button class="btn btn--primary" type="submit">{% trans "Export" %}</button></p>
+    </form>
+  </details>
+  <h2>{% trans "Case history" %}</h2>
+  <ol>{% for event in events %}<li>{{ event.get_event_display }}: {{ event.comment }}</li>{% empty %}<li>{% trans "No case events." %}</li>{% endfor %}</ol>
+</main>
+{% endblock %}

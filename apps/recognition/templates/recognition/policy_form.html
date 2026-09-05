@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Recognition policies" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="policy-heading">
+      <h1 id="policy-heading">{% trans "Recognition policies" %}</h1>
+      <p class="dn-lede">{% trans "Activate a documented, versioned scoring policy. Activation supersedes the previously active version." %}</p>
+      {% if form.non_field_errors %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "There is a problem" %}</h2>
+        <ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn--primary" type="submit">{% trans "Activate policy" %}</button>
+      </form>
+    </section>
+    <aside class="dn-sidebar" aria-labelledby="policy-history-heading">
+      <section class="dn-sidebar-section">
+        <h2 id="policy-history-heading">{% trans "Policy history" %}</h2>
+        {% if policies %}
+        <div class="dn-issue-list">
+          {% for policy in policies %}
+          <div class="dn-issue-row">
+            <span class="dn-state-dot" aria-hidden="true"></span>
+            <div>
+              <span class="dn-issue-title">{% blocktrans with version=policy.version %}Version {{ version }}{% endblocktrans %}</span>
+              {% if policy.document_url %}<div class="dn-issue-meta"><a href="{{ policy.document_url }}">{% trans "Policy document" %}</a></div>{% endif %}
+            </div>
+            <div class="dn-issue-aside">
+              {% if policy.is_active %}<span class="Label Label--success">{% trans "Active" %}</span>{% else %}<span class="Label">{% trans "Superseded" %}</span>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="dn-state-banner" role="status">{% trans "No policies have been activated." %}</div>
+        {% endif %}
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

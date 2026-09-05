@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% if is_create %}{% trans "Create community project" %}{% else %}{% trans "Edit community project" %}{% endif %} | DevNepal{% endblock %}
+{% block content %}
+<main class="section"><div class="container">
+  <h1>{% if is_create %}{% trans "Create community project" %}{% else %}{% trans "Edit community project" %}{% endif %}</h1>
+  <p>{% trans "Community projects are member-owned and are not endorsed by the Government of Nepal." %}</p>
+  {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
+  {% if editable|default:is_create %}<form method="post" class="field-group">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>{{ field }}{{ field.errors }}{% if field.help_text %}<p class="field__help">{{ field.help_text }}</p>{% endif %}</div>{% endfor %}<button class="btn btn--primary" type="submit">{% trans "Save draft" %}</button></form>
+  {% else %}<p>{% trans "This project is read-only in its current lifecycle state." %}</p>{% endif %}
+  {% if project %}<p><a href="{% url 'projects:community_detail' project.slug %}">{% trans "Back to community project" %}</a></p>{% endif %}
+</div></main>
+{% endblock %}

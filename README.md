@@ -26,6 +26,37 @@ python3 -m http.server 8000
 
 then visit http://localhost:8000/prototype/
 
+## Running the Django application
+
+The prototype flows are implemented in Django 6 with Python 3.12. From the
+repository root:
+
+```bash
+uv sync
+uv run python manage.py migrate
+uv run python manage.py runserver
+```
+
+Open <http://127.0.0.1:8000/en/>. The default development configuration uses
+SQLite; setting `POSTGRES_HOST` switches to PostgreSQL and reads the standard
+`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_PORT`
+variables.
+
+Run the complete verification suite with:
+
+```bash
+uv run pytest
+uv run ruff check .
+uv run python manage.py makemigrations --check --dry-run
+node static/src/design_check.mjs
+```
+
+The cross-role source-of-truth journey is executable in
+`tests/flows/test_prototype_main_flow.py`: ministry draft, PMO review and
+approval, public discovery, member application, publisher decision,
+contribution evidence, maintainer verification, recognition, progress update,
+and project completion.
+
 ## Status
 
 The requirements document is **v0.9, draft for stakeholder validation**. It does not by

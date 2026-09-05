@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Contribution history" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <header class="dn-contribution-header">
+    <h1>{% trans "Contribution history" %}</h1>
+    <p><a href="{% url 'contributions:detail' contribution.pk %}">{{ contribution.title }}</a></p>
+  </header>
+  <ol class="dn-timeline">
+    {% for event in events %}
+    <li class="dn-timeline-item">
+      <div class="dn-timeline-item-header">
+        <strong>{{ event.action }}</strong>
+        <time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at }}</time>
+        {% if event.actor %}<span>{% blocktrans with actor=event.actor.username %}by {{ actor }}{% endblocktrans %}</span>{% endif %}
+      </div>
+      {% if event.after.reason %}<div class="dn-timeline-item-body"><p>{{ event.after.reason }}</p></div>{% endif %}
+    </li>
+    {% empty %}
+    <li class="dn-timeline-item"><div class="dn-timeline-item-body"><p>{% trans "No verification history is available." %}</p></div></li>
+    {% endfor %}
+  </ol>
+</div>
+{% endblock %}

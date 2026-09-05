@@ -1,0 +1,146 @@
+/* polish.css — resolves missing Primer semantic tokens and softens the
+   interface density. Loaded after primer.css and devnepal.css. */
+:root {
+  --borderColor-default: #d1d9e0;
+  --borderColor-muted: #d8dee4;
+  --bgColor-muted: #f6f8fa;
+  --bgColor-inset: #f6f8fa;
+  --fgColor-muted: #59636e;
+  --borderRadius-medium: 6px;
+}
+
+.dn-container {
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .dn-container { padding-inline: 2rem; }
+}
+
+/* Desktop primary navigation */
+.dn-primary-nav { display: none; }
+@media (min-width: 768px) {
+  .dn-primary-nav { display: block; }
+}
+@media (max-width: 767px) {
+  .dn-primary-nav { display: none; }
+}
+.dn-primary-nav ul {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dn-primary-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min, 44px);
+  padding: 0 0.75rem;
+  border-radius: var(--borderRadius-medium);
+  color: var(--fgColor-muted, #59636e);
+  font-weight: 600;
+  text-decoration: none;
+}
+.dn-primary-nav a:hover {
+  color: var(--fgColor-default, #1f2328);
+  background: var(--bgColor-muted, #f6f8fa);
+}
+.dn-primary-nav a[aria-current="page"] {
+  color: var(--fgColor-default, #1f2328);
+  font-weight: 700;
+}
+
+/* Soften surfaces */
+.card,
+.dn-issue-list,
+.dn-review-list,
+.dn-source-grid,
+.dn-component-example,
+.dn-state-banner,
+.dn-accountability,
+table,
+.dn-timeline {
+  border-radius: var(--borderRadius-medium);
+}
+.dn-issue-list > *,
+.dn-review-list > * {
+  border-color: var(--borderColor-muted);
+}
+.dn-issue-list > *:hover,
+.dn-review-list > *:hover {
+  background: var(--bgColor-muted);
+}
+.dn-state-banner {
+  border-radius: var(--borderRadius-medium);
+}
+
+/* Forms and buttons breathe */
+.field input,
+.field select,
+.field textarea,
+.form-control {
+  border-radius: var(--borderRadius-medium);
+  border-color: var(--borderColor-default);
+}
+.btn {
+  border-radius: var(--borderRadius-medium);
+}
+.Label {
+  border-radius: 2em;
+}
+
+/* Tables: muted rules, roomier cells */
+table th,
+table td {
+  border-color: var(--borderColor-muted);
+  padding: 0.6rem 0.85rem;
+}
+
+/* GitHub sign-in panel + divider on auth pages */
+.auth-github-panel {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--borderRadius-medium);
+  background: var(--bgColor-muted);
+  max-width: 26rem;
+}
+.auth-github-panel .btn { min-width: 16rem; }
+.auth-github-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--fgColor-muted, #59636e);
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  max-width: 26rem;
+  color: var(--fgColor-muted, #59636e);
+  font-size: 0.875rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--borderColor-muted);
+}
+
+/* Homepage site directory */
+.dn-home-directory { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.dn-home-directory ul { list-style: none; margin: 0; padding: 0; }
+.dn-home-directory li + li { margin-top: 0.25rem; }
+.dn-home-directory a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min, 44px);
+  color: var(--fgColor-default, #1f2328);
+  text-decoration: none;
+}
+.dn-home-directory a:hover { text-decoration: underline; text-underline-offset: 3px; }

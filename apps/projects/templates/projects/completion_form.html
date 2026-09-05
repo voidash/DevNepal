@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Complete the project" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
+      <a href="{% url 'projects:authoring_detail' project.slug %}">{{ project.localized_title }}</a>
+      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
+      <h1 id="completion-heading">{% trans "Complete the project" %}</h1>
+      <span class="Label">{{ project.get_status_display }}</span>
+    </div>
+    <p class="dn-lede">{% trans "The completion summary is published on the public listing. Save it as a draft here, review every field, then mark the project completed." %}</p>
+  </div>
+</div>
+
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="completion-heading">
+      {% if form.non_field_errors %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "The project was not completed" %}</h2>
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+      {% if editable %}
+      <form method="post" class="dn-form-stack" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }} ({% trans "required" %})</label>
+          {{ field }}
+          {% if field.errors %}<div class="field__error" role="alert">{{ field.errors }}</div>{% endif %}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="button-group">
+          <button class="btn btn--secondary" type="submit" name="intent" value="save">{% trans "Save completion draft" %}</button>
+          <button class="btn btn--primary" type="submit" name="intent" value="complete">{% trans "Mark completed" %}</button>
+        </div>
+      </form>
+      {% else %}
+      <div class="dn-state-banner is-success" role="status">
+        <strong>{% trans "Completion summary is read-only" %}</strong>
+        <p>{% trans "Completed projects preserve their published outcome record. Reopening requires Super Admin approval." %}</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="dn-sidebar">
+      {% trans "Not written yet" as not_written_yet %}
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Public summary preview" %}</h2>
+        <h3>{% trans "Outcome" %}</h3>
+        <p>{{ form.outcome_summary.value|default:not_written_yet }}</p>
+        <h3>{% trans "Deliverables and releases" %}</h3>
+        <p>{{ form.deliverables.value|default:not_written_yet|linebreaksbr }}</p>
+        <h3>{% trans "Impact" %}</h3>
+        <p>{{ form.impact_summary.value|default:not_written_yet }}</p>
+        <h3>{% trans "Lessons learned" %}</h3>
+        <p>{{ form.lessons_learned.value|default:not_written_yet }}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What completion changes" %}</h2>
+        <p>{% trans "The listing stops accepting new applications. The public history, verified contributor records, and completion summary remain available." %}</p>
+        <p>{% trans "The transition and summary revision are recorded under your name in the audit history." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

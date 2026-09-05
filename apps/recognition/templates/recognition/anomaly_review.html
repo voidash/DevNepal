@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Recognition anomaly review" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-page-header">
+    <h1 id="anomaly-heading">{% trans "Recognition anomaly review" %}</h1>
+    <p class="dn-lede">{% trans "Read-only review of members whose recent accepted-contribution activity exceeds policy caps or repeats titles. This page never changes recognition state." %}</p>
+  </div>
+  <div class="dn-accountability" role="status">
+    <div class="dn-accountability-item">
+      <strong>{% blocktrans count counter=window_days %}{{ counter }} day{% plural %}{{ counter }} days{% endblocktrans %}</strong>
+      <span>{% trans "review window" %}</span>
+    </div>
+    <div class="dn-accountability-item">
+      <strong>{{ velocity_threshold }}</strong>
+      <span>{% trans "velocity cap per window" %}</span>
+    </div>
+    <div class="dn-accountability-item">
+      <strong>{{ duplicate_threshold }}</strong>
+      <span>{% trans "minimum accepted count before duplicate titles are flagged" %}</span>
+    </div>
+  </div>
+  <section class="section" aria-labelledby="anomaly-list-heading">
+    <h2 id="anomaly-list-heading" class="visually-hidden">{% trans "Flagged members" %}</h2>
+    {% if rows %}
+    <div class="dn-issue-list">
+      {% for row in rows %}
+      <div class="dn-issue-row">
+        <span class="dn-state-dot" aria-hidden="true"></span>
+        <div>
+          <a class="dn-issue-title" href="{% url 'accounts:public_profile' row.contributor__username %}">{{ row.contributor__username }}</a>
+          <div class="dn-issue-meta">
+            {% blocktrans count counter=row.accepted_count %}{{ counter }} accepted contribution{% plural %}{{ counter }} accepted contributions{% endblocktrans %}
+            {% if row.duplicate_titles %} · {% blocktrans count counter=row.duplicate_titles %}{{ counter }} repeated title{% plural %}{{ counter }} repeated titles{% endblocktrans %}{% endif %}
+          </div>
+          <div class="dn-labels">
+            {% if row.velocity_flag %}<span class="Label Label--attention">{% trans "Velocity above cap" %}</span>{% endif %}
+            {% if row.duplicate_flag %}<span class="Label Label--severe">{% trans "Duplicate title pattern" %}</span>{% endif %}
+          </div>
+        </div>
+        <div class="dn-issue-aside">
+          <a href="{% url 'accounts:public_profile' row.contributor__username %}">{% trans "Contribution history" %}</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="dn-state-banner is-success" role="status">{% trans "No members exceed the current velocity or duplicate-pattern thresholds." %}</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

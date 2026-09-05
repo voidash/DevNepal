@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% if post %}{% trans "Edit technical blog" %}{% else %}{% trans "New technical blog" %}{% endif %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="blog-form-heading">
+      <h1 id="blog-form-heading">{% if post %}{% trans "Edit technical blog" %}{% else %}{% trans "New technical blog" %}{% endif %}</h1>
+      <form method="post" novalidate class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div>
+          <button class="btn btn--secondary" type="submit" name="action" value="preview">{% trans "Preview and run checks" %}</button>
+          <button class="btn btn--primary" type="submit" name="action" value="save">{% trans "Save draft" %}</button>
+        </div>
+      </form>
+      {% if preview_checks %}
+      <section class="dn-sidebar-section" aria-labelledby="preview-checks-heading">
+        <h2 id="preview-checks-heading">{% trans "Preview and checks" %}</h2>
+        <ul>{% for check in preview_checks %}<li>{{ check }}</li>{% endfor %}</ul>
+      </section>
+      {% endif %}
+      {% if preview_html %}
+      <article class="dn-readme" aria-labelledby="preview-heading">
+        <div class="dn-readme-header" id="preview-heading">{% trans "Article preview" %}</div>
+        <div class="dn-readme-body">{{ preview_html|safe }}</div>
+      </article>
+      {% endif %}
+      {% if post %}<p><a href="{% url 'blogs:mine' %}">{% trans "Back to my technical blogs" %}</a></p>{% endif %}
+    </section>
+    <aside class="dn-sidebar">
+      {% if post %}
+      <section class="dn-sidebar-section" aria-label="{% trans 'Publishing actions' %}">
+        <h2>{% trans "Publishing actions" %}</h2>
+        <p>{% blocktrans with status=post.get_status_display %}Current status: {{ status }}{% endblocktrans %}</p>
+        {% if post.status == 'draft' or post.status == 'unpublished' %}
+        <form method="post" action="{% url 'blogs:publish' post.pk %}" class="dn-form-stack">{% csrf_token %}<button class="btn btn--primary" type="submit">{% trans "Publish" %}</button></form>
+        {% endif %}
+        {% if post.status == 'published' %}
+        <form method="post" action="{% url 'blogs:unpublish' post.pk %}" class="dn-form-stack">{% csrf_token %}<button class="btn btn--secondary" type="submit">{% trans "Unpublish" %}</button></form>
+        {% endif %}
+        {% if post.status != 'archived' %}
+        <form method="post" action="{% url 'blogs:archive' post.pk %}" class="dn-form-stack">{% csrf_token %}<button class="btn btn--secondary" type="submit">{% trans "Archive" %}</button></form>
+        {% endif %}
+      </section>
+      {% endif %}
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Two publication paths" %}</h2>
+        <p>{% trans "Write a native DevNepal post in safe Markdown, or list an external article without copying its text." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Review" %}</h2>
+        <p>{% trans "Published listings stay visible unless a moderator restricts them for a safety reason." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

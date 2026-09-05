@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Submit evidence for verification" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <p><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></p>
+    <h1 id="evidence-heading">{% trans "Submit evidence for verification" %}</h1>
+    <p class="dn-lede">{% trans "Design, QA, documentation, translation, security, and research follow the same review path as accepted code." %}</p>
+  </div>
+</div>
+
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="evidence-heading">
+      <div class="dn-state-banner" role="note">
+        <strong>{% trans "This creates a candidate record." %}</strong>
+        <p>{% trans "No score is created until a project maintainer accepts it. You can follow the decision and its reason from the contribution record." %}</p>
+      </div>
+
+      {% if error %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "Evidence was not submitted" %}</h2>
+        <p>{{ error }}</p>
+      </div>
+      {% endif %}
+      {% if form.errors %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "Check the evidence details" %}</h2>
+        <p>{% trans "Correct the fields marked below, then submit again." %}</p>
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <form method="post" class="dn-form-stack" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {% if field.errors %}<div class="field__error" role="alert">{{ field.errors }}</div>{% endif %}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn--primary" type="submit">{% trans "Submit for verification" %}</button>
+      </form>
+    </section>
+
+    <aside class="dn-sidebar" aria-label="{% trans 'Evidence guidance' %}">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What reviewers need" %}</h2>
+        <p>{% trans "Describe what you changed, how you checked it, and where the reviewer can inspect the result. Provide a description, an evidence link, or both." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Same verification boundary" %}</h2>
+        <p>{% trans "An authorized maintainer can accept, reject, or request clarification. A contributor reviewing their own submission needs an eligible secondary approver." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Rights and privacy" %}</h2>
+        <p>{% trans "Submit only evidence you have the right to share. Evidence is visible to you and authorized project reviewers." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Application" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
+      <a href="{% url 'projects:application_list' %}">{% trans "Applications" %}</a>
+      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
+      <h1>{{ application.project.localized_title }}</h1>
+      <span class="Label{% if application.status == 'accepted' %} Label--success{% elif application.status == 'declined' or application.status == 'withdrawn' %} Label--danger{% elif application.status == 'info_requested' or application.status == 'waitlisted' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=application.status %} {{ application.get_status_display }}</span>
+    </div>
+    <nav class="dn-tabs" aria-label="{% trans 'Application sections' %}">
+      <a class="dn-tab" aria-current="page" href="#application-detail">{% trans "Detail" %}</a>
+      <a class="dn-tab" href="{% url 'projects:application_timeline' application.pk %}">{% trans "Timeline" %} <span class="Counter">{{ application.events.count }}</span></a>
+    </nav>
+  </div>
+</div>
+<div class="dn-container dn-form-layout">
+  <section id="application-detail" aria-labelledby="application-heading">
+    <h2 id="application-heading" class="visually-hidden">{% trans "Application detail" %}</h2>
+    {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
+    <section class="dn-state-banner{% if application.status == 'accepted' %} is-success{% elif application.status == 'declined' or application.status == 'withdrawn' %} is-danger{% elif application.status == 'info_requested' or application.status == 'waitlisted' %} is-attention{% endif %}" aria-labelledby="application-status-heading" role="status">
+      <h2 id="application-status-heading">{% trans "Current application status" %}</h2>
+      <p><strong>{{ application.get_status_display }}</strong></p>
+      {% if application.decision_note %}<p>{% blocktrans with response=application.decision_note %}Latest response: {{ response }}{% endblocktrans %}</p>{% else %}<p>{% trans "No decision response has been recorded yet." %}</p>{% endif %}
+    </section>
+    <div class="dn-settings-list">
+      <div class="dn-setting-row"><div><strong>{% trans "Applicant" %}</strong></div><span>{{ application.applicant.username }}</span></div>
+      <div class="dn-setting-row"><div><strong>{% trans "Participation" %}</strong></div><span>{{ application.get_kind_display }}</span></div>
+      <div class="dn-setting-row"><div><strong>{% trans "Submitted" %}</strong></div><time datetime="{{ application.submitted_at|date:'c' }}">{{ application.submitted_at }}</time></div>
+    </div>
+    {% if application.motivation %}
+    <section class="dn-readme" aria-labelledby="motivation-heading">
+      <div class="dn-readme-header"><h2 id="motivation-heading">{% trans "Motivation" %}</h2></div>
+      <div class="dn-readme-body"><p>{{ application.motivation }}</p></div>
+    </section>
+    {% endif %}
+    {% if application.screening_answers %}
+    <section aria-labelledby="screening-heading">
+      <h2 id="screening-heading">{% trans "Screening responses" %}</h2>
+      {% for answer in application.screening_answers %}<p><strong>{{ answer.question }}</strong><br>{{ answer.answer }}</p>{% endfor %}
+    </section>
+    {% endif %}
+    {% if decision_history %}
+    <section aria-labelledby="decision-history-heading">
+      <h2 id="decision-history-heading">{% trans "Decision history" %}</h2>
+      <ol class="dn-timeline">
+        {% for item in decision_history %}
+        <li class="dn-timeline-item">
+          <div class="dn-timeline-item-header">
+            <strong>{{ item.status }}</strong>
+            <time datetime="{{ item.event.created_at|date:'c' }}">{{ item.event.created_at }}</time>
+            {% if item.event.actor %}<span>{% blocktrans with actor=item.event.actor.username %}by {{ actor }}{% endblocktrans %}</span>{% endif %}
+          </div>
+          {% if item.event.comment %}<div class="dn-timeline-item-body"><p>{{ item.event.comment }}</p></div>{% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% endif %}
+    <p><a class="btn btn--primary" href="{% url 'projects:application_timeline' application.pk %}">{% trans "View timeline" %}</a></p>
+    {% if application.status == "accepted" and application.applicant_id == user.pk %}
+    <p><a class="btn btn--primary" href="{% url 'contributions:submit' application.project.pk %}">{% trans "Submit evidence" %}</a></p>
+    {% endif %}
+  </section>
+  <aside class="dn-sidebar">
+    {% if can_decide and decision_choices %}
+    <section class="dn-sidebar-section" aria-labelledby="decision-heading">
+      <h2 id="decision-heading">{% trans "Record a decision" %}</h2>
+      <p>{% trans "Choose only an available decision. The applicant and authorized ministry users will see it in the append-only timeline." %}</p>
+      <form action="{% url 'projects:application_decide' application.pk %}" method="post" class="dn-form-stack">
+        {% csrf_token %}
+        <div class="dn-field"><label for="application-decision">{% trans "Decision" %}<span class="visually-hidden"> · {% trans "Available decision" %}</span></label><select id="application-decision" name="decision" required>{% for value, label in decision_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+        <div class="dn-field"><label for="application-decision-note">{% trans "Response" %}</label><textarea id="application-decision-note" name="note"></textarea></div>
+        <button class="btn btn--primary" type="submit">{% trans "Record decision" %}</button>
+      </form>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Confirm official contact" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <h1>{% trans "Confirm official contact" %}</h1>
+  <p>{% blocktrans with email=publisher.official_email %}Confirm that you control {{ email }}.{% endblocktrans %}</p>
+  <div class="dn-settings-list">
+    <div class="dn-setting-row">
+      <div>
+        <strong>{{ publisher.official_email }}</strong>
+        <p>{% trans "The confirmation code is sent to this official ministry address." %}</p>
+      </div>
+      <span class="Label Label--attention">{% trans "Awaiting confirmation" %}</span>
+    </div>
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Verification code" %}</strong>
+        <p>{% trans "Enter the code from the email to activate your publisher workspace." %}</p>
+      </div>
+    </div>
+  </div>
+  <form method="post" class="dn-form-stack">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+    {% if not field.is_hidden %}
+    <div class="dn-field">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {{ field.errors }}
+      {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+    </div>
+    {% else %}
+    {{ field }}
+    {% endif %}
+    {% endfor %}
+    <p><button class="btn btn--primary" type="submit">{% trans "Confirm email" %}</button></p>
+  </form>
+</div>
+{% endblock %}

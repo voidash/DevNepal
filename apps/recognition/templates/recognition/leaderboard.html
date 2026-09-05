@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Recognition" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-page-header">
+    <h1 id="leaderboard-heading">{% trans "Recognition" %}</h1>
+    <p class="dn-lede">{% trans "Ranks verified, accepted contributions to DevNepal-listed projects under the public scoring policy." %}</p>
+    <nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}">
+      <a class="dn-tab" aria-current="page" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a>
+      <a class="dn-tab" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a>
+      <a class="dn-tab" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a>
+    </nav>
+  </div>
+
+  <div class="dn-contribution-layout">
+    <section class="section" aria-labelledby="leaderboard-list-heading">
+      <h2 id="leaderboard-list-heading" class="visually-hidden">{% trans "Rankings" %}</h2>
+      {% if not public_leaderboard_available %}
+      <div class="dn-state-banner is-attention" role="status">
+        <strong>{% trans "Public rankings are not enabled." %}</strong>
+        <p>{% trans "No member names, scores, or rankings are shown until a public recognition policy is enabled." %}</p>
+      </div>
+      {% elif entries %}
+      <div class="dn-issue-list">
+        {% for entry in entries %}
+        <div class="dn-issue-row">
+          <span class="Counter" aria-label="{% blocktrans with rank=forloop.counter %}Rank {{ rank }}{% endblocktrans %}">{{ forloop.counter }}</span>
+          <div>
+            <a class="dn-issue-title" href="{% url 'accounts:public_profile' entry.contribution__contributor__username %}">{{ entry.contribution__contributor__username }}</a>
+            <div class="dn-issue-meta">{% trans "Accepted contribution score" %}</div>
+          </div>
+          <div class="dn-issue-aside">
+            <strong>{% blocktrans count counter=entry.points %}{{ counter }} point{% plural %}{{ counter }} points{% endblocktrans %}</strong>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="dn-state-banner" role="status">
+        <strong>{% trans "No ranked contributions are available." %}</strong>
+        <p>{% trans "Rankings appear after accepted work is scored under the active public policy." %}</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <aside class="dn-sidebar" aria-label="{% trans 'Recognition rules' %}">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What counts" %}</h2>
+        <p>{% trans "Design, QA, documentation, translation, security, and research count alongside accepted code." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What does not count" %}</h2>
+        <p>{% trans "Commits, bot events, and self-reported activity are not scored. Work counts only after an authorized reviewer accepts it." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Your choice" %}</h2>
+        <p>{% trans "Members can leave public rankings without deleting their private contribution and badge history." %}</p>
+        {% if request.user.is_authenticated %}<a href="{% url 'recognition:my_profile' %}">{% trans "Manage recognition display" %}</a>{% endif %}
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

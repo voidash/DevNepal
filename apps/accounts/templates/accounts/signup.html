@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create account" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <header class="dn-page-header">
+      <p class="dn-kicker">{% trans "Create account · 1 of 4" %}</p>
+      <h1>{% trans "Create your account" %}</h1>
+      <p class="dn-lede">{% trans "Start with the minimum account details. Profile skills, availability, location, and visibility come next and remain under your control." %}</p>
+    </header>
+    <div class="dn-state-banner" role="note">
+      <strong>{% trans "Know what is public before you continue." %}</strong>
+      <p>{% trans "Your username becomes your Public profile address. Email and sign-in provider are never shown publicly: Private · always." %}</p>
+    </div>
+    {% if messages %}
+    <ul role="status">
+      {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if github_oauth_enabled %}
+    <div class="auth-github-panel">
+      <form method="post" action="{% url 'accounts:github_connect' %}">
+        {% csrf_token %}
+        <button class="btn btn--primary" type="submit">{% trans "Sign up with GitHub" %}</button>
+      </form>
+      <p class="auth-github-hint">{% trans "Your verified GitHub email creates the private account record. Public activity recognition remains controllable from GitHub connection settings." %}</p>
+    </div>
+    <p class="auth-divider" role="separator"><span>{% trans "or create with email" %}</span></p>
+    {% endif %}
+    <form method="post" class="field-group" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="error-summary" role="alert"><h2>{% trans "There is a problem" %}</h2>{{ form.non_field_errors }}</div>{% endif %}
+      <div class="field">
+        <label for="{{ form.username.id_for_label }}">{% trans "Username" %}</label>
+        <input id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="text" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" maxlength="150" required aria-describedby="username-visibility{% if form.username.errors %} {{ form.username.id_for_label }}_error{% endif %}"{% if form.username.errors %} aria-invalid="true"{% endif %}>
+        <p class="field__help" id="username-visibility">{% trans "Public profile address · this is the name other people will see." %}</p>
+        {% if form.username.errors %}<p class="field__error" id="{{ form.username.id_for_label }}_error" role="alert">{{ form.username.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <label for="{{ form.email.id_for_label }}">{% trans "Email" %}</label>
+        <input id="{{ form.email.id_for_label }}" name="{{ form.email.html_name }}" type="email" value="{{ form.email.value|default_if_none:'' }}" autocomplete="email" required aria-describedby="email-visibility{% if form.email.errors %} {{ form.email.id_for_label }}_error{% endif %}"{% if form.email.errors %} aria-invalid="true"{% endif %}>
+        <p class="field__help" id="email-visibility">{% trans "Private · always. Used for account and required security notices." %}</p>
+        {% if form.email.errors %}<p class="field__error" id="{{ form.email.id_for_label }}_error" role="alert">{{ form.email.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <label for="{{ form.password1.id_for_label }}">{% trans "Password" %}</label>
+        <input id="{{ form.password1.id_for_label }}" name="{{ form.password1.html_name }}" type="password" autocomplete="new-password" required{% if form.password1.errors %} aria-invalid="true" aria-describedby="{{ form.password1.id_for_label }}_error"{% endif %}>
+        {% if form.password1.errors %}<p class="field__error" id="{{ form.password1.id_for_label }}_error" role="alert">{{ form.password1.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <label for="{{ form.password2.id_for_label }}">{% trans "Password confirmation" %}</label>
+        <input id="{{ form.password2.id_for_label }}" name="{{ form.password2.html_name }}" type="password" autocomplete="new-password" required{% if form.password2.errors %} aria-invalid="true" aria-describedby="{{ form.password2.id_for_label }}_error"{% endif %}>
+        {% if form.password2.errors %}<p class="field__error" id="{{ form.password2.id_for_label }}_error" role="alert">{{ form.password2.errors.0 }}</p>{% endif %}
+      </div>
+      <button class="btn btn--primary" type="submit">{% trans "Create account" %}</button>
+    </form>
+    <section class="dn-sidebar-section" aria-labelledby="profile-next-heading">
+      <h2 id="profile-next-heading">{% trans "Profile and visibility" %}</h2>
+      <p>{% trans "After signing in, add only what helps you contribute, choose visibility field by field, and preview the profile exactly as a visitor sees it." %}</p>
+    </section>
+    <p>{% trans "Already have an account?" %} <a href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a></p>
+  </div>
+</section>
+{% endblock %}

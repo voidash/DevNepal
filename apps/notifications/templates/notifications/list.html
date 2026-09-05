@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% trans "Notifications" %} | DevNepal{% endblock %}
+{% block content %}
+{% regroup notifications by read_at|date:"U" as read_groups %}
+<div class="dn-container">
+  <header class="dn-contribution-header">
+    <h1 id="notifications-heading">{% trans "Notifications" %}</h1>
+    <p>
+      {% if not notifications %}
+      <span class="Counter">0</span>
+      <span class="visually-hidden">{% trans "unread notifications" %}</span>
+      {% else %}
+      {% for read_group in read_groups %}{% if not read_group.grouper %}<span class="Counter">{{ read_group.list|length }}</span>
+      <span class="visually-hidden">{% trans "unread notifications" %}</span>{% endif %}{% endfor %}
+      {% endif %}
+    </p>
+    <p>
+      <a class="btn" href="{% url 'notifications:email_preferences' %}">{% trans "Email preferences" %}</a>
+      {% if notifications %}
+      <form action="{% url 'notifications:read_all' %}" method="post">{% csrf_token %}<button class="btn btn--secondary" type="submit">{% trans "Mark all as read" %}</button></form>
+      {% endif %}
+    </p>
+  </header>
+  <div class="dn-issue-list">
+    {% for notification in notifications %}
+    <div class="dn-issue-row">
+      {% if notification.read_at %}{% include "notifications/components/read_state_octicon.html" with read_state="read" %}{% else %}{% include "notifications/components/read_state_octicon.html" with read_state="unread" %}{% endif %}
+      <div>
+        <span class="dn-issue-title">{{ notification.title }}{% if not notification.read_at %} <span class="visually-hidden">({% trans "Unread notification" %})</span>{% else %} <span class="visually-hidden">({% trans "Read notification" %})</span>{% endif %}</span>
+        {% if notification.body %}<div class="dn-issue-meta">{{ notification.body }}</div>{% endif %}
+        <div class="dn-issue-meta"><time datetime="{{ notification.created_at|date:'c' }}">{{ notification.created_at|localtime }}</time></div>
+      </div>
+      <div class="dn-issue-aside">
+        {% if notification.context_url %}<a href="{{ notification.context_url }}">{% trans "View details" %}</a>{% endif %}
+        {% if not notification.read_at %}
+        <form action="{% url 'notifications:read' notification.pk %}" method="post">{% csrf_token %}<button class="btn btn--secondary btn-sm" type="submit">{% trans "Mark as read" %}</button></form>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="dn-issue-row"><span aria-hidden="true"></span><div>{% trans "You have no notifications." %}</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

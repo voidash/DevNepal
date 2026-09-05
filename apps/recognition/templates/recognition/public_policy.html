@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Scoring policy" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title"><h1>{% trans "Scoring policy" %}</h1><span class="Label">{% trans "Public record" %}</span></div>
+    <nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}"><a class="dn-tab" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a><a class="dn-tab" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><a class="dn-tab" aria-current="page" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a></nav>
+  </div>
+</div>
+<main class="section">
+  <div class="dn-container">
+    {% if policy %}
+    <section class="dn-sheet blueprint">
+      <div class="dn-sheet__header"><h2>{% blocktrans with version=policy.version %}Active policy · version {{ version }}{% endblocktrans %}</h2><span>{{ policy.activated_at }}</span></div>
+      <div class="dn-readme-body">
+        <p>{% trans "Only contributions accepted by an authorized maintainer receive points. Scores remain pinned to this policy version for auditability." %}</p>
+        <table class="dn-data-table"><thead><tr><th>{% trans "Rule" %}</th><th>{% trans "Value" %}</th></tr></thead><tbody>{% for name, value in policy.rules.items %}<tr><td>{{ name }}</td><td>{{ value }}</td></tr>{% endfor %}</tbody></table>
+        {% if policy.document_url %}<p><a class="btn" href="{{ policy.document_url }}" rel="noopener noreferrer">{% trans "Open policy document" %}</a></p>{% endif %}
+      </div>
+    </section>
+    {% else %}<div class="dn-state-banner"><p>{% trans "No scoring policy is active." %}</p></div>{% endif %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+
+{% block title %}{% trans "GitHub connection" %} | DevNepal{% endblock %}
+
+{% block content %}
+<div class="dn-container">
+  <h1 id="github-connection-heading">{% trans "GitHub connection" %}</h1>
+
+  {% if connection.revoked_at %}
+  <p class="dn-state-banner is-attention" role="status">{% trans "Disconnected" %}</p>
+  {% else %}
+  <p class="dn-state-banner is-success" role="status">{% trans "Connected" %}</p>
+  {% endif %}
+
+  <div class="dn-settings-list">
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% blocktrans with login=connection.login %}GitHub · connected as {{ login }}{% endblocktrans %}</strong>
+        <p>{% if connection.revoked_at %}{% trans "Disconnected" %}{% else %}{% trans "Connected" %}{% endif %}</p>
+      </div>
+      <span class="Label {% if connection.revoked_at %}Label--attention{% else %}Label--success{% endif %}">{% if connection.revoked_at %}{% trans "Disconnected" %}{% else %}{% trans "Connected" %}{% endif %}</span>
+    </div>
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Connected at" %}</strong>
+        <p><time datetime="{{ connection.connected_at|date:'c' }}">{{ connection.connected_at|localtime }}</time></p>
+      </div>
+    </div>
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Consent recorded at" %}</strong>
+        <p><time datetime="{{ connection.consent_recorded_at|date:'c' }}">{{ connection.consent_recorded_at|localtime }}</time></p>
+      </div>
+    </div>
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Granted scopes" %}</strong>
+        <p>{% for scope in connection.scopes %}<code>{{ scope }}</code>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+      </div>
+    </div>
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Last synchronized" %}</strong>
+        <p>
+          {% if connection.last_synced_at %}
+          <time datetime="{{ connection.last_synced_at|date:'c' }}">{{ connection.last_synced_at|localtime }}</time>
+          {% else %}
+          {% trans "Never" %}
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    {% if connection.revoked_at %}
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Disconnected at" %}</strong>
+        <p><time datetime="{{ connection.revoked_at|date:'c' }}">{{ connection.revoked_at|localtime }}</time></p>
+      </div>
+    </div>
+    {% else %}
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Disconnect GitHub" %}</strong>
+        <p>{% trans "Disconnecting stops all synchronization and deletes stored GitHub tokens." %}</p>
+      </div>
+      <form method="post" action="{% url 'github_sync:disconnect' %}">
+        {% csrf_token %}
+        <button class="btn btn--danger" type="submit">{% trans "Disconnect GitHub" %}</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

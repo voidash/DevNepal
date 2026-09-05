@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Application timeline" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
+      <a href="{% url 'projects:application_list' %}">{% trans "Applications" %}</a>
+      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
+      <h1>{{ application.project.title_en }}</h1>
+      <span class="Label{% if application.status == 'accepted' %} Label--success{% elif application.status == 'declined' or application.status == 'withdrawn' %} Label--danger{% elif application.status == 'info_requested' or application.status == 'waitlisted' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=application.status %} {{ application.get_status_display }}</span>
+    </div>
+    <nav class="dn-tabs" aria-label="{% trans 'Application sections' %}">
+      <a class="dn-tab" href="{% url 'projects:application_detail' application.pk %}">{% trans "Detail" %}</a>
+      <a class="dn-tab" aria-current="page" href="#timeline">{% trans "Timeline" %} <span class="Counter">{{ events|length }}</span></a>
+    </nav>
+  </div>
+</div>
+<div class="dn-container dn-form-layout">
+  <section id="timeline" aria-labelledby="timeline-heading">
+    <h2 id="timeline-heading" class="visually-hidden">{% trans "Application timeline" %}</h2>
+    {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
+    <section class="dn-state-banner{% if application.status == 'accepted' %} is-success{% elif application.status == 'declined' or application.status == 'withdrawn' %} is-danger{% elif application.status == 'info_requested' or application.status == 'waitlisted' %} is-attention{% endif %}" aria-labelledby="timeline-status-heading" role="status">
+      <h2 id="timeline-status-heading">{% trans "Current application status" %}</h2>
+      <p><strong>{{ application.get_status_display }}</strong></p>
+      <p>{% trans "This timeline is the complete record of submission, information requests, responses, and decisions." %}</p>
+    </section>
+    <p><a href="{% url 'projects:application_detail' application.pk %}">{% trans "Return to application detail" %}</a></p>
+    <ol class="dn-timeline">
+      {% for event in events %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <strong>{{ event.get_event_display }}</strong>
+          <time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at }}</time>
+          {% if event.actor %}<span>{% blocktrans with actor=event.actor.username %}by {{ actor }}{% endblocktrans %}</span>{% endif %}
+        </div>
+        {% if event.comment %}<div class="dn-timeline-item-body"><p>{{ event.comment }}</p></div>{% endif %}
+      </li>
+      {% empty %}
+      <li class="dn-timeline-item"><div class="dn-timeline-item-body"><p>{% trans "No events have been recorded." %}</p></div></li>
+      {% endfor %}
+    </ol>
+  </section>
+  <aside class="dn-sidebar">
+    {% if can_provide_info %}
+    <section class="dn-sidebar-section">
+      <h2>{% trans "Requested information" %}</h2>
+      <form action="{% url 'projects:application_provide_info' application.pk %}" method="post" class="dn-form-stack">
+        {% csrf_token %}
+        <div class="dn-field"><label for="application-information">{% trans "Requested information" %}</label><textarea id="application-information" name="text" required></textarea></div>
+        <button class="btn btn--primary" type="submit">{% trans "Send information" %}</button>
+      </form>
+    </section>
+    {% endif %}
+    {% if withdrawal_available %}
+    <section class="dn-sidebar-section">
+      <form action="{% url 'projects:application_withdraw' application.pk %}" method="post" class="dn-form-stack">
+        {% csrf_token %}
+        <p>{% trans "Withdrawing removes this application from review. Existing records are retained." %}</p>
+        <button class="btn btn--secondary" type="submit">{% trans "Withdraw application" %}</button>
+      </form>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

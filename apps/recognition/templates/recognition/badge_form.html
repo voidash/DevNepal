@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% if badge %}{% trans "Edit badge" %}{% else %}{% trans "Create badge" %}{% endif %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="badge-form-heading">
+      <h1 id="badge-form-heading">{% if badge %}{% trans "Edit badge" %}{% else %}{% trans "Create badge" %}{% endif %}</h1>
+      {% if form.non_field_errors %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "There is a problem" %}</h2>
+        <ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      <form method="post" enctype="multipart/form-data" class="dn-form-stack">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="button-group">
+          <button class="btn btn--primary" type="submit">{% trans "Save badge" %}</button>
+          {% if badge %}<a class="btn btn--secondary" href="{% url 'recognition:badge_award' badge.slug %}">{% trans "Award this badge" %}</a>{% endif %}
+        </div>
+      </form>
+    </section>
+    {% if badge %}
+    <aside class="dn-sidebar" aria-labelledby="awards-heading">
+      <section class="dn-sidebar-section">
+        <h2 id="awards-heading">{% trans "Awards" %}</h2>
+        <p>{% trans "Revoking a badge keeps the award history and records the reason in the audit log." %}</p>
+        {% if awards %}
+        <div class="dn-issue-list">
+          {% for award in awards %}
+          <div class="dn-issue-row">
+            <span class="dn-state-dot" aria-hidden="true"></span>
+            <div>
+              <span class="dn-issue-title">{{ award.recipient.username }}</span>
+              <div class="dn-issue-meta">
+                {% if award.issuer %}{% blocktrans with issuer=award.issuer.username %}issued by {{ issuer }}{% endblocktrans %} · {% endif %}
+                <time datetime="{{ award.issued_at|date:'c' }}">{{ award.issued_at|localtime }}</time>
+                {% if award.revocation_reason %} · {% trans "Reason" %}: {{ award.revocation_reason }}{% endif %}
+              </div>
+            </div>
+            <div class="dn-issue-aside">
+              {% if award.status == "active" %}
+              <span class="Label Label--success">{% trans "Active" %}</span>
+              <a href="{% url 'recognition:award_revoke' award.pk %}">{% trans "Revoke" %}</a>
+              {% else %}
+              <span class="Label Label--danger">{% trans "Revoked" %}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="dn-state-banner" role="status">{% trans "This badge has not been awarded yet." %}</div>
+        {% endif %}
+      </section>
+    </aside>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

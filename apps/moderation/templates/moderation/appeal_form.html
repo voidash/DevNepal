@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<main>
+  <h1>{% trans "Appeal moderation decision" %}</h1>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  <p>{% trans "Decision reason:" %} {{ case.get_action_reason_display }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{% trans "Submit appeal" %}</button>
+  </form>
+</main>
+{% endblock %}

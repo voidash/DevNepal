@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Public analytics report" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="dn-container">
+  <h1>{% trans "Public analytics report" %}</h1>
+  <p>{% blocktrans with month=report.report_month|date:"F Y" %}Privacy-safe aggregate activity for {{ month }}.{% endblocktrans %}</p>
+  <p>{% trans "Groups with fewer than five events are withheld." %}</p>
+  <p><a class="btn btn--secondary" href="{% url 'analytics:public_monthly_report_export' %}?month={{ report.report_month|date:'Y-m' }}">{% trans "Download JSON export" %}</a></p>
+  <table class="dn-data-table">
+    <thead><tr><th>{% trans "Measure" %}</th><th>{% trans "Count" %}</th></tr></thead>
+    <tbody>
+      {% for row in event_rows %}<tr><td>{{ row.label }}</td><td>{{ row.count }}</td></tr>{% empty %}<tr><td colspan="2">{% trans "No publishable aggregate data is available for this month." %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <p>{% trans "This report contains aggregate counts only and must not be used to identify people." %}</p>
+</section>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Suggest a skill" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="skill-suggestion-heading">
+      <h1 id="skill-suggestion-heading">{% trans "Suggest a missing skill" %}</h1>
+      <p class="dn-lede">{% trans "Submit a term that is not in the skill taxonomy. A Super Admin will review it." %}</p>
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="dn-field">
+          <label for="{{ form.term_name.id_for_label }}">{% trans "Skill name" %}</label>
+          {{ form.term_name }}
+          {{ form.term_name.errors }}
+          {% if form.term_name.help_text %}<p class="dn-field-help">{{ form.term_name.help_text }}</p>{% endif %}
+        </div>
+        <div class="dn-field">
+          <label for="{{ form.note.id_for_label }}">{% trans "Optional note" %}</label>
+          {{ form.note }}
+          {{ form.note.errors }}
+          {% if form.note.help_text %}<p class="dn-field-help">{{ form.note.help_text }}</p>{% endif %}
+        </div>
+        <button class="btn btn--primary" type="submit">{% trans "Submit suggestion" %}</button>
+      </form>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What happens next" %}</h2>
+        <p>{% trans "A verified Super Admin approves or rejects the term. Duplicate submissions and existing skills are rejected automatically." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Auditability" %}</h2>
+        <p>{% trans "Every submission and decision is recorded in the immutable audit log." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

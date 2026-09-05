@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<main>
+  <h1>{% trans "Report submitted" %}</h1>
+  <p>{% trans "Your report has been received." %}</p>
+  <p>{% trans "Status:" %} {{ case.get_status_display }}</p>
+  {% if case.status == "action_taken" and not case.security_containment %}
+  <a href="{% url 'moderation:appeal' case.pk %}">{% trans "Appeal this decision" %}</a>
+  {% endif %}
+</main>
+{% endblock %}

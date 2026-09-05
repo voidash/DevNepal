@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Public badges" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title"><h1>{% trans "Public badges" %}</h1><span class="Label">{% trans "Recognition" %}</span></div>
+    <nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}">
+      <a class="dn-tab" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a>
+      <a class="dn-tab" aria-current="page" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a>
+      <a class="dn-tab" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a>
+    </nav>
+  </div>
+</div>
+<main class="section">
+  <div class="dn-container">
+    <p class="dn-lede">{% trans "Badges recognize verified work. Each definition publishes its current criteria and version." %}</p>
+    <div class="card-grid">
+      {% for badge in badges %}
+      <article class="card blueprint">
+        <p class="dn-section-kicker">{% blocktrans with version=badge.criteria_version %}Criteria version {{ version }}{% endblocktrans %}</p>
+        <h2 class="card__title"><a class="card__title-link" href="{% url 'recognition:public_badge_detail' badge.slug %}">{{ badge.name }}</a></h2>
+        <p class="card__summary">{{ badge.description }}</p>
+        <a class="btn" href="{% url 'recognition:public_badge_detail' badge.slug %}">{% trans "View criteria" %}</a>
+      </article>
+      {% empty %}<div class="dn-state-banner"><p>{% trans "No public badges are active." %}</p></div>{% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Signed-in devices" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section" aria-labelledby="sessions-heading">
+  <div class="container">
+    <header>
+      <h1 id="sessions-heading">{% trans "Signed-in devices" %}</h1>
+      <p>{% trans "Revoke any session you do not recognise. That device will need to sign in again." %}</p>
+    </header>
+
+    {% trans "Device" as device_label %}
+    <div class="card-grid">
+      {% for session in sessions %}
+      <article class="card">
+        <h2 class="card__title">{{ session.device_label|default:device_label }}</h2>
+        <p class="card__summary">{% trans "Last activity" %}: {{ session.last_activity }}</p>
+        {% if session.revoked_at %}
+        <p>{% trans "Revoked" %}</p>
+        {% else %}
+        <form method="post" action="{% url 'accounts:session_revoke' session.pk %}">
+          {% csrf_token %}
+          <button class="btn btn--secondary" type="submit">{% trans "Revoke session" %}</button>
+        </form>
+        {% endif %}
+      </article>
+      {% empty %}
+      <div class="dn-state-banner" role="status">
+        <h2>{% trans "No active sessions" %}</h2>
+        <p>{% trans "No signed-in devices are currently recorded for this account." %}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <nav aria-label="{% trans 'Account controls' %}">
+      <div class="button-group">
+        <a class="btn btn--primary" href="{% url 'accounts:dashboard' %}">{% trans "Back to account settings" %}</a>
+        <a class="btn btn--secondary" href="{% url 'accounts:privacy_export' %}">{% trans "Download data export" %}</a>
+      </div>
+    </nav>
+  </div>
+</section>
+{% endblock %}

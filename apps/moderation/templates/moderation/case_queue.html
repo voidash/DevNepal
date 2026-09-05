@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+{% now "U" as queue_now_unix %}
+<div class="dn-container">
+  <h1>{% trans "Moderation cases" %}</h1>
+  <form method="get" class="dn-form-stack">
+    <div class="dn-field-group">
+      <div class="dn-field">
+        <label for="case-status">{% trans "Status" %}</label>
+        <select id="case-status" name="status">
+          <option value="">{% trans "All statuses" %}</option>
+          {% for value, label in case_statuses %}<option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="dn-field">
+        <label for="case-reason">{% trans "Reason" %}</label>
+        <select id="case-reason" name="reason">
+          <option value="">{% trans "All reasons" %}</option>
+          {% for value, label in report_reasons %}<option value="{{ value }}"{% if filters.reason == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="dn-field">
+        <label for="case-order">{% trans "Order" %}</label>
+        <select id="case-order" name="order">
+          <option value="newest"{% if filters.order == "newest" %} selected{% endif %}>{% trans "Newest first" %}</option>
+          <option value="age"{% if filters.order == "age" %} selected{% endif %}>{% trans "Oldest first (SLA urgency)" %}</option>
+          <option value="oldest"{% if filters.order == "oldest" %} selected{% endif %}>{% trans "Oldest first" %}</option>
+          <option value="status"{% if filters.order == "status" %} selected{% endif %}>{% trans "Status" %}</option>
+        </select>
+      </div>
+    </div>
+    <p><button class="btn btn--secondary" type="submit">{% trans "Apply filters" %}</button></p>
+  </form>
+  <p role="status">{% blocktrans count count=cases.paginator.count %}{{ count }} case{% plural %}{{ count }} cases{% endblocktrans %}</p>
+  <section aria-labelledby="case-queue-heading" class="dn-review-list">
+    <h2 id="case-queue-heading" class="visually-hidden">{% trans "Confidential moderation cases" %}</h2>
+    {% for case in cases %}
+    <div class="dn-review-row{% if case.created_at|date:'U'|add:0 < queue_now_unix|add:'-432000' %} is-overdue{% endif %}">
+      <span class="dn-state-dot" aria-hidden="true"></span>
+      <div>
+        <a href="{% url 'moderation:case_detail' case.pk %}">{% blocktrans with case_id=case.pk %}Case {{ case_id }}{% endblocktrans %}</a>
+        <div class="dn-issue-meta">
+          {{ case.report.get_reason_display }} · {% blocktrans with age=case.created_at|timesince %}open for {{ age }}{% endblocktrans %}
+          {% if case.assigned_to %} · {% blocktrans with assignee=case.assigned_to.username %}assigned to {{ assignee }}{% endblocktrans %}{% endif %}
+        </div>
+      </div>
+      <div class="dn-issue-aside">
+        <span class="Label">{% include "components/status_octicon.html" with project_status=case.status %} {{ case.get_status_display }}</span>
+        {% if case.created_at|date:'U'|add:0 < queue_now_unix|add:'-432000' %}<span class="Label Label--danger">{% trans "Overdue: over 5 days since intake" %}</span>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="dn-review-row"><span aria-hidden="true"></span><div>{% trans "No cases require review." %}</div></div>
+    {% endfor %}
+  </section>
+  {% if cases.paginator.num_pages > 1 %}
+  <nav aria-label="{% trans 'Moderation case pages' %}">
+    {% if cases.has_previous %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ cases.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
+    <span aria-current="page">{% blocktrans with current=cases.number total=cases.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>
+    {% if cases.has_next %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ cases.next_page_number }}">{% trans "Next" %}</a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

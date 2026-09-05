@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "How to contribute" %} — DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container dn-doc-layout">
+  <article class="dn-doc-main" aria-labelledby="about-heading">
+    <section>
+      <p class="dn-section-kicker">{% trans "About · How to contribute" %}</p>
+      <h1 id="about-heading">{% trans "How to contribute" %}</h1>
+      <p class="dn-lede">{% trans "A practical path from finding public-interest work to leaving a visible record of what changed. DevNepal is the registry and collaboration layer; code stays on GitHub." %}</p>
+      <p>{% trans "Find a fit · Read before acting · Close the loop through the project’s published route." %}</p>
+    </section>
+
+    <section aria-labelledby="process-heading">
+      <p class="dn-section-kicker">{% trans "01 · The process" %}</p>
+      <div class="blueprint dn-sheet">
+        <h2 id="process-heading" class="sr-only">{% trans "Contribution steps" %}</h2>
+        <div class="dn-journey" aria-label="{% trans 'Contribution steps' %}">
+          <div class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry lists a project" %}</strong><span>{% trans "A named publisher documents the contribution route, public safeguards, and maintainer responsibility before publication." %}</span></div>
+          <div class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "PMO approves" %}</strong><span>{% trans "Only approved government listings carry the Official badge; the decision is attributable and recorded." %}</span></div>
+          <div class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute" %}</strong><span>{% trans "Apply when a workstream is controlled, or follow the published direct-contribution instructions for an open task." %}</span></div>
+          <div class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "Work is verified and recognised" %}</strong><span>{% trans "A maintainer reviews the evidence and records a reasoned decision; raw activity alone is not recognition." %}</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="scope-heading">
+      <p class="dn-section-kicker">{% trans "02 · What DevNepal is — and is not" %}</p>
+      <div class="blueprint dn-sheet">
+        <div class="dn-contribution-grid">
+          <div>
+            <h2 id="scope-heading">{% trans "What DevNepal verifies" %}</h2>
+            <ul>
+              <li>{% trans "Government projects have an accountable ministry publisher, maintainer, suitability review, and contribution guidance before publication." %}</li>
+              <li>{% trans "Community projects identify their owner, terms, repository, and route for questions before they open for collaboration." %}</li>
+              <li>{% trans "Accepted contributions retain a visible evidence and decision trail; raw activity is not treated as impact by itself." %}</li>
+            </ul>
+          </div>
+          <div>
+            <h2>{% trans "What DevNepal does not promise" %}</h2>
+            <ul>
+              <li>{% trans "A listing is not an employment offer, procurement commitment, or guarantee that a contribution will be merged." %}</li>
+              <li>{% trans "DevNepal is not a code host; branches, issues, pull requests, and CI remain with the project’s repository." %}</li>
+              <li>{% trans "Community projects are not government endorsements simply because they are listed here." %}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="safety-heading">
+      <p class="dn-section-kicker">{% trans "03 · Policies" %}</p>
+      <div class="blueprint dn-sheet">
+        <div class="dn-sheet__header"><span>{% trans "Security and reporting" %}</span><span>{% trans "Confidential route available" %}</span></div>
+        <div class="dn-readme-body">
+          <h2 id="safety-heading">{% trans "Safety and reporting" %}</h2>
+          <p>{% trans "Follow the community code of conduct, keep private or security-sensitive details out of public project pages, and use the confidential report form when something needs review." %}</p>
+          <p><a class="btn btn--primary" href="{% url 'moderation:report_create' %}">{% trans "Report content confidentially" %}</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="faq-heading">
+      <p class="dn-section-kicker">{% trans "04 · Frequently asked" %}</p>
+      <h2 id="faq-heading">{% trans "Frequently asked questions" %}</h2>
+      <dl>
+        <dt><strong>{% trans "How are contributions verified?" %}</strong></dt>
+        <dd>{% trans "A maintainer or authorised reviewer checks the evidence and records a reasoned decision. A self-submitted claim is not official recognition by itself." %}</dd>
+        <dt><strong>{% trans "Is every listed project a government project?" %}</strong></dt>
+        <dd>{% trans "No. Government and community projects are labelled separately, and a community listing is not a government endorsement." %}</dd>
+        <dt><strong>{% trans "What should I do if a project is not a fit?" %}</strong></dt>
+        <dd>{% trans "Do not submit sensitive material. Read the brief, use the stated contact path, or choose another project whose scope and response expectations fit your time." %}</dd>
+      </dl>
+    </section>
+
+    <section aria-labelledby="next-heading">
+      <h2>{% trans "Support and next steps" %}</h2>
+      <p>{% trans "For account, safety, or moderation questions, use the relevant signed-in workflow or confidential report form so the right record is created." %}</p>
+      <h2 id="next-heading">{% trans "Choose where to start" %}</h2>
+      <p>{% trans "Use the route that matches your intent, then read the project’s own brief before contacting a maintainer." %}</p>
+      <p class="BtnGroup">
+        <a class="btn btn-primary" href="{% url 'projects:government' %}">{% trans "Government Projects" %}</a>
+        <a class="btn" href="{% url 'projects:community' %}">{% trans "Community Projects" %}</a>
+        <a class="btn" href="{% url 'accounts:member_directory' %}">{% trans "Members" %}</a>
+      </p>
+    </section>
+  </article>
+</div>
+{% endblock %}

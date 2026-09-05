@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Verification queue" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section" aria-labelledby="verification-queue-heading">
+  <div class="container">
+    <header class="section__header">
+      <h1 id="verification-queue-heading">{% trans "Verification queue" %}</h1>
+      <p>{% trans "Candidate evidence for projects you are authorized to review. Every decision requires a reason and remains in the audit history." %}</p>
+    </header>
+    <div class="dn-issue-list">
+      {% for contribution in contributions %}
+      <article class="dn-issue-row">
+        {% include "components/status_octicon.html" with project_status=contribution.status %}
+        <div>
+          <h2 class="dn-issue-title"><a href="{% url 'contributions:detail' contribution.pk %}">{{ contribution.title }}</a></h2>
+          <p class="dn-issue-meta">{{ contribution.project.localized_title }} · {{ contribution.contributor.username }}</p>
+          <p class="dn-issue-meta">{{ contribution.contribution_type.label }} · {{ contribution.get_status_display }}</p>
+        </div>
+        <div class="dn-issue-aside"><a class="btn btn--secondary" href="{% url 'contributions:detail' contribution.pk %}">{% trans "Review evidence" %}</a></div>
+      </article>
+      {% empty %}
+      <p role="status">{% trans "No candidate evidence needs your review." %}</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

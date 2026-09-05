@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create ministry" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="ministry-form-heading">
+      <h1 id="ministry-form-heading">{% trans "Create ministry" %}</h1>
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn--primary" type="submit">{% trans "Create ministry" %}</button>
+      </form>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Named accountability" %}</h2>
+        <p>{% trans "A ministry publishes under its own name. Publishers work only inside the assigned ministry and every privileged change is audited." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Official contact" %}</h2>
+        <p>{% trans "The official email must be verified before a publisher can submit projects for review." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

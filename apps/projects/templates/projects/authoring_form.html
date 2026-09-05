@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% if is_create %}{% trans "Create project draft" %}{% else %}{% trans "Edit project draft" %}{% endif %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="authoring-form-heading">
+      <p class="dn-section-kicker">{% if is_create %}{% trans "C2 · Draft preparation" %}{% else %}{% trans "C2 · Draft revision" %}{% endif %}</p>
+      <h1 id="authoring-form-heading">{% if is_create %}{% trans "Create government project draft" %}{% else %}{% trans "Edit government project" %}{% endif %}</h1>
+      <p>{% trans "Save the structured draft first. Readiness evidence, review, and publication happen from the project workflow after this step." %}</p>
+      {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
+      {% if editable|default:is_create %}
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn--primary" type="submit">{% trans "Save draft" %}</button>
+      </form>
+      {% else %}
+      <div class="dn-state-banner is-attention" role="status">{% trans "This project is read-only in its current lifecycle state." %}</div>
+      {% endif %}
+      {% if project %}<p><a href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Back to project workflow" %}</a></p>{% endif %}
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Draft and submit path" %}</h2>
+        <ol>
+          <li>{% trans "Save the bilingual draft." %}</li>
+          <li>{% trans "Add readiness evidence, maintainers, tasks, and suitability confirmation." %}</li>
+          <li>{% trans "Submit for Super Admin review from the project workflow." %}</li>
+        </ol>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Review hand-off" %}</h2>
+        <p>{% trans "Super Admins review completeness and documented suitability. If changes are requested, revise this draft and resubmit. Legal responsibility remains with the publishing ministry." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

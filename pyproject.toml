@@ -1,0 +1,40 @@
+[project]
+name = "devnepal"
+version = "0.1.0"
+description = "DevNepal - Government of Nepal public collaboration and developer-community platform"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1.1",
+    "django-otp>=1.7.1",
+    "factory-boy>=3.3.3",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-django>=4.14.0",
+    "ruff>=0.16.5",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+pythonpath = ["."]
+testpaths = ["tests", "apps"]
+addopts = "-ra --strict-markers"
+markers = [
+    "unit: fast, isolated, no external side effects",
+    "integration: cross-app flows through services and the ORM",
+    "acceptance: end-to-end SRS scenarios A1-A10",
+    "github_webhook: tests that exercise webhook signature/idempotency paths",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "DJ", "S", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["S105", "S106", "B011"]
+"apps/**/tests/**" = ["S105", "S106", "B011"]
+"config/settings/*" = ["F403", "S105"]

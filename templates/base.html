@@ -1,0 +1,122 @@
+{% load i18n static %}{% get_current_language as CURRENT_LANGUAGE %}<!DOCTYPE html>
+<html lang="{{ CURRENT_LANGUAGE }}" dir="ltr" data-color-mode="light" data-light-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% trans "DevNepal — Government of Nepal public collaboration platform" %}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/primer/primer.css' %}">
+  <link rel="stylesheet" href="{% static 'src/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'src/base.css' %}">
+  <link rel="stylesheet" href="{% static 'src/components.css' %}">
+  <link rel="stylesheet" href="{% static 'src/devnepal.css' %}">
+</head>
+<body>
+  <a class="btn dn-skip-link" href="#main-content">{% trans "Skip to main content" %}</a>
+  <header class="dn-product-header">
+    <div class="dn-header-inner">
+      <a class="dn-brand" href="{% url 'projects:home' %}">
+        <span class="dn-brand-copy">
+          <strong>DevNepal</strong>
+          <small>{% trans "नेपाल सरकार · Government of Nepal" %}</small>
+        </span>
+      </a>
+      {% block header_nav %}
+      <nav class="dn-primary-nav" aria-label="{% trans 'Primary' %}">
+        <ul>
+          {% url 'projects:home' as nav_home %}{% if nav_home %}<li><a href="{{ nav_home }}">{% trans "Home" %}</a></li>{% endif %}
+          {% url 'projects:government' as nav_government %}{% if nav_government %}<li><a href="{{ nav_government }}">{% trans "Government projects" %}</a></li>{% endif %}
+          {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}">{% trans "Community projects" %}</a></li>{% endif %}
+          {% url 'accounts:member_directory' as nav_members %}{% if nav_members %}<li><a href="{{ nav_members }}">{% trans "Members" %}</a></li>{% endif %}
+          {% url 'blogs:list' as nav_blogs %}{% if nav_blogs %}<li><a href="{{ nav_blogs }}">{% trans "Tech blogs" %}</a></li>{% endif %}
+          {% url 'recognition:leaderboard' as nav_leaderboard %}{% if nav_leaderboard %}<li><a href="{{ nav_leaderboard }}">{% trans "Recognition" %}</a></li>{% endif %}
+          {% url 'projects:about' as nav_about %}{% if nav_about %}<li><a href="{{ nav_about }}">{% trans "How to contribute" %}</a></li>{% endif %}
+        </ul>
+      </nav>
+      <div class="dn-header-actions">
+        <form class="lang-switch" action="/i18n/setlang/" method="post" aria-label="{% trans 'Language' %}">
+          {% csrf_token %}
+          {% if request %}<input type="hidden" name="next" value="{{ request.get_full_path }}">{% endif %}
+          <button type="submit" name="language" value="en" lang="en"{% if CURRENT_LANGUAGE == 'en' %} aria-current="true"{% endif %}>EN</button>
+          <span class="lang-switch__divider" aria-hidden="true">|</span>
+          <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>नेपाली</button>
+        </form>
+        {% if user.is_authenticated %}
+        <form action="{% url 'accounts:logout' %}" method="post">
+          {% csrf_token %}
+          <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
+        </form>
+        {% else %}
+        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a>
+        {% endif %}
+      </div>
+      <details class="mobile-nav">
+        <summary>{% trans "Menu" %}</summary>
+        <nav aria-label="{% trans 'Primary' %}">
+          <ul>
+            {% url 'projects:government' as nav_gov %}{% if nav_gov %}<li><a href="{{ nav_gov }}">{% trans "Government Projects" %}</a></li>{% endif %}
+            {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}">{% trans "Community Projects" %}</a></li>{% endif %}
+            {% url 'projects:about' as nav_about_m %}{% if nav_about_m %}<li><a href="{{ nav_about_m }}">{% trans "How to contribute" %}</a></li>{% endif %}
+            {% url 'projects:list' as nav_all %}{% if nav_all %}<li><a href="{{ nav_all }}">{% trans "All Projects" %}</a></li>{% endif %}
+            {% url 'accounts:member_directory' as nav_members_m %}{% if nav_members_m %}<li><a href="{{ nav_members_m }}">{% trans "Members" %}</a></li>{% endif %}
+            {% url 'blogs:list' as nav_blogs_m %}{% if nav_blogs_m %}<li><a href="{{ nav_blogs_m }}">{% trans "Blogs" %}</a></li>{% endif %}
+            {% url 'recognition:leaderboard' as nav_leaderboard %}{% if nav_leaderboard %}<li><a href="{{ nav_leaderboard }}">{% trans "Leaderboard" %}</a></li>{% endif %}
+            {% if user.is_authenticated %}
+            {% url 'accounts:dashboard' as nav_dashboard_m %}{% if nav_dashboard_m %}<li><a href="{{ nav_dashboard_m }}">{% trans "Dashboard" %}</a></li>{% endif %}
+            {% url 'projects:application_list' as nav_applications_m %}{% if nav_applications_m %}<li><a href="{{ nav_applications_m }}">{% trans "Applications" %}</a></li>{% endif %}
+            {% url 'notifications:list' as nav_notifications_m %}{% if nav_notifications_m %}<li><a href="{{ nav_notifications_m }}">{% trans "Notifications" %}</a></li>{% endif %}
+            {% url 'recognition:my_profile' as nav_recognition_m %}{% if nav_recognition_m %}<li><a href="{{ nav_recognition_m }}">{% trans "My recognition" %}</a></li>{% endif %}
+            {% url 'accounts:session_list' as nav_sessions_m %}{% if nav_sessions_m %}<li><a href="{{ nav_sessions_m }}">{% trans "Sessions" %}</a></li>{% endif %}
+            {% endif %}
+          </ul>
+        </nav>
+      </details>
+      {% endblock %}
+    </div>
+  </header>
+  {% if messages %}
+  <div class="dn-container dn-flash-stack" role="region" aria-label="{% trans 'Notifications' %}">
+    {% for message in messages %}
+    <div class="dn-state-banner{% if message.level_tag == 'success' %} is-success{% elif message.level_tag == 'error' %} is-danger{% elif message.level_tag == 'warning' %} is-attention{% endif %}"{% if message.level_tag == 'error' %} role="alert"{% else %} role="status"{% endif %}>{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="dn-footer">
+    <div class="dn-container dn-footer-grid">
+      <nav aria-label="{% trans 'Platform' %}">
+        <h2>{% trans "Platform" %}</h2>
+        <ul>
+          {% url 'projects:government' as government_url %}{% if government_url %}<li><a href="{{ government_url }}">{% trans "Government Projects" %}</a></li>{% endif %}
+          {% url 'projects:community' as community_url %}{% if community_url %}<li><a href="{{ community_url }}">{% trans "Community Projects" %}</a></li>{% endif %}
+          {% url 'projects:list' as projects_url %}{% if projects_url %}<li><a href="{{ projects_url }}">{% trans "All Projects" %}</a></li>{% endif %}
+          {% url 'accounts:member_directory' as members_url %}{% if members_url %}<li><a href="{{ members_url }}">{% trans "Members" %}</a></li>{% endif %}
+          {% url 'projects:about' as about_url %}{% if about_url %}<li><a href="{{ about_url }}">{% trans "How to contribute" %}</a></li>{% endif %}
+        </ul>
+      </nav>
+      <nav aria-label="{% trans 'Policies' %}">
+        <h2>{% trans "Policies" %}</h2>
+        <ul>
+          {% url 'moderation:report_create' as report_url %}{% if report_url %}<li><a href="{{ report_url }}">{% trans "Report content" %}</a></li>{% endif %}
+          {% url 'accounts:privacy_export' as privacy_export_url %}{% if privacy_export_url %}<li><a href="{{ privacy_export_url }}">{% trans "Export your data" %}</a></li>{% endif %}
+                  </ul>
+      </nav>
+      <nav aria-label="{% trans 'Help' %}">
+        <h2>{% trans "Help" %}</h2>
+        <ul>
+          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Sign in" %}</a></li>{% endif %}
+          {% url 'accounts:signup' as signup_url %}{% if signup_url %}<li><a href="{{ signup_url }}">{% trans "Create an account" %}</a></li>{% endif %}
+          {% url 'github_sync:connection' as github_connection_url %}{% if github_connection_url %}<li><a href="{{ github_connection_url }}">{% trans "GitHub connection" %}</a></li>{% endif %}
+        </ul>
+      </nav>
+      <div>
+        <h2>{% trans "Official platform" %}</h2>
+        <p>{% trans "A Government of Nepal public collaboration platform." %}</p>
+        <p lang="ne">{% trans "नेपाल सरकारको सार्वजनिक सहयोग मञ्च।" %}</p>
+      </div>
+    </div>
+    <p class="dn-container dn-footer-legal">© {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
+  </footer>
+</body>
+</html>

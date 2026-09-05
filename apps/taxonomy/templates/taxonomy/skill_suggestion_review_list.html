@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Skill suggestion review" %} | DevNepal{% endblock %}
+{% block content %}
+{% now "U" as queue_now_unix %}
+<div class="dn-container">
+  <h1>{% trans "Skill suggestion review" %}</h1>
+  {% if review_error %}<p role="alert">{{ review_error }}</p>{% endif %}
+  {% if suggestions %}
+  <p role="status">{% blocktrans count count=suggestions|length %}{{ count }} pending suggestion{% plural %}{{ count }} pending suggestions{% endblocktrans %}</p>
+  <section class="dn-review-list" aria-labelledby="skill-suggestion-queue-heading">
+    <h2 id="skill-suggestion-queue-heading" class="visually-hidden">{% trans "Pending skill suggestions" %}</h2>
+    {% for suggestion in suggestions %}
+    <div class="dn-review-row{% if suggestion.created_at|date:'U'|add:0 < queue_now_unix|add:'-432000' %} is-overdue{% endif %}">
+      <span class="dn-state-dot" aria-hidden="true"></span>
+      <div>
+        <strong class="dn-issue-title">{{ suggestion.term_name }}</strong>
+        <div class="dn-issue-meta">
+          {% if suggestion.note %}{{ suggestion.note }} · {% endif %}{% if suggestion.suggested_by %}{% blocktrans with username=suggestion.suggested_by.username %}Suggested by {{ username }}{% endblocktrans %} · {% endif %}{% blocktrans with age=suggestion.created_at|timesince %}open for {{ age }}{% endblocktrans %}
+        </div>
+        <div class="dn-labels">
+          <span class="Label Label--secondary">{% trans "Pending review" %}</span>
+          {% if suggestion.created_at|date:'U'|add:0 < queue_now_unix|add:'-432000' %}<span class="Label Label--danger">{% trans "Overdue: over 5 days since intake" %}</span>{% endif %}
+        </div>
+      </div>
+      <div class="dn-issue-aside">
+        <form method="post" action="{% url 'taxonomy:skill_suggestion_review' suggestion.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="approve"><button class="btn btn--primary btn-sm" type="submit">{% trans "Approve" %}</button></form>
+        <form method="post" action="{% url 'taxonomy:skill_suggestion_review' suggestion.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="reject"><button class="btn btn--secondary btn-sm" type="submit">{% trans "Reject" %}</button></form>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% else %}
+  <div class="dn-state-banner" role="status">{% trans "There are no pending skill suggestions." %}</div>
+  {% endif %}
+</div>
+{% endblock %}

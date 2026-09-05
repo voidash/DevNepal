@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Technical blogs" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <header class="dn-contribution-header">
+    <h1>{% trans "Technical blogs" %}</h1>
+    <p class="dn-lede">{% trans "Technical writing from the community and the Government of Nepal: native DevNepal posts and clearly labelled external articles." %}</p>
+    <p role="status">{% blocktrans count count=posts|length %}{{ count }} published listing{% plural %}{{ count }} published listings{% endblocktrans %}</p>
+  </header>
+  <div class="dn-issue-list">
+    {% for post in posts %}
+    <div class="dn-issue-row">
+      {% include "components/status_octicon.html" with project_status=post.status %}
+      <div>
+        <a class="dn-issue-title" href="{% url 'blogs:detail' post.pk %}">{{ post.title }}</a>
+        <div class="dn-issue-meta">
+          {% blocktrans with author=post.author.username %}By {{ author }}{% endblocktrans %} · {% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}
+        </div>
+        <div class="dn-labels">
+          <span class="Label">{{ post.get_language_display }}</span>
+          <span class="Label">{{ post.get_post_type_display }}</span>
+          {% if post.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% endif %}
+        </div>
+      </div>
+      <div class="dn-issue-aside">
+        {% if post.post_type == 'external' %}<a href="{{ post.canonical_url }}" rel="noopener noreferrer external">{% trans "Read the external article" %}</a>{% else %}<a href="{% url 'blogs:detail' post.pk %}">{% trans "Read post" %}</a>{% endif %}
+        {% if post.published_at %}<time datetime="{{ post.published_at|date:"Y-m-d" }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="dn-issue-row"><span aria-hidden="true"></span><div>{% trans "No technical blogs have been published yet." %}</div></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

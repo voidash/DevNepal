@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Connect a repository" %} | DevNepal{% endblock %}
+
+{% block content %}
+<div class="dn-container">
+  <h1 id="connect-repository-heading">{% trans "Connect a repository" %}</h1>
+
+  {% if error_banner %}
+  <p class="dn-state-banner is-attention" role="alert">{% trans "GitHub could not be reached. Try again shortly." %}</p>
+  {% endif %}
+
+  <div class="dn-settings-list">
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% blocktrans with login=connection.login %}GitHub · connected as {{ login }}{% endblocktrans %}</strong>
+        <p>{% trans "These repositories come from your GitHub App installations and can feed listed projects." %}</p>
+      </div>
+    </div>
+    <div class="dn-setting-row">
+      <div>
+        <strong>{% trans "Available repositories" %}</strong>
+        <p>{% trans "Enrolling a repository allows verified activity on it to feed its listed project." %}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="dn-issue-list">
+    <div class="dn-issue-list-header">
+      <span></span>
+      <span class="dn-issue-title">{% trans "Repository" %}</span>
+      <span class="dn-issue-aside">{% trans "Status" %}</span>
+    </div>
+    {% for repo in repositories %}
+    <div class="dn-issue-row">
+      <span></span>
+      <div>
+        <span class="dn-issue-title">{{ repo.full_name }}</span>
+        <p class="dn-issue-meta">
+          {% if repo.private %}{% trans "Private" %}{% else %}{% trans "Public" %}{% endif %}
+          · {% blocktrans with account=repo.installation_account %}installation {{ account }}{% endblocktrans %}
+        </p>
+      </div>
+      <span class="dn-issue-aside">
+        {% if repo.enrolled %}
+        <span class="Label Label--success">{% trans "Enrolled" %}</span>
+        {% else %}
+        <form method="post" action="{% url 'github_sync:connect_repository' %}">
+          {% csrf_token %}
+          <input type="hidden" name="installation_id" value="{{ repo.installation_id }}">
+          <input type="hidden" name="repository_id" value="{{ repo.repository_id }}">
+          <button class="btn" type="submit">{% trans "Enroll" %}</button>
+        </form>
+        {% endif %}
+      </span>
+    </div>
+    {% empty %}
+    <div class="dn-issue-row">
+      <span></span>
+      <div>
+        <span class="dn-issue-meta">{% trans "No repositories are available from your GitHub App installations." %}</span>
+      </div>
+      <span></span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Profile and visibility" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section" aria-labelledby="profile-visibility-heading">
+  <div class="container">
+    <header>
+      <p class="dn-section-kicker">{% trans "Edit profile" %}</p>
+      <h1 id="profile-visibility-heading">{% trans "Profile & visibility" %}</h1>
+      <p>{% trans "Add what helps people understand how you contribute, then choose visibility field by field." %}</p>
+    </header>
+
+    <div class="dn-state-banner" role="note">
+      <h2>{% trans "Private · always" %}</h2>
+      <p>{% trans "Email and sign-in provider stay private. Nothing on this form changes that boundary." %}</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="field-group">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="dn-state-banner is-danger error-summary" role="alert">
+        <h2>{% trans "There is a problem" %}</h2>
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <fieldset class="field-group">
+        <legend>{% trans "Your profile" %}</legend>
+        <p class="field__help">{% trans "These details help members find people with relevant experience and interests." %}</p>
+        <div class="field"><label for="{{ form.headline.id_for_label }}">{% trans "Headline" %}</label>{{ form.headline }}{% if form.headline.errors %}<p class="field__error">{{ form.headline.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.bio.id_for_label }}">{% trans "Biography" %}</label>{{ form.bio }}{% if form.bio.errors %}<p class="field__error">{{ form.bio.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.location.id_for_label }}">{% trans "Location" %}</label>{{ form.location }}{% if form.location.errors %}<p class="field__error">{{ form.location.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.province.id_for_label }}">{% trans "Province" %}</label>{{ form.province }}{% if form.province.errors %}<p class="field__error">{{ form.province.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.preferred_language.id_for_label }}">{% trans "Preferred language" %}</label>{{ form.preferred_language }}{% if form.preferred_language.errors %}<p class="field__error">{{ form.preferred_language.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.experience_band.id_for_label }}">{% trans "Experience band" %}</label>{{ form.experience_band }}{% if form.experience_band.errors %}<p class="field__error">{{ form.experience_band.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.availability.id_for_label }}">{% trans "Availability" %}</label>{{ form.availability }}{% if form.availability.errors %}<p class="field__error">{{ form.availability.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.contribution_preferences.id_for_label }}">{% trans "Contribution preferences" %}</label>{{ form.contribution_preferences }}{% if form.contribution_preferences.errors %}<p class="field__error">{{ form.contribution_preferences.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.interests.id_for_label }}">{% trans "Interests" %}</label>{{ form.interests }}{% if form.interests.errors %}<p class="field__error">{{ form.interests.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.skills.id_for_label }}">{% trans "Skills" %}</label>{{ form.skills }}{% if form.skills.help_text %}<p class="field__help">{{ form.skills.help_text }}</p>{% endif %}{% if form.skills.errors %}<p class="field__error">{{ form.skills.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.avatar.id_for_label }}">{% trans "Profile photograph" %}</label>{{ form.avatar }}{% if form.avatar.errors %}<p class="field__error">{{ form.avatar.errors.0 }}</p>{% endif %}</div>
+      </fieldset>
+
+      <fieldset class="field-group">
+        <legend>{% trans "Field visibility" %}</legend>
+        <p class="field__help">{% trans "Choose visibility field by field: public, members only, or private. Preview as a visitor before saving." %}</p>
+        <div class="field"><label>{{ form.directory_discoverable }} {% trans "Show my profile in the member directory" %}</label>{% if form.directory_discoverable.errors %}<p class="field__error">{{ form.directory_discoverable.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.visibility_location.id_for_label }}">{% trans "Location visibility" %}</label>{{ form.visibility_location }}{% if form.visibility_location.errors %}<p class="field__error">{{ form.visibility_location.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.visibility_province.id_for_label }}">{% trans "Province visibility" %}</label>{{ form.visibility_province }}{% if form.visibility_province.errors %}<p class="field__error">{{ form.visibility_province.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.visibility_education.id_for_label }}">{% trans "Education visibility" %}</label>{{ form.visibility_education }}{% if form.visibility_education.errors %}<p class="field__error">{{ form.visibility_education.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.visibility_links.id_for_label }}">{% trans "Links visibility" %}</label>{{ form.visibility_links }}{% if form.visibility_links.errors %}<p class="field__error">{{ form.visibility_links.errors.0 }}</p>{% endif %}</div>
+        <div class="field"><label for="{{ form.visibility_skills.id_for_label }}">{% trans "Skills visibility" %}</label>{{ form.visibility_skills }}{% if form.visibility_skills.errors %}<p class="field__error">{{ form.visibility_skills.errors.0 }}</p>{% endif %}</div>
+      </fieldset>
+
+      <fieldset class="field-group">
+        <legend>{% trans "Recognition settings" %}</legend>
+        <p class="field__help">{% trans "Choose whether your name can appear in public contribution rankings." %}</p>
+        <div class="field"><label>{{ form.leaderboard_opt_out }} {% trans "Exclude me from the leaderboard" %}</label>{% if form.leaderboard_opt_out.errors %}<p class="field__error">{{ form.leaderboard_opt_out.errors.0 }}</p>{% endif %}</div>
+        <a href="{% url 'recognition:my_profile' %}">{% trans "Review recognition settings" %}</a>
+      </fieldset>
+
+      <fieldset class="field-group">
+        <legend>{% trans "External links" %}</legend>
+        <p class="field__help">{% trans "Add work that helps people understand your experience. Each link has its own public setting." %}</p>
+        {{ link_formset.management_form }}
+        {% if link_formset.non_form_errors %}<div class="dn-state-banner is-danger" role="alert">{{ link_formset.non_form_errors }}</div>{% endif %}
+        {% for link_form in link_formset %}
+        <div class="dn-issue-row field">
+          {{ link_form.id }}
+          <div class="field"><label for="{{ link_form.link_type.id_for_label }}">{% trans "Link type" %}</label>{{ link_form.link_type }}{% if link_form.link_type.errors %}<p class="field__error">{{ link_form.link_type.errors.0 }}</p>{% endif %}</div>
+          <div class="field"><label for="{{ link_form.url.id_for_label }}">{% trans "URL" %}</label>{{ link_form.url }}{% if link_form.url.errors %}<p class="field__error">{{ link_form.url.errors.0 }}</p>{% endif %}</div>
+          <div class="field"><label for="{{ link_form.label.id_for_label }}">{% trans "Label" %}</label>{{ link_form.label }}{% if link_form.label.errors %}<p class="field__error">{{ link_form.label.errors.0 }}</p>{% endif %}</div>
+          <div class="field"><label>{{ link_form.is_public }} {% trans "Show publicly" %}</label>{% if link_form.is_public.errors %}<p class="field__error">{{ link_form.is_public.errors.0 }}</p>{% endif %}</div>
+          <div class="field"><label>{{ link_form.DELETE }} {% trans "Remove this link" %}</label></div>
+        </div>
+        {% endfor %}
+      </fieldset>
+
+      <div class="button-group">
+        <button class="btn btn--primary" type="submit">{% trans "Save profile" %}</button>
+        <button class="btn btn--secondary" type="submit" formaction="{% url 'accounts:profile_preview' %}">{% trans "Preview as a visitor" %}</button>
+      </div>
+    </form>
+
+    <nav aria-label="{% trans 'Related account settings' %}">
+      <div class="button-group">
+        <a class="btn btn--secondary" href="{% url 'notifications:email_preferences' %}">{% trans "Email preferences" %}</a>
+        <a class="btn btn--secondary" href="{% url 'accounts:dashboard' %}">{% trans "Connections & data" %}</a>
+      </div>
+    </nav>
+  </div>
+</section>
+{% endblock %}

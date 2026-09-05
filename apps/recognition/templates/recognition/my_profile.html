@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% trans "Your recognition" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-page-header">
+    <h1 id="recognition-heading">{% trans "Your recognition" %}</h1>
+    <p class="dn-lede">{% trans "Verified, accepted work only. Every score names the policy version that produced it, and every badge keeps its award history." %}</p>
+  </div>
+
+  {% if leaderboard_opt_out %}
+  <div class="dn-state-banner is-attention" role="status">
+    <strong>{% trans "Not listed on the public leaderboard" %}</strong>
+    <p>{% trans "Your verified contributions, scores, badges, and private history are unchanged." %}</p>
+  </div>
+  {% else %}
+  <div class="dn-state-banner is-success" role="status">
+    <strong>{% trans "Listed on the public leaderboard" %}</strong>
+    <p>{% trans "Your public name and accepted-contribution score can appear while public rankings are enabled." %}</p>
+  </div>
+  {% endif %}
+
+  <div class="dn-contribution-layout">
+    <div>
+      <section class="section" aria-labelledby="scores-heading">
+        <h2 id="scores-heading">{% trans "Verified contributions" %}</h2>
+        {% if scores %}
+        <div class="dn-issue-list">
+          {% for score in scores %}
+          <div class="dn-issue-row">
+            <span class="dn-state-dot" aria-hidden="true"></span>
+            <div>
+              <span class="dn-issue-title">{{ score.contribution.title }}</span>
+              <div class="dn-issue-meta">
+                {{ score.contribution.project.title_en }} · {{ score.contribution.get_source_display }} · {% blocktrans with version=score.policy.version %}policy v{{ version }}{% endblocktrans %}
+              </div>
+              {% if score.contribution.verified_by %}<div class="dn-issue-meta">{% trans "Verified by" %} {{ score.contribution.verified_by.username }}</div>{% endif %}
+            </div>
+            <div class="dn-issue-aside">
+              <strong>{% blocktrans count counter=score.points %}{{ counter }} point{% plural %}{{ counter }} points{% endblocktrans %}</strong>
+              {% if score.reversed_at %}<span class="Label Label--danger">{% trans "Reversed" %}</span>{% else %}<span class="Label Label--success">{% trans "Scored" %}</span>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="dn-state-banner" role="status">
+          <strong>{% trans "No verified contribution scores yet" %}</strong>
+          <p>{% trans "Submitted evidence appears here only after an authorized maintainer accepts it and an active policy scores it." %}</p>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="section" aria-labelledby="badges-heading">
+        <h2 id="badges-heading">{% trans "Badges" %}</h2>
+        {% if awards %}
+        <div class="dn-issue-list">
+          {% for award in awards %}
+          <div class="dn-issue-row">
+            <span class="dn-state-dot" aria-hidden="true"></span>
+            <div>
+              <span class="dn-issue-title">{{ award.badge.name }}</span>
+              <div class="dn-issue-meta">
+                {% blocktrans with version=award.badge.criteria_version %}criteria version {{ version }}{% endblocktrans %}
+                · <time datetime="{{ award.issued_at|date:'c' }}">{{ award.issued_at|localtime }}</time>
+                {% if award.issuer %} · {% blocktrans with issuer=award.issuer.username %}issued by {{ issuer }}{% endblocktrans %}{% endif %}
+              </div>
+              {% if award.revocation_reason %}<div class="dn-issue-meta">{% trans "Reason" %}: {{ award.revocation_reason }}</div>{% endif %}
+            </div>
+            <div class="dn-issue-aside">
+              {% if award.status == "active" %}<span class="Label Label--success">{% trans "Active" %}</span>{% else %}<span class="Label Label--danger">{% trans "Revoked" %}</span>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="dn-state-banner" role="status">{% trans "No badges awarded yet." %}</div>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="dn-sidebar" aria-labelledby="display-settings-heading">
+      <section class="dn-sidebar-section">
+        <h2 id="display-settings-heading">{% trans "Recognition & visibility" %}</h2>
+        <p>{% trans "Public leaderboard display is your choice. Opting out removes your name and score from public rankings while keeping your private history." %}</p>
+        {% if leaderboard_opt_out %}
+        <span class="Label Label--attention">{% trans "Not listed" %}</span>
+        <p>{% trans "To rejoin, update the leaderboard setting in Profile & visibility." %}</p>
+        <a class="btn btn--secondary" href="{% url 'accounts:profile_edit' %}">{% trans "Profile & visibility" %}</a>
+        {% else %}
+        <span class="Label Label--success">{% trans "Listed" %}</span>
+        <form method="post" action="{% url 'recognition:opt_out' %}">
+          {% csrf_token %}
+          <button class="btn btn--secondary" type="submit">{% trans "Leave the public leaderboard" %}</button>
+        </form>
+        {% endif %}
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What stays private" %}</h2>
+        <p>{% trans "Your complete recognition history and reversed records remain private regardless of leaderboard display." %}</p>
+        <a href="{% url 'accounts:profile_edit' %}">{% trans "Review profile visibility" %}</a>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

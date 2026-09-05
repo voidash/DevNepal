@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Applications" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
+      <h1 id="applications-heading">{% trans "Applications" %}</h1>
+      <span class="Label Label--secondary">{% blocktrans with count=applications|length %}{{ count }} records{% endblocktrans %}</span>
+    </div>
+    <nav class="dn-tabs" aria-label="{% trans 'Application workspace' %}">
+      <a class="dn-tab" aria-current="page" href="{% url 'projects:application_list' %}">{% trans "All visible applications" %}</a>
+      <a class="dn-tab" href="{% url 'projects:authoring_dashboard' %}">{% trans "Project authoring" %}</a>
+    </nav>
+  </div>
+</div>
+<main class="section" aria-labelledby="applications-heading">
+  <div class="dn-container">
+    <p class="dn-section-kicker">{% trans "C3 · Application decisions" %}</p>
+    <p>{% trans "These records show the applicant, current state, and complete decision timeline available to your role." %}</p>
+    <div class="dn-issue-list">
+      {% for application in applications %}
+      <article class="dn-issue-row">
+        <span class="Label{% if application.status == 'accepted' %} Label--success{% elif application.status == 'declined' or application.status == 'withdrawn' %} Label--danger{% elif application.status == 'info_requested' or application.status == 'waitlisted' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=application.status %}<span class="visually-hidden">{% trans "Status:" %}</span> {{ application.get_status_display }}</span>
+        <div>
+          <h2 class="card__title"><a class="card__title-link" href="{% url 'projects:application_detail' application.pk %}">{{ application.project.localized_title }}</a></h2>
+          <p>{% blocktrans with applicant=application.applicant.username %}Applicant: {{ applicant }}{% endblocktrans %}</p>
+          <p>{% blocktrans with submitted=application.submitted_at %}Submitted {{ submitted }}{% endblocktrans %}</p>
+        </div>
+        <div class="dn-issue-aside"><a class="btn btn--secondary" href="{% url 'projects:application_timeline' application.pk %}">{% trans "View timeline" %}</a></div>
+      </article>
+      {% empty %}
+      <div class="dn-issue-row"><span aria-hidden="true"></span><div>{% trans "No applications are available." %}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}

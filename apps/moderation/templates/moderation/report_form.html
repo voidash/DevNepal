@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="report-heading">
+      <h1 id="report-heading">{% trans "Submit a report" %}</h1>
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn--primary" type="submit">{% trans "Submit report" %}</button>
+      </form>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Confidentiality" %}</h2>
+        <p>{% trans "Reports are visible only to moderators. Your name is recorded with the report and is not shared with the reported account." %}</p>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "What happens next" %}</h2>
+        <p>{% trans "A moderator reviews the report, protects evidence, and applies the least restrictive action with a recorded reason." %}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+{% endblock %}

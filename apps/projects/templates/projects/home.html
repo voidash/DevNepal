@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load i18n static %}
+{% block title %}{% trans "Home" %} — DevNepal{% endblock %}
+{% block content %}
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="container">
+    <div class="dn-home-hero">
+      <div class="hero__panel">
+        <div class="dn-trust-tags">
+          <span class="tag tag-accent">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+            {% trans "Government of Nepal · Office of the Prime Minister" %}
+          </span>
+          <span class="tag tag-outline">{% trans "Digital Collaboration Initiative · pilot 2026" %}</span>
+        </div>
+        <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
+        <p class="hero__lead">{% trans "DevNepal is where ministries open suitable technology projects to public contribution — and where Nepal’s developers, designers, writers and testers earn recognition that a ministry has actually verified. Code stays on GitHub; DevNepal holds identity, listings, participation and the record." %}</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+          <a class="btn btn--ghost" href="{% url 'accounts:login' %}?next={% url 'projects:home' %}">{% trans "Join with GitHub" %}</a>
+          <a class="btn btn--ghost" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
+          <span class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:about' %}">{% trans "How listing works" %}</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section dn-platform-sheet" aria-labelledby="platform-sheet-heading">
+  <div class="container">
+    <div class="blueprint dn-sheet">
+      <header class="dn-sheet__header">
+        <h2 id="platform-sheet-heading">{% trans "DevNepal — platform at a glance" %}</h2>
+        <span>{% trans "Pilot" %}</span><span>{% trans "Updated daily" %}</span><span>{% trans "Sheet 01 of 07" %}</span>
+      </header>
+      <div class="TableWrapper">
+        <table class="table dn-metrics-table">
+          <thead><tr><th>{% trans "No." %}</th><th>{% trans "Measure" %}</th><th>{% trans "Value" %}</th><th>{% trans "Remark" %}</th></tr></thead>
+          <tbody>
+            <tr><td>01</td><td>{% trans "Ministries publishing" %}</td><td>{{ platform_metrics.ministries }}</td><td>{% trans "Named officers, MFA enforced; every action attributable" %}</td></tr>
+            <tr><td>02</td><td>{% trans "Projects open for contribution" %}</td><td>{{ platform_metrics.open_projects }}</td><td>{% trans "Only reviewed public work is counted" %}</td></tr>
+            <tr><td>03</td><td>{% trans "Verified contributions" %}</td><td>{{ platform_metrics.verified_contributions }}</td><td>{% trans "Accepted by a named maintainer — not commit counts" %}</td></tr>
+            <tr><td>04</td><td>{% trans "Public member profiles" %}</td><td>{{ platform_metrics.public_members }}</td><td>{% trans "Visible by each member’s own choice" %}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dn-sheet__note">{% trans "Figures refresh daily. Recognition counts only work accepted by a named maintainer on a DevNepal-listed project." %}</p>
+    </div>
+  </div>
+</section>
+<section class="section" aria-labelledby="opportunities-heading">
+  <div class="container">
+    <header>
+      <h2 id="opportunities-heading">{% trans "Government opportunities" %}</h2>
+      <p>{% trans "Open work is listed only after a named owner, contribution guidance, and suitability review." %}</p>
+    </header>
+    {% if featured_projects %}
+    <div class="dn-issue-list">
+      {% for project in featured_projects %}
+      <div class="dn-issue-row">
+        {% include "components/status_octicon.html" with project_status=project.status %}
+        <div>
+          <a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a>
+          <div class="dn-issue-meta">{{ project.localized_summary }}</div>
+          <div class="dn-issue-meta">{{ project.ministry.localized_name }}</div>
+          <div class="dn-labels">
+            <span class="Label Label--outline">{% trans "Official" %}</span>
+            {% if project.difficulty %}<span class="Label">{{ project.get_difficulty_display }}</span>{% endif %}
+            {% if project.estimated_effort %}<span class="Label">{{ project.get_estimated_effort_display }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="dn-issue-aside">
+          {% if project.response_sla %}{{ project.get_response_sla_display }}{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p><a href="{% url 'projects:government' %}">{% trans "See all government projects" %}</a></p>
+    {% else %}
+    <div class="dn-empty-opportunity">
+      <div class="dn-state-banner" role="status">
+        <strong>{% trans "Government opportunities are being prepared." %}</strong>
+        <p>{% trans "They appear only after a named owner, contribution guidance, and suitability review are complete." %}</p>
+      </div>
+      <figure class="dn-public-work-illustration">
+        <picture>
+          <source type="image/webp" srcset="{% static 'images/devnepal-public-work-illustrations-v1.webp' %}">
+          <img src="{% static 'images/devnepal-public-work-illustrations-v1.png' %}" alt="{% trans 'Eight grayscale public-service scenes for citizen services, education, disaster readiness, maps, health, Nepali-language access, security, and open-source maintenance.' %}" width="1774" height="887" loading="lazy" decoding="async">
+        </picture>
+        <figcaption>{% trans "Illustrated public-interest work areas, not a list of open projects." %}</figcaption>
+      </figure>
+    </div>
+    {% endif %}
+  </div>
+</section>
+<section class="section" aria-labelledby="contribution-path-heading">
+  <div class="container">
+    <div class="dn-contribution-model">
+      <header>
+        <span class="dn-section-kicker">{% trans "03 · Ways to contribute" %}</span>
+        <h2 id="contribution-path-heading">{% trans "Code is one of nine ways in" %}</h2>
+        <p>{% trans "Every contribution type is weighted equally under the public scoring policy. Code goes through GitHub and is verified when a named maintainer merges it; everything else is submitted as evidence and accepted by the ministry’s reviewer." %}</p>
+        <a href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
+      </header>
+      <div class="dn-contribution-grid">
+        <article class="blueprint"><h3>{% trans "Code & data" %}</h3><p>{% trans "Pick a labelled starter issue and open a pull request. A merge by a named maintainer becomes a verified contribution." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "Engineering" %}</span><span class="tag tag-neutral">{% trans "Data" %}</span></p></article>
+        <article class="blueprint"><h3>{% trans "Design & research" %}</h3><p>{% trans "Audits, flows, interface work and user research are submitted as evidence and accepted by the ministry reviewer." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "UI/UX" %}</span><span class="tag tag-neutral">{% trans "Research" %}</span></p></article>
+        <article class="blueprint"><h3>{% trans "Docs & Nepali" %}</h3><p>{% trans "Documentation, translation and localisation count exactly like code. No contribution type is disadvantaged." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "Documentation" %}</span><span class="tag tag-neutral">{% trans "Localization" %}</span></p></article>
+        <article class="blueprint"><h3>{% trans "QA, security & community" %}</h3><p>{% trans "Test plans, reproductions, responsible disclosure and community facilitation all count." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "QA" %}</span><span class="tag tag-neutral">{% trans "Security" %}</span><span class="tag tag-neutral">{% trans "Community" %}</span></p></article>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section" aria-labelledby="community-projects-heading">
+  <div class="container">
+    <div class="blueprint dn-community-boundary">
+      <header class="dn-sheet__header">
+        <h2 id="community-projects-heading">{% trans "Community projects — listed by members" %}</h2>
+        <span>{% trans "No government endorsement" %}</span>
+      </header>
+      <div class="dn-community-boundary__body">
+        <p>{% trans "Member projects are listed by their owners and are not reviewed by PMO. Ownership is verified through the owner’s connected GitHub account where possible." %}</p>
+        <a href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section" aria-labelledby="public-work-quote">
+  <div class="container dn-public-work-story">
+    <figure class="blueprint duotone">
+      <img src="{% static 'images/devnepal-hydropower-reference.jpg' %}" alt="{% trans 'Hydropower dam in Nepal, duotoned in steel blue.' %}" width="1600" height="1187" loading="lazy" decoding="async">
+    </figure>
+    <figure>
+      <blockquote id="public-work-quote">{% trans "The first accepted fix to the Sewa portal came from a volunteer in Hetauda who had never set foot in our office. She could see exactly what we needed, and we could see exactly what she did. That is the whole idea." %}</blockquote>
+      <figcaption>{% trans "— Rajan Koirala, maintainer, Department of Information Technology" %}</figcaption>
+    </figure>
+  </div>
+</section>
+{% if recommendations %}
+<section class="section" aria-labelledby="recommended-heading">
+  <div class="container">
+    <header>
+      <h2 id="recommended-heading">{% trans "Recommended for you" %}</h2>
+      <p>{% trans "Open projects matched to your skills, contributions, saved projects, and experience." %}</p>
+    </header>
+    <div class="dn-issue-list">
+      {% for recommendation in recommendations %}
+      <div class="dn-issue-row">
+        {% include "components/status_octicon.html" with project_status=recommendation.project.status %}
+        <div>
+          <a class="dn-issue-title" href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a>
+          <div class="dn-issue-meta">
+            {% if recommendation.project.ministry %}{{ recommendation.project.ministry.localized_name }} · {% endif %}{{ recommendation.project.get_status_display }}
+          </div>
+          <div class="dn-labels">
+            {% for reason in recommendation.reasons %}<span class="Label Label--secondary">{{ reason }}</span> {% endfor %}
+          </div>
+        </div>
+        <div class="dn-issue-aside">
+          {% if recommendation.project.deadline %}<time datetime="{{ recommendation.project.deadline|date:"Y-m-d" }}">{{ recommendation.project.deadline|date:"DATE_FORMAT" }}</time>{% else %}{% trans "No deadline" %}{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+<section class="section" aria-labelledby="directory-heading">
+  <div class="container">
+    <header>
+      <h2 id="directory-heading">{% trans "Everywhere on DevNepal" %}</h2>
+      <p>{% trans "Every destination on the platform, one click from home." %}</p>
+    </header>
+    <div class="dn-source-grid dn-home-directory">
+      <div class="dn-source">
+        <h3>{% trans "Discover" %}</h3>
+        <ul>
+          {% url 'projects:list' as d_all %}{% if d_all %}<li><a href="{{ d_all }}">{% trans "All projects" %}</a></li>{% endif %}
+          {% url 'projects:government' as d_gov %}{% if d_gov %}<li><a href="{{ d_gov }}">{% trans "Government projects" %}</a></li>{% endif %}
+          {% url 'projects:community' as d_comm %}{% if d_comm %}<li><a href="{{ d_comm }}">{% trans "Community projects" %}</a></li>{% endif %}
+          {% url 'blogs:list' as d_blogs %}{% if d_blogs %}<li><a href="{{ d_blogs }}">{% trans "Tech blogs" %}</a></li>{% endif %}
+          {% url 'accounts:member_directory' as d_members %}{% if d_members %}<li><a href="{{ d_members }}">{% trans "Member directory" %}</a></li>{% endif %}
+          {% url 'recognition:leaderboard' as d_board %}{% if d_board %}<li><a href="{{ d_board }}">{% trans "Leaderboard" %}</a></li>{% endif %}
+        </ul>
+      </div>
+      {% if user.is_authenticated %}
+      <div class="dn-source">
+        <h3>{% trans "Your workspace" %}</h3>
+        <ul>
+          {% url 'accounts:dashboard' as w_dash %}{% if w_dash %}<li><a href="{{ w_dash }}">{% trans "Dashboard" %}</a></li>{% endif %}
+          {% url 'accounts:profile_edit' as w_profile %}{% if w_profile %}<li><a href="{{ w_profile }}">{% trans "Profile settings" %}</a></li>{% endif %}
+          {% url 'projects:application_list' as w_apps %}{% if w_apps %}<li><a href="{{ w_apps }}">{% trans "My applications" %}</a></li>{% endif %}
+          {% url 'notifications:list' as w_notifs %}{% if w_notifs %}<li><a href="{{ w_notifs }}">{% trans "Notifications" %}</a></li>{% endif %}
+          {% url 'recognition:my_profile' as w_recog %}{% if w_recog %}<li><a href="{{ w_recog }}">{% trans "My recognition" %}</a></li>{% endif %}
+          {% url 'taxonomy:skill_suggestion_create' as w_skill %}{% if w_skill %}<li><a href="{{ w_skill }}">{% trans "Suggest a skill" %}</a></li>{% endif %}
+          {% url 'projects:community_create' as w_create %}{% if w_create %}<li><a href="{{ w_create }}">{% trans "List a community project" %}</a></li>{% endif %}
+          {% url 'accounts:session_list' as w_sessions %}{% if w_sessions %}<li><a href="{{ w_sessions }}">{% trans "Sessions and devices" %}</a></li>{% endif %}
+        </ul>
+      </div>
+      {% else %}
+      <div class="dn-source">
+        <h3>{% trans "Get started" %}</h3>
+        <ul>
+          {% url 'accounts:login' as s_login %}{% if s_login %}<li><a href="{{ s_login }}">{% trans "Sign in" %}</a></li>{% endif %}
+          {% url 'accounts:signup' as s_signup %}{% if s_signup %}<li><a href="{{ s_signup }}">{% trans "Create an account" %}</a></li>{% endif %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if user.is_superuser %}
+      <div class="dn-source">
+        <h3>{% trans "Administration" %}</h3>
+        <ul>
+          {% url 'ministries:organization_list' as a_min %}{% if a_min %}<li><a href="{{ a_min }}">{% trans "Ministries and publishers" %}</a></li>{% endif %}
+          {% url 'projects:authoring_dashboard' as a_author %}{% if a_author %}<li><a href="{{ a_author }}">{% trans "Project authoring" %}</a></li>{% endif %}
+          {% url 'moderation:case_queue' as a_mod %}{% if a_mod %}<li><a href="{{ a_mod }}">{% trans "Moderation queue" %}</a></li>{% endif %}
+          {% url 'recognition:policy_create' as a_policy %}{% if a_policy %}<li><a href="{{ a_policy }}">{% trans "Recognition policies" %}</a></li>{% endif %}
+          {% url 'recognition:badge_list' as a_badges %}{% if a_badges %}<li><a href="{{ a_badges }}">{% trans "Badges" %}</a></li>{% endif %}
+          {% url 'recognition:anomaly_review' as a_anom %}{% if a_anom %}<li><a href="{{ a_anom }}">{% trans "Anomaly review" %}</a></li>{% endif %}
+          {% url 'audit:audit_log' as a_audit %}{% if a_audit %}<li><a href="{{ a_audit }}">{% trans "Audit log" %}</a></li>{% endif %}
+          {% url 'audit:ops_dashboard' as a_ops %}{% if a_ops %}<li><a href="{{ a_ops }}">{% trans "Operations dashboard" %}</a></li>{% endif %}
+        </ul>
+      </div>
+      {% endif %}
+      <div class="dn-source">
+        <h3>{% trans "Trust and safety" %}</h3>
+        <ul>
+          {% url 'moderation:report_create' as t_report %}{% if t_report %}<li><a href="{{ t_report }}">{% trans "Report content" %}</a></li>{% endif %}
+          {% url 'accounts:privacy_export' as t_export %}{% if t_export %}<li><a href="{{ t_export }}">{% trans "Export your data" %}</a></li>{% endif %}
+          {% if user.is_authenticated %}{% url 'accounts:dashboard' as t_dash %}{% if t_dash %}<li><a href="{{ t_dash }}">{% trans "Privacy controls" %}</a></li>{% endif %}{% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

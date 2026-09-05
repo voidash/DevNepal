@@ -1,0 +1,72 @@
+{% load i18n tz %}
+{% if connection and connection.show_annual_calendar and not connection.revoked_at and calendar %}
+<style>
+  .dn-cal { width: 100%; border-collapse: collapse; font-family: var(--font-latin); }
+  .dn-cal caption { caption-side: top; text-align: left; padding: 0 0 0.75rem; font-size: var(--fs-sm); color: var(--color-text-secondary); }
+  .dn-cal th, .dn-cal td { padding: 2px; font-size: var(--fs-xs); font-weight: 400; text-align: left; }
+  .dn-cal thead th { border: 0; color: var(--color-text-secondary); font-weight: 600; }
+  .dn-cal tbody th { font-weight: 400; color: var(--color-text-secondary); width: 3ch; }
+  .dn-cal-cell { width: 12px; height: 12px; border-radius: 2px; background: var(--color-bg-subtle); outline: 1px solid rgba(0, 0, 0, 0.06); outline-offset: -1px; }
+  .dn-cal-cell.is-empty { background: transparent; outline: 0; }
+  .dn-cal-cell.is-level-1 { background: #f6c9d2; }
+  .dn-cal-cell.is-level-2 { background: #e58ea0; }
+  .dn-cal-cell.is-level-3 { background: #dc143c; }
+  .dn-cal-cell.is-level-4 { background: #8f0d27; }
+  .dn-cal-legend { display: flex; align-items: center; gap: 4px; margin: 0.5rem 0 0; font-size: var(--fs-xs); color: var(--color-text-secondary); }
+  .dn-cal-legend .dn-cal-cell { display: inline-block; }
+  .dn-cal-note { margin: 0.5rem 0 0; font-size: var(--fs-sm); color: var(--color-text-secondary); }
+  .dn-cal-freshness { margin: 0 0 0.5rem; font-size: var(--fs-sm); color: var(--color-text-secondary); }
+  .dn-cal-scroll { overflow-x: auto; }
+</style>
+<section class="dn-calendar" aria-labelledby="dn-cal-heading-{{ calendar.year }}">
+  <h2 id="dn-cal-heading-{{ calendar.year }}">{% trans "DevNepal verified record" %}</h2>
+  <p class="dn-cal-freshness">
+    {% blocktrans with fetched=calendar.fetched_at|localtime|date:"N j, Y, H:i" %}Generated {{ fetched }} · Nepal Time{% endblocktrans %}
+  </p>
+  <div class="dn-cal-scroll">
+  <table class="dn-cal">
+    <caption>
+      {% blocktrans count total=calendar.total with year=calendar.year %}{{ total }} accepted contribution in {{ year }}.{% plural %}{{ total }} accepted contributions in {{ year }}.{% endblocktrans %}
+      {% blocktrans count streak=calendar.longest_streak %}Longest streak {{ streak }} day.{% plural %}Longest streak {{ streak }} days.{% endblocktrans %}
+      {% blocktrans with month=calendar.busiest_month|date:"F" %}Busiest month {{ month }}.{% endblocktrans %}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col"><span class="visually-hidden">{% trans "Weekday" %}</span></th>
+        {% for month in calendar.months %}
+        <th scope="col" colspan="{{ month.span }}">{{ month.start|date:"F" }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in calendar.rows %}
+      <tr>
+        <th scope="row">{{ row.label }}</th>
+        {% for cell in row.cells %}
+        {% if cell %}
+        <td class="dn-cal-cell is-level-{{ cell.level }}">
+          <span class="visually-hidden">{% blocktrans count n=cell.count with d=cell.date|date:"N j, Y" %}{{ n }} accepted contribution on {{ d }}.{% plural %}{{ n }} accepted contributions on {{ d }}.{% endblocktrans %}</span>
+        </td>
+        {% else %}
+        <td class="dn-cal-cell is-empty" aria-hidden="true"></td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="dn-cal-legend">
+    <span>{% trans "Fewer" %}</span>
+    {% for level in calendar.levels %}<span class="dn-cal-cell is-level-{{ level }}" aria-hidden="true"></span>{% endfor %}
+    <span>{% trans "More" %}</span>
+  </div>
+  <p class="dn-cal-note">
+    {% blocktrans %}
+    This calendar is DevNepal's verified contribution record, counted only from accepted,
+    human-verified contributions on DevNepal projects. It is not GitHub's contribution graph,
+    and it is not an exact all-time work record.
+    {% endblocktrans %}
+  </p>
+</section>
+{% endif %}

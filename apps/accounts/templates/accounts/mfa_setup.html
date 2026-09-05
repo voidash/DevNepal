@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Set up multi-factor authentication" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section"><div class="container"><h1>{% trans "Set up multi-factor authentication" %}</h1>{% if config_url %}<p>{% trans "Add this setup link to an authenticator app, then enter the six-digit code." %}</p><code>{{ config_url }}</code>{% endif %}{% if error %}<p class="field__error" role="alert">{{ error }}</p>{% endif %}{% if can_enroll %}<form method="post" class="field-group">{% csrf_token %}<input type="hidden" name="action" value="enroll"><button class="btn btn--primary" type="submit">{% trans "Start MFA enrollment" %}</button></form>{% else %}<form method="post" class="field-group">{% csrf_token %}<div class="field"><label for="mfa-token">{% trans "Authentication code" %}</label><input id="mfa-token" name="token" inputmode="numeric" autocomplete="one-time-code" required></div><button class="btn btn--primary" type="submit">{% trans "Verify code" %}</button></form>{% endif %}</div></section>
+{% endblock %}

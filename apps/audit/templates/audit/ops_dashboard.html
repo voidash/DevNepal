@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+
+{% block title %}{% trans "Operations dashboard" %} | DevNepal{% endblock %}
+
+{% block content %}
+<main class="container" aria-labelledby="ops-heading">
+  <h1 id="ops-heading">{% trans "Operations dashboard" %}</h1>
+  <div class="dn-state-banner" role="note">
+    {% trans "Read-only operational overview. Panels show at most five rows and never mutate data or offer exports." %}
+  </div>
+  {% for panel in panels %}
+  <section class="ops-panel" aria-labelledby="panel-{{ panel.id }}-heading">
+    <h2 id="panel-{{ panel.id }}-heading">
+      <a href="{{ panel.url }}">{{ panel.title }}</a>
+      <span class="dn-labels"><span>{% if panel.overflow %}{% trans "5+" %}{% else %}{{ panel.count }}{% endif %}</span></span>
+    </h2>
+    {% if panel.state != "ok" %}<p class="dn-state-banner {{ panel.state_class }}" role="status">{{ panel.banner }}</p>{% endif %}
+    {% if panel.overflow %}<p>{% trans "More entries exist; open the panel source page for the full list." %}</p>{% endif %}
+
+    {% if panel.id == "stale_projects" %}
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{{ panel.title }}">
+      <table class="dn-data-table">
+        <caption class="visually-hidden">{% trans "Live projects past their deadline, oldest deadline first" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Project" %}</th>
+            <th scope="col">{% trans "Status" %}</th>
+            <th scope="col">{% trans "Deadline" %}</th>
+            <th scope="col">{% trans "Ministry" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in panel.rows %}
+          <tr>
+            <td><a href="{% url 'projects:detail' row.slug %}">{{ row.title_en }}</a></td>
+            <td>{{ row.get_status_display }}</td>
+            <td>{{ row.deadline|date:"Y-m-d" }}</td>
+            <td>{{ row.ministry.localized_name|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4">{% trans "Nothing flagged." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if panel.id == "aging_cases" %}
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{{ panel.title }}">
+      <table class="dn-data-table">
+        <caption class="visually-hidden">{% trans "Moderation cases waiting longest first" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Case" %}</th>
+            <th scope="col">{% trans "Status" %}</th>
+            <th scope="col">{% trans "Waiting since" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in panel.rows %}
+          <tr>
+            <td><a href="{% url 'moderation:case_detail' row.pk %}">{% blocktrans with case_id=row.pk %}Case #{{ case_id }}{% endblocktrans %}</a></td>
+            <td>{{ row.get_status_display }}</td>
+            <td><time datetime="{{ row.created_at|date:'c' }}">{{ row.created_at|localtime }}</time></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3">{% trans "Nothing flagged." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if panel.id == "repo_health" %}
+    <p role="status">{% blocktrans count counter=panel.pending_events %}{{ counter }} provider event is waiting to be processed.{% plural %}{{ counter }} provider events are waiting to be processed.{% endblocktrans %}</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{{ panel.title }}">
+      <table class="dn-data-table">
+        <caption class="visually-hidden">{% trans "Unhealthy repository connections, errors first" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Repository" %}</th>
+            <th scope="col">{% trans "Sync state" %}</th>
+            <th scope="col">{% trans "Project" %}</th>
+            <th scope="col">{% trans "Last synced" %}</th>
+            <th scope="col">{% trans "Health note" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in panel.rows %}
+          <tr>
+            <td>{{ row.full_name }}</td>
+            <td>{{ row.get_sync_state_display }}</td>
+            <td>{% if row.project %}<a href="{% url 'projects:detail' row.project.slug %}">{{ row.project.title_en }}</a>{% else %}-{% endif %}</td>
+            <td>{{ row.last_synced_at|localtime|date:"Y-m-d H:i"|default:"-" }}</td>
+            <td>{{ row.health_note|truncatechars:80|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">{% trans "Nothing flagged." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if panel.id == "notification_delivery" %}
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{{ panel.title }}">
+      <table class="dn-data-table">
+        <caption class="visually-hidden">{% trans "Notification deliveries by status" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Delivery status" %}</th>
+            <th scope="col">{% trans "Count" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in panel.rows %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td>{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2">{% trans "Nothing flagged." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if panel.id == "recent_audit_failures" %}
+    <p>
+      <a href="{{ panel.failure_url }}">{% trans "View all failures in the audit log" %}</a>
+      <a href="{{ panel.denied_url }}">{% trans "View all denials in the audit log" %}</a>
+    </p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{{ panel.title }}">
+      <table class="dn-data-table">
+        <caption class="visually-hidden">{% trans "Failed and denied audit events from the last 24 hours, denials first" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% trans "Time" %}</th>
+            <th scope="col">{% trans "Actor" %}</th>
+            <th scope="col">{% trans "Action" %}</th>
+            <th scope="col">{% trans "Result" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in panel.rows %}
+          <tr>
+            <td><time datetime="{{ row.created_at|date:'c' }}">{{ row.created_at|localtime }}</time></td>
+            <td>{{ row.actor.username|default:"-" }}</td>
+            <td>{{ row.action }}</td>
+            <td><span class="dn-labels"><span>{{ row.result }}</span></span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4">{% trans "Nothing flagged." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+  {% endfor %}
+</main>
+{% endblock %}

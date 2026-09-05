@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% trans "Revoke badge award" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-container">
+  <div class="dn-form-layout">
+    <section aria-labelledby="award-revoke-heading">
+      <h1 id="award-revoke-heading">{% trans "Revoke badge award" %}</h1>
+      <div class="dn-state-banner is-attention" role="status">
+        {% blocktrans with badge_name=award.badge.name recipient=award.recipient.username %}You are revoking “{{ badge_name }}” from {{ recipient }}. The award history is kept and the reason is recorded in the audit log.{% endblocktrans %}
+      </div>
+      {% if form.non_field_errors %}
+      <div class="error-summary" role="alert">
+        <h2>{% trans "There is a problem" %}</h2>
+        <ul>{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+      <form method="post" class="dn-form-stack">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="dn-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} ({% trans "required" %}){% endif %}</label>
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}<p class="dn-field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="button-group">
+          <button class="btn btn--danger" type="submit">{% trans "Revoke award" %}</button>
+          <a class="btn btn--secondary" href="{% url 'recognition:badge_edit' award.badge.slug %}">{% trans "Cancel" %}</a>
+        </div>
+      </form>
+    </section>
+    <aside class="dn-sidebar">
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Awarded" %}</h2>
+        <p><time datetime="{{ award.issued_at|date:'c' }}">{{ award.issued_at|localtime }}</time></p>
+      </section>
+      {% if award.revoked_at %}
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Revoked" %}</h2>
+        <p>
+          <time datetime="{{ award.revoked_at|date:'c' }}">{{ award.revoked_at|localtime }}</time>
+          {% if award.revocation_reason %} · {{ award.revocation_reason }}{% endif %}
+        </p>
+      </section>
+      {% endif %}
+    </aside>
+  </div>
+</div>
+{% endblock %}
