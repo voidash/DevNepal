@@ -1,13 +1,14 @@
 import logging
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps.notifications.services import send_pending_notifications
+from apps.observability.commands import InstrumentedCommand
 
 logger = logging.getLogger(__name__)
 
 
-class Command(BaseCommand):
+class Command(InstrumentedCommand):
     help = (
         "NTF-002/NTF-003/NTF-004: worker entrypoint that drains queued notification "
         "emails through the configured Django email backend. Schedule it with cron or "

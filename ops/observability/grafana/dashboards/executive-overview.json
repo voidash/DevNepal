@@ -1,0 +1,320 @@
+{
+  "uid": "devnepal-executive",
+  "title": "DevNepal / Executive Overview",
+  "description": "Live platform health for non-engineering stakeholders: is it up, is it reliable, is anything stuck.",
+  "tags": ["devnepal", "executive", "nfr-avl-01"],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "System Status",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "options": { "textMode": "value", "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Unknown",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "Down", "color": "red" } } },
+            { "type": "value", "options": { "1": { "text": "Operational", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "up{job=\"django\"}", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Uptime (30 days)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "noValue": "No data yet",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 99 },
+              { "color": "green", "value": 99.5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "avg_over_time(up{job=\"django\"}[30d]) * 100", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "title": "Reliability, last 24h",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Share of requests in the last 24 hours that did not error.",
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "noValue": "No traffic yet",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 99 },
+              { "color": "green", "value": 99.5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(1 - ((sum(rate(http_user_requests_total{status=~\"5..\"}[24h])) or vector(0)) / sum(rate(http_user_requests_total[24h])))) * 100",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Average Response Time",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Average over the last hour, all pages combined. See the HTTP (RED) dashboard for the p95 figure the SLA is measured against.",
+      "options": { "colorMode": "value", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "No traffic yet",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.5 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_seconds_sum[1h])) / sum(rate(http_request_duration_seconds_count[1h]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Reliability Trend (30 days) — target 99.5%",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 95,
+          "max": 100,
+          "custom": { "thresholdsStyle": { "mode": "line" } },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 99.5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(1 - ((sum(rate(http_user_requests_total{status=~\"5..\"}[1d])) or vector(0)) / sum(rate(http_user_requests_total[1d])))) * 100",
+          "legendFormat": "daily reliability",
+          "refId": "A"
+        }
+      ],
+      "time": { "from": "now-30d", "to": "now" }
+    },
+    {
+      "id": 6,
+      "title": "Automated Background Tasks",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Hours since the slowest of the five recurring platform jobs (GitHub sync, notifications, project lifecycle) last completed successfully.",
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1,
+          "mappings": [
+            {
+              "type": "special",
+              "options": { "match": "+Inf", "result": { "text": "Never run yet", "color": "red" } }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 12 },
+              { "color": "red", "value": 48 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "max(background_job_seconds_since_last_success) / 3600", "refId": "A" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Requests Served, last 24h",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "options": { "colorMode": "value", "graphMode": "area" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "noValue": "0", "decimals": 0 },
+        "overrides": []
+      },
+      "targets": [{ "expr": "sum(increase(http_user_requests_total[24h]))", "refId": "A" }]
+    },
+    {
+      "id": 8,
+      "title": "GitHub Sync Backlog",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Repository events received but not yet processed.",
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "queue_depth{queue=\"github_sync_pending_events\"}", "refId": "A" }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Security & Access Alerts, last 24h",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Failed or denied privileged actions recorded in the audit log.",
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "queue_depth{queue=\"audit_failures_24h\"}", "refId": "A" }]
+    },
+    {
+      "id": 10,
+      "title": "Projects Needing Attention",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Open government or contribution projects past their deadline.",
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "queue_depth{queue=\"projects_stale\"}", "refId": "A" }]
+    },
+    {
+      "id": 11,
+      "title": "Content Awaiting Moderation",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "description": "Moderation cases open for more than five days.",
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "queue_depth{queue=\"moderation_aging_cases\"}", "refId": "A" }]
+    },
+    {
+      "id": 12,
+      "title": "Notifications Not Yet Delivered",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "queue_depth{queue=\"notifications_pending\"}", "refId": "A" }]
+    }
+  ]
+}

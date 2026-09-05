@@ -50,7 +50,7 @@ below.
 | Security delivery | Threat model, ASVS verification, dependency and secret scans, SBOM, CI release gate, independent penetration-test report, remediation or approved risk acceptance | Security owner | Not started |
 | Privacy and legal | Privacy impact assessment, data inventory, notices, consent, records schedule, data-subject workflow, hosting and public-release approvals | Privacy/legal owner | Not started |
 | Hosting and encryption | Approved government-controlled hosting, TLS, encrypted database/backups/object storage/secrets, named production access, and key-management review | Infrastructure owner | Not started |
-| Observability and availability | Request and job correlation IDs, PII/secret filtering, dashboards, alert routing, health checks, worker monitoring, and 99.5% availability measurement plan | Operations owner | Not started |
+| Observability and availability | Request and job correlation IDs, PII/secret filtering, dashboards, alert routing, health checks, worker monitoring, and 99.5% availability measurement plan | Operations owner | In progress — see docs/adr/0010-observability.md. Correlation IDs, log scrubbing, `/healthz`/`/readyz`, `/metrics` (HTTP, database, job, and queue metrics), worker-monitoring gauges, pending-migration tracking, and Grafana dashboards (HTTP, Database & Maintenance, Jobs & Maintenance, Availability, Executive Overview) implemented and verified locally. Alerting rules exist; Alertmanager routing, production deployment (gunicorn multiprocess wiring), and the 99.5% measurement plan are not started. |
 | Backup and disaster recovery | Completed timed isolated restore drill meeting the PMO-approved RPO/RTO; encrypted database and object-store backup manifests; retained drill record | Operations and security | Not started |
 | Incident response | Named roster, severity/on-call exercise, evidence-preservation exercise, provider-token containment exercise, communications approval, and post-incident review template | Security and operations | Not started |
 | GitHub outage and replay | GitHub App approval, endpoint delivery evidence, worker supervision, signature-secret management, idempotency test, replay exercise, and implemented reconciliation test | GitHub integration owner | Blocked |
@@ -75,8 +75,11 @@ Attach both records before marking the backup/DR and incident-response gates com
 - PMO has not yet approved final RPO/RTO, records retention, hosting/data-residency, or the
   operational owner roster required by the SRS decision register.
 - No infrastructure-as-code, deployment manifest, managed PostgreSQL backup configuration,
-  object-store configuration, secret-store integration, monitoring stack, or production access
-  model exists in this repository.
+  object-store configuration, secret-store integration, or production access model exists
+  in this repository. A local/dev Prometheus+Grafana stack exists (`ops/observability/`,
+  docs/adr/0010-observability.md) but has not been deployed to any managed environment,
+  has no Alertmanager routing, and has not been validated under a multi-process production
+  WSGI server.
 - The GitHub webhook receiver route, continuously running worker, GitHub App configuration,
   trusted timestamp design, and provider reconciliation client are not implemented here.
 - The configured `GITHUB_TOKEN_PURGE` hook is only an integration seam; a real secret-store purge

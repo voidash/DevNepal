@@ -3,6 +3,7 @@ import contextlib
 from django.db import models
 
 from apps.audit.models import AuditEvent
+from apps.observability.context import get_correlation_id
 
 
 class AuditBulkMutationError(PermissionError):
@@ -65,5 +66,5 @@ def record_audit(
         after=after,
         source=source,
         result=result,
-        correlation_id=correlation_id or "",
+        correlation_id=correlation_id or get_correlation_id(),
     )
