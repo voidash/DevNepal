@@ -22,16 +22,62 @@
         </div>
         <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a> · <a href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a></p>
       </div>
-      <aside class="dn-hero-proof blueprint" aria-labelledby="hero-proof-heading">
-        <h2 id="hero-proof-heading">{% trans "On DevNepal today" %}</h2>
-        <ul>
-          <li><strong>{{ platform_metrics.ministries }}</strong><span>{% trans "ministries publishing, each through a named officer" %}</span></li>
-          <li><strong>{{ platform_metrics.open_projects }}</strong><span>{% trans "projects open for contribution" %}</span></li>
-          <li><strong>{{ platform_metrics.verified_contributions }}</strong><span>{% trans "contributions accepted by a named maintainer" %}</span></li>
-        </ul>
-        <p>{% trans "Only reviewed public work is listed." %}</p>
-      </aside>
+      {% comment %} The hero states the promise; the counts that substantiate it
+         read better as a measure below than as a boxed panel competing with
+         the headline. What balances the claim here is a picture of the thing
+         being promised: a public board of open work. It carries no
+         information of its own, so it is hidden from assistive technology.
+      {% endcomment %}
+      <svg class="dn-hero-illo" viewBox="0 0 460 380" role="presentation" aria-hidden="true" focusable="false">
+        <rect class="dn-hero-illo__behind" x="39" y="1" width="370" height="298" rx="6"/>
+        <rect class="dn-hero-illo__face" x="9" y="9" width="370" height="298" rx="6"/>
+        <rect class="dn-hero-illo__title" x="30" y="26" width="104" height="13" rx="6"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="296" y="28" width="26" height="10" rx="5"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="330" y="28" width="34" height="10" rx="5"/>
+        <path class="dn-hero-illo__rule" d="M9 57 H379"/>
+        <rect class="dn-hero-illo__tint" x="10" y="140" width="368" height="76"/>
+        <g class="dn-hero-illo__row">
+          <circle class="dn-hero-illo__ring" cx="46" cy="94" r="9"/>
+          <circle class="dn-hero-illo__dot" cx="46" cy="94" r="3.5"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="70" y="80" width="196" height="12" rx="6"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="70" y="102" width="118" height="8" rx="4"/>
+        </g>
+        <path class="dn-hero-illo__rule" d="M30 140 H358"/>
+        <g class="dn-hero-illo__row">
+          <circle class="dn-hero-illo__ring" cx="46" cy="170" r="9"/>
+          <circle class="dn-hero-illo__dot" cx="46" cy="170" r="3.5"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="70" y="156" width="164" height="12" rx="6"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="70" y="178" width="96" height="8" rx="4"/>
+          <rect class="dn-hero-illo__chip" x="272" y="155" width="80" height="17" rx="8.5"/>
+        </g>
+        <path class="dn-hero-illo__rule" d="M30 216 H358"/>
+        <g class="dn-hero-illo__row">
+          <circle class="dn-hero-illo__ring" cx="46" cy="246" r="9"/>
+          <circle class="dn-hero-illo__dot" cx="46" cy="246" r="3.5"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="70" y="232" width="212" height="12" rx="6"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="70" y="254" width="140" height="8" rx="4"/>
+        </g>
+        <rect class="dn-hero-illo__paper" x="249" y="249" width="202" height="122" rx="6"/>
+        <circle class="dn-hero-illo__seal" cx="283" cy="291" r="15"/>
+        <path class="dn-hero-illo__check" d="M276 291 l5 5 l9 -10"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="312" y="282" width="106" height="10" rx="5"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="312" y="300" width="70" height="8" rx="4"/>
+        <path class="dn-hero-illo__rule" d="M269 326 H431"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="269" y="342" width="128" height="8" rx="4"/>
+      </svg>
     </div>
+  </div>
+</section>
+
+<section class="dn-measure" aria-labelledby="hero-proof-heading">
+  <div class="container">
+    <h2 id="hero-proof-heading">{% trans "On DevNepal today" %}</h2>
+    <dl class="dn-measure__figures">
+      <div><dt>{{ platform_metrics.ministries }}</dt><dd>{% trans "ministries publishing, each through a named officer" %}</dd></div>
+      <div><dt>{{ platform_metrics.open_projects }}</dt><dd>{% trans "projects open for contribution" %}</dd></div>
+      <div><dt>{{ platform_metrics.verified_contributions }}</dt><dd>{% trans "contributions accepted by a named maintainer" %}</dd></div>
+    </dl>
+    <p class="dn-measure__note">{% trans "Only reviewed public work is listed." %}</p>
   </div>
 </section>
 

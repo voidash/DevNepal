@@ -651,21 +651,42 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
    The hero states the claim on the left and the figures that back it on the
    right, so a first-time visitor sees the evidence before any invitation. */
 .hero { background: var(--color-paper); border-bottom: 0; }
-.dn-home-hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, .7fr); gap: var(--space-16); align-items: center; padding-block: var(--space-12) var(--space-16); }
+.dn-home-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr); gap: var(--space-12); align-items: center; padding-block: var(--space-12) var(--space-16); }
 .dn-home-hero .hero__panel { max-width: none; padding: 0; }
 .dn-home-hero h1 { max-width: 11em; }
 .dn-home-hero .hero__lead { max-width: 52ch; margin-top: var(--space-6); }
 .dn-home-hero .hero__actions { margin-top: var(--space-8); }
 .dn-home-hero .hero__ministry-link { display: block; margin: var(--space-8) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); }
 .dn-home-hero .dn-trust-tags { margin-bottom: var(--space-6); }
-.dn-hero-proof { align-self: center; padding: var(--space-6) var(--space-8); }
-.dn-hero-proof h2 { margin: 0 0 var(--space-2); color: var(--color-neutral-600); font-family: var(--font-body); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.dn-hero-proof ul { margin: 0; padding: 0; list-style: none; }
-.dn-hero-proof li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: var(--space-4); align-items: center; padding: var(--space-4) 0; }
-.dn-hero-proof li + li { border-top: 1px solid var(--color-divider); }
-.dn-hero-proof strong { color: var(--color-accent-700); font-family: var(--font-heading); font-size: 42px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
-.dn-hero-proof span { color: var(--color-neutral-700); font-size: var(--fs-sm); line-height: 1.45; }
-.dn-hero-proof > p { max-width: none; margin: var(--space-4) 0 0; padding-top: var(--space-4); border-top: 1px solid var(--color-divider); color: var(--color-neutral-600); font-size: var(--fs-xs); }
+/* The hero's second column is a picture of what the page is offering: a public
+   board of open work, with one accepted contribution resting on it. It is drawn
+   from the design system's own parts — paper, hairline, 6px radius, the accent
+   ramp — so it stays flat and needs no asset. */
+.dn-hero-illo { display: block; width: 100%; height: auto; align-self: center; }
+.dn-hero-illo__face { fill: var(--color-bg); stroke: var(--color-divider-strong); stroke-width: 1.5; }
+.dn-hero-illo__behind { fill: var(--color-paper); stroke: var(--color-divider); stroke-width: 1.5; }
+.dn-hero-illo__paper { fill: var(--color-paper); stroke: var(--color-divider-strong); stroke-width: 1.5; }
+.dn-hero-illo__tint { fill: var(--color-accent-100); }
+.dn-hero-illo__rule { stroke: var(--color-divider); stroke-width: 1.5; }
+.dn-hero-illo__title { fill: var(--color-neutral-800); }
+.dn-hero-illo__bar { fill: var(--color-neutral-300); }
+.dn-hero-illo__bar--lead { fill: var(--color-neutral-500); }
+.dn-hero-illo__bar--soft { fill: var(--color-neutral-200); }
+.dn-hero-illo__chip { fill: var(--color-accent-200); stroke: var(--color-accent-300); stroke-width: 1.5; }
+.dn-hero-illo__ring { fill: var(--color-paper); stroke: var(--color-accent-700); stroke-width: 2; }
+.dn-hero-illo__dot, .dn-hero-illo__seal { fill: var(--color-accent-700); }
+.dn-hero-illo__check { fill: none; stroke: var(--color-paper); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The counts substantiate the hero's claim, so they sit directly beneath it as
+   a measure rather than in a box that competes with the headline. */
+.dn-measure { background: var(--color-paper); }
+.dn-measure > .container { padding-block: var(--space-8) var(--space-10); border-top: 1px solid var(--color-divider); }
+.dn-measure h2 { margin: 0 0 var(--space-6); color: var(--color-neutral-600); font-family: var(--font-body); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.dn-measure__figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin: 0; }
+.dn-measure__figures > div + div { padding-left: var(--space-8); border-left: 1px solid var(--color-divider); }
+.dn-measure__figures dt { color: var(--color-accent-700); font-family: var(--font-heading); font-size: 46px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.dn-measure__figures dd { max-width: 30ch; margin: var(--space-2) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); line-height: 1.45; }
+.dn-measure__note { margin: var(--space-6) 0 0; color: var(--color-neutral-600); font-size: var(--fs-xs); }
 
 .dn-featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: var(--space-5); }
 .dn-featured-card { gap: var(--space-4); padding: var(--space-6); }
@@ -717,20 +738,25 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 @media (max-width: 1080px) {
   .dn-home-hero { grid-template-columns: 1fr; gap: var(--space-8); padding-block: var(--space-10) var(--space-12); }
   .dn-home-hero h1 { max-width: none; }
+  .dn-hero-illo { max-width: 460px; }
   ol.dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   ol.dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
   ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   .dn-home-faq dl { grid-template-columns: 1fr; gap: var(--space-5); }
 }
 @media (max-width: 640px) {
+  /* On a phone the drawing is pure decoration standing between the call to
+     action and the numbers behind it, so it steps out. */
+  .dn-hero-illo { display: none; }
   .section.dn-home { padding-block: var(--space-12); }
   .section.dn-home--follow { padding-top: 0; }
   ol.dn-journey { grid-template-columns: 1fr; }
   ol.dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
   ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   ol.dn-journey .dn-journey-step + .dn-journey-step { border-top: 1px solid var(--color-divider); border-left: 0; }
-  .dn-hero-proof li { grid-template-columns: 60px minmax(0, 1fr); }
-  .dn-hero-proof strong { font-size: 32px; }
+  .dn-measure__figures { grid-template-columns: 1fr; gap: var(--space-5); }
+  .dn-measure__figures > div + div { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--color-divider); }
+  .dn-measure__figures dt { font-size: 34px; }
   .dn-closing-band { padding: var(--space-6); }
 }
 
