@@ -412,17 +412,22 @@ def provision_ministry(
         raise MinistryProvisioningError(f"slug '{slug_value}' is already taken")
 
     try:
-        org = MinistryOrganization.objects.create(
-            name_en=name_en,
-            name_ne=name_ne,
-            slug=slug_value,
-            abbreviation=abbreviation,
-            description=description,
-            contact_email=contact_email,
-            website_url=website_url,
-            provisioned_by=super_admin,
-            provisioned_at=timezone.now(),
-        )
+        # Keep the integrity boundary in its own savepoint. Callers such as the
+        # onboarding workflow already run in an outer transaction and must be
+        # able to translate a concurrent uniqueness collision without leaving
+        # that transaction rollback-only.
+        with transaction.atomic():
+            org = MinistryOrganization.objects.create(
+                name_en=name_en,
+                name_ne=name_ne,
+                slug=slug_value,
+                abbreviation=abbreviation,
+                description=description,
+                contact_email=contact_email,
+                website_url=website_url,
+                provisioned_by=super_admin,
+                provisioned_at=timezone.now(),
+            )
     except IntegrityError as exc:
         raise MinistryProvisioningError("ministry organization could not be created") from exc
 
