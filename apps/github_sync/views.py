@@ -40,6 +40,7 @@ from apps.github_sync.services import (
     disconnect,
     enroll_repository,
     ingest_webhook,
+    is_public_snapshot_lifecycle_delivery,
     member_repositories,
     process_pending,
     refresh_public_repository_snapshot,
@@ -128,12 +129,16 @@ def github_webhook(request: HttpRequest) -> HttpResponse:
         return HttpResponse(status=401)
     except WebhookReplayError:
         return HttpResponse(status=409)
-    if event == "issues" and provider_event.processing_state == ProcessingState.PENDING:
+    if (
+        provider_event.processing_state == ProcessingState.PENDING
+        and provider_event.repository_id is not None
+        and is_public_snapshot_lifecycle_delivery(provider_event)
+    ):
         try:
             result = process_pending(limit=1, event_ids=[provider_event.pk])
         except Exception:
             logger.exception(
-                "immediate GitHub issue projection refresh failed (event=%s)",
+                "immediate GitHub public projection refresh failed (event=%s)",
                 provider_event.pk,
             )
             return HttpResponse(status=503)
@@ -301,21 +306,20 @@ def disconnect_connection(request: HttpRequest) -> HttpResponse:
 @privileged_mfa_required
 @require_http_methods(["GET", "POST"])
 def connect_repository(request: HttpRequest) -> HttpResponse:
-    """GIT-001/GIT-003/AUTH-008: member enrollment of App-accessible repositories.
+    """GIT-001/GIT-003/AUTH-006: bind an App repository to an authorized project.
 
-    GET lists the repositories of the member's linked installations with a
-    freshly minted in-memory token; POST enrolls exactly one repository. The
-    route is disabled (404) when the GitHub App is unconfigured, mirroring the
-    connect flow. Enrollments are idempotent and audited; token material is
-    never stored, rendered or logged.
+    A ministry publisher needs no personal GitHub OAuth link. For a selected
+    authorized project, only the exact public repository URL configured on the
+    draft is selectable from the App installation. The legacy unscoped member
+    view still requires its linked GitHub identity. Tokens remain in memory.
     """
     client = github_app_client()
     if not client.is_configured:
         raise Http404("GitHub App is not configured")
-    connection = GithubConnection.objects.filter(user=request.user, revoked_at__isnull=True).first()
-    if connection is None:
-        raise Http404("no provider connection for this member")
     project = _binding_project(request)
+    connection = GithubConnection.objects.filter(user=request.user, revoked_at__isnull=True).first()
+    if connection is None and project is None:
+        raise Http404("select an authorized project or connect a GitHub identity")
     if request.method == "POST":
         return _enroll_repository(request, client, connection, project)
     return _render_connect_repository(request, client, connection, project)
@@ -337,6 +341,7 @@ def _repository_context(request, connection, repositories, project=None, **extra
         "repositories": repositories,
         "projects": binding_projects(request.user),
         "selected_project": project,
+        "uses_project_app_installation": connection is None and project is not None,
     }
     context.update(extra)
     return context

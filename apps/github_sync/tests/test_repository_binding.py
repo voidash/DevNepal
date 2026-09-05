@@ -124,9 +124,8 @@ def test_repository_cannot_be_rebound_or_bound_to_a_mismatched_url():
 
 
 def test_publisher_project_filter_lists_exact_org_repository(client, settings):
-    """GIT-003/AUTH-006: project-scoped listing permits its org repo without leaking others."""
+    """GIT-003/AUTH-006: ministry App binding needs no personal GitHub OAuth link."""
     publisher = MinistryPublisherFactory()
-    connection = GithubConnectionFactory(user=publisher.user, login="deepak")
     project = ProjectFactory(
         ministry=publisher.ministry,
         repository_url="https://github.com/dhm-np/flood-alert-gateway",
@@ -181,13 +180,14 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
         raise AssertionError(url)
 
     settings.GITHUB_APP_TRANSPORT = transport
-    client.force_login(connection.user)
+    client.force_login(publisher.user)
 
     response = client.get(
         reverse("github_sync:connect_repository"), {"project_id": str(project.pk)}
     )
 
     assert response.status_code == 200
+    assert response.context["uses_project_app_installation"] is True
     assert [choice.full_name for choice in response.context["repositories"]] == [
         "dhm-np/flood-alert-gateway"
     ]

@@ -10,6 +10,7 @@ from datetime import timedelta
 from typing import NamedTuple, Protocol
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.db.models.functions import TruncDate
@@ -44,12 +45,14 @@ from apps.github_sync.models import (
     RepositoryConnection,
 )
 from apps.github_sync.webhooks import (
+    ISSUE_COMMENT_LIFECYCLE_ACTIONS,
     ISSUE_LIFECYCLE_ACTIONS,
+    PULL_REQUEST_LIFECYCLE_ACTIONS,
     ParsedEvent,
-    ParsedIssueLifecycleEvent,
+    ParsedPublicSnapshotLifecycleEvent,
     is_within_replay_window,
     parse_event,
-    parse_issue_lifecycle_event,
+    parse_public_snapshot_lifecycle_event,
     verify_signature,
 )
 
@@ -77,6 +80,12 @@ INSTALLATION_DELETED = "installation_deleted"
 INSTALLATION_SUSPENDED = "installation_suspended"
 INSTALLATION_UNSUSPENDED_UNBOUND = "installation_unsuspended_unbound"
 REPOSITORY_REMOVED = "repository_removed"
+WEBHOOK_SNAPSHOT_LOCK_SECONDS = 20
+PUBLIC_SNAPSHOT_LIFECYCLE_ACTIONS = {
+    "issues": ISSUE_LIFECYCLE_ACTIONS,
+    "pull_request": PULL_REQUEST_LIFECYCLE_ACTIONS,
+    "issue_comment": ISSUE_COMMENT_LIFECYCLE_ACTIONS,
+}
 
 
 @dataclass(frozen=True)
@@ -133,16 +142,17 @@ class StarterTaskSyncOutcome:
 
 def member_repositories(
     client: GithubAppClient,
-    connection: GithubConnection,
+    connection: GithubConnection | None,
     *,
     actor=None,
     project=None,
 ) -> list[RepositoryChoice]:
-    """GIT-003: repositories the member may enroll, from their linked installations.
+    """GIT-003: App repositories available to the authorized binding workflow.
 
-    A repository is selectable when its owner or its installation account matches
-    the member's connected GitHub login. Tokens are minted per installation and
-    stay in memory for the duration of this call (AUTH-008).
+    Project-scoped ministry binding needs no member OAuth identity: authorization
+    comes from the ministry assignment and only the repository URL configured on
+    that project is selectable. Unscoped member management retains the older
+    linked-login ownership filter. Installation tokens remain in memory only.
     """
     target_repository = None
     if project is not None:
@@ -163,7 +173,8 @@ def member_repositories(
         if (
             _repository_matches_project(repository, target_repository)
             if target_repository is not None
-            else _repository_belongs_to_member(repository, account, connection.login)
+            else connection is not None
+            and _repository_belongs_to_member(repository, account, connection.login)
         )
     ]
     enrolled = {
@@ -1095,13 +1106,15 @@ def _ingest(
             correlation_id=correlation_id,
         )
     parsed = parse_event(event, payload_dict) if payload_dict is not None else None
-    issue_lifecycle = (
-        parse_issue_lifecycle_event(event, payload_dict) if payload_dict is not None else None
+    snapshot_lifecycle = (
+        parse_public_snapshot_lifecycle_event(event, payload_dict)
+        if payload_dict is not None
+        else None
     )
 
-    if parsed is None and issue_lifecycle is not None:
+    if parsed is None and snapshot_lifecycle is not None:
         repository = RepositoryConnection.objects.filter(
-            provider=provider, repository_node_id=issue_lifecycle.repository_node_id
+            provider=provider, repository_node_id=snapshot_lifecycle.repository_node_id
         ).first()
         row = ProviderEvent.objects.create(
             provider=provider,
@@ -1112,7 +1125,7 @@ def _ingest(
             source=DeliverySource.WEBHOOK,
             signature_valid=True,
             signature_note=SIGNATURE_NOTE_VALID,
-            payload=asdict(issue_lifecycle),
+            payload=asdict(snapshot_lifecycle),
             payload_digest=digest,
             processing_state=ProcessingState.PENDING,
             correlation_id=correlation_id,
@@ -1219,13 +1232,17 @@ def process_pending(
     processed = failed = blocked = 0
     blocked_event_ids: list[str] = []
     for event in events:
-        issue_lifecycle = _stored_issue_lifecycle_event(event.payload)
-        if issue_lifecycle is not None:
+        snapshot_lifecycle = _stored_public_snapshot_lifecycle_event(event)
+        try:
+            parsed = ParsedEvent(**event.payload) if event.payload else None
+        except TypeError:
+            parsed = None
+        if parsed is None and snapshot_lifecycle is not None:
             connection = (
                 RepositoryConnection.objects.select_related("project")
                 .filter(
                     provider=event.provider,
-                    repository_node_id=issue_lifecycle.repository_node_id,
+                    repository_node_id=snapshot_lifecycle.repository_node_id,
                 )
                 .first()
             )
@@ -1246,7 +1263,7 @@ def process_pending(
                 continue
             event.repository = connection
             event.processing_attempts += 1
-            if not _refresh_public_snapshot_after_issue_lifecycle(connection, event):
+            if not _refresh_public_snapshot_after_lifecycle_event(connection, event):
                 event.last_error = "retry: GitHub public snapshot refresh unavailable"
                 event.save(update_fields=["repository", "last_error", "processing_attempts"])
                 blocked += 1
@@ -1267,7 +1284,6 @@ def process_pending(
             processed += 1
             continue
 
-        parsed = ParsedEvent(**event.payload) if event.payload else None
         if parsed is None:
             event.processing_state = ProcessingState.FAILED
             event.last_error = "failed: stored payload missing parsed fields"
@@ -1344,8 +1360,8 @@ def process_pending(
             continue
 
         snapshot_refreshed = True
-        if event.event_type == "issues" and parsed.action in ISSUE_LIFECYCLE_ACTIONS:
-            snapshot_refreshed = _refresh_public_snapshot_after_issue_lifecycle(connection, event)
+        if snapshot_lifecycle is not None:
+            snapshot_refreshed = _refresh_public_snapshot_after_lifecycle_event(connection, event)
 
         try:
             from apps.contributions.services import record_candidate_from_github
@@ -1400,19 +1416,32 @@ def process_pending(
     )
 
 
-def _stored_issue_lifecycle_event(payload: object) -> ParsedIssueLifecycleEvent | None:
-    if not isinstance(payload, dict):
+def _stored_public_snapshot_lifecycle_event(
+    event: ProviderEvent,
+) -> ParsedPublicSnapshotLifecycleEvent | None:
+    if event.event_type not in PUBLIC_SNAPSHOT_LIFECYCLE_ACTIONS or not isinstance(
+        event.payload, dict
+    ):
         return None
     try:
-        event = ParsedIssueLifecycleEvent(**payload)
-    except TypeError:
+        snapshot_lifecycle = ParsedPublicSnapshotLifecycleEvent(
+            action=str(event.payload["action"]),
+            repository_node_id=str(event.payload["repository_node_id"]),
+        )
+    except (KeyError, TypeError):
         return None
-    if event.action not in ISSUE_LIFECYCLE_ACTIONS or not event.repository_node_id:
+    actions = PUBLIC_SNAPSHOT_LIFECYCLE_ACTIONS[event.event_type]
+    if snapshot_lifecycle.action not in actions or not snapshot_lifecycle.repository_node_id:
         return None
-    return event
+    return snapshot_lifecycle
 
 
-def _refresh_public_snapshot_after_issue_lifecycle(
+def is_public_snapshot_lifecycle_delivery(event: ProviderEvent) -> bool:
+    """GIT-003/GIT-005: identify a verified delivery that invalidates a public cache."""
+    return _stored_public_snapshot_lifecycle_event(event) is not None
+
+
+def _refresh_public_snapshot_after_lifecycle_event(
     connection: RepositoryConnection, event: ProviderEvent
 ) -> bool:
     if (
@@ -1422,15 +1451,50 @@ def _refresh_public_snapshot_after_issue_lifecycle(
         or connection.deactivated_at is not None
     ):
         return True
+    if (
+        connection.public_snapshot_at is not None
+        and connection.public_snapshot_at >= event.received_at
+    ):
+        return True
+    lock_key = f"github_sync.webhook_snapshot_refresh.v1:{connection.pk}"
+    lock_acquired = False
     try:
-        refresh_public_repository_snapshot(connection, github_app_client())
-    except GithubAppError:
-        logger.warning(
-            "issue lifecycle public snapshot refresh failed (repository=%s event=%s)",
+        reserved = cache.add(lock_key, str(event.pk), timeout=WEBHOOK_SNAPSHOT_LOCK_SECONDS)
+        lock_acquired = reserved
+    except Exception:
+        logger.exception(
+            "public snapshot refresh lock failed (repository=%s event=%s)",
+            connection.pk,
+            event.pk,
+        )
+        reserved = True
+    if not reserved:
+        logger.info(
+            "public snapshot refresh coalesced behind an in-flight refresh "
+            "(repository=%s event=%s)",
             connection.pk,
             event.pk,
         )
         return False
+    try:
+        refresh_public_repository_snapshot(connection, github_app_client())
+    except GithubAppError:
+        logger.warning(
+            "public snapshot lifecycle refresh failed (repository=%s event=%s)",
+            connection.pk,
+            event.pk,
+        )
+        return False
+    finally:
+        if lock_acquired:
+            try:
+                cache.delete(lock_key)
+            except Exception:
+                logger.exception(
+                    "public snapshot refresh lock cleanup failed (repository=%s event=%s)",
+                    connection.pk,
+                    event.pk,
+                )
     return True
 
 

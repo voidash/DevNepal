@@ -11,6 +11,19 @@ DEFAULT_MAX_SKEW_SECONDS = 300
 ISSUE_LIFECYCLE_ACTIONS = frozenset(
     {"opened", "edited", "reopened", "closed", "labeled", "unlabeled", "deleted"}
 )
+PULL_REQUEST_LIFECYCLE_ACTIONS = frozenset(
+    {
+        "opened",
+        "edited",
+        "reopened",
+        "closed",
+        "ready_for_review",
+        "converted_to_draft",
+        "labeled",
+        "unlabeled",
+    }
+)
+ISSUE_COMMENT_LIFECYCLE_ACTIONS = frozenset({"created", "edited", "deleted"})
 
 
 class DedupKeys(NamedTuple):
@@ -37,8 +50,8 @@ class ParsedEvent:
 
 
 @dataclass(frozen=True)
-class ParsedIssueLifecycleEvent:
-    """GIT-003/GIT-005: minimal signed issue change data needed to refresh a projection."""
+class ParsedPublicSnapshotLifecycleEvent:
+    """GIT-003/GIT-005: minimal signed cache-invalidation data from a webhook."""
 
     action: str
     repository_node_id: str
@@ -121,24 +134,34 @@ def parse_event(event: str, payload: dict) -> ParsedEvent | None:
     return None
 
 
-def parse_issue_lifecycle_event(event: str, payload: dict) -> ParsedIssueLifecycleEvent | None:
-    """GIT-003/GIT-005: recognize issue changes that invalidate a public repository cache."""
-    if event != "issues":
+def parse_public_snapshot_lifecycle_event(
+    event: str, payload: dict
+) -> ParsedPublicSnapshotLifecycleEvent | None:
+    """GIT-003/GIT-005: recognize signed changes that invalidate public projections."""
+    actions = {
+        "issues": ISSUE_LIFECYCLE_ACTIONS,
+        "pull_request": PULL_REQUEST_LIFECYCLE_ACTIONS,
+        "issue_comment": ISSUE_COMMENT_LIFECYCLE_ACTIONS,
+    }.get(event)
+    if actions is None:
         return None
     action = payload.get("action")
-    if action not in ISSUE_LIFECYCLE_ACTIONS:
+    if action not in actions:
         return None
-    issue = payload.get("issue") or {}
+    subject_key = "pull_request" if event == "pull_request" else "issue"
+    subject = payload.get(subject_key) or {}
+    if event == "issue_comment" and not isinstance(payload.get("comment"), dict):
+        return None
     repository = payload.get("repository") or {}
     try:
-        issue_id = int(issue["id"])
-        issue_number = int(issue["number"])
+        subject_id = int(subject["id"])
+        subject_number = int(subject["number"])
     except (KeyError, TypeError, ValueError):
         return None
     repository_node_id = str(repository.get("node_id") or "").strip()
-    if issue_id < 1 or issue_number < 1 or not repository_node_id:
+    if subject_id < 1 or subject_number < 1 or not repository_node_id:
         return None
-    return ParsedIssueLifecycleEvent(action=action, repository_node_id=repository_node_id)
+    return ParsedPublicSnapshotLifecycleEvent(action=action, repository_node_id=repository_node_id)
 
 
 def is_within_replay_window(

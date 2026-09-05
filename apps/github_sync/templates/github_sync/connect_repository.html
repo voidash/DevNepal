@@ -37,8 +37,13 @@
   <div class="dn-settings-list">
     <div class="dn-setting-row">
       <div>
+        {% if uses_project_app_installation %}
+        <strong>{% trans "GitHub App · ministry project access" %}</strong>
+        <p>{% trans "The repository is selected from the DevNepal GitHub App installation. No personal GitHub account connection is required." %}</p>
+        {% else %}
         <strong>{% blocktrans with login=connection.login %}GitHub · connected as {{ login }}{% endblocktrans %}</strong>
         <p>{% trans "These repositories come from your GitHub App installations and can feed listed projects." %}</p>
+        {% endif %}
       </div>
     </div>
     <div class="dn-setting-row">

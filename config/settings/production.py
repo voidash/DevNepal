@@ -22,6 +22,14 @@ CSRF_TRUSTED_ORIGINS = _csv_setting(
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "media"
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": os.environ.get("DJANGO_CACHE_DIR", str(BASE_DIR.parent / ".devnepal-cache")),
+        "TIMEOUT": 300,
+    }
+}
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

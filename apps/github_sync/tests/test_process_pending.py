@@ -8,7 +8,12 @@ from django.utils import timezone
 
 from apps.github_sync.enums import ProcessingState
 from apps.github_sync.errors import GithubAppResponseError
-from apps.github_sync.models import GithubIssueSnapshot, ProviderEvent, RepositoryConnection
+from apps.github_sync.models import (
+    GithubIssueSnapshot,
+    GithubPullRequestSnapshot,
+    ProviderEvent,
+    RepositoryConnection,
+)
 from apps.github_sync.services import ingest_webhook, process_pending
 from apps.github_sync.tests.factories import (
     WEBHOOK_SECRET,
@@ -71,6 +76,43 @@ def issue_lifecycle_body(action, *, node_id, issue_id=8080, number=12):
     ).encode("utf-8")
 
 
+def pull_request_lifecycle_body(action, *, node_id, pull_request_id=9090, number=34):
+    return json.dumps(
+        {
+            "action": action,
+            "pull_request": {
+                "id": pull_request_id,
+                "number": number,
+                "merged": False,
+                "user": {"login": "sita", "type": "User"},
+                "base": {"ref": "main"},
+            },
+            "repository": {
+                "id": 555001,
+                "node_id": node_id,
+                "name": "gov-portal",
+            },
+            "sender": {"login": "sita", "type": "User"},
+        }
+    ).encode("utf-8")
+
+
+def issue_comment_lifecycle_body(action, *, node_id, comment_id=10101, issue_id=8080, number=12):
+    return json.dumps(
+        {
+            "action": action,
+            "comment": {"id": comment_id, "body": "Public status update"},
+            "issue": {"id": issue_id, "number": number, "state": "open"},
+            "repository": {
+                "id": 555001,
+                "node_id": node_id,
+                "name": "gov-portal",
+            },
+            "sender": {"login": "sita", "type": "User"},
+        }
+    ).encode("utf-8")
+
+
 class LifecycleSnapshotClient:
     def __init__(self):
         self.calls = []
@@ -99,7 +141,23 @@ class LifecycleSnapshotClient:
         ]
 
     def list_open_pull_requests(self, installation_id, full_name):
-        return []
+        return [
+            {
+                "id": 9090,
+                "number": 34,
+                "title": "Fresh public pull request",
+                "body": "Ready for ministry review",
+                "state": "open",
+                "comments": 0,
+                "html_url": f"https://github.com/{full_name}/pull/34",
+                "updated_at": "2026-09-06T10:00:00Z",
+                "user": {
+                    "login": "sita",
+                    "avatar_url": "https://avatars.githubusercontent.com/u/2",
+                },
+                "labels": [{"name": "ready for review"}],
+            }
+        ]
 
     def list_contributors(self, installation_id, full_name):
         return []
@@ -111,6 +169,25 @@ class FailingLifecycleSnapshotClient(LifecycleSnapshotClient):
 
 
 class TestProcessPending:
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_inflight_repository_refresh_coalesces_without_another_provider_call(self, monkeypatch):
+        """GIT-003/SEC-006: a webhook burst cannot multiply full provider snapshots."""
+        connection = RepositoryConnectionFactory(
+            is_public=True, repository_node_id="R_kgDOInflightCoalesce"
+        )
+        client = LifecycleSnapshotClient()
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", lambda: client)
+        monkeypatch.setattr("apps.github_sync.services.cache.add", lambda *args, **kwargs: False)
+        body = issue_lifecycle_body("labeled", node_id=connection.repository_node_id)
+        event = ingest_webhook("github", "issues", "inflight-coalesce", sign_body(body), None, body)
+
+        result = process_pending(limit=10)
+
+        event.refresh_from_db()
+        assert result.blocked == 1
+        assert event.processing_state == ProcessingState.PENDING
+        assert client.calls == []
+
     @pytest.mark.parametrize(
         "action",
         ["opened", "edited", "reopened", "closed", "labeled", "unlabeled", "deleted"],
@@ -154,6 +231,138 @@ class TestProcessPending:
         assert event.processing_state == ProcessingState.PROCESSED
         assert event.last_error == ""
         assert GithubIssueSnapshot.objects.get(repository=connection).title == "New public issue"
+
+    @pytest.mark.parametrize(
+        "action",
+        [
+            "opened",
+            "edited",
+            "reopened",
+            "closed",
+            "ready_for_review",
+            "converted_to_draft",
+            "labeled",
+            "unlabeled",
+        ],
+    )
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_signed_pull_request_lifecycle_refreshes_public_snapshot_in_worker(
+        self, monkeypatch, action
+    ):
+        """GIT-003/GIT-004/GIT-005: signed pull-request changes refresh public projections."""
+        connection = RepositoryConnectionFactory(
+            is_public=True, repository_node_id="R_kgDOPullRequestLifecycle"
+        )
+        client = LifecycleSnapshotClient()
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", lambda: client)
+        body = pull_request_lifecycle_body(action, node_id=connection.repository_node_id)
+
+        event = ingest_webhook(
+            "github",
+            "pull_request",
+            f"pull-request-lifecycle-{action}",
+            sign_body(body),
+            timezone.now().isoformat(),
+            body,
+        )
+
+        result = process_pending(limit=10)
+
+        event.refresh_from_db()
+        assert result.processed == 1
+        assert event.processing_state == ProcessingState.PROCESSED
+        assert event.last_error == ""
+        assert GithubPullRequestSnapshot.objects.get(repository=connection).title == (
+            "Fresh public pull request"
+        )
+
+    @pytest.mark.parametrize("action", ["created", "edited", "deleted"])
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_signed_issue_comment_lifecycle_refreshes_public_snapshot_in_worker(
+        self, monkeypatch, action
+    ):
+        """GIT-003/GIT-004/GIT-005: issue comments refresh public issue comment counts."""
+        connection = RepositoryConnectionFactory(
+            is_public=True, repository_node_id="R_kgDOIssueCommentLifecycle"
+        )
+        client = LifecycleSnapshotClient()
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", lambda: client)
+        body = issue_comment_lifecycle_body(action, node_id=connection.repository_node_id)
+
+        event = ingest_webhook(
+            "github",
+            "issue_comment",
+            f"issue-comment-lifecycle-{action}",
+            sign_body(body),
+            timezone.now().isoformat(),
+            body,
+        )
+
+        result = process_pending(limit=10)
+
+        event.refresh_from_db()
+        assert result.processed == 1
+        assert event.processing_state == ProcessingState.PROCESSED
+        assert GithubIssueSnapshot.objects.get(repository=connection).comments_count == 0
+
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_newer_projection_coalesces_older_pending_lifecycle_event(self, monkeypatch):
+        """GIT-003/GIT-005: one completed projection satisfies an older pending delivery."""
+        connection = RepositoryConnectionFactory(
+            is_public=True, repository_node_id="R_kgDOProjectionCoalesce"
+        )
+        client = LifecycleSnapshotClient()
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", lambda: client)
+        first_body = issue_lifecycle_body("opened", node_id=connection.repository_node_id)
+        second_body = issue_lifecycle_body(
+            "edited", node_id=connection.repository_node_id, issue_id=8081
+        )
+        first = ingest_webhook(
+            "github", "issues", "coalesce-first", sign_body(first_body), None, first_body
+        )
+        second = ingest_webhook(
+            "github", "issues", "coalesce-second", sign_body(second_body), None, second_body
+        )
+
+        result = process_pending(limit=10)
+
+        first.refresh_from_db()
+        second.refresh_from_db()
+        assert result.processed == 2
+        assert first.processing_state == second.processing_state == ProcessingState.PROCESSED
+        assert client.calls == [(connection.installation_id, connection.full_name)]
+
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_merged_pull_request_refreshes_projection_without_skipping_contribution_credit(
+        self, monkeypatch
+    ):
+        """GIT-003/GIT-005/GIT-007: merged PRs refresh the cache and retain credit ledger work."""
+        connection = RepositoryConnectionFactory(
+            is_public=True, repository_node_id="R_kgDOMergedPullRequest"
+        )
+        client = LifecycleSnapshotClient()
+        calls = []
+        install_fake_contributions(monkeypatch, calls)
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", lambda: client)
+        body = pr_merged_body(node_id=connection.repository_node_id)
+
+        event = ingest_webhook(
+            "github",
+            "pull_request",
+            "merged-pull-request-refresh",
+            sign_body(body),
+            timezone.now().isoformat(),
+            body,
+        )
+
+        result = process_pending(limit=10)
+
+        event.refresh_from_db()
+        assert result.processed == 1
+        assert event.processing_state == ProcessingState.PROCESSED
+        assert len(calls) == 1
+        assert calls[0][1] == connection.project
+        assert GithubPullRequestSnapshot.objects.get(repository=connection).number == 34
 
     @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
     def test_issue_lifecycle_snapshot_failure_keeps_last_good_projection(self, monkeypatch):

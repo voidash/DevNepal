@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.github_sync.enums import ProcessingState
-from apps.github_sync.models import GithubIssueSnapshot, ProviderEvent
+from apps.github_sync.models import GithubIssueSnapshot, GithubPullRequestSnapshot, ProviderEvent
 from apps.github_sync.tests.factories import (
     WEBHOOK_SECRET,
     RepositoryConnectionFactory,
@@ -46,6 +46,83 @@ def post_webhook(client, body, headers):
 
 
 class TestGithubWebhookView:
+    def test_signed_pull_request_open_refreshes_projection_and_public_render(
+        self, client, monkeypatch
+    ):
+        """GIT-003/GIT-004/GIT-005: a signed PR webhook updates the rendered public project."""
+        connection = RepositoryConnectionFactory(
+            is_public=True,
+            repository_node_id="R_kgDOImmediatePullRequest",
+            full_name="voidash/civic-help-directory",
+        )
+        connection.project.status = ProjectStatus.OPEN_FOR_CONTRIBUTION
+        connection.project.repository_url = "https://github.com/voidash/civic-help-directory"
+        connection.project.save(update_fields=["status", "repository_url"])
+
+        class SnapshotClient:
+            def repository_metadata(self, installation_id, full_name):
+                return {"full_name": full_name, "private": False, "default_branch": "main"}
+
+            def list_open_issues(self, installation_id, full_name):
+                return []
+
+            def list_open_pull_requests(self, installation_id, full_name):
+                return [
+                    {
+                        "id": 88003,
+                        "number": 20,
+                        "title": "Visible after GitHub pull request webhook",
+                        "body": "Ready for a ministry reviewer.",
+                        "state": "open",
+                        "comments": 0,
+                        "html_url": f"https://github.com/{full_name}/pull/20",
+                        "updated_at": "2026-09-06T10:00:00Z",
+                        "user": {
+                            "login": "voidash",
+                            "avatar_url": "https://avatars.githubusercontent.com/u/1",
+                        },
+                    }
+                ]
+
+            def list_contributors(self, installation_id, full_name):
+                return []
+
+        monkeypatch.setattr("apps.github_sync.services.github_app_client", SnapshotClient)
+        body = json.dumps(
+            {
+                "action": "opened",
+                "pull_request": {
+                    "id": 88003,
+                    "number": 20,
+                    "merged": False,
+                    "user": {"login": "voidash", "type": "User"},
+                    "base": {"ref": "main"},
+                },
+                "repository": {
+                    "id": 555001,
+                    "node_id": connection.repository_node_id,
+                    "name": "civic-help-directory",
+                },
+                "sender": {"login": "voidash", "type": "User"},
+            }
+        ).encode("utf-8")
+        headers = webhook_headers(
+            body,
+            HTTP_X_GITHUB_EVENT="pull_request",
+            HTTP_X_GITHUB_DELIVERY="immediate-pull-request-refresh",
+        )
+
+        response = post_webhook(client, body, headers)
+
+        assert response.status_code == 202
+        assert ProviderEvent.objects.get().processing_state == ProcessingState.PROCESSED
+        assert GithubPullRequestSnapshot.objects.get(repository=connection).number == 20
+        public_page = client.get(
+            reverse("projects:detail", kwargs={"slug": connection.project.slug})
+        )
+        assert public_page.status_code == 200
+        assert "Visible after GitHub pull request webhook" in public_page.content.decode()
+
     def test_signed_issue_open_refreshes_the_public_projection_before_acknowledgement(
         self, client, monkeypatch
     ):
