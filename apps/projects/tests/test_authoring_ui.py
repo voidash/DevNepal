@@ -56,7 +56,7 @@ def test_publisher_creates_a_ministry_owned_draft_through_authoring_ui(client):
 
     project = Project.objects.get(title_en="Digital Service Directory")
     assert response.status_code == 302
-    assert response.url == reverse("projects:authoring_edit", kwargs={"slug": project.slug})
+    assert response.url == reverse("projects:authoring_detail", kwargs={"slug": project.slug})
     assert project.project_type == "government"
     assert project.ministry == assignment.ministry
     assert project.owner == assignment.user

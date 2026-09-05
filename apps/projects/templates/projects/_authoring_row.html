@@ -1,0 +1,42 @@
+{% load i18n %}{% comment %} One project in the ministry's list. The row carries
+   the state, the repository behind it, the numbers that repository is
+   producing, and exactly one primary action: publishing a draft, or opening
+   the workspace of anything already live. {% endcomment %}
+<article class="blueprint dn-project-row">
+  <div class="dn-project-row__identity">
+    <div class="dn-project-row__head">
+      <span class="Label{% if project.status == 'open_for_contribution' %} Label--success{% elif project.status == 'paused' or project.status == 'changes_requested' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+      {% if project.ministry %}<span class="dn-project-row__ministry">{{ project.ministry.abbreviation|default:project.ministry.localized_name }}</span>{% endif %}
+    </div>
+    <h4><a href="{% url 'projects:authoring_detail' project.slug %}">{{ project.localized_title }}</a></h4>
+    {% for connection in project.repository_connections.all %}{% if forloop.first %}
+    <p class="dn-project-row__repo">{{ connection.full_name }}{% if connection.public_snapshot_at %} · {% trans "synced" %} {{ connection.public_snapshot_at|timesince }} {% trans "ago" %}{% endif %}</p>
+    {% endif %}{% empty %}
+    <p class="dn-project-row__repo dn-project-row__repo--missing">{% trans "Repository not connected yet" %}</p>
+    {% endfor %}
+  </div>
+  {% if stage == "draft" %}
+  <p class="dn-project-row__hint">{% trans "Nobody can see or contribute to this listing until you publish it." %}</p>
+  {% else %}
+  <dl class="dn-project-row__signals">
+    {% for connection in project.repository_connections.all %}{% if forloop.first %}
+    <div><dt>{% trans "Open issues" %}</dt><dd>{{ connection.issue_snapshots.all|length }}</dd></div>
+    <div><dt>{% trans "Pull requests" %}</dt><dd>{{ connection.pull_request_snapshots.all|length }}</dd></div>
+    <div><dt>{% trans "Contributors" %}</dt><dd>{{ connection.contributor_snapshots.all|length }}</dd></div>
+    {% endif %}{% empty %}
+    <div><dt>{% trans "Open issues" %}</dt><dd class="is-none">—</dd></div>
+    <div><dt>{% trans "Pull requests" %}</dt><dd class="is-none">—</dd></div>
+    <div><dt>{% trans "Contributors" %}</dt><dd class="is-none">—</dd></div>
+    {% endfor %}
+  </dl>
+  {% endif %}
+  <div class="dn-project-row__actions">
+    {% if stage == "draft" %}
+    <a class="btn btn--primary" href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Review and publish" %}</a>
+    <a class="btn" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit" %}</a>
+    {% else %}
+    <a class="btn btn--primary" href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Open workspace" %}</a>
+    <a class="dn-arrow-link" href="{% url 'projects:detail' project.slug %}">{% trans "View public page" %} →</a>
+    {% endif %}
+  </div>
+</article>

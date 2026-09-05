@@ -1034,15 +1034,54 @@ def authoring_dashboard(request: HttpRequest) -> HttpResponse:
     if not _can_author_projects(request.user):
         raise PermissionDenied
     projects = (
-        Project.objects.filter(project_type=ProjectType.GOVERNMENT)
-        if request.user.is_superuser
-        else projects_for_publisher(request.user)
+        (
+            Project.objects.filter(project_type=ProjectType.GOVERNMENT)
+            if request.user.is_superuser
+            else projects_for_publisher(request.user)
+        )
+        .select_related("ministry")
+        .prefetch_related("repository_connections")
     )
+    live_states = (ProjectStatus.OPEN_FOR_CONTRIBUTION, ProjectStatus.PAUSED)
+    draft_states = (
+        ProjectStatus.DRAFT,
+        ProjectStatus.IN_REVIEW,
+        ProjectStatus.CHANGES_REQUESTED,
+        ProjectStatus.APPROVED,
+    )
+    drafts = [project for project in projects if project.status in draft_states]
     return render(
         request,
         "projects/authoring_dashboard.html",
         {
-            "projects": projects.select_related("ministry"),
+            "projects": projects,
+            "draft_projects": drafts,
+            "live_projects": [project for project in projects if project.status in live_states],
+            "closed_projects": [
+                project
+                for project in projects
+                if project.status not in draft_states and project.status not in live_states
+            ],
+            "unconnected_draft_count": sum(
+                1
+                for project in drafts
+                if not any(
+                    connection.deactivated_at is None
+                    for connection in project.repository_connections.all()
+                )
+            ),
+            "pending_application_count": Application.objects.filter(
+                project__in=projects,
+                status__in=(
+                    ApplicationStatus.SUBMITTED,
+                    ApplicationStatus.INFO_REQUESTED,
+                    ApplicationStatus.WAITLISTED,
+                ),
+            ).count(),
+            "pending_evidence_count": ContributionRecord.objects.filter(
+                project__in=projects,
+                status__in=(VerificationStatus.CANDIDATE, VerificationStatus.PENDING_INFO),
+            ).count(),
             "can_create": _can_author_projects(request.user),
         },
     )
@@ -1252,7 +1291,7 @@ def authoring_create(request: HttpRequest) -> HttpResponse:
             except ProjectAuthorizationError as error:
                 raise PermissionDenied from error
             _save_authoring_many_to_many(form, project)
-            return redirect("projects:authoring_edit", slug=project.slug)
+            return redirect("projects:authoring_detail", slug=project.slug)
     else:
         form = GovernmentDraftCreateForm(actor=request.user)
     return render(request, "projects/authoring_form.html", {"form": form, "is_create": True})
@@ -1276,7 +1315,7 @@ def authoring_edit(request: HttpRequest, slug: str) -> HttpResponse:
                     status=400,
                 )
             _save_authoring_many_to_many(form, project)
-            return redirect("projects:authoring_edit", slug=project.slug)
+            return redirect("projects:authoring_detail", slug=project.slug)
     else:
         form = ProjectAuthoringForm(instance=project)
     return render(

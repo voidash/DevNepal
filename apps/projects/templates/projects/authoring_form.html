@@ -14,7 +14,16 @@
         <p class="dn-section-kicker">{% trans "Ministry publishing" %}</p>
         <h1 id="authoring-form-heading">{% if is_create %}{% trans "Create a government project" %}{% else %}{% trans "Edit government project" %}{% endif %}</h1>
         <p class="dn-lede">{% trans "Connect a public GitHub repository. DevNepal will show its open issues, pull requests, and contributors." %}</p>
+        {% if is_create %}
+        <ol class="dn-mini-path" aria-label="{% trans 'Path to publication' %}">
+          <li aria-current="step"><span>1</span>{% trans "Describe it" %}</li>
+          <li><span>2</span>{% trans "Connect the repository" %}</li>
+          <li><span>3</span>{% trans "Publish" %}</li>
+        </ol>
+        <p class="dn-field-help">{% trans "This step saves a draft. Nothing is public until you publish it from the project's workspace." %}</p>
+        {% else %}
         <p class="dn-field-help">{% trans "Only the ministry, bilingual title and summary, repository, licence, and contribution route are needed to begin." %}</p>
+        {% endif %}
       </header>
       {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
       {% if editable|default:is_create %}
@@ -90,7 +99,7 @@
           {% include "projects/_authoring_field.html" with field=form.vulnerability_disclosure_url %}
         </details>
         <div class="dn-authoring-actions">
-          <button class="btn btn--primary" type="submit">{% if is_create %}{% trans "Create project" %}{% else %}{% trans "Save changes" %}{% endif %}</button>
+          <button class="btn btn--primary" type="submit">{% if is_create %}{% trans "Save draft and continue" %}{% else %}{% trans "Save changes" %}{% endif %}</button>
           <a class="btn" href="{% url 'projects:authoring_dashboard' %}">{% trans "Cancel" %}</a>
         </div>
         </div>

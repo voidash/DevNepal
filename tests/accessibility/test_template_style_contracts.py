@@ -574,6 +574,7 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
 
     assert 'class="dn-footer"' in base
     assert 'class="dn-container dn-footer-grid"' in base
+    assert "dn-footer-brand" not in base
     assert base.count("<footer") == 1
     for label in ("Platform", "Policies", "Help"):
         assert f"aria-label=\"{{% trans '{label}' %}}\"" in base, label

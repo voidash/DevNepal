@@ -595,6 +595,8 @@ def test_catalog_defers_secondary_controls_until_a_visitor_asks_for_them(client)
     assert 'name="q"' in toolbar
     assert 'name="sort"' not in toolbar
     assert 'name="layout"' not in toolbar
+    assert '<details class="dn-catalog-filters">' in content
+    assert '<details class="dn-catalog-filters" open>' not in content
     assert 'name="technology"' in filters
     assert 'name="deadline_from"' in filters
 
