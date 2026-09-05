@@ -22,6 +22,10 @@ class ReconciliationError(GithubSyncError):
     """GIT-006: a repository reconciliation sweep could not complete safely."""
 
 
+class ReconciliationAuthorizationError(ReconciliationError):
+    """D5.4/AUTH-005: a reconciliation run was requested without Super Admin MFA."""
+
+
 class GithubAppError(GithubSyncError):
     """GIT-001: base failure for GitHub App API operations."""
 

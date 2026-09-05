@@ -17,4 +17,9 @@ urlpatterns = [
         views.connect_repository,
         name="connect_repository",
     ),
+    path(
+        "github/repositories/<int:pk>/reconciliation/",
+        views.reconciliation_console,
+        name="reconciliation",
+    ),
 ]

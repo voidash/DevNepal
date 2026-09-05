@@ -27,6 +27,7 @@ from apps.github_sync.errors import (
     ConnectionNotFoundError,
     GithubAppError,
     GithubAppResponseError,
+    ReconciliationAuthorizationError,
     ReconciliationError,
     RepositoryBindingError,
     WebhookReplayError,
@@ -604,6 +605,30 @@ class ReconciliationPage:
     next_cursor: str
 
 
+@dataclass(frozen=True)
+class ReconciliationPreviewItem:
+    """D5.4/GIT-006: one provider event classified before a reconciliation write."""
+
+    event_type: str
+    event_kind: str
+    number: int | None
+    actor_login: str
+    status: str
+
+
+@dataclass(frozen=True)
+class ReconciliationPreview:
+    """D5.4/GIT-006: immutable dry-run view of one reconciliation page."""
+
+    repository: RepositoryConnection
+    since: object
+    next_cursor: str
+    events_found: int
+    qualifying: int
+    already_recorded: int
+    events: tuple[ReconciliationPreviewItem, ...]
+
+
 class ReconciliationFetcher(Protocol):
     def fetch(
         self,
@@ -652,6 +677,137 @@ def _reconciliation_page_number(cursor):
     if page < 1:
         raise ReconciliationError("stored reconciliation cursor is malformed")
     return page
+
+
+def configured_reconciliation_fetcher() -> ReconciliationFetcher:
+    """D5.4/GIT-006: construct the same configured fetcher used by the scheduled sweep."""
+    dotted_path = getattr(settings, "GITHUB_RECONCILE_FETCHER", "")
+    if not dotted_path:
+        return GithubReconciliationFetcher()
+    module_name, _, attribute = dotted_path.rpartition(".")
+    if not module_name:
+        raise ReconciliationError("configured reconciliation fetcher path is invalid")
+    try:
+        fetcher_class = getattr(importlib.import_module(module_name), attribute)
+    except (AttributeError, ImportError, ModuleNotFoundError) as exc:
+        raise ReconciliationError("configured reconciliation fetcher is unavailable") from exc
+    return fetcher_class()
+
+
+def preview_reconciliation(
+    actor,
+    repository_connection: RepositoryConnection,
+    *,
+    fetcher: ReconciliationFetcher,
+) -> ReconciliationPreview:
+    """D5.4/GIT-006: fetch and classify one reconciliation page without changing the ledger."""
+    connection = _reconcilable_connection(repository_connection.pk)
+    _authorize_reconciliation(actor, connection)
+    page = fetcher.fetch(connection, connection.sync_cursor, connection.last_synced_at)
+    existing_ids = set(
+        ProviderEvent.objects.filter(
+            provider=connection.provider,
+            provider_event_id__in=[event.parsed_event.event_id for event in page.events],
+        ).values_list("provider_event_id", flat=True)
+    )
+    rows = tuple(
+        ReconciliationPreviewItem(
+            event_type=event.event_type,
+            event_kind=str(event.parsed_event.kind),
+            number=event.parsed_event.number,
+            actor_login=event.parsed_event.actor_login,
+            status=(
+                "already_recorded" if event.parsed_event.event_id in existing_ids else "pending"
+            ),
+        )
+        for event in page.events
+    )
+    qualifying = sum(row.status == "pending" for row in rows)
+    return ReconciliationPreview(
+        repository=connection,
+        since=connection.last_synced_at,
+        next_cursor=page.next_cursor,
+        events_found=len(rows),
+        qualifying=qualifying,
+        already_recorded=len(rows) - qualifying,
+        events=rows,
+    )
+
+
+def audit_reconciliation_preview(actor, preview: ReconciliationPreview, purpose: str) -> None:
+    """D5.4/SEC-008: retain the stated purpose and non-secret dry-run outcome."""
+    _authorize_reconciliation(actor, preview.repository)
+    record_audit(
+        actor=actor,
+        action="github_reconciliation.preview",
+        obj=preview.repository,
+        before={"sync_cursor": preview.repository.sync_cursor},
+        after={
+            "purpose": purpose,
+            "events_found": preview.events_found,
+            "qualifying": preview.qualifying,
+            "already_recorded": preview.already_recorded,
+            "next_cursor": preview.next_cursor,
+        },
+    )
+
+
+def run_reconciliation(
+    actor,
+    repository_connection: RepositoryConnection,
+    *,
+    purpose: str,
+    fetcher: ReconciliationFetcher,
+) -> int:
+    """D5.4/GIT-006/SEC-008: apply one idempotent sweep with an immutable purpose audit."""
+    connection = _reconcilable_connection(repository_connection.pk)
+    _authorize_reconciliation(actor, connection)
+    normalized_purpose = str(purpose).strip()
+    if len(normalized_purpose) < 8:
+        raise ReconciliationError("reconciliation requires a meaningful purpose")
+    return reconcile(
+        connection,
+        since=connection.last_synced_at,
+        fetcher=fetcher,
+        audit_actor=actor,
+        audit_purpose=normalized_purpose,
+    )
+
+
+def _reconcilable_connection(repository_connection_id: int) -> RepositoryConnection:
+    connection = (
+        RepositoryConnection.objects.select_related("project")
+        .filter(pk=repository_connection_id, project__isnull=False, deactivated_at__isnull=True)
+        .exclude(sync_state=SyncState.STOPPED)
+        .first()
+    )
+    if connection is None:
+        raise ReconciliationError("repository connection is not available for reconciliation")
+    return connection
+
+
+def _authorize_reconciliation(actor, repository_connection: RepositoryConnection) -> None:
+    if not (
+        actor is not None
+        and getattr(actor, "is_authenticated", False)
+        and getattr(actor, "is_active", False)
+        and getattr(actor, "is_superuser", False)
+    ):
+        record_audit(
+            actor=actor,
+            action="github_reconciliation.denied",
+            obj=repository_connection,
+            result="failure",
+        )
+        raise ReconciliationAuthorizationError("reconciliation requires a Super Admin")
+    from apps.accounts.services import require_privileged_mfa
+
+    require_privileged_mfa(
+        actor,
+        action="github_reconciliation",
+        obj=repository_connection,
+        error_type=ReconciliationAuthorizationError,
+    )
 
 
 def _configured_verified_event_types():
@@ -1118,6 +1274,8 @@ def reconcile(
     repository_connection: RepositoryConnection,
     since: object,
     fetcher: ReconciliationFetcher,
+    audit_actor=None,
+    audit_purpose: str = "",
 ) -> int:
     """GIT-006: durably reconcile one selected repository through an injected provider client."""
     try:
@@ -1149,6 +1307,18 @@ def reconcile(
                     "updated_at",
                 ]
             )
+            if audit_actor is not None:
+                record_audit(
+                    actor=audit_actor,
+                    action="github_reconciliation.apply",
+                    obj=connection,
+                    before={"sync_cursor": repository_connection.sync_cursor},
+                    after={
+                        "purpose": audit_purpose,
+                        "recovered": recovered,
+                        "sync_cursor": connection.sync_cursor,
+                    },
+                )
             return recovered
     except Exception as exc:
         logger.exception("reconciliation fetch failed (repository=%s)", repository_connection.pk)
