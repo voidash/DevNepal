@@ -7,6 +7,18 @@ app_name = "accounts"
 urlpatterns = [
     path("accounts/login/", views.LocalLoginView.as_view(), name="login"),
     path("accounts/signup/", views.signup, name="signup"),
+    path("accounts/onboarding/profile/", views.onboarding_profile, name="onboarding_profile"),
+    path(
+        "accounts/onboarding/visibility/", views.onboarding_visibility, name="onboarding_visibility"
+    ),
+    path("accounts/onboarding/github/", views.onboarding_github, name="onboarding_github"),
+    path(
+        "accounts/onboarding/github/skip/",
+        views.onboarding_github_skip,
+        name="onboarding_github_skip",
+    ),
+    path("accounts/onboarding/preview/", views.onboarding_preview, name="onboarding_preview"),
+    path("accounts/onboarding/publish/", views.onboarding_publish, name="onboarding_publish"),
     path("accounts/github/connect/", views.github_connect, name="github_connect"),
     path(
         "accounts/github/login/callback/",

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Preview your public profile" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="dn-onboarding" aria-labelledby="onboarding-preview-heading">
+  <div class="dn-onboarding__shell">
+    <header class="dn-onboarding__heading"><p>{% trans "Your profile · preview" %}</p><h1 id="onboarding-preview-heading">{% trans "Preview as a visitor" %}</h1><p class="dn-onboarding__lede">{% trans "This is the persisted public projection. Nothing becomes a completed profile until you confirm below." %}</p></header>
+    <div class="dn-onboarding__sheet blueprint">
+      <article class="dn-onboarding__public-preview">
+        <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+        <p class="dn-onboarding__username">@{{ payload.username }}</p>
+        {% if payload.headline %}<p>{{ payload.headline }}</p>{% endif %}
+        {% if payload.location %}<p>{{ payload.location }}</p>{% endif %}
+        {% if payload.province %}<p>{{ payload.province }}</p>{% endif %}
+        {% if payload.skills %}<ul>{% for skill in payload.skills %}<li>{{ skill.name }}</li>{% endfor %}</ul>{% endif %}
+      </article>
+      <aside class="dn-onboarding__note"><strong>{% trans "Not shown to anyone" %}</strong><p>{% trans "Email, sign-in provider, exact address, private profile fields, repository lists, and private GitHub activity." %}</p></aside>
+      <footer class="dn-onboarding__actions"><a href="{% url 'accounts:onboarding_visibility' %}">{% trans "Back · change visibility" %}</a><form method="post" action="{% url 'accounts:onboarding_publish' %}">{% csrf_token %}<button class="btn btn--primary" type="submit">{% trans "Confirm and finish setup" %}</button></form></footer>
+    </div>
+  </div>
+</section>
+{% endblock %}

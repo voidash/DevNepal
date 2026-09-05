@@ -111,6 +111,7 @@ def test_shared_shell_loads_one_coherent_design_system_after_primer():
         "src/base.css",
         "src/components.css",
         "src/devnepal.css",
+        "src/onboarding.css",
     ]
 
 

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Profile visibility" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="dn-onboarding" aria-labelledby="onboarding-visibility-heading">
+  <div class="dn-onboarding__shell">
+    <header class="dn-onboarding__heading"><p>{% trans "Create your account · 3 of 4" %}</p><h1 id="onboarding-visibility-heading">{% trans "Visibility" %}</h1><p class="dn-onboarding__lede">{% trans "Choose who sees each supported profile field. Email, sign-in provider, and exact address are private always." %}</p></header>
+    <form method="post" class="dn-onboarding__sheet blueprint" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="dn-state-banner is-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      <table class="dn-onboarding__visibility-table">
+        <thead><tr><th>{% trans "Field" %}</th><th>{% trans "Who can see it" %}</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">{% trans "Skills" %}</th><td>{{ form.visibility_skills }}</td></tr>
+          <tr><th scope="row">{% trans "Location" %}</th><td>{{ form.visibility_location }}</td></tr>
+          <tr><th scope="row">{% trans "Province" %}</th><td>{{ form.visibility_province }}</td></tr>
+          <tr><th scope="row">{% trans "Education" %}</th><td>{{ form.visibility_education }}</td></tr>
+          <tr><th scope="row">{% trans "Links" %}</th><td>{{ form.visibility_links }}</td></tr>
+          <tr><th scope="row">{% trans "Email and sign-in provider" %}</th><td><span class="dn-onboarding__locked">{% trans "Private · always" %}</span></td></tr>
+        </tbody>
+      </table>
+      {% for field in form %}{% if field.errors %}<p class="field__error">{{ field.label }}: {{ field.errors.0 }}</p>{% endif %}{% endfor %}
+      <div class="dn-onboarding__choices">{{ form.directory_discoverable }} <label for="{{ form.directory_discoverable.id_for_label }}">{% trans "List my profile in the public member directory" %}</label></div>
+      <div class="dn-onboarding__choices">{{ form.leaderboard_opt_out }} <label for="{{ form.leaderboard_opt_out.id_for_label }}">{% trans "Do not list me on the public leaderboard" %}</label></div>
+      <aside class="dn-onboarding__note"><strong>{% trans "Members" %}</strong> {% trans "means signed-in DevNepal members. Ministries never see private fields; application sharing is a separate choice." %}</aside>
+      <footer class="dn-onboarding__actions"><a href="{% url 'accounts:onboarding_profile' %}">{% trans "Back to profile" %}</a><button class="btn btn--primary" type="submit">{% trans "Continue to GitHub" %}</button></footer>
+    </form>
+  </div>
+</section>
+{% endblock %}

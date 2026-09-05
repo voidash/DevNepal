@@ -139,6 +139,88 @@ class MemberProfileForm(forms.ModelForm):
         return profile
 
 
+class OnboardingProfileForm(forms.ModelForm):
+    """The optional B1 profile details, saved independently from visibility choices."""
+
+    skills = forms.ModelMultipleChoiceField(
+        queryset=Skill.objects.filter(is_active=True),
+        required=False,
+        label=gettext_lazy("Skills"),
+    )
+
+    class Meta:
+        model = MemberProfile
+        fields = (
+            "skills",
+            "experience_band",
+            "availability",
+            "location",
+            "province",
+            "headline",
+            "contribution_preferences",
+            "interests",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.user_id:
+            self.fields["skills"].initial = list(
+                self.instance.user.skills.filter(skill__is_active=True).values_list(
+                    "skill_id", flat=True
+                )
+            )
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        if commit:
+            profile.save()
+            self.save_m2m()
+            sync_member_skills(profile.user, self.cleaned_data["skills"])
+        return profile
+
+
+class OnboardingVisibilityForm(forms.Form):
+    """B1.4 controls only the visibility boundaries the public projection enforces."""
+
+    directory_discoverable = forms.BooleanField(
+        required=False,
+        label=gettext_lazy("List my profile in the public member directory"),
+    )
+    leaderboard_opt_out = forms.BooleanField(
+        required=False,
+        label=gettext_lazy("Do not list me on the public leaderboard"),
+    )
+
+    def __init__(self, *args, profile: MemberProfile, **kwargs):
+        self.profile = profile
+        super().__init__(*args, **kwargs)
+        self.fields["directory_discoverable"].initial = profile.directory_discoverable
+        self.fields["leaderboard_opt_out"].initial = profile.leaderboard_opt_out
+        for field in sorted(VISIBILITY_CONTROLLED_FIELDS):
+            self.fields[f"visibility_{field}"] = forms.ChoiceField(
+                choices=Visibility.choices,
+                initial=profile.field_visibility.get(field, Visibility.PRIVATE),
+                label=gettext_lazy(field.replace("_", " ").capitalize()),
+            )
+
+    def save(self):
+        visibility = dict(self.profile.field_visibility)
+        for field in VISIBILITY_CONTROLLED_FIELDS:
+            visibility[field] = self.cleaned_data[f"visibility_{field}"]
+        self.profile.field_visibility = visibility
+        self.profile.directory_discoverable = self.cleaned_data["directory_discoverable"]
+        self.profile.leaderboard_opt_out = self.cleaned_data["leaderboard_opt_out"]
+        self.profile.save(
+            update_fields=[
+                "field_visibility",
+                "directory_discoverable",
+                "leaderboard_opt_out",
+                "updated_at",
+            ]
+        )
+        return self.profile
+
+
 class MemberLinkForm(forms.ModelForm):
     class Meta:
         model = MemberLink

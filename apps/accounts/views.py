@@ -23,6 +23,8 @@ from apps.accounts.forms import (
     MemberLinkFormSet,
     MemberProfileForm,
     MemberSignupForm,
+    OnboardingProfileForm,
+    OnboardingVisibilityForm,
 )
 from apps.accounts.models import MemberProfile, UserSession
 from apps.accounts.permissions import privileged_mfa_required, requires_mfa
@@ -46,6 +48,9 @@ from apps.taxonomy.models import Skill
 
 logger = logging.getLogger(__name__)
 
+ONBOARDING_MEMBER_SESSION_KEY = "accounts.onboarding_member_id"
+ONBOARDING_GITHUB_SESSION_KEY = "accounts.onboarding_github"
+
 
 class LocalLoginView(LoginView):
     authentication_form = LocalAuthenticationForm
@@ -63,6 +68,8 @@ class LocalLoginView(LoginView):
     def form_valid(self, form):
         response = super().form_valid(form)
         record_session(self.request, self.request.user)
+        if self.request.session.pop(ONBOARDING_MEMBER_SESSION_KEY, None) == self.request.user.pk:
+            return redirect("accounts:onboarding_profile")
         return response
 
 
@@ -89,7 +96,7 @@ def signup(request):
     if request.method == "POST":
         form = MemberSignupForm(request.POST)
         if form.is_valid():
-            create_member_account(
+            user = create_member_account(
                 username=form.cleaned_data["username"],
                 email=form.cleaned_data["email"],
                 password=form.cleaned_data["password1"],
@@ -98,6 +105,7 @@ def signup(request):
                 request,
                 gettext("Your DevNepal account is ready. Sign in to continue."),
             )
+            request.session[ONBOARDING_MEMBER_SESSION_KEY] = user.pk
             return redirect("accounts:login")
         return render(
             request,
@@ -118,6 +126,8 @@ def github_connect(request):
     config = github_oauth.oauth_config()
     if not config.enabled:
         raise Http404("GitHub connect is not enabled")
+    if request.POST.get("onboarding") == "1":
+        request.session[ONBOARDING_GITHUB_SESSION_KEY] = True
     state = github_oauth.generate_state()
     request.session[github_oauth.STATE_SESSION_KEY] = state
     return redirect(github_oauth.authorize_url(config, state))
@@ -166,6 +176,9 @@ def github_callback(request):
         login(request, user)
         record_session(request, user)
     messages.success(request, gettext("Your GitHub account is connected."))
+    if request.session.pop(ONBOARDING_GITHUB_SESSION_KEY, False):
+        if not _profile_for(user).onboarding_completed:
+            return redirect("accounts:onboarding_preview")
     return redirect("accounts:dashboard")
 
 
@@ -173,6 +186,107 @@ def _refuse_github_connect(request, action: str):
     actor = request.user if request.user.is_authenticated else None
     record_audit(actor=actor, action=action, result="failure")
     messages.error(request, gettext("GitHub connect could not be completed."))
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_http_methods(["GET", "POST"])
+def onboarding_profile(request):
+    """AUTH-001/MEM-002/MEM-004: save the optional profile portion of B1 onboarding."""
+    profile = _profile_for(request.user)
+    if profile.onboarding_completed:
+        return redirect("accounts:dashboard")
+    form = OnboardingProfileForm(request.POST or None, instance=profile)
+    if request.method == "POST":
+        if not form.is_valid():
+            return render(request, "accounts/onboarding_profile.html", {"form": form}, status=400)
+        with transaction.atomic():
+            form.save()
+            record_audit(actor=request.user, action="account.onboarding_profile_saved", obj=profile)
+        return redirect("accounts:onboarding_visibility")
+    return render(request, "accounts/onboarding_profile.html", {"form": form})
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_http_methods(["GET", "POST"])
+def onboarding_visibility(request):
+    """MEM-003/REC-004: persist B1.4 public and member-only visibility controls."""
+    profile = _profile_for(request.user)
+    if profile.onboarding_completed:
+        return redirect("accounts:dashboard")
+    form = OnboardingVisibilityForm(request.POST or None, profile=profile)
+    if request.method == "POST":
+        if not form.is_valid():
+            return render(
+                request, "accounts/onboarding_visibility.html", {"form": form}, status=400
+            )
+        with transaction.atomic():
+            form.save()
+            record_audit(
+                actor=request.user, action="account.onboarding_visibility_saved", obj=profile
+            )
+        return redirect("accounts:onboarding_github")
+    return render(request, "accounts/onboarding_visibility.html", {"form": form})
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_GET
+def onboarding_github(request):
+    """AUTH-002/GIT-010: disclose actual OAuth availability before optional connection."""
+    profile = _profile_for(request.user)
+    if profile.onboarding_completed:
+        return redirect("accounts:dashboard")
+    connection = GithubConnection.objects.filter(user=request.user, revoked_at__isnull=True).first()
+    return render(
+        request,
+        "accounts/onboarding_github.html",
+        {
+            "github_oauth_enabled": github_oauth.oauth_config().enabled,
+            "github_connection": connection,
+        },
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_http_methods(["POST"])
+def onboarding_github_skip(request):
+    """GIT-002: record a real optional-provider skip without manufacturing a connection."""
+    profile = _profile_for(request.user)
+    if not profile.onboarding_completed:
+        with transaction.atomic():
+            profile.github_onboarding_skipped = True
+            profile.save(update_fields=["github_onboarding_skipped", "updated_at"])
+            record_audit(
+                actor=request.user, action="account.onboarding_github_skipped", obj=profile
+            )
+    return redirect("accounts:onboarding_preview")
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_GET
+def onboarding_preview(request):
+    """MEM-008: render the persisted visitor projection before an explicit publish action."""
+    profile = _profile_for(request.user)
+    if profile.onboarding_completed:
+        return redirect("accounts:dashboard")
+    return render(
+        request,
+        "accounts/onboarding_preview.html",
+        {"payload": public_profile_payload(profile), "profile": profile},
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_http_methods(["POST"])
+def onboarding_publish(request):
+    """MEM-003/MEM-008: publish only after the member explicitly confirms the projection."""
+    profile = _profile_for(request.user)
+    if not profile.onboarding_completed:
+        with transaction.atomic():
+            profile.onboarding_completed = True
+            profile.save(update_fields=["onboarding_completed", "updated_at"])
+            record_audit(actor=request.user, action="account.onboarding_published", obj=profile)
+    messages.success(request, gettext("Your profile setup is published."))
+    return redirect("accounts:dashboard")
 
 
 def public_profile(request, username):

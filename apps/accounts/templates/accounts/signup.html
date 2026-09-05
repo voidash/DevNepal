@@ -3,7 +3,7 @@
 {% block title %}{% trans "Create account" %} | DevNepal{% endblock %}
 {% block content %}
 <section class="section">
-  <div class="container">
+  <div class="container dn-auth-page">
     <header class="dn-page-header">
       <p class="dn-kicker">{% trans "Create account · 1 of 4" %}</p>
       <h1>{% trans "Create your account" %}</h1>
@@ -28,7 +28,7 @@
     </div>
     <p class="auth-divider" role="separator"><span>{% trans "or create with email" %}</span></p>
     {% endif %}
-    <form method="post" class="field-group" novalidate>
+    <form method="post" class="dn-auth-form blueprint" novalidate>
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="error-summary" role="alert"><h2>{% trans "There is a problem" %}</h2>{{ form.non_field_errors }}</div>{% endif %}
       <div class="field">

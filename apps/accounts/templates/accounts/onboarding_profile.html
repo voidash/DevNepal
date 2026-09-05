@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Your profile" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="dn-onboarding" aria-labelledby="onboarding-profile-heading">
+  <div class="dn-onboarding__shell">
+    <header class="dn-onboarding__heading">
+      <p>{% trans "Create your account · 2 of 4" %}</p>
+      <h1 id="onboarding-profile-heading">{% trans "Your profile" %}</h1>
+      <p class="dn-onboarding__lede">{% trans "Add only what helps people understand how you want to contribute. Every field here is optional." %}</p>
+    </header>
+    <form method="post" class="dn-onboarding__sheet blueprint" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="dn-state-banner is-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="dn-onboarding__field">
+        <label for="{{ form.skills.id_for_label }}">{% trans "Skills" %}</label>{{ form.skills }}
+        <p>{% trans "Choose from the active platform taxonomy. You can update this later." %}</p>
+      </div>
+      <div class="dn-onboarding__grid">
+        <div class="dn-onboarding__field"><label for="{{ form.experience_band.id_for_label }}">{% trans "Experience" %}</label>{{ form.experience_band }}{% if form.experience_band.errors %}<p class="field__error">{{ form.experience_band.errors.0 }}</p>{% endif %}</div>
+        <div class="dn-onboarding__field"><label for="{{ form.availability.id_for_label }}">{% trans "Availability per week" %}</label>{{ form.availability }}{% if form.availability.errors %}<p class="field__error">{{ form.availability.errors.0 }}</p>{% endif %}</div>
+        <div class="dn-onboarding__field"><label for="{{ form.location.id_for_label }}">{% trans "Location" %}</label>{{ form.location }}<p>{% trans "Use a city or municipality, not an exact address." %}</p>{% if form.location.errors %}<p class="field__error">{{ form.location.errors.0 }}</p>{% endif %}</div>
+        <div class="dn-onboarding__field"><label for="{{ form.province.id_for_label }}">{% trans "Province" %}</label>{{ form.province }}{% if form.province.errors %}<p class="field__error">{{ form.province.errors.0 }}</p>{% endif %}</div>
+      </div>
+      <div class="dn-onboarding__field"><label for="{{ form.headline.id_for_label }}">{% trans "Headline" %}</label>{{ form.headline }}<p>{% trans "Optional. For example: Frontend developer." %}</p>{% if form.headline.errors %}<p class="field__error">{{ form.headline.errors.0 }}</p>{% endif %}</div>
+      <div class="dn-onboarding__field"><label for="{{ form.contribution_preferences.id_for_label }}">{% trans "I want to contribute through" %}</label>{{ form.contribution_preferences }}{% if form.contribution_preferences.errors %}<p class="field__error">{{ form.contribution_preferences.errors.0 }}</p>{% endif %}</div>
+      <div class="dn-onboarding__field"><label for="{{ form.interests.id_for_label }}">{% trans "Interests" %}</label>{{ form.interests }}<p>{% trans "Optional. This improves project recommendations." %}</p>{% if form.interests.errors %}<p class="field__error">{{ form.interests.errors.0 }}</p>{% endif %}</div>
+      <footer class="dn-onboarding__actions"><a href="{% url 'accounts:dashboard' %}">{% trans "Finish later" %}</a><button class="btn btn--primary" type="submit">{% trans "Continue to visibility" %}</button></footer>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -38,6 +38,8 @@ class MemberProfile(models.Model):
     field_visibility = models.JSONField(default=dict, blank=True)
     directory_discoverable = models.BooleanField(default=False)
     leaderboard_opt_out = models.BooleanField(default=False)
+    onboarding_completed = models.BooleanField(default=False)
+    github_onboarding_skipped = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Connect GitHub" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="dn-onboarding" aria-labelledby="onboarding-github-heading">
+  <div class="dn-onboarding__shell">
+    <header class="dn-onboarding__heading"><p>{% trans "Create your account · 4 of 4 · optional" %}</p><h1 id="onboarding-github-heading">{% trans "Connect GitHub" %}</h1></header>
+    <div class="dn-onboarding__sheet blueprint">
+      {% if github_connection %}
+      <div class="dn-onboarding__status"><strong>{% trans "GitHub is connected" %}</strong><span>@{{ github_connection.login }}</span></div>
+      <p>{% trans "The connection is active. Continue to inspect your visitor preview." %}</p>
+      <footer class="dn-onboarding__actions"><a href="{% url 'accounts:onboarding_visibility' %}">{% trans "Back to visibility" %}</a><a class="btn btn--primary" href="{% url 'accounts:onboarding_preview' %}">{% trans "Preview your profile" %}</a></footer>
+      {% else %}
+      <h2>{% trans "Connect GitHub so your merged work can be attributed" %}</h2>
+      <p>{% trans "A connection helps us match your GitHub identity to work on DevNepal-listed repositories. Design, documentation, QA, and translation can still be submitted as evidence without GitHub." %}</p>
+      <div class="dn-onboarding__grid">
+        <section class="dn-onboarding__disclosure"><h3>{% trans "We read" %}</h3><p>{% trans "Your public GitHub profile and the minimum account identity needed to connect it. Repository access is managed separately through GitHub." %}</p></section>
+        <section class="dn-onboarding__disclosure"><h3>{% trans "We never" %}</h3><p>{% trans "We do not show tokens, private activity, or repository contents on your public profile. Disconnecting stops synchronization." %}</p></section>
+      </div>
+      {% if github_oauth_enabled %}
+      <form method="post" action="{% url 'accounts:github_connect' %}">{% csrf_token %}<input type="hidden" name="onboarding" value="1"><button class="btn btn--primary" type="submit">{% trans "Connect GitHub · continues on github.com" %}</button></form>
+      {% else %}
+      <div class="dn-state-banner is-attention" role="status"><strong>{% trans "GitHub connection is not available" %}</strong><p>{% trans "This deployment has not configured GitHub OAuth. You can finish without it." %}</p></div>
+      {% endif %}
+      <footer class="dn-onboarding__actions"><a href="{% url 'accounts:onboarding_visibility' %}">{% trans "Back to visibility" %}</a><form method="post" action="{% url 'accounts:onboarding_github_skip' %}">{% csrf_token %}<button class="btn" type="submit">{% trans "Skip for now" %}</button></form></footer>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
