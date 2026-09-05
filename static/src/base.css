@@ -67,7 +67,12 @@ ul {
   margin: 0 0 var(--space-4);
 }
 
-a { color: var(--color-accent); text-underline-offset: 3px; }
+a { color: var(--color-accent-700); text-underline-offset: 3px; }
+
+main :where(p, li, dd) a:not(.btn) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
 
 main :where(p, li, dd) a:not(.btn) {
   text-decoration: underline;
