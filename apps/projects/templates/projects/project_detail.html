@@ -25,7 +25,7 @@
       <div class="dn-repo-title"><span class="dn-project-owner">{{ project.ministry.abbreviation|default:"DevNepal" }}</span><span class="dn-repo-title-separator" aria-hidden="true">/</span><h1>{{ project.localized_title }}</h1></div>
       {% if project.title_ne and project.title_ne != project.localized_title %}<p class="dn-project-title-ne" lang="ne">{{ project.title_ne }}</p>{% endif %}
       <p class="dn-lede">{{ project.localized_summary }}</p>
-      {% if project.ministry %}<p class="dn-project-byline">{% blocktrans with ministry=project.ministry.localized_name %}Published by {{ ministry }}{% endblocktrans %}{% if last_activity_at %} · {% blocktrans count counter=last_activity_days_ago %}last maintainer activity {{ counter }} day ago{% plural %}last maintainer activity {{ counter }} days ago{% endblocktrans %}{% endif %}</p>{% endif %}
+      {% if project.ministry or last_activity_at %}<p class="dn-project-byline">{% if project.ministry %}{% blocktrans with ministry=project.ministry.localized_name %}Published by {{ ministry }}{% endblocktrans %}{% endif %}{% if project.ministry and last_activity_at %} · {% endif %}{% if last_activity_at %}<strong>{% trans "Last maintainer activity" %}</strong> {% blocktrans count counter=last_activity_days_ago %}{{ counter }} day ago{% plural %}{{ counter }} days ago{% endblocktrans %}{% endif %}</p>{% endif %}
     </div>
     <div class="dn-project-hero__actions">
       {% if github_issues %}<a class="btn btn--primary" href="#open-github-issues">{% trans "Choose an issue" %}</a>{% elif project.issue_tracker_url %}<a class="btn btn--primary" href="{{ project.issue_tracker_url }}" rel="noopener noreferrer">{% trans "View open issues" %}</a>{% endif %}
@@ -41,7 +41,7 @@
   {% if response_overdue %}<div class="dn-state-banner is-attention" role="status">{% trans "Response overdue: the maintainers have not answered within their published response window." %}</div>{% endif %}
   {% if maintainer_stale %}<div class="dn-state-banner is-danger" role="status">{% trans "Stale project: no maintainer activity has been recorded for an extended period." %}</div>{% endif %}
 
-  <section class="blueprint dn-sheet dn-project-sheet" aria-labelledby="project-sheet-heading">
+  <section class="dn-project-sheet blueprint dn-sheet" aria-labelledby="project-sheet-heading">
     <div class="dn-sheet__header"><span id="project-sheet-heading">{% trans "Project sheet" %}</span>{% if project.license %}<span>{{ project.license.spdx_id }}</span>{% endif %}<span>{% blocktrans with classification=project.get_data_classification_display %}Data: {{ classification }}{% endblocktrans %}</span></div>
     <div class="dn-accountability">
       <div class="dn-accountability-item"><strong>{% trans "How to join" %}</strong><span>{{ project.get_contribution_mode_display }}</span></div>
@@ -81,6 +81,8 @@
     </div>
   </section>
   {% endif %}
+
+  {% if supports_direct_contributions and user.is_authenticated %}<p><a class="btn btn--secondary" href="{% url 'contributions:submit' project.pk %}">{% trans "Submit evidence" %}</a></p>{% endif %}
 
   {% if github_starter_tasks and not github_issues and not supports_direct_contributions %}
   <section aria-labelledby="github-starter-heading">

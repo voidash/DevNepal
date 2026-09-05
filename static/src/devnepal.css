@@ -718,3 +718,4 @@ ol.dn-journey .dn-journey-step { list-style: none; }
 @media (max-width: 860px) {
   .dn-auth-columns { grid-template-columns: 1fr; gap: var(--space-6); }
 }
+.dn-featured-card__code { color: var(--color-neutral-600); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }

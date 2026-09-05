@@ -44,5 +44,4 @@ def test_home_calls_to_action_keep_visitors_in_the_active_language(client):
         hero = response.content[hero_start:hero_end]
 
         assert f'href="{reverse("projects:government")}"'.encode() in hero
-        assert f'href="{reverse("projects:community")}"'.encode() not in hero
-        assert f'href="{reverse("projects:community")}"'.encode() in response.content
+        assert f'href="{reverse("projects:community")}"'.encode() in hero

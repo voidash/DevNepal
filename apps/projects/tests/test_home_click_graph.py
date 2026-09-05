@@ -20,23 +20,24 @@ def test_home_empty_opportunities_keeps_a_government_catalog_exit(client):
     GITHUB_CLIENT_SECRET="client-secret",
     GITHUB_OAUTH_ENABLED=True,
 )
-def test_home_uses_the_real_github_post_boundary_only_when_configured(client):
-    """AUTH-002/GIT-002: configured GitHub hero action starts the OAuth boundary."""
+def test_home_offers_no_account_route_even_when_github_oauth_is_configured(client):
+    """AUTH-001/AUTH-002: contributing needs no account, so home never starts OAuth."""
     response = client.get(reverse("projects:home"))
 
     assert response.status_code == 200
-    assert f'action="{reverse("accounts:github_connect")}"'.encode() in response.content
-    assert b"Join with GitHub" in response.content
+    assert f'action="{reverse("accounts:github_connect")}"'.encode() not in response.content
+    assert b"Join with GitHub" not in response.content
+    assert b"no DevNepal account is needed" in response.content
 
 
 @pytest.mark.unit
 @override_settings(GITHUB_CLIENT_ID="", GITHUB_CLIENT_SECRET="", GITHUB_OAUTH_ENABLED=False)
-def test_home_labels_the_disabled_github_path_as_account_creation(client):
-    """AUTH-001: the anonymous hero never promises GitHub sign-in when OAuth is unavailable."""
+def test_home_sends_officers_to_sign_in_and_everyone_else_to_the_work(client):
+    """AUTH-001: the anonymous hero routes officers to sign-in and never promises OAuth."""
     response = client.get(reverse("projects:home"))
 
     assert response.status_code == 200
-    assert b"Create an account" in response.content
+    assert b"Ministry sign-in" in response.content
     assert b"Join with GitHub" not in response.content
 
 
@@ -51,11 +52,9 @@ def test_home_hero_offers_exactly_two_visitor_actions(client):
     assert b"Government of Nepal" in hero
     assert b"Digital Collaboration Initiative" not in hero
     assert b"Browse government projects" in hero
-    assert b"Create an account" in hero
-    assert b"Community projects" not in hero
-    assert b"Ministry officer?" not in hero
-    assert reverse("projects:community").encode() not in hero
-    assert reverse("projects:ministry_onboarding").encode() not in hero
+    assert b"Browse community projects" in hero
+    assert b"Create an account" not in hero
+    assert reverse("projects:community").encode() in hero
     assert hero.count(b'class="btn') == 2
 
 
@@ -89,8 +88,7 @@ def test_anonymous_mobile_menu_contains_account_entry_points(client):
     content = response.content.decode()
 
     assert f'href="{reverse("accounts:login")}"'.encode() in response.content
-    assert f'href="{reverse("accounts:signup")}"'.encode() in response.content
-    assert "Create an account" in content
+    assert "Ministry sign-in" in content
 
 
 @pytest.mark.unit
@@ -125,9 +123,8 @@ def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
 
     assert "Featured government projects" in content
     assert "Code is one of nine ways in" in content
-    assert "DevNepal — platform at a glance" in content
-    assert "People — verified impact and the people behind it" in content
-    assert "Writing from the community" in content
+    assert "What is published here" in content
+    assert "From listing to public record" in content
     assert "Choose your way in" not in content
     assert f'href="{reverse("projects:government")}"' in content
     assert f'href="{reverse("projects:community")}"' in content

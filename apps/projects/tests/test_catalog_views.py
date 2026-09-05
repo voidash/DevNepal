@@ -95,7 +95,7 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
     assert "Official" in section
     assert "See all government projects" in section
     assert "Open for contribution" not in section
-    assert "dn-home-section-heading--flush" in section
+    assert "dn-featured-card__facts" in section
 
 
 @pytest.mark.unit
@@ -110,15 +110,15 @@ def test_home_community_sheet_puts_the_catalog_exit_in_the_header(client):
 
     response = client.get(reverse("projects:home"))
     section = (
-        response.content.split(b'aria-labelledby="community-projects-heading"', 1)[1]
-        .split(b'aria-labelledby="people-heading"', 1)[0]
+        response.content.split(b'aria-labelledby="community-heading"', 1)[1]
+        .split(b'aria-labelledby="ministry-cta-heading"', 1)[0]
         .decode()
     )
 
-    assert "Community work that is not official" in section
-    assert "All community projects" in section
-    assert section.count("All community projects") == 1
-    assert "No government endorsement" not in section
+    assert "Community projects" in section
+    assert "Browse community projects" in section
+    assert section.count("Browse community projects") == 1
+    assert "never imply government endorsement" in section
     assert "not reviewed by PMO" not in section
 
 
@@ -144,7 +144,7 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
     assert response.status_code == 200
     assert b"Public technology," in response.content
     assert b"built in public." in response.content
-    assert b"Code stays on GitHub" in response.content
+    assert b"code stays on GitHub" in response.content
     assert b"Browse government projects" in response.content
     assert b"Government of Nepal" in response.content
     assert b"Collaborate on Nepal's digital future" not in response.content
@@ -157,51 +157,44 @@ def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "DevNepal — platform at a glance" in content
-    assert "Ministries publishing" in content
-    assert "Projects open for contribution" in content
-    assert "Verified contributions" in content
+    assert "What is published here" in content
+    assert "ministries publishing, each through a named officer" in content
+    assert "projects open for contribution right now" in content
+    assert "contributions accepted by a named maintainer" in content
     assert "Public member profiles" not in content
-    assert "Pilot 2026" not in content
-    assert "Updated daily" not in content
     assert "Code is one of nine ways in" in content
-    assert "Community projects — listed by members" in content
-    assert "All community projects" in content
-    assert "Recognition counts only work accepted by a named maintainer" in content
+    assert "Community projects" in content
+    assert "Browse community projects" in content
+    assert "A named maintainer verifies accepted work" in content
     assert 'class="blueprint' in content
-    reference_image = Path(settings.BASE_DIR) / "static/images/devnepal-hydropower-reference.jpg"
-    assert reference_image.is_file()
-    assert reference_image.stat().st_size == 289216
-    assert 'width="1600" height="1187"' in content
 
 
 @pytest.mark.unit
-def test_home_empty_state_uses_a_bounded_editorial_image_without_misrepresenting_open_work(client):
-    """DSC-001/NFR-A11Y-01/NFR-PERF-01: empty-state imagery is contextual, labelled, optional."""
+def test_home_never_asks_a_visitor_for_an_account(client):
+    """DSC-001/AUTH-001: contributing needs no account, so home offers none."""
     response = client.get(reverse("projects:home"))
-    content = response.content.decode()
-    asset = Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.png"
-    modern_asset = (
-        Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.webp"
-    )
+    main = response.content.split(b"<main", 1)[1].split(b"</main>", 1)[0].decode()
 
     assert response.status_code == 200
-    assert asset.is_file()
-    assert asset.stat().st_size > 0
-    assert modern_asset.is_file()
-    assert modern_asset.stat().st_size > 0
-    assert modern_asset.stat().st_size < asset.stat().st_size
-    assert 'class="dn-public-work-illustration"' in content
-    assert (
-        'type="image/webp" srcset="/static/images/devnepal-public-work-illustrations-v1.webp"'
-        in content
-    )
-    assert 'src="/static/images/devnepal-public-work-illustrations-v1.png"' in content
-    assert 'loading="lazy"' in content
-    assert 'decoding="async"' in content
-    assert 'width="1774" height="887"' in content
-    assert 'alt="Eight grayscale public-service scenes' in content
-    assert "Illustrated public-interest work areas, not a list of open projects." in content
+    assert "no DevNepal account is needed" in main
+    assert reverse("accounts:signup") not in main
+    assert "Create an account" not in main
+    assert "Join with GitHub" not in main
+    assert reverse("accounts:login") in main
+    assert "Ministry sign-in" in main
+
+
+@pytest.mark.unit
+def test_home_empty_state_explains_the_publication_safeguard_without_filler(client):
+    """DSC-001/NFR-A11Y-01: an empty catalogue states its reason and offers the exit."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Government opportunities are being prepared." in content
+    assert "a named owner, contribution guidance, and suitability review" in content
+    assert 'class="dn-public-work-illustration"' not in content
+    assert f'href="{reverse("projects:government")}"' in content
 
 
 @pytest.mark.unit
@@ -233,7 +226,7 @@ def test_about_page_uses_the_a1_2_process_and_policy_sheets(client):
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert 'class="blueprint dn-sheet"' in content
+    assert "blueprint dn-sheet" in content
     assert "01 · The process" in content
     assert "A ministry lists a project" in content
     assert "PMO approves" in content
@@ -595,12 +588,12 @@ def test_project_detail_uses_the_a1_3_a2_2_project_sheet_with_real_accountabilit
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert 'class="blueprint dn-sheet"' in content
+    assert "blueprint dn-sheet" in content
     assert "Project sheet" in content
     assert "Maintainers" in content
     assert first.user.username in content
     assert second.user.username in content
-    assert "Contribution mode" in content
+    assert "How to join" in content
     assert "Expected effort" in content
     assert "First response" in content
     assert "Open tasks" in content

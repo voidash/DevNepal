@@ -52,7 +52,7 @@
       <article class="card blueprint dn-featured-card">
         <div class="dn-featured-card__head">
           <span class="tag tag-accent">{% trans "Official" %}</span>
-          <span class="Label Label--success">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+          {% if project.ministry.abbreviation %}<span class="dn-featured-card__code">{{ project.ministry.abbreviation }}</span>{% endif %}
         </div>
         <div>
           <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3>
@@ -127,7 +127,7 @@
         {% include "components/status_octicon.html" with project_status=recommendation.project.status %}
         <div>
           <a class="dn-issue-title" href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a>
-          <div class="dn-labels">{% for reason in recommendation.reasons %}<span class="Label Label--secondary">{{ reason }}</span>{% endfor %}</div>
+          <div class="dn-labels">{% for reason in recommendation.reasons %}<span class="tag tag-neutral">{{ reason }}</span>{% endfor %}</div>
         </div>
       </article>
       {% endfor %}
