@@ -1,0 +1,15 @@
+<main style="padding:28px 40px 48px;display:flex;flex-direction:column;gap:20px;min-height:860px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
+          <div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0 0 4px">Ministry organizations</h1><div style="font-size:14px;color:var(--color-neutral-600)">7 organizations · 12 named officers · 1 invitation pending</div></div>
+          <button type="button" class="btn btn-primary blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Provision ministry</button>
+        </div>
+        <sc-raw-table class="table">
+          <sc-raw-thead><sc-raw-tr><sc-raw-th>Organization</sc-raw-th><sc-raw-th>Code</sc-raw-th><sc-raw-th>Named officers</sc-raw-th><sc-raw-th>MFA</sc-raw-th><sc-raw-th>Projects</sc-raw-th><sc-raw-th>Status</sc-raw-th><sc-raw-th>Last action · audit</sc-raw-th></sc-raw-tr></sc-raw-thead>
+          <sc-raw-tbody>
+            <sc-for list="{{ ministries }}" as="m" hint-placeholder-count="7">
+            <sc-raw-tr><sc-raw-td style="font-weight:500">{{ m.name }}</sc-raw-td><sc-raw-td class="text-muted">{{ m.code }}</sc-raw-td><sc-raw-td>{{ m.officers }}</sc-raw-td><sc-raw-td>{{ m.mfa }}</sc-raw-td><sc-raw-td>{{ m.projects }}</sc-raw-td><sc-raw-td><span class="tag {{ m.statusClass }}">{{ m.status }}</span></sc-raw-td><sc-raw-td class="text-muted" style="font-size:12px">{{ m.last }}</sc-raw-td></sc-raw-tr>
+            </sc-for>
+          </sc-raw-tbody>
+        </sc-raw-table>
+        <div style="font-size:12px;color:var(--color-neutral-600)">Suspending an organization revokes all of its officers immediately; its published projects remain visible under moderation policy.</div>
+      </main>

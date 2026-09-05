@@ -1,0 +1,23 @@
+<main style="padding:32px 40px 56px;display:flex;flex-direction:column;gap:20px;max-width:1000px"><div><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Sync health</div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0">Sync health</h1></div><div style="display:flex;flex-direction:column;position:relative;min-height:600px;border:1px solid var(--color-divider);background:var(--color-bg)">
+        
+        <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1">
+          <sc-raw-table class="table" style="font-size:12px">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Repository</sc-raw-th><sc-raw-th>Ministry</sc-raw-th><sc-raw-th>Last event</sc-raw-th><sc-raw-th>State</sc-raw-th></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody>
+              <sc-raw-tr style="background:var(--color-accent-100)"><sc-raw-td style="font-family:ui-monospace,Menlo,monospace">dhm-np/flood-alert-gateway</sc-raw-td><sc-raw-td>DHM</sc-raw-td><sc-raw-td class="text-muted">Fri 16:40</sc-raw-td><sc-raw-td><span class="tag tag-outline">Failing · signature</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td style="font-family:ui-monospace,Menlo,monospace">doit-np/sewa-portal</sc-raw-td><sc-raw-td>DoIT</sc-raw-td><sc-raw-td class="text-muted">12 min ago</sc-raw-td><sc-raw-td><span class="tag tag-accent">Healthy</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td style="font-family:ui-monospace,Menlo,monospace">mofaga-np/address-schema</sc-raw-td><sc-raw-td>MoFAGA</sc-raw-td><sc-raw-td class="text-muted">1 h ago</sc-raw-td><sc-raw-td><span class="tag tag-accent">Healthy</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td style="font-family:ui-monospace,Menlo,monospace">nitc-np/e-attendance-client</sc-raw-td><sc-raw-td>NITC</sc-raw-td><sc-raw-td class="text-muted">3 h ago</sc-raw-td><sc-raw-td><span class="tag tag-accent">Healthy</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td class="text-muted">+ 5 more</sc-raw-td><sc-raw-td></sc-raw-td><sc-raw-td></sc-raw-td><sc-raw-td><span class="tag tag-accent">Healthy</span></sc-raw-td></sc-raw-tr>
+            </sc-raw-tbody>
+          </sc-raw-table>
+          <div class="blueprint" style="padding:12px 14px;font-size:12.5px;display:flex;flex-direction:column;gap:6px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">dhm-np/flood-alert-gateway · detail</div>
+            <span style="display:flex;gap:8px;align-items:flex-start;color:var(--color-accent-900)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span><b>11 deliveries refused since Fri 16:40</b> · reason: HMAC signature mismatch · likely cause: webhook secret rotated on GitHub, not updated here</span></span>
+            <span>· Refused events are logged with delivery IDs, never processed — no unverified data entered the system</span>
+            <span>· Installation still active · repository metadata reachable · 3 merged PRs visible via API since Friday</span>
+            <span>· Ministry officers: Deepak Shrestha, Prabin Rai · not yet notified</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;border-top:1px solid var(--color-divider);padding-top:10px"><button type="button" class="btn btn-primary blueprint" style="font-size:12.5px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Rotate secret &amp; notify DHM</button><button type="button" class="btn btn-secondary blueprint" style="font-size:12.5px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Run reconciliation</button><button type="button" class="btn btn-ghost" style="font-size:12.5px">View refused deliveries</button></div>
+        </div>
+      </div></main>

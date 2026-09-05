@@ -1,0 +1,57 @@
+<div id="a3-1" data-screen-label="A3.1 Tech blogs" style="width:1440px;background:var(--color-bg);border:1px solid var(--color-divider);box-shadow:var(--shadow-md)">
+    <nav class="nav" style="padding:14px 48px;border-bottom:1px solid var(--color-divider)">
+      <span class="nav-brand" style="display:flex;flex-direction:column;gap:3px;line-height:1;font-size:22px">DevNepal<span style="font:600 9px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700)">Government of Nepal · PMO</span></span>
+      <a href="#">Home</a><a href="#">Government projects</a><a href="#">Community projects</a><a href="#">Members</a><a href="#" aria-current="page">Tech blogs</a><a href="#">Recognition</a><a href="#">How to contribute</a>
+      <div class="seg" style="margin-left:8px"><span class="seg-opt" style="background:var(--color-accent);color:var(--color-bg)">EN</span><span class="seg-opt">ने</span></div>
+      <button type="button" class="btn btn-primary blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Sign in</button>
+    </nav>
+    <div style="padding:40px 48px 56px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
+        <div><h1 style="font:600 40px/1.05 var(--font-heading);margin:0 0 8px">Tech blogs</h1><p style="margin:0;font-size:15px;color:var(--color-neutral-700);max-width:70ch">Technical writing by DevNepal members and project maintainers — in Nepali and English.</p></div>
+        <div style="display:flex;gap:12px;align-items:center"><div class="seg"><span class="seg-opt" style="background:var(--color-accent);color:var(--color-bg)">All languages</span><span class="seg-opt">नेपाली</span><span class="seg-opt">English</span></div><button type="button" class="btn btn-primary blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Write a post</button></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:48px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:28px">
+          <div class="blueprint" style="display:grid;grid-template-columns:5fr 7fr;gap:0"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="duotone" style="background:var(--color-accent-200);min-height:260px;display:grid;place-items:center;color:var(--color-accent-900);font:600 13px var(--font-body);letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:24px">Cover image<br>(author-supplied, alt text required)</div>
+            <div style="padding:28px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:8px;align-items:center"><span class="tag tag-accent">Featured</span><span class="tag tag-neutral">Member</span><span style="font-size:12px;color:var(--color-neutral-600)">English · 9 min read</span></div>
+              <h2 style="font:600 32px/1.1 var(--font-heading);margin:0">Handling Bikram Sambat dates in PostgreSQL without losing your mind</h2>
+              <p style="margin:0;font-size:15px;line-height:1.55;color:var(--color-neutral-800)">Fiscal years that start in mid-July, months of 29 to 32 days and a calendar table that has to be maintained by hand — here is the schema, the conversion functions and the tests we ship in NepaliDate.js.</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto"><span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:28px;height:28px;border:1px solid var(--color-divider);background:var(--color-accent-100);display:grid;place-items:center;font:600 11px var(--font-heading)">AS</span>Aarati Shrestha · 28 Aug 2026</span><span style="font-size:12px;color:var(--color-neutral-600)">PostgreSQL · Dates · Nepali</span></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ blogs }}" as="b" hint-placeholder-count="5">
+            <article style="display:grid;grid-template-columns:1fr 200px;gap:24px;padding:20px 0;border-bottom:1px solid var(--color-divider)">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;gap:8px;align-items:center"><span class="tag {{ b.kindClass }}">{{ b.kind }}</span><span style="font-size:12px;color:var(--color-neutral-600)">{{ b.lang }} · {{ b.mins }} read</span></div>
+                <h3 style="font:600 24px/1.15 var(--font-heading);margin:0">{{ b.title }}</h3>
+                <p style="margin:0;font-size:14px;line-height:1.5;color:var(--color-neutral-800)">{{ b.excerpt }}</p>
+                <div style="font-size:13px;color:var(--color-neutral-700)">{{ b.author }} · {{ b.date }}</div>
+              </div>
+              <div style="font-size:12px;color:var(--color-neutral-600);text-align:right;padding-top:4px">{{ b.tags }}</div>
+            </article>
+            </sc-for>
+          </div>
+        </div>
+        <aside style="display:flex;flex-direction:column;gap:20px">
+          <div class="card blueprint" style="padding:18px;gap:10px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="card-kicker">Topics</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:14px">
+              <span style="display:flex;justify-content:space-between"><span>Accessibility</span><span style="color:var(--color-neutral-600)">38</span></span><span style="display:flex;justify-content:space-between"><span>Nepali language &amp; Unicode</span><span style="color:var(--color-neutral-600)">31</span></span><span style="display:flex;justify-content:space-between"><span>APIs &amp; open data</span><span style="color:var(--color-neutral-600)">27</span></span><span style="display:flex;justify-content:space-between"><span>Testing</span><span style="color:var(--color-neutral-600)">19</span></span><span style="display:flex;justify-content:space-between"><span>Contributing &amp; maintaining</span><span style="color:var(--color-neutral-600)">16</span></span><span style="display:flex;justify-content:space-between"><span>Security</span><span style="color:var(--color-neutral-600)">9</span></span>
+            </div>
+          </div>
+          <div class="card blueprint" style="padding:18px;gap:10px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="card-kicker">By project</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:14px"><span>Sewa Portal Accessibility · 12</span><span>Health Facility Registry API · 8</span><span>Unified Local Address Schema · 7</span><span>NepaliDate.js · 4</span></div>
+          </div>
+          <div class="card blueprint" style="padding:18px;gap:10px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div class="card-kicker">Writing on DevNepal</div>
+            <div style="font-size:13px;line-height:1.5;color:var(--color-neutral-800)">Safe Markdown with code blocks, tables and images. Alt text is required. Scripts and embeds are not rendered. Posts published elsewhere can be listed as a link with a canonical URL instead of copied.</div>
+            <a href="#" style="font-size:12px">Writing guidelines</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div></div></sc-if><sc-if value="{{ story }}" hint-placeholder-val="{{ true }}"><div style="width:72px;display:flex;justify-content:center;padding-top:420px;flex:none"><svg width="48" height="18" viewBox="0 0 48 18" fill="none" stroke="var(--color-accent-700)" stroke-width="1.5"><path d="M0 9h46"></path><path d="m39 2 7 7-7 7"></path></svg></div></sc-if><sc-if value="{{ vis.a3_2 }}" hint-placeholder-val="{{ true }}"><div style="width:1440px;display:flex;flex-direction:column;gap:10px"><sc-if value="{{ story }}" hint-placeholder-val="{{ true }}"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 20px var(--font-heading)"><span style="color:var(--color-accent-700)">Step 2</span> · Reading a post</span><sc-if value="{{ showTrace }}" hint-placeholder-val="{{ true }}"><span style="font:500 11px ui-monospace,Menlo,monospace;color:var(--color-neutral-600)">BLG-002 · BLG-003 · BLG-004 · BLG-006 · MEM-007</span></sc-if></div><p style="margin:0;font-size:14px;line-height:1.5;color:var(--color-neutral-800);max-width:110ch">A post as readers see it: labelled Member, language and reading time, described images, code and tables from safe Markdown, external links marked, the author’s verified standing beside it, a Report action.</p></sc-if>

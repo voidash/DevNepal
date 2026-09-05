@@ -1,0 +1,69 @@
+/* Block-1 chrome around the reference boards. Temporary by design: dn-shell
+   replaces the rail in block 3. Uses Industry tokens so it re-skins with the
+   boards when industry-aliases.css lands. */
+
+html, body { height: 100%; }
+body { overflow: hidden; }
+
+.dn-canvas {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  height: 100vh;
+}
+
+/* ── rail ─────────────────────────────────────────────────────────────── */
+.dn-rail {
+  overflow-y: auto;
+  border-right: 1px solid var(--color-divider);
+  background: var(--color-bg);
+  padding: 16px 12px 40px;
+  font-size: 13px;
+}
+.dn-rail-head {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 4px 8px 16px;
+  font-family: var(--font-heading); font-size: 18px; line-height: 1.1;
+}
+.dn-rail-head .text-muted { font: 400 12px/1.4 var(--font-body); }
+.dn-rail-group { margin-top: 14px; }
+.dn-rail-group h6 { margin: 0 0 4px; padding: 0 8px; font-size: 11px; }
+.dn-rail-group ol { list-style: none; margin: 0; padding: 0; }
+.dn-rail a {
+  display: grid; grid-template-columns: 44px 1fr; gap: 8px; align-items: baseline;
+  padding: 6px 8px; border-radius: var(--radius-md);
+  color: var(--color-text); text-decoration: none; line-height: 1.35;
+}
+.dn-rail a:hover { background: color-mix(in srgb, var(--color-text) 6%, transparent); }
+.dn-rail a[aria-current="page"] {
+  background: var(--color-accent-100); color: var(--color-accent-800); font-weight: 500;
+}
+.dn-code { font: 500 11px/1 var(--font-heading); letter-spacing: .04em; color: var(--color-accent-700); }
+.dn-rail a[aria-current="page"] .dn-code { color: inherit; }
+
+/* ── stage ────────────────────────────────────────────────────────────── */
+.dn-stage { overflow: auto; background: var(--color-neutral-200); }
+.dn-stage-head {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 16px 24px 12px; border-bottom: 1px solid var(--color-divider);
+  background: var(--color-bg); position: sticky; top: 0; z-index: 2;
+}
+.dn-stage-head h4 { margin: 0; }
+.dn-stage-head p { margin: 0; flex-basis: 100%; font-size: 13px; }
+
+/* Boards are drawn at 1440 wide; keep that, scroll sideways inside the stage. */
+.dn-ref { position: relative; width: max-content; min-width: 100%; padding: 24px; }
+.dn-ref > main, .dn-ref > div[data-screen-label] { background: var(--color-bg); }
+.dn-ref > main { width: 1440px; border: 1px solid var(--color-divider); box-shadow: var(--shadow-md); }
+
+.dn-ref-chip {
+  position: sticky; top: 64px; left: 24px; z-index: 1;
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0 0 12px; padding: 5px 10px;
+  font: 500 12px/1 var(--font-body); letter-spacing: .02em;
+  color: var(--color-neutral-800); background: var(--color-neutral-100);
+  border: 1px dashed var(--color-neutral-500); border-radius: 999px;
+}
+.dn-ref-chip::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--color-neutral-500);
+}

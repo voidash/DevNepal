@@ -1,0 +1,36 @@
+<main style="padding:32px 40px 48px;display:flex;flex-direction:column;gap:28px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end"><div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0 0 4px">Overview</h1><div style="font-size:14px;color:var(--color-neutral-600)">Department of Information Technology · Tuesday, 2 September 2026</div></div><button type="button" class="btn btn-primary blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>New project draft</button></div>
+        <div class="blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr)">
+            <div style="padding:18px 24px;display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Open for contribution</span><span style="font:600 40px/1 var(--font-heading)">3</span><span style="font-size:12px;color:var(--color-neutral-600)">1 in review · 1 draft · 1 completed</span></div>
+            <div style="padding:18px 24px;border-left:1px solid var(--color-divider);display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Applications awaiting response</span><span style="font:600 40px/1 var(--font-heading)">7</span><span style="font-size:12px;color:var(--color-neutral-600)"><b style="color:var(--color-accent-800)">2 past SLA</b> · oldest 6 days</span></div>
+            <div style="padding:18px 24px;border-left:1px solid var(--color-divider);display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Candidate contributions to verify</span><span style="font:600 40px/1 var(--font-heading)">4</span><span style="font-size:12px;color:var(--color-neutral-600)">3 GitHub events · 1 evidence submission</span></div>
+            <div style="padding:18px 24px;border-left:1px solid var(--color-divider);display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Median first response · 30 d</span><span style="font:600 40px/1 var(--font-heading)">2.1 <span style="font-size:20px">days</span></span><span style="font-size:12px;color:var(--color-neutral-600)">Commitment ≤ 3 working days · met 88%</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border:1px solid var(--color-accent-400);background:var(--color-accent-100);font-size:14px;line-height:1.5;color:var(--color-accent-900)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span><b>Two applications have waited longer than your 3-working-day commitment.</b> Anjali Rai (6 days) and Sagar Thapa (4 days) on Sewa Portal Accessibility Remediation. PMO is notified automatically at 10 days.</span><a href="#" style="margin-left:auto;white-space:nowrap">Respond now</a></div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Projects · 5</div><span style="font-size:12px;color:var(--color-neutral-600)">Deadlines never close a project automatically — you extend, pause, complete or archive</span></div>
+          <hr style="height:1px;border:0;margin:0 0 4px;background:var(--color-divider)">
+          <sc-raw-table class="table">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Project</sc-raw-th><sc-raw-th>Lifecycle state</sc-raw-th><sc-raw-th>Applications</sc-raw-th><sc-raw-th>To verify</sc-raw-th><sc-raw-th>Last maintainer response</sc-raw-th><sc-raw-th style="text-align:right">Action</sc-raw-th></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody>
+              <sc-for list="{{ pubProjects }}" as="r" hint-placeholder-count="5">
+              <sc-raw-tr><sc-raw-td style="font-weight:500">{{ r.title }}</sc-raw-td><sc-raw-td><span class="tag {{ r.stateClass }}">{{ r.state }}</span></sc-raw-td><sc-raw-td>{{ r.apps }}</sc-raw-td><sc-raw-td>{{ r.cands }}</sc-raw-td><sc-raw-td class="text-muted">{{ r.response }}</sc-raw-td><sc-raw-td style="text-align:right"><a href="#" style="font-size:13px">{{ r.action }}</a></sc-raw-td></sc-raw-tr>
+              </sc-for>
+            </sc-raw-tbody>
+          </sc-raw-table>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Applications inbox · Sewa Portal Accessibility Remediation</div><a href="#" style="font-size:12px">Response templates</a></div>
+          <hr style="height:1px;border:0;margin:0 0 4px;background:var(--color-divider)">
+          <sc-raw-table class="table">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Applicant</sc-raw-th><sc-raw-th>Workstream</sc-raw-th><sc-raw-th>Submitted</sc-raw-th><sc-raw-th>Status</sc-raw-th><sc-raw-th style="text-align:right">Respond</sc-raw-th></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody>
+              <sc-for list="{{ apps }}" as="a" hint-placeholder-count="4">
+              <sc-raw-tr><sc-raw-td><div style="display:flex;gap:10px;align-items:center"><span style="width:28px;height:28px;border:1px solid var(--color-divider);background:var(--color-accent-100);flex:none"></span><div><div style="font-weight:500">{{ a.who }}</div><div style="font-size:12px;color:var(--color-neutral-600)">{{ a.handle }}</div></div></div></sc-raw-td><sc-raw-td>{{ a.ws }}</sc-raw-td><sc-raw-td class="text-muted">{{ a.when }}</sc-raw-td><sc-raw-td><span class="tag {{ a.stateClass }}">{{ a.state }}</span></sc-raw-td><sc-raw-td style="text-align:right"><div style="display:inline-flex;gap:4px"><button type="button" class="btn btn-ghost" style="font-size:13px;padding:4px 8px">Accept</button><button type="button" class="btn btn-ghost" style="font-size:13px;padding:4px 8px">Waitlist</button><button type="button" class="btn btn-ghost" style="font-size:13px;padding:4px 8px">Request info</button><button type="button" class="btn btn-ghost" style="font-size:13px;padding:4px 8px">Decline</button></div></sc-raw-td></sc-raw-tr>
+              </sc-for>
+            </sc-raw-tbody>
+          </sc-raw-table>
+        </div>
+      </main>

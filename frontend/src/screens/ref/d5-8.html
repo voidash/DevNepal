@@ -1,0 +1,24 @@
+<main style="padding:32px 40px 56px;display:flex;flex-direction:column;gap:20px;max-width:1000px"><div><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Privileged access</div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0">Privileged access</h1></div><div style="display:flex;flex-direction:column;position:relative;min-height:600px;border:1px solid var(--color-divider);background:var(--color-bg)">
+        
+        <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1">
+          <sc-raw-table class="table" style="font-size:12px">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Super Admin</sc-raw-th><sc-raw-th>MFA</sc-raw-th><sc-raw-th>Granted</sc-raw-th><sc-raw-th>Active sessions</sc-raw-th></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody>
+              <sc-raw-tr><sc-raw-td><b>Bikash Neupane</b> (you) · PMO</sc-raw-td><sc-raw-td>TOTP + key</sc-raw-td><sc-raw-td class="text-muted">Deployment · 1 Jul 2026</sc-raw-td><sc-raw-td>2</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Sunita Rana</b> · PMO</sc-raw-td><sc-raw-td>TOTP</sc-raw-td><sc-raw-td class="text-muted">B. Neupane, confirmed by PO · 3 Jul</sc-raw-td><sc-raw-td>1</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Anil Karki</b> · NITC (hosting)</sc-raw-td><sc-raw-td>TOTP + key</sc-raw-td><sc-raw-td class="text-muted">B. Neupane, confirmed by S. Rana · 15 Jul</sc-raw-td><sc-raw-td>0</sc-raw-td></sc-raw-tr>
+            </sc-raw-tbody>
+          </sc-raw-table>
+          <div class="blueprint" style="padding:12px 14px;font-size:12.5px;display:flex;flex-direction:column;gap:8px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Your sessions</div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span>Chrome · Windows · Kathmandu · this device · signed in 08:52</span><span class="tag tag-accent">Current</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span>Safari · iPhone · Kathmandu · last active Sat 19:10</span><a href="#" style="font-size:12px">Revoke</a></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;color:var(--color-accent-900)"><span>Firefox · Linux · <b>Frankfurt</b> · signed in Sun 02:14 · <b>unrecognised</b></span><button type="button" class="btn btn-primary blueprint" style="font-size:12px;padding:4px 10px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Revoke &amp; reset MFA</button></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px">
+            <div class="blueprint" style="padding:10px 12px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600)">Grant Super Admin</div>Needs a second Super Admin to confirm within 24 h; recorded with both names and a reason.</div>
+            <div class="blueprint" style="padding:10px 12px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600)">Revoke Super Admin</div>Immediate; sessions end; the person’s audit entries remain under their name.</div>
+          </div>
+          <div style="font-size:11.5px;color:var(--color-neutral-600);border-top:1px solid var(--color-divider);padding-top:10px;margin-top:auto">Security notices about privileged sign-ins cannot be muted and go to all Super Admins.</div>
+        </div>
+      </div></main>

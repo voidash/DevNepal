@@ -1,0 +1,20 @@
+<main style="padding:32px 40px 56px;display:flex;flex-direction:column;gap:20px;max-width:1000px"><div><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Configuration / Feature flags</div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0">Feature flags</h1></div><div style="display:flex;flex-direction:column;position:relative;min-height:600px;border:1px solid var(--color-divider);background:var(--color-bg)">
+        
+        <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1">
+          <sc-raw-table class="table" style="font-size:12px">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Flag</sc-raw-th><sc-raw-th>Scope</sc-raw-th><sc-raw-th>State</sc-raw-th><sc-raw-th>Owner · reason</sc-raw-th></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody>
+              <sc-raw-tr><sc-raw-td><b>Public leaderboard</b></sc-raw-td><sc-raw-td>Everyone</sc-raw-td><sc-raw-td><span class="tag tag-accent">On</span></sc-raw-td><sc-raw-td class="text-muted">Product owner · policy v1.2 approved</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Leaderboard default for new members</b></sc-raw-td><sc-raw-td>Everyone</sc-raw-td><sc-raw-td><span class="tag tag-outline">Not listed</span></sc-raw-td><sc-raw-td class="text-muted">Privacy review · opt-in until Q4 decision</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Facebook sign-in</b></sc-raw-td><sc-raw-td>Everyone</sc-raw-td><sc-raw-td><span class="tag tag-neutral">Off</span></sc-raw-td><sc-raw-td class="text-muted">Security review · pending provider assessment</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Auto-hide on blocklist hit</b> (moderation)</sc-raw-td><sc-raw-td>Everyone</sc-raw-td><sc-raw-td><span class="tag tag-neutral">Off</span></sc-raw-td><sc-raw-td class="text-muted">Community lead · every hide is a human act</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Readiness check blocks submit</b></sc-raw-td><sc-raw-td>Pilot ministries · 3</sc-raw-td><sc-raw-td><span class="tag tag-accent">On</span></sc-raw-td><sc-raw-td class="text-muted">Product owner · advisory elsewhere</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Community collaboration invites</b> (PPR-006)</sc-raw-td><sc-raw-td>—</sc-raw-td><sc-raw-td><span class="tag tag-neutral">Off · Phase 2</span></sc-raw-td><sc-raw-td class="text-muted">Roadmap</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Members-only visibility tier</b></sc-raw-td><sc-raw-td>Everyone</sc-raw-td><sc-raw-td><span class="tag tag-accent">On</span></sc-raw-td><sc-raw-td class="text-muted">UX · re-evaluate after beta</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td><b>Nepali interface</b></sc-raw-td><sc-raw-td>Everyone</sc-raw-td><sc-raw-td><span class="tag tag-accent">On</span></sc-raw-td><sc-raw-td class="text-muted">Launch requirement · cannot be disabled</sc-raw-td></sc-raw-tr>
+            </sc-raw-tbody>
+          </sc-raw-table>
+          <div class="blueprint" style="padding:12px 14px;font-size:12.5px;display:flex;flex-direction:column;gap:5px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Change log · Facebook sign-in</div><span>Off · 28 Aug · B. Neupane · “Security review pending; existing Facebook-linked accounts keep working, new sign-ups hidden.” · approved by S. Rana (four-eyes)</span><span style="color:var(--color-neutral-600)">On · 1 Jul · initial configuration</span></div>
+          <div style="font-size:11.5px;line-height:1.5;color:var(--color-neutral-700);border-top:1px solid var(--color-divider);padding-top:10px;margin-top:auto">Flags that change what members see require a second Super Admin to confirm. Flags never bypass authorization or audit.</div>
+        </div>
+      </div></main>

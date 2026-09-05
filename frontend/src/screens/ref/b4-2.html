@@ -1,0 +1,27 @@
+<main style="padding:32px 40px 56px;display:flex;flex-direction:column;gap:20px;max-width:1100px"><div><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Draft · autosaved</div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0">Draft</h1></div><div style="display:flex;flex-direction:column;position:relative;min-height:600px;border:1px solid var(--color-divider);background:var(--color-bg)">
+        
+        <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1">
+          <div class="input" style="font:600 22px/1.15 var(--font-heading);min-height:44px;display:flex;align-items:center">Handling Bikram Sambat dates in PostgreSQL without losing your mind</div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center"><div class="seg" style="font-size:12px"><span class="seg-opt" style="padding:5px 10px;background:var(--color-accent);color:var(--color-bg)">English</span><span class="seg-opt" style="padding:5px 10px">नेपाली</span></div><div class="input" style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:36px;padding:4px 8px;font-size:12px"><span class="tag tag-accent">PostgreSQL ×</span><span class="tag tag-accent">Dates ×</span><span class="tag tag-accent">Nepali ×</span><span style="color:var(--color-neutral-600)">add tag from taxonomy…</span></div></div>
+          <div style="display:flex;gap:6px;font-size:12px;color:var(--color-neutral-700);border:1px solid var(--color-divider);padding:6px 10px"><b>B</b><i>I</i><span>H2</span><span>H3</span><span style="font-family:ui-monospace,Menlo,monospace">code</span><span>list</span><span>table</span><span>link</span><span>image</span><span style="margin-left:auto;color:var(--color-neutral-500)">Markdown · no raw HTML</span></div>
+          <div class="input" style="min-height:190px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;color:var(--color-neutral-800);white-space:pre-wrap">## Why this is hard
+
+Fiscal years start in mid-July, months run 29–32 days and no formula predicts them — you need a **calendar table**.
+
+```sql
+CREATE TABLE bs_calendar (
+  bs_year int, bs_month int, days int,
+  ad_start date
+);
+```
+
+![Month lengths for 2080–2083](bs-months.png "alt: Table of month lengths for BS 2080 to 2083")
+
+The conversion function is a lookup, not arithmetic…</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="field"><label>Excerpt · shown in lists</label><div class="input" style="font-size:12.5px;min-height:52px;line-height:1.45">Fiscal years that start in mid-July, months of 29 to 32 days and a calendar table maintained by hand — here is the schema, the functions and the tests.</div></div>
+            <div class="field"><label>Cover image · description required</label><div style="display:flex;gap:8px"><div class="blueprint" style="width:52px;height:52px;flex:none;background:var(--color-neutral-100);display:grid;place-items:center;font:600 8px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);text-align:center"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>cover</div><div class="input" style="font-size:12px;min-height:52px;line-height:1.45">Hand-drawn Nepali calendar page with Gregorian dates pencilled in</div></div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;border-top:1px solid var(--color-divider);padding-top:10px"><span style="font-size:12px;color:var(--color-neutral-600)">1,840 words · ~9 min · linked project: <a href="#">NepaliDate.js</a></span><div style="display:flex;gap:8px"><button type="button" class="btn btn-secondary blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Save draft</button><button type="button" class="btn btn-primary blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Preview</button></div></div>
+        </div>
+      </div></main>

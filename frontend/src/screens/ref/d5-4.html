@@ -1,0 +1,23 @@
+<main style="padding:32px 40px 56px;display:flex;flex-direction:column;gap:20px;max-width:1000px"><div><div style="font:600 12px/12px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700);margin:0 0 10px">Sync health / dhm-np/flood-alert-gateway / Reconciliation</div><h1 style="font:600 34px/1.05 var(--font-heading);margin:0">Reconciliation run</h1></div><div style="display:flex;flex-direction:column;position:relative;min-height:600px;border:1px solid var(--color-divider);background:var(--color-bg)">
+        
+        <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--color-divider)">
+            <div style="padding:10px 12px"><span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);display:block">Window</span><b style="font:600 16px var(--font-heading)">Fri 16:40 → now</b></div>
+            <div style="padding:10px 12px;border-left:1px solid var(--color-divider)"><span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);display:block">Events found</span><b style="font:600 16px var(--font-heading)">11</b></div>
+            <div style="padding:10px 12px;border-left:1px solid var(--color-divider)"><span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);display:block">Qualifying</span><b style="font:600 16px var(--font-heading)">3</b></div>
+            <div style="padding:10px 12px;border-left:1px solid var(--color-divider)"><span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600);display:block">API budget used</span><b style="font:600 16px var(--font-heading)">42 / 5,000</b></div>
+          </div>
+          <sc-raw-table class="table" style="font-size:12px">
+            <sc-raw-thead><sc-raw-tr><sc-raw-th>Event</sc-raw-th><sc-raw-th>Actor → member</sc-raw-th><sc-raw-th>Result</sc-raw-th></sc-raw-tr></sc-raw-thead>
+            <sc-raw-tbody>
+              <sc-raw-tr><sc-raw-td>PR #23 merged · retry queue</sc-raw-td><sc-raw-td>@rohank → Rohan Karki</sc-raw-td><sc-raw-td><span class="tag tag-outline">Candidate created · reconciliation</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td>PR #24 merged · delivery log schema</sc-raw-td><sc-raw-td>@rohank → Rohan Karki</sc-raw-td><sc-raw-td><span class="tag tag-outline">Candidate created · reconciliation</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td>Issue #19 closed · completed</sc-raw-td><sc-raw-td>@bibekg → Bibek Gurung</sc-raw-td><sc-raw-td><span class="tag tag-outline">Candidate created · reconciliation</span></sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td>PR #22 merged (Fri 15:10)</sc-raw-td><sc-raw-td>@rohank</sc-raw-td><sc-raw-td class="text-muted">Skipped · already held from webhook</sc-raw-td></sc-raw-tr>
+              <sc-raw-tr><sc-raw-td>7 pushes, 1 bot dependency PR</sc-raw-td><sc-raw-td>—</sc-raw-td><sc-raw-td class="text-muted">Not qualifying · raw commits / bot</sc-raw-td></sc-raw-tr>
+            </sc-raw-tbody>
+          </sc-raw-table>
+          <div class="blueprint" style="padding:12px 14px;font-size:12.5px;display:flex;flex-direction:column;gap:5px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600)">Provenance kept on each record</div><span>source: reconciliation · run 2026-09-08T09:31:12 · triggered by B. Neupane · repository id · event id · actor mapping · verification pending (DHM maintainers)</span></div>
+          <div style="font-size:12px;color:var(--color-neutral-700)">Notified · DHM maintainers: 3 new candidates to verify · members: “received” · Bikash: run complete. Webhook secret rotated; next delivery will confirm health.</div>
+        </div>
+      </div></main>
