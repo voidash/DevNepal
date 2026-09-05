@@ -145,6 +145,38 @@ def test_unmarked_submission_keeps_normal_draft_creation_semantics(client):
     assert Project.objects.filter(title_en="A distinct ministry workstream").exists()
 
 
+@pytest.mark.integration
+def test_demo_fill_cannot_reuse_another_ministrys_connected_project(client):
+    """GOV-001/AUTH-006: a forged demo marker cannot cross a ministry boundary."""
+    assignment = MinistryPublisherFactory()
+    _verify_mfa(client, assignment.user)
+    other_project = ProjectFactory(repository_url="https://github.com/voidash/civic-help-directory")
+    RepositoryConnectionFactory(
+        project=other_project,
+        full_name="voidash/civic-help-directory",
+        is_public=True,
+    )
+
+    response = client.post(
+        reverse("projects:authoring_create"),
+        {
+            "demo_fill": "civic-help-directory",
+            "ministry": assignment.ministry.pk,
+            "title_en": "Civic Help Directory",
+            "title_ne": "नागरिक सहायता निर्देशिका",
+            "summary_en": "A directory for public services.",
+            "summary_ne": "सार्वजनिक सेवाहरूको निर्देशिका।",
+            "repository_url": "https://github.com/voidash/civic-help-directory",
+            "data_classification": "public",
+        },
+    )
+
+    assert response.status_code == 403
+    assert not Project.objects.filter(
+        owner=assignment.user, repository_url="https://github.com/voidash/civic-help-directory"
+    ).exists()
+
+
 def test_demo_fill_uses_the_rendered_mit_licence_label(client):
     """GOV-002: the demo helper selects the approved MIT licence shown by the form."""
     assignment = MinistryPublisherFactory()

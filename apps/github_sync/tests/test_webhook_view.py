@@ -15,6 +15,7 @@ from apps.github_sync.tests.factories import (
     sign_body,
 )
 from apps.github_sync.views import MAX_WEBHOOK_BODY_BYTES
+from apps.projects.enums import ProjectStatus
 
 pytestmark = [pytest.mark.integration, pytest.mark.github_webhook, pytest.mark.django_db]
 
@@ -54,6 +55,9 @@ class TestGithubWebhookView:
             repository_node_id="R_kgDOImmediateIssue",
             full_name="voidash/civic-help-directory",
         )
+        connection.project.status = ProjectStatus.OPEN_FOR_CONTRIBUTION
+        connection.project.repository_url = "https://github.com/voidash/civic-help-directory"
+        connection.project.save(update_fields=["status", "repository_url"])
         calls = []
 
         class SnapshotClient:
@@ -110,11 +114,46 @@ class TestGithubWebhookView:
         )
 
         response = post_webhook(client, body, headers)
+        duplicate = post_webhook(client, body, headers)
 
         assert response.status_code == 202
+        assert duplicate.status_code == 202
         assert calls == [(connection.installation_id, connection.full_name)]
         assert ProviderEvent.objects.get().processing_state == ProcessingState.PROCESSED
         assert GithubIssueSnapshot.objects.get(repository=connection).number == 18
+        public_page = client.get(
+            reverse("projects:detail", kwargs={"slug": connection.project.slug})
+        )
+        assert public_page.status_code == 200
+        assert "Visible without a manual refresh" in public_page.content.decode()
+
+    def test_invalid_issue_signature_never_starts_a_public_snapshot_refresh(
+        self, client, monkeypatch
+    ):
+        """GIT-004: rejected issue payloads cannot trigger an outbound provider read."""
+        calls = []
+        monkeypatch.setattr(
+            "apps.github_sync.services.github_app_client",
+            lambda: calls.append("called"),
+        )
+        body = json.dumps(
+            {
+                "action": "opened",
+                "issue": {"id": 88002, "number": 19},
+                "repository": {"node_id": "R_untrusted"},
+            }
+        ).encode("utf-8")
+        headers = webhook_headers(
+            body,
+            HTTP_X_GITHUB_EVENT="issues",
+            HTTP_X_GITHUB_DELIVERY="invalid-issue-refresh",
+            HTTP_X_HUB_SIGNATURE_256="sha256=" + "0" * 64,
+        )
+
+        response = post_webhook(client, body, headers)
+
+        assert response.status_code == 401
+        assert calls == []
 
     def test_valid_delivery_is_accepted_and_queued(self, client):
         """GIT-004/GIT-005: a signed, fresh delivery receives a quick idempotent acknowledgement."""

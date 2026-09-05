@@ -1246,13 +1246,20 @@ def process_pending(
                 continue
             event.repository = connection
             event.processing_attempts += 1
-            _refresh_public_snapshot_after_issue_lifecycle(connection, event)
+            if not _refresh_public_snapshot_after_issue_lifecycle(connection, event):
+                event.last_error = "retry: GitHub public snapshot refresh unavailable"
+                event.save(update_fields=["repository", "last_error", "processing_attempts"])
+                blocked += 1
+                blocked_event_ids.append(str(event.pk))
+                continue
             event.processing_state = ProcessingState.PROCESSED
+            event.last_error = ""
             event.processed_at = timezone.now()
             event.save(
                 update_fields=[
                     "repository",
                     "processing_state",
+                    "last_error",
                     "processing_attempts",
                     "processed_at",
                 ]
@@ -1336,8 +1343,9 @@ def process_pending(
             failed += 1
             continue
 
+        snapshot_refreshed = True
         if event.event_type == "issues" and parsed.action in ISSUE_LIFECYCLE_ACTIONS:
-            _refresh_public_snapshot_after_issue_lifecycle(connection, event)
+            snapshot_refreshed = _refresh_public_snapshot_after_issue_lifecycle(connection, event)
 
         try:
             from apps.contributions.services import record_candidate_from_github
@@ -1367,12 +1375,21 @@ def process_pending(
             )
             failed += 1
             continue
+        if not snapshot_refreshed:
+            event.repository = connection
+            event.last_error = "retry: GitHub public snapshot refresh unavailable"
+            event.save(update_fields=["repository", "last_error", "processing_attempts"])
+            blocked += 1
+            blocked_event_ids.append(str(event.pk))
+            continue
         event.processing_state = ProcessingState.PROCESSED
+        event.last_error = ""
         event.processed_at = timezone.now()
         event.save(
             update_fields=[
                 "repository",
                 "processing_state",
+                "last_error",
                 "processing_attempts",
                 "processed_at",
             ]
@@ -1397,14 +1414,14 @@ def _stored_issue_lifecycle_event(payload: object) -> ParsedIssueLifecycleEvent 
 
 def _refresh_public_snapshot_after_issue_lifecycle(
     connection: RepositoryConnection, event: ProviderEvent
-) -> None:
+) -> bool:
     if (
         not connection.is_public
         or connection.project_id is None
         or connection.sync_state == SyncState.STOPPED
         or connection.deactivated_at is not None
     ):
-        return
+        return True
     try:
         refresh_public_repository_snapshot(connection, github_app_client())
     except GithubAppError:
@@ -1413,6 +1430,8 @@ def _refresh_public_snapshot_after_issue_lifecycle(
             connection.pk,
             event.pk,
         )
+        return False
+    return True
 
 
 def disconnect(user) -> GithubConnection:

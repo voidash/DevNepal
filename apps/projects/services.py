@@ -30,7 +30,7 @@ from apps.audit.models import AuditEvent
 from apps.audit.services import record_audit
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
-from apps.github_sync.enums import SyncState
+from apps.github_sync.enums import Provider, SyncState
 from apps.github_sync.models import GithubConnection, RepositoryConnection
 from apps.ministries.models import MinistryPublisher
 from apps.ministries.services import is_publisher_active
@@ -597,6 +597,7 @@ def reusable_bound_project_for_demo(actor, ministry, repository_url: str) -> Pro
 
     connection = (
         RepositoryConnection.objects.filter(
+            provider=Provider.GITHUB,
             full_name__iexact=repository_name,
             is_public=True,
             deactivated_at__isnull=True,
@@ -604,6 +605,7 @@ def reusable_bound_project_for_demo(actor, ministry, repository_url: str) -> Pro
         )
         .exclude(sync_state=SyncState.STOPPED)
         .select_related("project__ministry")
+        .order_by("-updated_at", "pk")
         .first()
     )
     if connection is None:

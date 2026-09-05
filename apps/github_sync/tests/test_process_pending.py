@@ -152,6 +152,7 @@ class TestProcessPending:
         event.refresh_from_db()
         assert result.processed == 1
         assert event.processing_state == ProcessingState.PROCESSED
+        assert event.last_error == ""
         assert GithubIssueSnapshot.objects.get(repository=connection).title == "New public issue"
 
     @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
@@ -185,8 +186,9 @@ class TestProcessPending:
 
         event.refresh_from_db()
         connection.refresh_from_db()
-        assert result.processed == 1
-        assert event.processing_state == ProcessingState.PROCESSED
+        assert result.blocked == 1
+        assert event.processing_state == ProcessingState.PENDING
+        assert event.last_error == "retry: GitHub public snapshot refresh unavailable"
         assert GithubIssueSnapshot.objects.filter(pk=old_issue.pk).exists()
         assert connection.public_snapshot_note
 

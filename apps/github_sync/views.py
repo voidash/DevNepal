@@ -130,12 +130,14 @@ def github_webhook(request: HttpRequest) -> HttpResponse:
         return HttpResponse(status=409)
     if event == "issues" and provider_event.processing_state == ProcessingState.PENDING:
         try:
-            process_pending(limit=1, event_ids=[provider_event.pk])
+            result = process_pending(limit=1, event_ids=[provider_event.pk])
         except Exception:
             logger.exception(
                 "immediate GitHub issue projection refresh failed (event=%s)",
                 provider_event.pk,
             )
+            return HttpResponse(status=503)
+        if result.blocked:
             return HttpResponse(status=503)
     return HttpResponse(status=202)
 
