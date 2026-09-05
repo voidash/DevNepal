@@ -47,6 +47,10 @@ const save = async (page, filename) => {
   await page.screenshot({path: path.join(outputDirectory, filename)});
 };
 
+const resetScroll = async (page) => {
+  await page.evaluate(() => window.scrollTo({top: 0, left: 0, behavior: 'instant'}));
+};
+
 await mkdir(outputDirectory, {recursive: true});
 const browser = await chromium.launch({executablePath: BRAVE_PATH, headless: true});
 
@@ -73,6 +77,7 @@ try {
     'Government project catalogue',
   );
   await publicPage.getByRole('link', {name: /Civic Help Directory/i}).first().waitFor();
+  await resetScroll(publicPage);
   await save(publicPage, '02-project-list-ne.png');
 
   const projectUrl = `${BASE_URL}/ne/projects/${PROJECT_SLUG}/`;
@@ -85,6 +90,7 @@ try {
   const selectedIssue = publicPage.locator(`a[href$="/issues/${ISSUE_NUMBER}/"]`).first();
   await selectedIssue.waitFor({state: 'visible'});
   await publicPage.getByRole('link', {name: /#10/}).first().waitFor();
+  await resetScroll(publicPage);
   await save(publicPage, '03-project-top-ne.png');
   await publicPage.locator('#github-issues-heading').scrollIntoViewIfNeeded();
   await save(publicPage, '03-project-issues-ne.png');
@@ -99,6 +105,7 @@ try {
     `DevNepal issue #${ISSUE_NUMBER}`,
   );
   await publicPage.getByText(new RegExp(`#${ISSUE_NUMBER}(?:\\D|$)`)).first().waitFor();
+  await resetScroll(publicPage);
   await save(publicPage, '04-issue-devnepal-ne.png');
 
   await gotoChecked(
@@ -108,6 +115,7 @@ try {
     'Public GitHub profile',
   );
   await publicPage.locator('#tracked-work-heading').waitFor();
+  await resetScroll(publicPage);
   await save(publicPage, '05-profile-ne.png');
   await publicContext.close();
 
@@ -119,6 +127,7 @@ try {
     (issueNumber) => document.title.includes(`#${issueNumber}`),
     ISSUE_NUMBER,
   );
+  await resetScroll(githubPage);
   await save(githubPage, '04-issue-github.png');
 
   await gotoChecked(
@@ -127,6 +136,7 @@ try {
     githubPage.locator(`a[href="/${REPOSITORY}/issues/${ISSUE_NUMBER}"]`).first(),
     'GitHub issue list',
   );
+  await resetScroll(githubPage);
   await save(githubPage, '08-github-issues.png');
 
   await gotoChecked(
@@ -135,6 +145,7 @@ try {
     githubPage.locator(`a[href="/${REPOSITORY}/pull/10"]`).first(),
     'GitHub pull request list',
   );
+  await resetScroll(githubPage);
   await save(githubPage, '08-github-prs.png');
   await githubContext.close();
 
@@ -148,6 +159,7 @@ try {
     publisherPage.getByRole('link', {name: 'Create project'}),
     'Publisher dashboard',
   );
+  await resetScroll(publisherPage);
   await save(publisherPage, '06-authoring-dashboard.png');
 
   await gotoChecked(
@@ -162,6 +174,7 @@ try {
   if ((await repositoryField.inputValue()) !== `https://github.com/${REPOSITORY}`) {
     throw new Error('Demo fill did not select the verified civic-help-directory repository');
   }
+  await resetScroll(publisherPage);
   await save(publisherPage, '06-create-filled-top.png');
   await repositoryField.scrollIntoViewIfNeeded();
   await save(publisherPage, '06-create-filled-repository.png');
@@ -173,6 +186,7 @@ try {
     'Publisher project workspace',
   );
   await publisherPage.locator(`a[href$="/issues/${ISSUE_NUMBER}/"]`).first().waitFor();
+  await resetScroll(publisherPage);
   await save(publisherPage, '07-workspace-refreshed.png');
   await publisherPage.locator('[id^="repo-contributors-"]').first().scrollIntoViewIfNeeded();
   await save(publisherPage, '07-workspace-contributors.png');
@@ -191,6 +205,7 @@ try {
     'Mobile Nepali home',
   );
   await assertNoHorizontalOverflow(mobilePage, 'Mobile Nepali home');
+  await resetScroll(mobilePage);
   await save(mobilePage, '09-mobile-home.png');
 
   await gotoChecked(
@@ -200,6 +215,7 @@ try {
     'Mobile Nepali project',
   );
   await assertNoHorizontalOverflow(mobilePage, 'Mobile Nepali project');
+  await resetScroll(mobilePage);
   await save(mobilePage, '09-mobile-project.png');
   await mobilePage.locator('#github-issues-heading').scrollIntoViewIfNeeded();
   await mobilePage.mouse.wheel(0, 120);
