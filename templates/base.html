@@ -26,6 +26,7 @@
       {% block header_nav %}
       <nav class="dn-primary-nav" aria-label="{% trans 'Primary' %}">
         <ul>
+          {% url 'projects:issue_index' as nav_issues %}{% if nav_issues %}<li><a href="{{ nav_issues }}"{% if request.resolver_match.view_name == 'projects:issue_index' %} aria-current="page"{% endif %}>{% trans "Open issues" %}</a></li>{% endif %}
           {% url 'projects:government' as nav_government %}{% if nav_government %}<li><a href="{{ nav_government }}"{% if request.resolver_match.view_name == 'projects:government' %} aria-current="page"{% endif %}>{% trans "Government projects" %}</a></li>{% endif %}
           {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}"{% if request.resolver_match.view_name == 'projects:community' %} aria-current="page"{% endif %}>{% trans "Community projects" %}</a></li>{% endif %}
           {% url 'projects:about' as nav_about %}{% if nav_about %}<li><a href="{{ nav_about }}"{% if request.resolver_match.view_name == 'projects:about' %} aria-current="page"{% endif %}>{% trans "How to contribute" %}</a></li>{% endif %}
@@ -57,6 +58,7 @@
         <summary>{% trans "Menu" %}</summary>
         <nav aria-label="{% trans 'Primary' %}">
           <ul>
+            {% url 'projects:issue_index' as nav_issues_m %}{% if nav_issues_m %}<li><a href="{{ nav_issues_m }}"{% if request.resolver_match.view_name == 'projects:issue_index' %} aria-current="page"{% endif %}>{% trans "Open issues" %}</a></li>{% endif %}
             {% url 'projects:government' as nav_gov %}{% if nav_gov %}<li><a href="{{ nav_gov }}"{% if request.resolver_match.view_name == 'projects:government' %} aria-current="page"{% endif %}>{% trans "Government projects" %}</a></li>{% endif %}
             {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}"{% if request.resolver_match.view_name == 'projects:community' %} aria-current="page"{% endif %}>{% trans "Community projects" %}</a></li>{% endif %}
             {% url 'projects:about' as nav_about_m %}{% if nav_about_m %}<li><a href="{{ nav_about_m }}"{% if request.resolver_match.view_name == 'projects:about' %} aria-current="page"{% endif %}>{% trans "How to contribute" %}</a></li>{% endif %}

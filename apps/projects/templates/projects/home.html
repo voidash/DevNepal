@@ -18,8 +18,8 @@
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
         <p class="hero__lead">{% trans "Ministries publish the technology work they want help with. Pick an issue and contribute — code stays on GitHub, and no DevNepal account is needed." %}</p>
         <div class="hero__actions">
-          <a class="btn btn--primary" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
-          <a class="btn" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
+          <a class="btn btn--primary" href="{% url 'projects:issue_index' %}">{% trans "Browse open issues" %}</a>
+          <a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
         </div>
         <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a> · <a href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a></p>
       </div>
@@ -112,7 +112,7 @@
       <h2 id="path-heading">{% trans "From listing to public record" %}</h2>
       <ol class="dn-journey" aria-labelledby="path-heading">
         <li class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry publishes" %}</strong><span>{% trans "A named officer lists the project with its repository, licence and response commitment." %}</span></li>
-        <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You pick an issue" %}</strong><span>{% trans "Open issues are synchronised from the project's public GitHub repository." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You pick an issue" %}</strong><span>{% trans "Open issues are synchronised from the project's public GitHub repository." %} <a href="{% url 'projects:issue_index' %}">{% trans "Browse open issues" %}</a></span></li>
         <li class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute on GitHub" %}</strong><span>{% trans "Fork, branch and open a pull request. Discussion and review stay in the repository." %}</span></li>
         <li class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "The work is recognised" %}</strong><span>{% trans "Merged work appears against the project and on your public contributor profile." %}</span></li>
       </ol>

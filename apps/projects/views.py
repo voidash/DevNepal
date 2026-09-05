@@ -384,6 +384,76 @@ def ministry_onboarding(request: HttpRequest) -> HttpResponse:
     return render(request, "projects/ministry_onboarding.html")
 
 
+def issue_index(request: HttpRequest) -> HttpResponse:
+    """DSC-005/GIT-010: one public list of every open issue across published ministry work.
+
+    A contributor's unit of work is an issue, not a project, so the catalogue of
+    projects is not enough on its own. Labels live in a JSON column that no
+    supported database filters portably, so the label facet is applied in Python
+    over a bounded window of synced issues.
+    """
+    issues = (
+        GithubIssueSnapshot.objects.filter(
+            repository__is_public=True,
+            repository__deactivated_at__isnull=True,
+            repository__project__status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        )
+        .select_related("repository__project", "repository__project__ministry")
+        .order_by("-source_updated_at", "-number")[:200]
+    )
+    ministry_slug = normalize_nfc(request.GET.get("ministry", ""))
+    label = normalize_nfc(request.GET.get("label", ""))
+
+    rows = []
+    label_counts: dict[str, int] = {}
+    for issue in issues:
+        project = issue.repository.project
+        if project is None:
+            continue
+        labels = [str(name) for name in (issue.labels or [])]
+        for name in labels:
+            label_counts[name] = label_counts.get(name, 0) + 1
+        if label and label.lower() not in {name.lower() for name in labels}:
+            continue
+        if ministry_slug and (project.ministry is None or project.ministry.slug != ministry_slug):
+            continue
+        rows.append(
+            {
+                "number": issue.number,
+                "title": issue.title,
+                "labels": labels,
+                "is_starter": any(name.strip().lower() in STARTER_ISSUE_LABELS for name in labels),
+                "author_login": issue.author_login,
+                "comments_count": issue.comments_count,
+                "url": issue.url,
+                "repository": issue.repository.full_name,
+                "project": project,
+                "read_url": reverse("projects:github_issue", args=[project.slug, issue.number]),
+            }
+        )
+    rows.sort(key=lambda row: (0 if row["is_starter"] else 1, row["number"]))
+
+    ministries = list(
+        MinistryOrganization.objects.filter(
+            projects__status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+            projects__repository_connections__issue_snapshots__isnull=False,
+        )
+        .order_by("name_en")
+        .distinct()
+    )
+    return render(
+        request,
+        "projects/issue_index.html",
+        {
+            "issues": rows,
+            "starter_count": sum(1 for row in rows if row["is_starter"]),
+            "labels": sorted(label_counts.items(), key=lambda item: (-item[1], item[0]))[:10],
+            "ministries": ministries,
+            "filters": {"label": label, "ministry": ministry_slug},
+        },
+    )
+
+
 def project_list(request: HttpRequest, project_type: str | None = None) -> HttpResponse:
     """DSC-001/DSC-002: public project browse and explicit catalog filtering."""
     catalog = public_projects()
@@ -736,9 +806,7 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         (issue for repository in public_repositories for issue in repository.issue_snapshots.all()),
         key=lambda issue: (
             0
-            if any(
-                label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or [])
-            )
+            if any(label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or []))
             else 1,
             issue.number,
         ),

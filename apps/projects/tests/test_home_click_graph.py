@@ -51,10 +51,12 @@ def test_home_hero_offers_exactly_two_visitor_actions(client):
     assert response.status_code == 200
     assert b"Government of Nepal" in hero
     assert b"Digital Collaboration Initiative" not in hero
+    assert b"Browse open issues" in hero
     assert b"Browse government projects" in hero
-    assert b"Browse community projects" in hero
     assert b"Create an account" not in hero
-    assert reverse("projects:community").encode() in hero
+    assert reverse("projects:issue_index").encode() in hero
+    assert reverse("projects:government").encode() in hero
+    assert reverse("projects:community").encode() in response.content
     assert hero.count(b'class="btn') == 2
 
 
