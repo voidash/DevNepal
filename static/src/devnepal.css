@@ -32,15 +32,15 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-tab { min-height: 44px; border: 0; border-bottom: 1px solid transparent; }
 .dn-tab[aria-current="page"] { color: var(--color-accent-700); background: transparent; border-bottom-color: var(--color-accent); }
 
-.blueprint { position: relative; border: 1px solid var(--color-divider); }
+.blueprint { position: relative; border: 1px solid var(--color-divider); border-radius: var(--radius-md); }
 .blueprint > .corner { position: absolute; width: 11px; height: 11px; color: color-mix(in srgb, var(--color-text) 55%, transparent); }
 .blueprint > .corner::before, .blueprint > .corner::after { position: absolute; content: ""; background: currentColor; }
 .blueprint > .corner::before { top: 0; left: 5px; width: 1px; height: 100%; }
 .blueprint > .corner::after { top: 5px; left: 0; width: 100%; height: 1px; }
-.blueprint > .corner.tl { top: -6px; left: -6px; }
-.blueprint > .corner.tr { top: -6px; right: -6px; }
-.blueprint > .corner.bl { bottom: -6px; left: -6px; }
-.blueprint > .corner.br { right: -6px; bottom: -6px; }
+.blueprint > .corner.tl { top: -7px; left: -7px; }
+.blueprint > .corner.tr { top: -7px; right: -7px; }
+.blueprint > .corner.bl { bottom: -7px; left: -7px; }
+.blueprint > .corner.br { right: -7px; bottom: -7px; }
 .blueprint:not(.btn) { padding: 24px; }
 .duotone { position: relative; overflow: hidden; }
 .duotone::after { position: absolute; inset: 0; content: ""; pointer-events: none; background: var(--color-accent); mix-blend-mode: color; }
