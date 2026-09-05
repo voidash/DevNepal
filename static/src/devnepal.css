@@ -15,7 +15,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-primary-nav a { display: inline-flex; align-items: center; min-height: 36px; color: var(--color-text); font-size: 14px; text-decoration: none; white-space: nowrap; }
 .dn-primary-nav a:hover, .dn-primary-nav a[aria-current="page"] { color: var(--color-accent); }
 .dn-header-actions { display: flex; flex: none; align-items: center; gap: 8px; }
-.lang-switch { display: inline-flex; overflow: hidden; border: 1px solid var(--color-divider); border-radius: 0; }
+.lang-switch { display: inline-flex; overflow: hidden; border: 1px solid var(--color-divider); border-radius: var(--radius-md); }
 .lang-switch button { min-width: 36px; min-height: 34px; padding: 0 10px; border: 0; border-radius: 0; color: var(--color-text); background: transparent; font-family: var(--font-body); font-size: 13px; cursor: pointer; }
 .lang-switch button + .lang-switch__divider + button { border-left: 1px solid var(--color-divider); }
 .lang-switch button[aria-current="true"] { color: var(--color-bg); background: var(--color-accent); }
@@ -151,7 +151,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-catalog-status-counts dd { margin: 0; font-family: var(--font-heading); font-size: 20px; font-weight: 600; }
 .dn-catalog-toolbar { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(180px, auto) auto auto; gap: 12px; align-items: end; padding: 20px 24px 24px; }
 .dn-catalog-search label, .dn-catalog-sort label, .dn-catalog-layout legend { display: block; margin-bottom: 5px; color: var(--color-neutral-700); font-size: 12px; }
-.dn-catalog-search input, .dn-catalog-sort select, .dn-catalog-filters select, .dn-catalog-filters input[type="date"] { width: 100%; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-divider); border-radius: 0; color: var(--color-text); background: var(--color-bg); font: inherit; font-size: 14px; }
+.dn-catalog-search input, .dn-catalog-sort select, .dn-catalog-filters select, .dn-catalog-filters input[type="date"] { width: 100%; min-height: 40px; padding: 6px 10px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-bg); font: inherit; font-size: 14px; }
 .dn-catalog-layout, .dn-catalog-filters fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .dn-catalog-segmented { display: flex; min-height: 40px; border: 1px solid var(--color-divider); }
 .dn-catalog-segmented label { margin: 0; cursor: pointer; }

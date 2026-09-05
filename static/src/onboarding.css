@@ -9,7 +9,7 @@
 .dn-onboarding__field { display: grid; gap: 5px; }
 .dn-onboarding__field > label, .dn-onboarding__visibility-table th { font-size: 13px; font-weight: 600; }
 .dn-onboarding__field > p { margin: 0; font-size: 12px; color: color-mix(in srgb, #1d1f20 62%, transparent); }
-.dn-onboarding__field input, .dn-onboarding__field select, .dn-onboarding__field textarea { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, #1d1f20 20%, transparent); border-radius: 0; background: #e9e9ea; padding: 7px 9px; color: #1d1f20; }
+.dn-onboarding__field input, .dn-onboarding__field select, .dn-onboarding__field textarea { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, #1d1f20 20%, transparent); border-radius: var(--radius-md); background: #e9e9ea; padding: 7px 9px; color: #1d1f20; }
 .dn-onboarding__field textarea { min-height: 74px; }
 .dn-onboarding__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .dn-onboarding__actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid color-mix(in srgb, #1d1f20 16%, transparent); }
@@ -17,7 +17,7 @@
 .dn-onboarding__visibility-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .dn-onboarding__visibility-table th, .dn-onboarding__visibility-table td { padding: 10px 8px; border-bottom: 1px solid color-mix(in srgb, #1d1f20 12%, transparent); text-align: left; }
 .dn-onboarding__visibility-table td { text-align: right; }
-.dn-onboarding__visibility-table select { max-width: 150px; border: 1px solid color-mix(in srgb, #1d1f20 20%, transparent); border-radius: 0; background: #e9e9ea; padding: 5px; }
+.dn-onboarding__visibility-table select { max-width: 150px; border: 1px solid color-mix(in srgb, #1d1f20 20%, transparent); border-radius: var(--radius-md); background: #e9e9ea; padding: 5px; }
 .dn-onboarding__choices { display: flex; gap: 8px; align-items: start; font-size: 13px; }
 .dn-onboarding__locked { color: color-mix(in srgb, #1d1f20 58%, transparent); }
 .dn-onboarding__note, .dn-onboarding__disclosure { padding: 12px 14px; border: 1px solid color-mix(in srgb, #1d1f20 16%, transparent); font-size: 13px; }
