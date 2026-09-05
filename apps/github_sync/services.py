@@ -5,6 +5,7 @@ import json
 import logging
 import uuid
 from dataclasses import asdict, dataclass
+from datetime import timedelta
 from typing import NamedTuple, Protocol
 
 from django.conf import settings
@@ -16,7 +17,11 @@ from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext as _
 
 from apps.audit.services import record_audit
-from apps.github_sync.app_client import GithubAppClient, installation_granted_scopes
+from apps.github_sync.app_client import (
+    GithubAppClient,
+    github_app_client,
+    installation_granted_scopes,
+)
 from apps.github_sync.enums import DeliverySource, ProcessingState, Provider, SyncState
 from apps.github_sync.errors import (
     ConnectionNotFoundError,
@@ -49,6 +54,19 @@ SIGNATURE_NOTE_MISSING = "missing"
 IGNORED_UNSUPPORTED_NOTE = "ignored: unsupported event type, no verified activity"
 BOT_FILTER_NOTE = "ignored: bot actor, no contribution credit"
 STARTER_TASK_LABELS = frozenset({"good first issue", "help wanted"})
+DEFAULT_VERIFIED_EVENT_TYPES = frozenset(
+    {"pull_request", "issues", "pull_request_review", "release"}
+)
+API_EVENT_TYPES = {
+    "PullRequestEvent": "pull_request",
+    "IssuesEvent": "issues",
+    "PullRequestReviewEvent": "pull_request_review",
+    "ReleaseEvent": "release",
+}
+INSTALLATION_DELETED = "installation_deleted"
+INSTALLATION_SUSPENDED = "installation_suspended"
+INSTALLATION_UNSUSPENDED_UNBOUND = "installation_unsuspended_unbound"
+REPOSITORY_REMOVED = "repository_removed"
 
 
 @dataclass(frozen=True)
@@ -290,6 +308,47 @@ def enroll_repository(
         provider=Provider.GITHUB, repository_id=repository_id
     ).first()
     if existing is not None:
+        if existing.sync_state == SyncState.STOPPED or existing.deactivated_at is not None:
+            with transaction.atomic():
+                existing = RepositoryConnection.objects.select_for_update().get(pk=existing.pk)
+                before = _repository_access_snapshot(existing)
+                existing.installation_id = installation_id
+                existing.repository_node_id = node_id
+                existing.full_name = full_name
+                existing.is_public = is_public
+                existing.granted_scopes = granted_scopes
+                existing.activated_by = user
+                existing.sync_state = SyncState.IDLE
+                existing.deactivated_at = None
+                existing.access_revoked_reason = ""
+                existing.health_note = ""
+                existing.sync_failure_count = 0
+                existing.next_sync_attempt_at = None
+                existing.save(
+                    update_fields=[
+                        "installation_id",
+                        "repository_node_id",
+                        "full_name",
+                        "is_public",
+                        "granted_scopes",
+                        "activated_by",
+                        "sync_state",
+                        "deactivated_at",
+                        "access_revoked_reason",
+                        "health_note",
+                        "sync_failure_count",
+                        "next_sync_attempt_at",
+                        "updated_at",
+                    ]
+                )
+                record_audit(
+                    actor=user,
+                    action="github_repository.reenroll",
+                    obj=existing,
+                    before=before,
+                    after=_repository_access_snapshot(existing),
+                    correlation_id=uuid.uuid4().hex,
+                )
         return EnrollOutcome(connection=existing, created=False)
     try:
         with transaction.atomic():
@@ -554,6 +613,116 @@ class ReconciliationFetcher(Protocol):
     ) -> ReconciliationPage: ...
 
 
+class GithubReconciliationFetcher:
+    """GIT-006/GIT-007: production GitHub Events API reconciliation adapter."""
+
+    def __init__(self, client: GithubAppClient | None = None):
+        self.client = client or github_app_client()
+
+    def fetch(self, repository_connection, cursor, since):
+        project = repository_connection.project
+        if project is None:
+            raise ReconciliationError("repository connection has no configured project")
+        default_branch = str(project.default_branch or "").strip()
+        if not default_branch:
+            raise ReconciliationError("project default branch is not configured")
+        page_number = _reconciliation_page_number(cursor)
+        raw_events = self.client.list_repository_events_page(
+            repository_connection.installation_id,
+            repository_connection.full_name,
+            page_number,
+        )
+        enabled = _configured_verified_event_types()
+        events = []
+        for raw in raw_events:
+            normalized = _normalize_api_event(raw, repository_connection, default_branch, enabled)
+            if normalized is not None:
+                events.append(normalized)
+        next_cursor = str(page_number + 1) if len(raw_events) >= 100 else ""
+        return ReconciliationPage(events=tuple(events), next_cursor=next_cursor)
+
+
+def _reconciliation_page_number(cursor):
+    if cursor in (None, ""):
+        return 1
+    try:
+        page = int(cursor)
+    except (TypeError, ValueError) as exc:
+        raise ReconciliationError("stored reconciliation cursor is malformed") from exc
+    if page < 1:
+        raise ReconciliationError("stored reconciliation cursor is malformed")
+    return page
+
+
+def _configured_verified_event_types():
+    configured = getattr(settings, "GITHUB_VERIFIED_EVENT_TYPES", None)
+    if configured is None:
+        return DEFAULT_VERIFIED_EVENT_TYPES
+    if not isinstance(configured, (list, tuple, set, frozenset)):
+        raise ReconciliationError("GITHUB_VERIFIED_EVENT_TYPES must be a sequence")
+    normalized = frozenset(str(item).strip() for item in configured)
+    unknown = normalized - DEFAULT_VERIFIED_EVENT_TYPES
+    if unknown:
+        raise ReconciliationError(
+            "GITHUB_VERIFIED_EVENT_TYPES contains unsupported values: " + ", ".join(sorted(unknown))
+        )
+    return normalized
+
+
+def _matches_configured_branch(connection, event_type, payload):
+    if event_type not in {"pull_request", "pull_request_review"}:
+        return True
+    if connection is None or connection.project_id is None:
+        # Mapping-time validation remains necessary for deliveries that precede enrollment.
+        return True
+    default_branch = str(connection.project.default_branch or "").strip()
+    pull_request = payload.get("pull_request") or {}
+    base = pull_request.get("base") or {}
+    return bool(default_branch) and base.get("ref") == default_branch
+
+
+def _normalize_api_event(raw, connection, default_branch, enabled):
+    event_type = API_EVENT_TYPES.get(raw.get("type"))
+    if event_type is None or event_type not in enabled:
+        return None
+    raw_repository = raw.get("repo") or {}
+    if raw_repository.get("name", "").casefold() != connection.full_name.casefold():
+        raise ReconciliationError("provider API event belongs to a different repository")
+    payload = raw.get("payload")
+    actor = raw.get("actor")
+    if not isinstance(payload, dict) or not isinstance(actor, dict):
+        logger.warning("ignoring malformed reconciliation event (repository=%s)", connection.pk)
+        return None
+    webhook_payload = dict(payload)
+    webhook_payload["sender"] = actor
+    webhook_payload["repository"] = {
+        "id": connection.repository_id,
+        "node_id": connection.repository_node_id,
+        "name": connection.full_name.rsplit("/", 1)[-1],
+        "default_branch": default_branch,
+    }
+    if event_type == "pull_request_review" and webhook_payload.get("action") == "created":
+        webhook_payload["action"] = "submitted"
+    if event_type in {"pull_request", "pull_request_review"}:
+        pull_request = webhook_payload.get("pull_request") or {}
+        base = pull_request.get("base") or {}
+        if base.get("ref") != default_branch:
+            logger.info(
+                "ignoring non-default-branch event (repository=%s event=%s)",
+                connection.pk,
+                raw.get("id"),
+            )
+            return None
+    parsed = parse_event(event_type, webhook_payload)
+    if parsed is None:
+        return None
+    return ReconciliationEvent(
+        event_type=event_type,
+        delivery_id=f"reconciliation-{raw.get('id') or parsed.event_id}",
+        parsed_event=parsed,
+    )
+
+
 def ingest_webhook(
     provider: str,
     event: str,
@@ -657,6 +826,16 @@ def _ingest(
         return row, WebhookReplayError(f"delivery {delivery_id} outside replay window")
 
     payload_dict = _decode_json(body)
+    if payload_dict is not None and event in {"installation", "installation_repositories"}:
+        return _ingest_operational_event(
+            provider,
+            event,
+            delivery_id,
+            payload_dict,
+            digest=digest,
+            now=now,
+            correlation_id=correlation_id,
+        )
     parsed = parse_event(event, payload_dict) if payload_dict is not None else None
 
     if parsed is None:
@@ -703,6 +882,25 @@ def _ingest(
     repository = RepositoryConnection.objects.filter(
         provider=provider, repository_node_id=parsed.repository_node_id
     ).first()
+    if event not in _configured_verified_event_types() or not _matches_configured_branch(
+        repository, event, payload_dict
+    ):
+        row = ProviderEvent.objects.create(
+            provider=provider,
+            event_type=event,
+            delivery_id=delivery_id,
+            provider_event_id=delivery_id,
+            repository=repository,
+            source=DeliverySource.WEBHOOK,
+            signature_valid=True,
+            signature_note=SIGNATURE_NOTE_VALID,
+            payload_digest=digest,
+            processing_state=ProcessingState.PROCESSED,
+            last_error="ignored: event or default branch is not configured for verified activity",
+            processed_at=now,
+            correlation_id=correlation_id,
+        )
+        return row, None
     actor = _resolve_actor(provider, parsed.actor_login)
     row = ProviderEvent.objects.create(
         provider=provider,
@@ -771,6 +969,21 @@ def process_pending(limit: int = 50) -> ProcessPendingResult:
             event.repository = None
             event.processing_state = ProcessingState.FAILED
             event.last_error = "failed: repository not mapped to a connected project"
+            event.processing_attempts += 1
+            event.save(
+                update_fields=[
+                    "repository",
+                    "processing_state",
+                    "last_error",
+                    "processing_attempts",
+                ]
+            )
+            failed += 1
+            continue
+        if connection.sync_state == SyncState.STOPPED or connection.deactivated_at is not None:
+            event.repository = connection
+            event.processing_state = ProcessingState.FAILED
+            event.last_error = "failed: repository synchronization is stopped"
             event.processing_attempts += 1
             event.save(
                 update_fields=[
@@ -922,12 +1135,16 @@ def reconcile(
             connection.sync_cursor = page.next_cursor
             connection.sync_state = SyncState.IDLE
             connection.health_note = ""
+            connection.sync_failure_count = 0
+            connection.next_sync_attempt_at = None
             connection.last_synced_at = timezone.now()
             connection.save(
                 update_fields=[
                     "sync_cursor",
                     "sync_state",
                     "health_note",
+                    "sync_failure_count",
+                    "next_sync_attempt_at",
                     "last_synced_at",
                     "updated_at",
                 ]
@@ -985,7 +1202,248 @@ def _mark_reconciliation_failed(repository_connection_id) -> None:
             return
         connection.sync_state = SyncState.DEGRADED
         connection.health_note = "reconciliation failed"
-        connection.save(update_fields=["sync_state", "health_note", "updated_at"])
+        connection.sync_failure_count += 1
+        base = max(1, int(getattr(settings, "GITHUB_SYNC_RETRY_BASE_SECONDS", 60)))
+        maximum = max(base, int(getattr(settings, "GITHUB_SYNC_RETRY_MAX_SECONDS", 3600)))
+        exponent = min(connection.sync_failure_count - 1, 30)
+        delay = min(maximum, base * (2**exponent))
+        connection.next_sync_attempt_at = timezone.now() + timedelta(seconds=delay)
+        connection.save(
+            update_fields=[
+                "sync_state",
+                "health_note",
+                "sync_failure_count",
+                "next_sync_attempt_at",
+                "updated_at",
+            ]
+        )
+
+
+def _ingest_operational_event(
+    provider,
+    event,
+    delivery_id,
+    payload,
+    *,
+    digest,
+    now,
+    correlation_id,
+):
+    """Apply authoritative GitHub App access changes in the signed request transaction."""
+    action = str(payload.get("action") or "")
+    installation = payload.get("installation") or {}
+    installation_id = installation.get("id")
+    affected = 0
+    note = IGNORED_UNSUPPORTED_NOTE
+    processing_state = ProcessingState.PROCESSED
+    supported_action = (
+        event == "installation" and action in {"deleted", "suspend", "unsuspend"}
+    ) or (event == "installation_repositories" and action == "removed")
+    if supported_action and not isinstance(installation_id, int):
+        processing_state = ProcessingState.FAILED
+        note = "failed: operational webhook has no valid installation id"
+    if isinstance(installation_id, int):
+        if event == "installation" and action in {"deleted", "suspend"}:
+            reason = INSTALLATION_DELETED if action == "deleted" else INSTALLATION_SUSPENDED
+            affected = _revoke_installation(provider, installation_id, reason, now, correlation_id)
+            note = f"processed: {reason} affected {affected} repository connection(s)"
+        elif event == "installation" and action == "unsuspend":
+            affected = _unsuspend_installation(provider, installation_id, correlation_id)
+            note = (
+                f"processed: installation_unsuspended affected {affected} repository connection(s)"
+            )
+        elif event == "installation_repositories" and action == "removed":
+            removed = payload.get("repositories_removed")
+            if not isinstance(removed, list):
+                processing_state = ProcessingState.FAILED
+                note = "failed: repository removal webhook has no valid repository list"
+            repository_ids = (
+                {
+                    item.get("id")
+                    for item in removed
+                    if isinstance(item, dict) and isinstance(item.get("id"), int)
+                }
+                if isinstance(removed, list)
+                else set()
+            )
+            if processing_state != ProcessingState.FAILED:
+                affected = _revoke_removed_repositories(
+                    provider, installation_id, repository_ids, now, correlation_id
+                )
+                note = f"processed: repository_removed affected {affected} repository connection(s)"
+
+    row = ProviderEvent.objects.create(
+        provider=provider,
+        event_type=event,
+        delivery_id=delivery_id,
+        provider_event_id=delivery_id,
+        source=DeliverySource.WEBHOOK,
+        signature_valid=True,
+        signature_note=SIGNATURE_NOTE_VALID,
+        payload={"action": action, "installation_id": installation_id, "affected": affected},
+        payload_digest=digest,
+        processing_state=processing_state,
+        last_error=note,
+        processed_at=now,
+        correlation_id=correlation_id,
+    )
+    return row, None
+
+
+def _revoke_installation(provider, installation_id, reason, now, correlation_id):
+    connections = list(
+        RepositoryConnection.objects.select_for_update().filter(
+            provider=provider, installation_id=installation_id
+        )
+    )
+    affected = 0
+    for connection in connections:
+        if (
+            connection.sync_state == SyncState.STOPPED
+            and connection.project_id is None
+            and connection.access_revoked_reason == reason
+        ):
+            continue
+        before = _repository_access_snapshot(connection)
+        connection.sync_state = SyncState.STOPPED
+        connection.project = None
+        connection.deactivated_at = connection.deactivated_at or now
+        connection.access_revoked_reason = reason
+        connection.next_sync_attempt_at = None
+        connection.save(
+            update_fields=[
+                "sync_state",
+                "project",
+                "deactivated_at",
+                "access_revoked_reason",
+                "next_sync_attempt_at",
+                "updated_at",
+            ]
+        )
+        record_audit(
+            actor=None,
+            action=f"github_repository.{reason}",
+            obj=connection,
+            before=before,
+            after=_repository_access_snapshot(connection),
+            source="github_webhook",
+            correlation_id=correlation_id,
+        )
+        affected += 1
+    logger.warning(
+        "GitHub installation access revoked (installation=%s reason=%s affected=%s)",
+        installation_id,
+        reason,
+        affected,
+    )
+    return affected
+
+
+def _unsuspend_installation(provider, installation_id, correlation_id):
+    connections = list(
+        RepositoryConnection.objects.select_for_update().filter(
+            provider=provider,
+            installation_id=installation_id,
+            access_revoked_reason=INSTALLATION_SUSPENDED,
+        )
+    )
+    for connection in connections:
+        before = _repository_access_snapshot(connection)
+        # Suspension already cleared the project binding. Provider access returning
+        # is not authority to restore that binding or restart synchronization.
+        connection.sync_state = SyncState.STOPPED
+        connection.access_revoked_reason = INSTALLATION_UNSUSPENDED_UNBOUND
+        connection.health_note = "installation unsuspended; explicit re-enrollment required"
+        connection.sync_failure_count = 0
+        connection.next_sync_attempt_at = None
+        connection.save(
+            update_fields=[
+                "sync_state",
+                "access_revoked_reason",
+                "health_note",
+                "sync_failure_count",
+                "next_sync_attempt_at",
+                "updated_at",
+            ]
+        )
+        record_audit(
+            actor=None,
+            action="github_repository.installation_unsuspended",
+            obj=connection,
+            before=before,
+            after=_repository_access_snapshot(connection),
+            source="github_webhook",
+            correlation_id=correlation_id,
+        )
+    logger.info(
+        "GitHub installation unsuspended (installation=%s affected=%s)",
+        installation_id,
+        len(connections),
+    )
+    return len(connections)
+
+
+def _revoke_removed_repositories(provider, installation_id, repository_ids, now, correlation_id):
+    if not repository_ids:
+        return 0
+    connections = list(
+        RepositoryConnection.objects.select_for_update().filter(
+            provider=provider,
+            installation_id=installation_id,
+            repository_id__in=repository_ids,
+        )
+    )
+    affected = 0
+    for connection in connections:
+        if (
+            connection.sync_state == SyncState.STOPPED
+            and connection.project_id is None
+            and connection.access_revoked_reason == REPOSITORY_REMOVED
+        ):
+            continue
+        before = _repository_access_snapshot(connection)
+        connection.sync_state = SyncState.STOPPED
+        connection.project = None
+        connection.deactivated_at = connection.deactivated_at or now
+        connection.access_revoked_reason = REPOSITORY_REMOVED
+        connection.next_sync_attempt_at = None
+        connection.save(
+            update_fields=[
+                "sync_state",
+                "project",
+                "deactivated_at",
+                "access_revoked_reason",
+                "next_sync_attempt_at",
+                "updated_at",
+            ]
+        )
+        record_audit(
+            actor=None,
+            action="github_repository.repository_removed",
+            obj=connection,
+            before=before,
+            after=_repository_access_snapshot(connection),
+            source="github_webhook",
+            correlation_id=correlation_id,
+        )
+        affected += 1
+    logger.warning(
+        "GitHub repository access removed (installation=%s affected=%s)",
+        installation_id,
+        affected,
+    )
+    return affected
+
+
+def _repository_access_snapshot(connection):
+    return {
+        "project_id": connection.project_id,
+        "sync_state": connection.sync_state,
+        "deactivated_at": (
+            connection.deactivated_at.isoformat() if connection.deactivated_at else None
+        ),
+        "access_revoked_reason": connection.access_revoked_reason,
+    }
 
 
 def _decode_json(body: bytes) -> dict | None:

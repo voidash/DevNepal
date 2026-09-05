@@ -1,6 +1,9 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 import pytest
+from django.test import override_settings
+from django.utils import timezone
 
 from apps.github_sync.enums import DeliverySource, ProcessingState, SyncState
 from apps.github_sync.errors import ReconciliationError
@@ -100,7 +103,40 @@ class TestReconcile:
         assert connection.sync_cursor == "cursor-1"
         assert connection.sync_state == SyncState.DEGRADED
         assert connection.health_note == "reconciliation failed"
+        assert connection.sync_failure_count == 1
+        assert connection.next_sync_attempt_at > timezone.now()
         assert "reconciliation fetch failed" in caplog.text
+
+    @override_settings(GITHUB_SYNC_RETRY_BASE_SECONDS=30, GITHUB_SYNC_RETRY_MAX_SECONDS=300)
+    def test_repeated_failure_persists_exponential_retry_schedule(self, monkeypatch):
+        """GIT-006-U2: reconciliation failure persists bounded exponential backoff."""
+        connection = RepositoryConnectionFactory(sync_failure_count=2)
+        fetcher = StubFetcher(error=RuntimeError("rate limited"))
+        now = timezone.now()
+        monkeypatch.setattr("apps.github_sync.services.timezone.now", lambda: now)
+
+        with pytest.raises(ReconciliationError):
+            reconcile(connection, since=None, fetcher=fetcher)
+
+        connection.refresh_from_db()
+        assert connection.sync_failure_count == 3
+        assert connection.next_sync_attempt_at == now + timedelta(seconds=120)
+
+    def test_success_clears_persisted_failure_state(self):
+        """GIT-006: a healed connection clears retry state after a successful fetch."""
+        connection = RepositoryConnectionFactory(
+            sync_failure_count=3,
+            next_sync_attempt_at=timezone.now(),
+            health_note="reconciliation failed",
+        )
+        fetcher = StubFetcher(page=ReconciliationPage(events=(), next_cursor="healed"))
+
+        reconcile(connection, since=None, fetcher=fetcher)
+
+        connection.refresh_from_db()
+        assert connection.sync_failure_count == 0
+        assert connection.next_sync_attempt_at is None
+        assert connection.health_note == ""
 
     def test_stopped_connection_is_not_fetched(self):
         """GIT-006/GIT-011: reconciliation never resumes a stopped connection."""

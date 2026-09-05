@@ -94,6 +94,27 @@ class TestReplayWindow:
 
 
 class TestUnsupportedEvents:
+    @override_settings(
+        GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET,
+        GITHUB_VERIFIED_EVENT_TYPES=("issues", "release"),
+    )
+    def test_configured_event_allowlist_is_enforced_before_queueing(self):
+        """GIT-007: disabled verified kinds never enter the pending ledger queue."""
+        RepositoryConnectionFactory(repository_node_id="R_kgDOKExAmPlE")
+        row = ingest()
+        assert row.processing_state == ProcessingState.PROCESSED
+        assert "not configured" in row.last_error
+
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_pr_for_non_default_branch_is_not_queued(self):
+        """GIT-007: only PR activity targeting the project's configured branch is eligible."""
+        connection = RepositoryConnectionFactory(repository_node_id="R_kgDOKExAmPlE")
+        connection.project.default_branch = "release"
+        connection.project.save(update_fields=["default_branch"])
+        row = ingest()
+        assert row.processing_state == ProcessingState.PROCESSED
+        assert "default branch" in row.last_error
+
     @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
     def test_unsupported_event_type_is_processed_as_ignored(self):
         """GIT-007: events outside the verified set are recorded PROCESSED, never PENDING."""

@@ -36,8 +36,14 @@ def pr_merged_body(
             "number": number,
             "merged": True,
             "user": {"login": author_login or login, "type": "User"},
+            "base": {"ref": "main"},
         },
-        "repository": {"id": 555001, "node_id": node_id, "name": "gov-portal"},
+        "repository": {
+            "id": 555001,
+            "node_id": node_id,
+            "name": "gov-portal",
+            "default_branch": "main",
+        },
         "sender": {"login": login, "type": "User"},
     }
     return json.dumps(payload).encode("utf-8")
@@ -96,7 +102,7 @@ class RepositoryConnectionFactory(DjangoModelFactory):
     repository_id = Sequence(lambda n: 500_000 + n)
     repository_node_id = Sequence(lambda n: f"R_kgDOFakeNode{n:08d}")
     full_name = Sequence(lambda n: f"moit/service-repository-{n}")
-    project = SubFactory(ProjectFactory)
+    project = SubFactory(ProjectFactory, default_branch="main")
     granted_scopes = factory.LazyFunction(lambda: ["public_repo"])
     sync_state = SyncState.IDLE
     activated_by = SubFactory(UserFactory)

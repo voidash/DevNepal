@@ -267,6 +267,23 @@ class GithubAppClient:
             f"/repos/{repository}/issues?state=open", _extract_items, token=token
         )
 
+    def list_repository_events_page(
+        self, installation_id: int, full_name: str, page: int
+    ) -> list[dict]:
+        """GIT-006: fetch one bounded public-events page with an in-memory App token."""
+        if isinstance(page, bool) or not isinstance(page, int) or page < 1:
+            raise GithubAppResponseError("repository events page was malformed")
+        repository = _repository_path(full_name)
+        token = self.mint_installation_token(installation_id)
+        payload = self._request(
+            "GET",
+            f"/repos/{repository}/events?per_page={PAGE_SIZE}&page={page}",
+            token=token,
+        )
+        if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+            raise GithubAppResponseError("GitHub repository events response was malformed")
+        return payload
+
     def mint_installation_token(self, installation_id: int) -> str:
         """GIT-001: mint a short-lived installation token, returned in memory only."""
         payload = self._request("POST", f"/app/installations/{installation_id}/access_tokens")

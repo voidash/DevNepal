@@ -81,6 +81,9 @@ class RepositoryConnection(models.Model):
     last_synced_at = models.DateTimeField(null=True, blank=True)
     sync_cursor = models.CharField(255, blank=True, default="")
     health_note = NFCTextField(blank=True)
+    sync_failure_count = models.PositiveIntegerField(default=0)
+    next_sync_attempt_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    access_revoked_reason = models.CharField(max_length=40, blank=True, default="")
     task_snapshot_at = models.DateTimeField(null=True, blank=True)
     task_snapshot_note = NFCTextField(blank=True)
     activated_by = models.ForeignKey(

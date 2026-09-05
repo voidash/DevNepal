@@ -3,6 +3,8 @@ import logging
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Q
+from django.utils import timezone
 
 from apps.github_sync import services
 from apps.github_sync.enums import SyncState
@@ -22,35 +24,37 @@ def load_fetcher(dotted_path: str):
 class Command(BaseCommand):
     help = (
         "GIT-006: sweep every active repository connection through the configured "
-        "fetcher to recover missed webhook events; no-op unless "
-        "GITHUB_RECONCILE_FETCHER is configured."
+        "fetcher to recover missed webhook events. Uses the production GitHub "
+        "App API fetcher unless GITHUB_RECONCILE_FETCHER overrides it."
     )
 
     def handle(self, *args, **options):
         dotted_path = getattr(settings, "GITHUB_RECONCILE_FETCHER", "")
-        if not dotted_path:
-            message = (
-                "GITHUB_RECONCILE_FETCHER is not configured; reconciliation skipped (GIT-006)."
+        if dotted_path:
+            try:
+                fetcher_class = load_fetcher(dotted_path)
+            except (AttributeError, ImportError, ModuleNotFoundError) as exc:
+                logger.exception("reconcile_repositories has an invalid fetcher path")
+                raise CommandError(
+                    f"GITHUB_RECONCILE_FETCHER is not importable: {dotted_path}"
+                ) from exc
+        else:
+            fetcher_class = services.GithubReconciliationFetcher
+
+        connections = (
+            RepositoryConnection.objects.exclude(sync_state=SyncState.STOPPED)
+            .filter(project__isnull=False, deactivated_at__isnull=True)
+            .filter(
+                Q(next_sync_attempt_at__isnull=True) | Q(next_sync_attempt_at__lte=timezone.now())
             )
-            logger.info("reconcile_repositories skipped: fetcher unconfigured")
-            self.stdout.write(message)
-            return
-
-        try:
-            fetcher_class = load_fetcher(dotted_path)
-        except (AttributeError, ImportError, ModuleNotFoundError) as exc:
-            logger.exception("reconcile_repositories has an invalid fetcher path")
-            raise CommandError(
-                f"GITHUB_RECONCILE_FETCHER is not importable: {dotted_path}"
-            ) from exc
-
-        connections = RepositoryConnection.objects.exclude(sync_state=SyncState.STOPPED).order_by(
-            "pk"
+            .order_by("pk")
         )
         failures = 0
         for connection in connections:
             try:
-                recovered = services.reconcile(connection, since=None, fetcher=fetcher_class())
+                recovered = services.reconcile(
+                    connection, since=connection.last_synced_at, fetcher=fetcher_class()
+                )
             except services.ReconciliationError:
                 failures += 1
                 logger.warning(
