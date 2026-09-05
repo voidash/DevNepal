@@ -1,4 +1,5 @@
 import pytest
+from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
 from django_otp.oath import totp
@@ -97,6 +98,25 @@ def test_log_onboarding_request_rejects_non_government_or_shared_mailbox():
 
 
 @pytest.mark.integration
+def test_onboarding_request_persists_normalized_domain_and_refuses_inflight_domain_duplicate():
+    """D1.1/DSC-003: one normalized official domain has one open onboarding request."""
+    super_admin = SuperAdminFactory()
+    request = log_onboarding_request(super_admin, **onboarding_payload())
+
+    assert request.official_domain == "molmcpa.gov.np"
+    with pytest.raises(MinistryOnboardingRequestError):
+        log_onboarding_request(
+            super_admin,
+            **onboarding_payload(
+                name_en="Department of Land Records",
+                website_url="https://www.molmcpa.gov.np",
+                official_email="sushil.karki@molmcpa.gov.np",
+                nominated_officer_name="Sushil Karki",
+            ),
+        )
+
+
+@pytest.mark.integration
 def test_onboarding_request_detects_existing_organization_and_cannot_provision():
     """AUTH-004: duplicate organization detection prevents a second ministry record."""
     super_admin = SuperAdminFactory()
@@ -111,6 +131,25 @@ def test_onboarding_request_detects_existing_organization_and_cannot_provision()
         provision_onboarding_request(super_admin, request)
     request.refresh_from_db()
     assert request.status == OnboardingRequestStatus.NEW
+
+
+@pytest.mark.integration
+def test_onboarding_provisioning_recovers_from_a_concurrent_organization_collision(monkeypatch):
+    """AUTH-004/D1.1: an organization uniqueness collision leaves the onboarding request usable."""
+    super_admin = SuperAdminFactory()
+    request = log_onboarding_request(super_admin, **onboarding_payload())
+
+    def collide(**kwargs):
+        raise IntegrityError("concurrent organization insert")
+
+    monkeypatch.setattr("apps.ministries.services.MinistryOrganization.objects.create", collide)
+
+    with pytest.raises(MinistryOnboardingRequestError):
+        provision_onboarding_request(super_admin, request)
+
+    request.refresh_from_db()
+    assert request.status == OnboardingRequestStatus.NEW
+    assert MinistryOnboardingRequest.objects.filter(pk=request.pk).exists()
 
 
 @pytest.mark.integration

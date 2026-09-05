@@ -23,7 +23,7 @@ class MinistryOrganizationForm(forms.ModelForm):
 
 class MinistryOnboardingRequestForm(forms.ModelForm):
     signatory_verified = forms.BooleanField(
-        label=_("I verified the letter signatory with the ministry focal contact"),
+        label=_("I attest that I recorded the nomination evidence and focal-contact check"),
         required=True,
     )
 

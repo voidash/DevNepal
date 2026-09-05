@@ -32,9 +32,9 @@
       <section class="dn-onboarding__note" aria-labelledby="checks-heading">
         <h2 id="checks-heading">{% trans "PMO checks" %}</h2>
         <ul>
-          <li>{% if onboarding_request.domain_verified %}✓{% else %}□{% endif %} {% blocktrans with domain=onboarding_request.official_domain %}Domain {{ domain }} is a registered government domain{% endblocktrans %}</li>
-          <li>{% if onboarding_request.named_person_verified %}✓{% else %}□{% endif %} {% trans "Named person, official mailbox — not a shared address" %}</li>
-          <li>{% if onboarding_request.signatory_verified %}✓{% else %}□{% endif %} {% trans "Letter signatory verified with the ministry’s focal contact by phone" %}</li>
+          <li>{% if onboarding_request.domain_verified %}✓{% else %}□{% endif %} {% blocktrans with domain=onboarding_request.official_domain %}Automated check: the nominated mailbox matches {{ domain }}{% endblocktrans %}</li>
+          <li>{% if onboarding_request.named_person_verified %}✓{% else %}□{% endif %} {% trans "PMO attestation: nominated mailbox is named rather than shared" %}</li>
+          <li>{% if onboarding_request.signatory_verified %}✓{% else %}□{% endif %} {% trans "PMO attestation: nomination evidence and focal-contact check were recorded" %}</li>
           <li>{% if onboarding_request.duplicate_organization %}□{% else %}✓{% endif %} {% trans "Organization does not already exist on DevNepal" %}</li>
         </ul>
       </section>

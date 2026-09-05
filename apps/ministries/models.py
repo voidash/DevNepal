@@ -1,5 +1,4 @@
 import typing
-from urllib.parse import urlsplit
 
 from django.db import models
 from django.utils.translation import get_language
@@ -22,16 +21,19 @@ class MinistryOnboardingRequest(models.Model):
     name_ne = NFCTextField(blank=True)
     abbreviation = NFCCharField(max_length=20, blank=True)
     website_url = models.URLField()
+    official_domain = models.CharField(max_length=253, editable=False, db_index=True)
     official_email = models.EmailField()
     nominated_officer_name = NFCCharField(max_length=160)
     nominated_officer_title = NFCCharField(max_length=160)
     purpose = NFCTextField()
     focal_contact = NFCCharField(max_length=160)
     nomination_reference = NFCCharField(max_length=180)
+    nomination_evidence = models.JSONField(default=dict, blank=True)
     signatory_name = NFCCharField(max_length=160)
     domain_verified = models.BooleanField(default=False)
     named_person_verified = models.BooleanField(default=False)
     signatory_verified = models.BooleanField(default=False)
+    pmo_attested_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=16,
         choices=OnboardingRequestStatus.choices,
@@ -62,6 +64,13 @@ class MinistryOnboardingRequest(models.Model):
         indexes: typing.ClassVar[list] = [
             models.Index(fields=["status", "-created_at"], name="idx_onboarding_request_state"),
         ]
+        constraints: typing.ClassVar[list] = [
+            models.UniqueConstraint(
+                fields=["official_domain"],
+                condition=models.Q(status=OnboardingRequestStatus.NEW),
+                name="uniq_open_onboarding_domain",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.reference} · {self.name_en}"
@@ -75,11 +84,6 @@ class MinistryOnboardingRequest(models.Model):
     @property
     def duplicate_organization(self):
         return MinistryOrganization.objects.filter(name_en__iexact=self.name_en).first()
-
-    @property
-    def official_domain(self) -> str:
-        host = (urlsplit(self.website_url).hostname or "").lower()
-        return host.removeprefix("www.")
 
 
 class MinistryOrganization(models.Model):
