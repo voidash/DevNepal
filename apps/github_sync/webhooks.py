@@ -55,6 +55,7 @@ class ParsedPublicSnapshotLifecycleEvent:
 
     action: str
     repository_node_id: str
+    snapshot_item: dict
 
 
 def verify_signature(secret: str, payload_body: bytes, signature_header: str | None) -> bool:
@@ -161,7 +162,37 @@ def parse_public_snapshot_lifecycle_event(
     repository_node_id = str(repository.get("node_id") or "").strip()
     if subject_id < 1 or subject_number < 1 or not repository_node_id:
         return None
-    return ParsedPublicSnapshotLifecycleEvent(action=action, repository_node_id=repository_node_id)
+    return ParsedPublicSnapshotLifecycleEvent(
+        action=action,
+        repository_node_id=repository_node_id,
+        snapshot_item=_bounded_snapshot_item(subject),
+    )
+
+
+def _bounded_snapshot_item(subject: dict) -> dict:
+    """GIT-010: retain only bounded public fields needed for immediate projection."""
+    user = subject.get("user") if isinstance(subject.get("user"), dict) else {}
+    labels = subject.get("labels") if isinstance(subject.get("labels"), list) else []
+    return {
+        "id": subject.get("id"),
+        "number": subject.get("number"),
+        "title": str(subject.get("title") or "")[:301],
+        "body": str(subject.get("body") or "")[:10_000],
+        "state": str(subject.get("state") or ""),
+        "comments": subject.get("comments", 0),
+        "html_url": str(subject.get("html_url") or "")[:500],
+        "updated_at": str(subject.get("updated_at") or "")[:100],
+        "user": {
+            "login": str(user.get("login") or "")[:101],
+            "avatar_url": str(user.get("avatar_url") or "")[:500],
+        },
+        "labels": [
+            {"name": str(label.get("name") or "")[:101]}
+            for label in labels[:21]
+            if isinstance(label, dict)
+        ],
+        **({"pull_request": True} if "pull_request" in subject else {}),
+    }
 
 
 def is_within_replay_window(

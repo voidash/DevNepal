@@ -230,7 +230,12 @@ class TestProcessPending:
         assert result.processed == 1
         assert event.processing_state == ProcessingState.PROCESSED
         assert event.last_error == ""
-        assert GithubIssueSnapshot.objects.get(repository=connection).title == "New public issue"
+        if action in {"closed", "deleted"}:
+            assert not GithubIssueSnapshot.objects.filter(repository=connection).exists()
+        else:
+            assert GithubIssueSnapshot.objects.get(repository=connection).title == (
+                "New public issue"
+            )
 
     @pytest.mark.parametrize(
         "action",
@@ -272,9 +277,12 @@ class TestProcessPending:
         assert result.processed == 1
         assert event.processing_state == ProcessingState.PROCESSED
         assert event.last_error == ""
-        assert GithubPullRequestSnapshot.objects.get(repository=connection).title == (
-            "Fresh public pull request"
-        )
+        if action == "closed":
+            assert not GithubPullRequestSnapshot.objects.filter(repository=connection).exists()
+        else:
+            assert GithubPullRequestSnapshot.objects.get(repository=connection).title == (
+                "Fresh public pull request"
+            )
 
     @pytest.mark.parametrize("action", ["created", "edited", "deleted"])
     @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)

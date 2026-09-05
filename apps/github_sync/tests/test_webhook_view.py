@@ -140,11 +140,7 @@ class TestGithubWebhookView:
         class SnapshotClient:
             def repository_metadata(self, installation_id, full_name):
                 calls.append((installation_id, full_name))
-                return {
-                    "full_name": full_name,
-                    "private": False,
-                    "default_branch": "main",
-                }
+                raise AssertionError("signed issue projection must not need a list API read")
 
             def list_open_issues(self, installation_id, full_name):
                 return [
@@ -175,7 +171,21 @@ class TestGithubWebhookView:
         body = json.dumps(
             {
                 "action": "opened",
-                "issue": {"id": 88001, "number": 18, "state": "open"},
+                "issue": {
+                    "id": 88001,
+                    "number": 18,
+                    "title": "Visible without a manual refresh",
+                    "body": "The signed webhook directly updated this cache.",
+                    "state": "open",
+                    "comments": 0,
+                    "html_url": "https://github.com/voidash/civic-help-directory/issues/18",
+                    "updated_at": "2026-09-06T10:00:00Z",
+                    "user": {
+                        "login": "voidash",
+                        "avatar_url": "https://avatars.githubusercontent.com/u/1",
+                    },
+                    "labels": [{"name": "help wanted"}],
+                },
                 "repository": {
                     "id": 555001,
                     "node_id": connection.repository_node_id,
@@ -195,7 +205,7 @@ class TestGithubWebhookView:
 
         assert response.status_code == 202
         assert duplicate.status_code == 202
-        assert calls == [(connection.installation_id, connection.full_name)]
+        assert calls == []
         assert ProviderEvent.objects.get().processing_state == ProcessingState.PROCESSED
         assert GithubIssueSnapshot.objects.get(repository=connection).number == 18
         public_page = client.get(

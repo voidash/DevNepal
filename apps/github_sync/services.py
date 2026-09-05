@@ -1471,6 +1471,11 @@ def _stored_public_snapshot_lifecycle_event(
         snapshot_lifecycle = ParsedPublicSnapshotLifecycleEvent(
             action=str(event.payload["action"]),
             repository_node_id=str(event.payload["repository_node_id"]),
+            snapshot_item=(
+                event.payload["snapshot_item"]
+                if isinstance(event.payload.get("snapshot_item"), dict)
+                else {}
+            ),
         )
     except (KeyError, TypeError):
         return None
@@ -1494,6 +1499,9 @@ def _refresh_public_snapshot_after_lifecycle_event(
         or connection.sync_state == SyncState.STOPPED
         or connection.deactivated_at is not None
     ):
+        return True
+    lifecycle = _stored_public_snapshot_lifecycle_event(event)
+    if lifecycle is not None and _apply_signed_lifecycle_projection(connection, event, lifecycle):
         return True
     if (
         connection.public_snapshot_at is not None
@@ -1539,6 +1547,57 @@ def _refresh_public_snapshot_after_lifecycle_event(
                     connection.pk,
                     event.pk,
                 )
+    return True
+
+
+def _apply_signed_lifecycle_projection(
+    connection: RepositoryConnection,
+    event: ProviderEvent,
+    lifecycle: ParsedPublicSnapshotLifecycleEvent,
+) -> bool:
+    """GIT-003/GIT-010: persist signed issue/PR data without a stale list API read."""
+    model = None
+    identifier = ""
+    record = None
+    if event.event_type in {"issues", "issue_comment"}:
+        model = GithubIssueSnapshot
+        identifier = "github_issue_id"
+        record = _issue_snapshot_record(connection, lifecycle.snapshot_item)
+    elif event.event_type == "pull_request":
+        model = GithubPullRequestSnapshot
+        identifier = "github_pull_request_id"
+        record = _pull_request_snapshot_record(connection, lifecycle.snapshot_item)
+    if model is None:
+        return False
+
+    try:
+        remote_id = int(lifecycle.snapshot_item["id"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    if remote_id < 1:
+        return False
+
+    if event.event_type in {"issues", "pull_request"} and lifecycle.action in {
+        "closed",
+        "deleted",
+    }:
+        with transaction.atomic():
+            model.objects.filter(repository=connection, **{identifier: remote_id}).delete()
+            RepositoryConnection.objects.filter(pk=connection.pk).update(
+                public_snapshot_at=timezone.now(), public_snapshot_note=""
+            )
+        return True
+    if record is None:
+        return False
+    with transaction.atomic():
+        model.objects.update_or_create(
+            repository=connection,
+            **{identifier: record[identifier]},
+            defaults=record,
+        )
+        RepositoryConnection.objects.filter(pk=connection.pk).update(
+            public_snapshot_at=timezone.now(), public_snapshot_note=""
+        )
     return True
 
 
