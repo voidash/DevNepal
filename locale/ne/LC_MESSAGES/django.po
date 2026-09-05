@@ -5880,7 +5880,7 @@ msgstr "रिडमि (README) वा कागजात URL"
 
 #: apps/projects/forms.py:102
 msgid "Code of conduct URL"
-msgstr "आचारसंहिता URL"
+msgstr "आचारसंहिता लिङ्क"
 
 #: apps/projects/forms.py:103
 msgid "Approved license"
@@ -8949,7 +8949,7 @@ msgstr "म्याद (अन्त्य)"
 
 #: apps/projects/views.py:678
 msgid "Open work first"
-msgstr ""
+msgstr "खुला काम पहिले"
 
 #: apps/projects/views.py:679
 msgid "Recently updated"
@@ -10460,10 +10460,8 @@ msgid "Help"
 msgstr "सहायता"
 
 #: templates/base.html:108
-#, fuzzy
-#| msgid "Become a ministry publisher"
 msgid "Become a publishing ministry"
-msgstr "मन्त्रालय प्रकाशक बन्नुहोस्"
+msgstr "प्रकाशन गर्ने मन्त्रालय बन्नुहोस्"
 
 #: templates/base.html:112
 msgid "Official platform"
