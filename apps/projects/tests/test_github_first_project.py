@@ -233,6 +233,9 @@ def test_gov_004_new_project_workspace_links_to_repository_connection(client):
 
     response = client.get(reverse("projects:authoring_detail", args=[project.slug]))
 
-    expected = f"{reverse('github_sync:connect_repository')}?project_id={project.pk}"
+    expected = reverse("github_sync:connect_repository")
+    content = response.content.decode()
     assert response.status_code == 200
-    assert f'href="{expected}"' in response.content.decode()
+    assert f'action="{expected}"' in content
+    assert f'name="project_id" value="{project.pk}"' in content
+    assert 'type="submit">Connect repository</button>' in content

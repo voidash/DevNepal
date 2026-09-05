@@ -195,14 +195,11 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
 
     response = client.post(
         reverse("github_sync:connect_repository"),
-        {
-            "project_id": str(project.pk),
-            "installation_id": "42",
-            "repository_id": "1001",
-        },
+        {"project_id": str(project.pk)},
     )
 
     assert response.status_code == 302
+    assert response.url == reverse("projects:authoring_detail", args=[project.slug])
     repository = RepositoryConnection.objects.get(repository_id=1001)
     assert repository.project == project
     assert repository.activated_by == publisher.user

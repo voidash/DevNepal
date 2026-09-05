@@ -1,0 +1,6 @@
+{% load i18n %}
+<form method="post" action="{% url 'github_sync:connect_repository' %}">
+  {% csrf_token %}
+  <input type="hidden" name="project_id" value="{{ project.pk }}">
+  <button class="{{ button_class|default:'btn btn--primary' }}" type="submit">{% trans "Connect repository" %}</button>
+</form>

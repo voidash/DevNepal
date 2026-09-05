@@ -365,27 +365,41 @@ def _render_connect_repository(request, client, connection, project=None) -> Htt
 
 
 def _enroll_repository(request, client, connection, project=None) -> HttpResponse:
-    installation_id = _parse_selection_id(request.POST.get("installation_id"))
-    repository_id = _parse_selection_id(request.POST.get("repository_id"))
+    installation_id = request.POST.get("installation_id")
+    repository_id = request.POST.get("repository_id")
     try:
         repositories = member_repositories(client, connection, actor=request.user, project=project)
     except GithubAppError:
         logger.exception("GitHub App repository enrollment failed (member=%s)", request.user.pk)
+        if project is not None:
+            messages.error(request, _("GitHub could not be reached. Try connecting again."))
+            return redirect("projects:authoring_detail", slug=project.slug)
         return render(
             request,
             "github_sync/connect_repository.html",
             _repository_context(request, connection, [], project, error_banner=True),
         )
-    choice = next(
-        (
-            repository
-            for repository in repositories
-            if repository.repository_id == repository_id
-            and repository.installation_id == installation_id
-        ),
-        None,
-    )
+    if project is not None and installation_id is None and repository_id is None:
+        choice = repositories[0] if len(repositories) == 1 else None
+    else:
+        parsed_installation_id = _parse_selection_id(installation_id)
+        parsed_repository_id = _parse_selection_id(repository_id)
+        choice = next(
+            (
+                repository
+                for repository in repositories
+                if repository.repository_id == parsed_repository_id
+                and repository.installation_id == parsed_installation_id
+            ),
+            None,
+        )
     if choice is None:
+        if project is not None:
+            messages.error(
+                request,
+                _("The project's GitHub repository is not available to the DevNepal App."),
+            )
+            return redirect("projects:authoring_detail", slug=project.slug)
         raise Http404("repository is not available for this member")
     binding_outcome = None
     try:
@@ -408,6 +422,9 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             project.pk if project is not None else None,
             choice.repository_id,
         )
+        if project is not None:
+            messages.error(request, _("This repository could not be connected to the project."))
+            return redirect("projects:authoring_detail", slug=project.slug)
         return render(
             request,
             "github_sync/connect_repository.html",
@@ -415,8 +432,7 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
                 request,
                 connection,
                 repositories,
-                project,
-                binding_error=_("This repository could not be connected to the project."),
+                binding_error=_("This repository could not be connected."),
             ),
             status=400,
         )
@@ -429,10 +445,9 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
         )
     else:
         messages.info(request, _("Repository was already connected."))
-    target = reverse("github_sync:connect_repository")
     if project is not None:
-        target = f"{target}?project_id={project.pk}"
-    return redirect(target)
+        return redirect("projects:authoring_detail", slug=project.slug)
+    return redirect(reverse("github_sync:connect_repository"))
 
 
 def _parse_selection_id(raw) -> int:

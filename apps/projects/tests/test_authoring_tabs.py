@@ -111,8 +111,8 @@ def test_authoring_overview_exposes_repository_activity_without_user_oauth_bindi
     assert response.status_code == 200
     content = response.content.decode()
     assert repository.full_name in content
-    expected = f"{reverse('github_sync:connect_repository')}?project_id={project.pk}"
-    assert f'href="{expected}"' not in content
+    expected = reverse("github_sync:connect_repository")
+    assert f'action="{expected}"' not in content
 
 
 @pytest.mark.integration
