@@ -286,3 +286,50 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-greeting { display: inline-flex; align-items: center; min-height: 36px; padding-right: 4px; color: var(--color-text); font-size: 13px; text-decoration: none; white-space: nowrap; }
 .dn-greeting:hover { color: var(--color-accent); }
 .dn-greeting-item { color: var(--color-neutral-700); font-size: 13px; }
+
+/* GitHub-first project and profile surfaces. */
+.dn-github-project { display: grid; gap: 42px; padding-block: 34px 72px; }
+.dn-github-project > section { max-width: 920px; }
+.dn-github-project .dn-issue-list { border: 1px solid var(--color-divider); }
+.dn-github-project .dn-issue-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.dn-github-project .dn-issue-row h3 { margin: 6px 0 2px; font-size: 18px; }
+.dn-github-project .dn-issue-row h3 a { color: var(--color-text); text-decoration: none; }
+.dn-github-project .dn-issue-row h3 a:hover { color: var(--color-accent); text-decoration: underline; }
+.dn-github-project .dn-issue-row p { margin: 0; color: var(--color-neutral-700); font-size: 13px; }
+.dn-github-contributors { display: flex; flex-wrap: wrap; gap: 10px; }
+.dn-github-contributor { display: flex; gap: 10px; align-items: center; min-width: 210px; padding: 10px 14px; border: 1px solid var(--color-divider); color: var(--color-text); text-decoration: none; }
+.dn-github-contributor:hover { border-color: var(--color-accent); }
+.dn-github-contributor img { border-radius: 50%; }
+.dn-github-contributor span, .dn-github-contributor small { display: block; }
+.dn-github-contributor small { margin-top: 2px; color: var(--color-neutral-700); }
+.dn-github-project details.dn-sheet { max-width: 920px; }
+.dn-github-project details.dn-sheet > summary { padding: 18px 22px; cursor: pointer; font-family: var(--font-heading); font-weight: 600; }
+.dn-github-project details.dn-sheet > :not(summary) { margin-inline: 22px; }
+.dn-github-issue { max-width: 920px; padding-block: 18px 72px; }
+.dn-github-issue__card { border: 1px solid var(--color-divider); }
+.dn-github-issue__card > header, .dn-github-issue__body, .dn-github-issue__card > footer { padding: 24px; }
+.dn-github-issue__card > header, .dn-github-issue__body { border-bottom: 1px solid var(--color-divider); }
+.dn-github-issue__card h1 { max-width: 26ch; margin: 12px 0 8px; }
+.dn-github-issue__body { min-height: 180px; font-size: 16px; line-height: 1.7; }
+.dn-github-issue__card > footer p { margin: 12px 0 0; color: var(--color-neutral-700); font-size: 13px; }
+.dn-github-profile { max-width: 780px; padding-block: 64px 80px; }
+.dn-github-profile__card { border: 1px solid var(--color-divider); }
+.dn-github-profile__identity { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 24px; padding: 30px; border-bottom: 1px solid var(--color-divider); }
+.dn-github-profile__identity img { border-radius: 50%; }
+.dn-github-profile__identity h1 { margin: 0; }
+.dn-github-profile__login { margin: 3px 0 14px; color: var(--color-neutral-700); }
+.dn-github-profile__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+.dn-github-profile__facts > div { padding: 20px 30px; border-bottom: 1px solid var(--color-divider); }
+.dn-github-profile__facts > div:nth-child(even) { border-left: 1px solid var(--color-divider); }
+.dn-github-profile__facts dt { color: var(--color-neutral-700); font-size: 12px; text-transform: uppercase; }
+.dn-github-profile__facts dd { margin: 6px 0 0; font-family: var(--font-heading); font-size: 18px; font-weight: 600; }
+.dn-github-profile__actions { padding: 24px 30px; }
+.dn-github-profile__actions p, .dn-github-profile__report { color: var(--color-neutral-700); font-size: 13px; }
+
+@media (max-width: 640px) {
+  .dn-github-project .dn-issue-row { grid-template-columns: 1fr; }
+  .dn-github-profile__identity { grid-template-columns: 72px minmax(0, 1fr); padding: 20px; }
+  .dn-github-profile__identity img { width: 72px; height: 72px; }
+  .dn-github-profile__facts { grid-template-columns: 1fr; }
+  .dn-github-profile__facts > div:nth-child(even) { border-left: 0; }
+}

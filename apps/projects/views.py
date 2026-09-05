@@ -24,6 +24,7 @@ from apps.blogs.enums import BlogModerationState, BlogStatus
 from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
+from apps.github_sync.models import GithubIssueSnapshot, RepositoryConnection
 from apps.github_sync.services import starter_tasks_for_project
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
@@ -105,6 +106,7 @@ from apps.projects.services import (
     projects_for_publisher,
     provide_info,
     publish,
+    publish_by_publisher,
     recommended_projects,
     reject_submission,
     remove_screening_question,
@@ -600,6 +602,25 @@ def project_updates(request: HttpRequest, slug: str) -> HttpResponse:
     )
 
 
+def github_issue_detail(request: HttpRequest, slug: str, number: int) -> HttpResponse:
+    """DSC-005/GIT-010: show a bounded public GitHub issue snapshot inside DevNepal."""
+    issue = get_object_or_404(
+        GithubIssueSnapshot.objects.select_related(
+            "repository__project", "repository__project__ministry"
+        ),
+        repository__project__slug=normalize_nfc(slug),
+        repository__project__status__in=PUBLIC_PROJECT_STATUSES,
+        repository__is_public=True,
+        repository__deactivated_at__isnull=True,
+        number=number,
+    )
+    return render(
+        request,
+        "projects/github_issue_detail.html",
+        {"project": issue.repository.project, "repository": issue.repository, "issue": issue},
+    )
+
+
 def public_project_details():
     return (
         public_projects()
@@ -616,6 +637,15 @@ def public_project_details():
                 ),
                 to_attr="open_tasks",
             ),
+            Prefetch(
+                "repository_connections",
+                queryset=RepositoryConnection.objects.filter(
+                    is_public=True, deactivated_at__isnull=True
+                ).prefetch_related(
+                    "issue_snapshots", "pull_request_snapshots", "contributor_snapshots"
+                ),
+                to_attr="public_repositories",
+            ),
         )
     )
 
@@ -631,6 +661,7 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         or project.published_at
     )
     github_starter_tasks, github_repositories = starter_tasks_for_project(project)
+    public_repositories = getattr(project, "public_repositories", [])
     return {
         "project": project,
         "open_tasks": project.open_tasks,
@@ -644,6 +675,22 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         "maintainer_stale": maintainer_response_stale(project, now=moment) if live else False,
         "github_starter_tasks": github_starter_tasks,
         "github_repositories": github_repositories,
+        "github_issues": [
+            issue
+            for repository in public_repositories
+            for issue in repository.issue_snapshots.all()
+        ],
+        "github_pull_requests": [
+            pull_request
+            for repository in public_repositories
+            for pull_request in repository.pull_request_snapshots.all()
+        ],
+        "github_contributors": [
+            contributor
+            for repository in public_repositories
+            for contributor in repository.contributor_snapshots.all()
+        ],
+        "public_github_repositories": public_repositories,
         **extra,
     }
 
@@ -688,7 +735,7 @@ def _manageable_project_or_404(user, slug: str) -> Project:
 
 def _allowed_workflow_actions(user, project: Project) -> set[str]:
     status_actions = {
-        ProjectStatus.DRAFT: {"submit"},
+        ProjectStatus.DRAFT: {"submit", "publish"},
         ProjectStatus.IN_REVIEW: {"request_changes", "reject", "approve"},
         ProjectStatus.CHANGES_REQUESTED: {"resubmit"},
         ProjectStatus.APPROVED: {"publish", "revoke_approval"},
@@ -714,7 +761,6 @@ def _allowed_workflow_actions(user, project: Project) -> set[str]:
         "reject",
         "approve",
         "revoke_approval",
-        "publish",
         "restore",
     }
 
@@ -1294,7 +1340,11 @@ def authoring_workflow(request: HttpRequest, slug: str) -> HttpResponse:
             comment=reason,
         ),
         "revoke_approval": lambda: revoke_approval(request.user, project, reason=reason),
-        "publish": lambda: publish(request.user, project),
+        "publish": lambda: (
+            publish_by_publisher(request.user, project)
+            if project.status == ProjectStatus.DRAFT
+            else publish(request.user, project)
+        ),
         "pause": lambda: pause(request.user, project),
         "resume": lambda: resume(request.user, project),
         "complete": lambda: complete(request.user, project),

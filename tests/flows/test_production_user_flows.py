@@ -155,7 +155,7 @@ def test_visitor_searches_in_devanagari_and_gets_the_project(client):
 
 @pytest.mark.unit
 def test_visitor_views_public_profile_without_private_data(client):
-    """V3/MEM-005: the public profile renders public fields and hides email."""
+    """V3/MEM-005: legacy profile fields stay off the GitHub-only public page."""
     user = make_member("profiled-member")
     profile = MemberProfile.objects.get(user=user)
     profile.headline = "Civic technologist"
@@ -166,15 +166,15 @@ def test_visitor_views_public_profile_without_private_data(client):
     response = client.get(reverse("accounts:public_profile", kwargs={"username": user.username}))
 
     assert response.status_code == 200
-    assert b"Civic technologist" in response.content
-    assert b"Kathmandu" in response.content
+    assert b"Civic technologist" not in response.content
+    assert b"Kathmandu" not in response.content
+    assert b"has not shared a GitHub profile" in response.content
     assert b"@example.com" not in response.content
 
 
 @pytest.mark.unit
 def test_visitor_discovers_an_opted_in_member_and_follows_public_work(client):
-    """MEM-003/MEM-005/BLG-005: the deployed public flow connects the opt-in directory to a
-    privacy-projected profile, published writing, and verified contribution evidence."""
+    """MEM-003/MEM-005/BLG-005: discovery and blogs remain separate from GitHub profiles."""
     user = make_member("directory-profile-member")
     user.email = "directory-private@example.com"
     user.save(update_fields=["email"])
@@ -204,8 +204,8 @@ def test_visitor_discovers_an_opted_in_member_and_follows_public_work(client):
     assert user.username.encode() in directory.content
     assert skill.name.encode() in directory.content
     assert public_profile.status_code == 200
-    assert post.canonical_url.encode() in public_profile.content
-    assert b"verified contribution" in public_profile.content
+    assert post.canonical_url.encode() not in public_profile.content
+    assert b"verified contribution" not in public_profile.content
     assert user.email.encode() not in public_profile.content
     assert (
         f"/en/reports/new/?content_type={ContentType.objects.get_for_model(user).pk}"
@@ -241,7 +241,7 @@ def test_member_signs_in_and_reaches_the_dashboard(client):
 
 @pytest.mark.unit
 def test_member_edits_previews_and_publishes_profile_changes(client):
-    """M6/MEM-002/MEM-003/MEM-008: edit, preview, then publish profile changes."""
+    """M6/MEM-002/MEM-008: legacy profile edits do not leak into the GitHub-only page."""
     user = make_member("editing-member")
     login(client, user.username)
     payload = {
@@ -259,7 +259,8 @@ def test_member_edits_previews_and_publishes_profile_changes(client):
     assert b"Open-source cartographer" in preview.content
     assert saved.status_code == 302
     assert profile.headline == "Open-source cartographer"
-    assert b"Open-source cartographer" in public.content
+    assert b"Open-source cartographer" not in public.content
+    assert b"has not shared a GitHub profile" in public.content
 
 
 @pytest.mark.unit

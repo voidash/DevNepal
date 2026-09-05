@@ -25,13 +25,13 @@
     <h2 id="project-state-heading">{% trans "Current project state" %}</h2>
     <p><strong>{{ project.get_status_display }}</strong></p>
     {% if project.status == 'draft' %}
-    <p>{% trans "Complete the readiness evidence, then submit this draft for Super Admin review." %}</p>
+    <p>{% trans "Connect the public GitHub repository, check the project details, then publish it." %}</p>
     {% elif project.status == 'in_review' %}
-    <p>{% trans "This submission is with the Super Admin. The review history below is the authoritative decision record." %}</p>
+    <p>{% trans "This older submission is still in review. Return it to draft before using the direct ministry flow." %}</p>
     {% elif project.status == 'changes_requested' %}
     <p>{% trans "Changes requested: address the recorded review comments, save the revision, then resubmit." %}</p>
     {% elif project.status == 'approved' %}
-    <p>{% trans "The reviewed version is approved. A Super Admin can publish once all readiness evidence remains valid." %}</p>
+    <p>{% trans "The reviewed version is approved and ready to publish." %}</p>
     {% elif project.status == 'open_for_contribution' %}
     <p>{% trans "This listing is live. Keep its updates, tasks, and response commitments accurate for contributors." %}</p>
     {% elif project.status == 'paused' %}
@@ -41,7 +41,7 @@
     {% elif project.status == 'cancelled' %}
     <p>{% trans "This listing has been cancelled. Its recorded history remains available for accountability." %}</p>
     {% else %}
-    <p>{% trans "This listing is archived and read-only. A Super Admin may restore it only through the recorded lifecycle." %}</p>
+    <p>{% trans "This listing is archived and read-only." %}</p>
     {% endif %}
   </section>
   {% if active_tab == 'overview' %}
@@ -137,7 +137,7 @@
       <strong>{% trans "Publication is blocked until the following evidence is provided:" %}</strong>
       <ul>{% for violation in publish_readiness_violations %}<li>{{ violation }}</li>{% endfor %}</ul>
     </div>
-    {% else %}<div class="dn-state-banner is-success" role="status"><strong>{% trans "Ready for publication" %}</strong><p>{% trans "All required readiness evidence is recorded. The Super Admin approval and publication actions remain auditable lifecycle steps." %}</p></div>{% endif %}
+    {% else %}<div class="dn-state-banner is-success" role="status"><strong>{% trans "Ready for publication" %}</strong><p>{% trans "All required readiness evidence is recorded." %}</p></div>{% endif %}
     <h3 id="suitability-heading">{% trans "Suitability checklist" %}</h3>
     {% if suitability %}<p>{% trans "Completed by" %} {{ suitability.completed_by|default:system_label }}{% if suitability.confirmed_at %}. {% trans "Confirmed by" %} {{ suitability.confirmed_by|default:system_label }}{% endif %}</p>{% endif %}
     {% if editable %}

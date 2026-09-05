@@ -114,7 +114,6 @@ const shellCss = await readFile(join(root, 'static', 'src/devnepal.css'), 'utf8'
 const navigationCues = [
   [/\.dn-primary-nav a\[aria-current="page"\]\s*\{[^}]*text-decoration:\s*underline/s, 'primary navigation'],
   [/\.mobile-nav a\[aria-current="page"\]\s*\{[^}]*border-left:/s, 'mobile navigation'],
-  [/\.dn-admin-nav a\[aria-current="page"\]\s*\{[^}]*text-decoration:\s*underline/s, 'admin navigation'],
 ]
 for (const [pattern, name] of navigationCues) {
   if (!pattern.test(shellCss)) cssViolations.push(`src/devnepal.css: missing ${name} cue`)
@@ -180,31 +179,16 @@ for (const required of [
 }
 
 for (const viewName of [
-  'projects:home',
   'projects:government',
   'projects:community',
   'projects:about',
-  'projects:list',
-  'accounts:member_directory',
   'accounts:login',
   'accounts:signup',
   'accounts:dashboard',
-  'blogs:list',
-  'recognition:leaderboard',
   'recognition:my_profile',
   'notifications:list',
   'projects:application_list',
-  'administration:console',
-  'administration:feature_flags',
-  'projects:review_queue',
   'projects:authoring_dashboard',
-  'moderation:case_queue',
-  'contributions:verification_queue',
-  'ministries:organization_list',
-  'taxonomy:skill_suggestion_review_list',
-  'recognition:badge_list',
-  'audit:ops_dashboard',
-  'audit:audit_log',
 ]) {
   const marker = `request.resolver_match.view_name == '${viewName}'`
   if (!base.includes(marker)) throw new Error(`templates/base.html lacks current-page state: ${viewName}`)

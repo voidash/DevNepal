@@ -26,15 +26,14 @@ def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(clien
 
     government = client.get(reverse("projects:government"))
     assert government.status_code == 200
-    assert "Sewa Portal Accessibility Remediation" in government.content.decode()
+    assert "Civic Help Directory" in government.content.decode()
 
     project = Project.objects.get(slug="sewa-portal-accessibility-remediation")
     detail_url = reverse("projects:detail", kwargs={"slug": project.slug})
     detail = client.get(detail_url)
     assert detail.status_code == 200
     detail_content = detail.content.decode()
-    assert "Rajan Koirala" in detail_content
-    assert "Sabina Lamichhane" in detail_content
+    assert "voidash/civic-help-directory" in detail_content
     assert "Starter tasks from GitHub" in detail_content
     assert "Sign in to apply" in detail_content
     assert f"next={detail_url}" in detail_content

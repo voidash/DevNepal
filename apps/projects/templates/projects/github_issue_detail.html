@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ issue.title }} | {{ project.localized_title }}{% endblock %}
+{% block content %}
+<div class="dn-container dn-github-issue" aria-labelledby="issue-title">
+  <nav class="dn-breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+    <a href="{% url 'projects:government' %}">{% trans "Government projects" %}</a>
+    <span aria-hidden="true">/</span>
+    <a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{% blocktrans with number=issue.number %}Issue #{{ number }}{% endblocktrans %}</span>
+  </nav>
+
+  <article class="dn-github-issue__card">
+    <header>
+      <div class="dn-project-hero__labels">
+        <span class="Label Label--success">{{ issue.state|capfirst }}</span>
+        {% for label in issue.labels %}<span class="Label">{{ label }}</span>{% endfor %}
+      </div>
+      <h1 id="issue-title">{{ issue.title }}</h1>
+      <p>
+        {{ repository.full_name }} #{{ issue.number }}
+        {% if issue.author_login %}· {% blocktrans with author=issue.author_login %}opened by @{{ author }}{% endblocktrans %}{% endif %}
+        · {% blocktrans count counter=issue.comments_count %}{{ counter }} comment{% plural %}{{ counter }} comments{% endblocktrans %}
+      </p>
+    </header>
+
+    <div class="dn-github-issue__body">
+      {% if issue.body %}{{ issue.body|linebreaks }}{% else %}<p>{% trans "No description was provided for this issue." %}</p>{% endif %}
+    </div>
+
+    <footer>
+      <a class="btn btn--primary" href="{{ issue.url }}" rel="noopener noreferrer">{% trans "Start contributing on GitHub" %}</a>
+      <p>{% trans "GitHub is the source of truth for assignment, discussion, and pull requests." %}</p>
+    </footer>
+  </article>
+</div>
+{% endblock %}

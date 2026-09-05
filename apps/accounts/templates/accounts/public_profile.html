@@ -1,53 +1,40 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{{ payload.display_name }} | DevNepal{% endblock %}
+{% block title %}{% if github_profile.display_name %}{{ github_profile.display_name }}{% else %}@{{ profile.user.username }}{% endif %} | DevNepal{% endblock %}
 {% block content %}
-<article class="section member-profile" aria-labelledby="profile-heading">
-  <div class="container">
-    <header class="member-profile__identity">
-      <div class="member-profile__avatar blueprint duotone" aria-hidden="true">{{ payload.display_name|slice:":1"|upper }}{{ payload.display_name|slice:"1:2"|upper }}<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></div>
-      <div class="member-profile__intro">
-        <p class="dn-section-kicker">{% trans "Public profile" %}</p>
-        <div class="member-profile__name-line"><h1 id="profile-heading">{{ payload.display_name }}</h1><span>@{{ payload.username }}</span></div>
-        {% if payload.headline %}<p class="member-profile__headline">{{ payload.headline }}</p>{% endif %}
-        <div class="member-profile__metadata">{% if payload.location %}<span>{{ payload.location }}{% if payload.province %}, {{ payload.province }}{% endif %}</span>{% elif payload.province %}<span>{{ payload.province }}</span>{% endif %}<span>{% blocktrans with joined=payload.member_since|date:"F Y" %}Member since {{ joined }}{% endblocktrans %}</span></div>
-        <div class="member-profile__badges" aria-label="{% trans 'Profile highlights' %}"><span class="tag tag-accent">{% blocktrans count counter=payload.accepted_contribution_total %}{{ counter }} verified contribution{% plural %}{{ counter }} verified contributions{% endblocktrans %}</span>{% for badge in payload.badges|slice:":4" %}<span class="tag tag-neutral">{{ badge.name }}</span>{% endfor %}{% if payload.badges %}<a href="{% url 'recognition:public_badges' %}">{% trans "View badge criteria" %}</a>{% endif %}</div>
+<div class="dn-container dn-github-profile" aria-labelledby="profile-heading">
+  {% if github_profile %}
+  <article class="dn-github-profile__card">
+    <header class="dn-github-profile__identity">
+      {% if github_profile.avatar_url %}<img src="{{ github_profile.avatar_url }}" alt="" width="112" height="112">{% endif %}
+      <div>
+        <p class="dn-section-kicker">{% trans "GitHub profile" %}</p>
+        <h1 id="profile-heading">{{ github_profile.display_name|default:github_profile.login }}</h1>
+        <p class="dn-github-profile__login">@{{ github_profile.login }}</p>
+        {% if github_profile.bio %}<p class="dn-lede">{{ github_profile.bio }}</p>{% endif %}
       </div>
-      <div class="member-profile__actions">{% for link in payload.links|slice:":1" %}<a class="btn btn--secondary blueprint" href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></a>{% endfor %}<span class="member-profile__private-note">{% trans "Email and sign-in provider are private" %}</span><a href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report impersonation" %}</a></div>
     </header>
 
-    <div class="member-profile__layout">
-      <div class="member-profile__main">
-        <section class="member-profile__section" aria-labelledby="contributions-heading">
-          <div class="member-profile__section-heading"><h2 id="contributions-heading">{% trans "Verified contributions" %} · {{ payload.accepted_contribution_total }}</h2><span>{% trans "Accepted work only" %}</span></div>
-          <div class="member-profile__table-wrap"><table class="member-profile__contribution-table"><thead><tr><th>{% trans "Contribution" %}</th><th>{% trans "Project" %}</th><th>{% trans "Accepted by" %}</th><th>{% trans "Provenance" %}</th><th>{% trans "Date" %}</th></tr></thead><tbody>{% for item in payload.contribution_records %}<tr><td><strong>{{ item.title }}</strong><span class="member-profile__record-type">{{ item.type_label }}</span></td><td><a href="{% url 'projects:detail' item.project_slug %}">{{ item.project_title }}</a></td><td>{{ item.accepted_by }}</td><td><span class="tag tag-outline">{{ item.provenance }}</span></td><td><time datetime="{{ item.accepted_at|date:'Y-m-d' }}">{{ item.accepted_at|date:"j M Y" }}</time></td></tr>{% empty %}<tr><td colspan="5">{% trans "No verified contributions yet." %}</td></tr>{% endfor %}</tbody></table></div>
-        </section>
+    <dl class="dn-github-profile__facts">
+      {% if github_profile.company %}<div><dt>{% trans "Organization" %}</dt><dd>{{ github_profile.company }}</dd></div>{% endif %}
+      {% if github_profile.location %}<div><dt>{% trans "Location" %}</dt><dd>{{ github_profile.location }}</dd></div>{% endif %}
+      <div><dt>{% trans "Repositories" %}</dt><dd>{% blocktrans count counter=github_profile.public_repos %}{{ counter }} public repository{% plural %}{{ counter }} public repositories{% endblocktrans %}</dd></div>
+      <div><dt>{% trans "Followers" %}</dt><dd>{{ github_profile.followers }}</dd></div>
+    </dl>
 
-        <section class="member-profile__section" aria-labelledby="projects-heading">
-          <div class="member-profile__section-heading"><h2 id="projects-heading">{% trans "Government projects" %}</h2></div>
-          <div class="dn-issue-list">{% for project in payload.projects %}{% if project.official %}<div class="member-profile__project-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><span class="Label Label--outline">{% trans "Official" %}</span></div>{% endif %}{% empty %}<p>{% trans "No public projects listed." %}</p>{% endfor %}</div>
-        </section>
-
-        <section class="member-profile__section" aria-labelledby="community-projects-heading">
-          <div class="member-profile__section-heading"><h2 id="community-projects-heading">{% trans "Community projects" %}</h2></div>
-          <div class="dn-issue-list">{% for project in payload.projects %}{% if not project.official %}<div class="member-profile__project-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><span class="Label Label--secondary">{% trans "Community project" %}</span></div>{% endif %}{% empty %}<p>{% trans "No community projects listed." %}</p>{% endfor %}</div>
-        </section>
-
-        <section class="member-profile__section" aria-labelledby="blogs-heading">
-          <div class="member-profile__section-heading"><h2 id="blogs-heading">{% trans "Technical blogs" %}</h2></div>
-          <ul class="member-profile__links">{% for post in payload.blogs %}<li><a href="{{ post.url }}"{% if post.external %} rel="noopener noreferrer"{% endif %}>{{ post.title }}</a>{% if post.external %}<span class="tag tag-outline">{% trans "External article" %}</span>{% endif %}{% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</li>{% empty %}<li>{% trans "No published blog listings." %}</li>{% endfor %}</ul>
-        </section>
-      </div>
-
-      <aside class="member-profile__aside" aria-label="{% trans 'Profile details' %}">
-        {% if payload.bio %}<section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2>{% trans "About" %}</h2><p>{{ payload.bio }}</p></section>{% endif %}
-        <section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2 id="skills-heading">{% trans "Skills" %}</h2><div class="member-profile__tag-list">{% for skill in payload.skills %}<span class="tag tag-neutral">{{ skill.name }}{% if skill.self_rating %} · {{ skill.self_rating }}{% endif %}</span>{% empty %}<p>{% trans "No public skills listed." %}</p>{% endfor %}</div></section>
-        <section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2 id="badges-heading">{% trans "Badges" %}</h2><ul class="member-profile__badge-list">{% for badge in payload.badges %}<li><strong>{{ badge.name }}</strong>{% if badge.description %}<span>{{ badge.description }}</span>{% endif %}<time datetime="{{ badge.issued_at|date:'Y-m-d' }}">{% blocktrans with date=badge.issued_at|date:"j M Y" %}Earned {{ date }}{% endblocktrans %}</time></li>{% empty %}<li>{% trans "No badges awarded yet." %}</li>{% endfor %}</ul></section>
-        <section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2>{% trans "Public links" %}</h2><ul class="member-profile__links">{% for link in payload.links %}<li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}</a></li>{% empty %}<li>{% trans "No public links listed." %}</li>{% endfor %}</ul></section>
-        <section class="member-profile__panel member-profile__privacy"><span class="dn-section-kicker">{% trans "Private by default" %}</span><h2>{% trans "What stays private" %}</h2><p>{% trans "Email, sign-in provider, education, private contact details, tokens, and private GitHub activity are never shown here." %}</p></section>
-      </aside>
+    <div class="dn-github-profile__actions">
+      <a class="btn btn--primary" href="{{ github_profile.html_url }}" rel="noopener noreferrer">{% trans "View profile on GitHub" %}</a>
+      <p>{% trans "This member chose to share these public GitHub fields. DevNepal does not show private GitHub activity." %}</p>
     </div>
-    {% include "github_sync/calendar.html" %}
-  </div>
-</article>
+  </article>
+  {% else %}
+  <section class="dn-empty-state" aria-labelledby="profile-heading">
+    <p class="dn-section-kicker">{% trans "GitHub profile" %}</p>
+    <h1 id="profile-heading">@{{ profile.user.username }}</h1>
+    <p>{% trans "This member has not shared a GitHub profile." %}</p>
+  </section>
+  {% endif %}
+
+  <p class="dn-github-profile__report"><a href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report impersonation" %}</a></p>
+</div>
 {% endblock %}
