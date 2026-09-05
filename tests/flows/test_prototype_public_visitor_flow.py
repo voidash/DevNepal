@@ -8,8 +8,8 @@ from apps.projects.models import Project
 
 
 @pytest.mark.django_db
-def test_public_visitor_can_follow_home_catalog_detail_and_sign_in(client):
-    """A1/A2: the prototype's primary anonymous path stays connected end to end."""
+def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(client):
+    """A1/A2/DSC-001: the compact anonymous path stays connected end to end."""
     call_command("seed_prototype_demo")
 
     home = client.get(reverse("projects:home"))
@@ -17,13 +17,9 @@ def test_public_visitor_can_follow_home_catalog_detail_and_sign_in(client):
     home_content = home.content.decode()
 
     ordered_sections = (
-        "DevNepal — platform at a glance",
-        "Featured government projects",
-        "Ways to contribute",
-        "Community projects — listed by members",
-        "People — verified impact and the people behind it",
-        "Writing from the community",
-        "Get started",
+        'id="opportunities-heading"',
+        'id="contribution-path-heading"',
+        'id="community-heading"',
     )
     positions = [home_content.index(section) for section in ordered_sections]
     assert positions == sorted(positions)
@@ -45,8 +41,8 @@ def test_public_visitor_can_follow_home_catalog_detail_and_sign_in(client):
 
 
 @pytest.mark.django_db
-def test_home_source_sections_link_to_real_public_destinations(client):
-    """A1/A3: prototype home calls-to-action are routes, not decorative controls."""
+def test_home_calls_to_action_link_to_real_public_destinations(client):
+    """A1/A3/DSC-001: compact home calls-to-action are routes, not decorative controls."""
     call_command("seed_prototype_demo")
 
     response = client.get(reverse("projects:home"))

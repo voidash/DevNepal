@@ -72,3 +72,43 @@ def test_anonymous_mobile_menu_contains_account_entry_points(client):
     assert f'href="{reverse("accounts:login")}"'.encode() in response.content
     assert f'href="{reverse("accounts:signup")}"'.encode() in response.content
     assert "Create an account" in content
+
+
+@pytest.mark.unit
+def test_public_shell_prioritizes_open_work_without_duplicate_home_navigation(client):
+    """DSC-001/A2.1: the brand is Home and the visitor menu prioritizes discovery."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+    primary = content.split('<nav class="dn-primary-nav"', 1)[1].split("</nav>", 1)[0]
+    mobile = content.split('<details class="mobile-nav">', 1)[1].split("</details>", 1)[0]
+
+    for route in ("projects:government", "projects:community", "projects:about"):
+        assert f'href="{reverse(route)}"' in primary
+        assert f'href="{reverse(route)}"' in mobile
+
+    assert f'<a class="dn-brand" href="{reverse("projects:home")}">' in content
+    for route in (
+        "projects:home",
+        "projects:list",
+        "accounts:member_directory",
+        "blogs:list",
+        "recognition:leaderboard",
+    ):
+        assert f'href="{reverse(route)}"' not in primary
+        assert f'href="{reverse(route)}"' not in mobile
+
+
+@pytest.mark.unit
+def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
+    """DSC-001/GOV-011: home leads with trusted open work rather than secondary dashboards."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+
+    assert "Featured government projects" in content
+    assert "Code is one of nine ways in" in content
+    assert "DevNepal — platform at a glance" not in content
+    assert "People — verified impact and the people behind it" not in content
+    assert "Writing from the community" not in content
+    assert "Choose your way in" not in content
+    assert f'href="{reverse("projects:government")}"' in content
+    assert f'href="{reverse("projects:community")}"' in content
