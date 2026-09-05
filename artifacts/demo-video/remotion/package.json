@@ -2,6 +2,7 @@
   "name": "devnepal-demo-video",
   "private": true,
   "scripts": {
+    "record:brave": "node scripts/record-brave-flow.mjs",
     "render": "remotion render src/index.ts DevNepalNarrated ../DevNepal-GitHub-flow-demo.mp4",
     "render:silent": "remotion render src/index.ts DevNepalSilent ../DevNepal-GitHub-flow-preview.mp4"
   },
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@types/react": "19.1.16",
+    "playwright-core": "^1.55.0",
     "typescript": "5.9.2"
   }
 }

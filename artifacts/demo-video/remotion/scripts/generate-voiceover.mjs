@@ -9,11 +9,11 @@ if (!apiKey) {
 
 const voiceId = process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 const lines = [
-  ['01-visitor.mp3', 'DevNepal starts with the public need. Visitors browse approved government projects without signing in. Civic Help Directory is published by the Department of Information Technology and linked to a real public repository.'],
-  ['02-ministry-create.mp3', 'A ministry publisher starts a government project and uses Fill demo details for bilingual content, the approved licence, and the Civic Help Directory repository. The publisher still reviews every field before saving.'],
-  ['03-github-proof.mp3', 'The connected repository is voidash slash civic-help-directory. Its issues and pull requests remain on GitHub, while DevNepal makes them discoverable in a government project context.'],
-  ['04-visitor-issue-profile.mp3', 'Visitors see open issues synchronized from GitHub inside DevNepal. Issue seven includes its complete goal and acceptance criteria, then links to the original GitHub issue. Contributor profiles show only cached public GitHub information.'],
-  ['05-ministry-activity.mp3', 'The ministry workspace uses the same connection to show three open issues, pull request ten, and nine commits from at voidash. Open pull requests stay marked as work in progress. Merged work can then enter contribution verification.'],
+  ['01-visitor.mp3', 'DevNepal starts with the public need. Without creating an account, a visitor browses approved government work, opens Civic Help Directory, and understands the project before choosing to contribute.'],
+  ['02-ministry-create.mp3', 'A ministry publisher starts a bilingual project, uses the small demo-fill helper, and connects the real Civic Help Directory repository. The ministry still reviews the details before publication.'],
+  ['03-github-proof.mp3', 'Here is the live repository in Brave. Issue eleven was created on GitHub, the source of truth for discussion, assignment, and code, then synchronized into DevNepal.'],
+  ['04-visitor-issue-profile.mp3', 'After synchronization, issue eleven appears inside DevNepal with its complete goal and acceptance criteria. The visitor gets a safe GitHub handoff, while the contributor page uses only cached public GitHub information.'],
+  ['05-ministry-activity.mp3', 'The same connection lets the ministry see four open issues, pull request ten, and the public contributor snapshot. DevNepal reports repository activity without pretending that unfinished work has been verified.'],
 ];
 
 const outputDirectory = path.resolve('public/voice');

@@ -12,6 +12,7 @@ const FPS = 30;
 
 type Scene = {
   duration: number;
+  playbackRate: number;
   eyebrow: string;
   title: string;
   caption: string;
@@ -21,48 +22,53 @@ type Scene = {
 
 const scenes: Scene[] = [
   {
-    duration: 515,
+    duration: 390,
+    playbackRate: 0.87,
     eyebrow: 'VISITOR · NO ACCOUNT REQUIRED',
     title: 'Find public work worth contributing to',
     caption:
-      'Visitors browse approved government projects without signing in. Civic Help Directory is published by the Department of Information Technology and linked to a real public repository.',
+      'Visitors browse approved government work without an account, choose Civic Help Directory, and see the public need before deciding whether to contribute.',
     video: 'videos/01-visitor.webm',
     audio: 'voice/01-visitor.mp3',
   },
   {
-    duration: 514,
+    duration: 420,
+    playbackRate: 0.79,
     eyebrow: 'MINISTRY PUBLISHER · REVIEW BEFORE SAVE',
     title: 'Create a project and connect GitHub',
     caption:
-      'A ministry publisher starts a project and uses Fill demo details for bilingual content, the approved licence, and the Civic Help Directory repository. The publisher still reviews every field before saving.',
+      'A ministry publisher starts a bilingual project, uses the small demo-fill helper, and connects the real Civic Help Directory repository before review and publication.',
     video: 'videos/02-ministry-create.webm',
     audio: 'voice/02-ministry-create.mp3',
   },
   {
-    duration: 317,
-    eyebrow: 'REAL REPOSITORY · GITHUB IS THE SOURCE OF TRUTH',
-    title: 'The connection points to live public work',
+    duration: 420,
+    playbackRate: 0.94,
+    eyebrow: 'LIVE GITHUB · RECORDED IN BRAVE',
+    title: 'Create the issue where the work lives',
     caption:
-      'The connected repository is voidash slash civic-help-directory. Its issues and pull requests remain on GitHub while DevNepal makes them discoverable in a government project context.',
-    video: 'videos/05-github-proof.webm',
+      'Issue #11 was created in the live voidash/civic-help-directory repository. GitHub remains the source of truth for discussion, assignment, and code.',
+    video: 'videos/03-github-proof.webm',
     audio: 'voice/03-github-proof.mp3',
   },
   {
-    duration: 654,
+    duration: 480,
+    playbackRate: 0.92,
     eyebrow: 'VISITOR · ISSUES AND PUBLIC GITHUB PROFILE',
     title: 'Understand the issue before leaving DevNepal',
     caption:
-      'Visitors see open issues synchronized from GitHub inside DevNepal. Issue seven includes its goal and acceptance criteria, then links to GitHub. Contributor profiles contain only cached public GitHub information.',
-    video: 'videos/03-visitor-issue-profile.webm',
+      'After synchronization, issue #11 appears inside DevNepal with its complete goal and acceptance criteria, a safe GitHub handoff, and a public GitHub-only contributor profile.',
+    video: 'videos/04-visitor-issue-profile.webm',
     audio: 'voice/04-visitor-issue-profile.mp3',
   },
   {
-    duration: 471,
+    duration: 420,
+    playbackRate: 0.81,
     eyebrow: 'MINISTRY · REPOSITORY ACTIVITY',
     title: 'See issues, pull requests, and contributors',
     caption:
-      'The ministry workspace shows three open issues, pull request ten, and nine commits from at voidash. Open pull requests stay work in progress; merged work can then enter contribution verification.',
-    video: 'videos/04-ministry-activity.webm',
+      'The ministry workspace now shows four open issues, pull request #10, and the public contributor snapshot. It reports activity without pretending that open work is verified.',
+    video: 'videos/05-ministry-activity.webm',
     audio: 'voice/05-ministry-activity.mp3',
   },
 ];
@@ -92,6 +98,7 @@ const SceneCard = ({scene, withAudio}: {scene: Scene; withAudio: boolean}) => {
         <Video
           src={staticFile(scene.video)}
           muted
+          playbackRate={scene.playbackRate}
           objectFit="cover"
           style={{width: '100%', height: '100%'}}
         />
