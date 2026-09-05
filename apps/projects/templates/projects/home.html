@@ -11,10 +11,10 @@
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
             {% trans "Government of Nepal · Office of the Prime Minister" %}
           </span>
-          <span class="tag tag-outline">{% trans "Digital Collaboration Initiative · pilot 2026" %}</span>
         </div>
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
-        <p class="hero__lead">{% trans "DevNepal is where ministries open suitable technology projects to public contribution — and where Nepal’s developers, designers, writers and testers earn recognition that a ministry has actually verified. Code stays on GitHub; DevNepal holds identity, listings, participation and the record." %}</p>
+        <p class="hero__lead">{% trans "DevNepal is where ministries open suitable technology projects to public contribution — and where Nepal’s developers, designers, writers and testers earn recognition that a ministry has actually verified." %}</p>
+        <p class="hero__boundary">{% trans "Code stays on GitHub; DevNepal holds identity, listings, participation and the record." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
           {% if github_oauth_enabled %}
@@ -25,7 +25,6 @@
           {% else %}
           <a class="btn btn--ghost" href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a>
           {% endif %}
-          <span class="hero__ministry-link"><a href="{% url 'projects:community' %}">{% trans "Community projects" %}</a> · {% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a></span>
         </div>
       </div>
     </div>
@@ -36,11 +35,9 @@
    header bar, a numbered table of measure / value / remark, and a footnote. {% endcomment %}
 <section class="section dn-home" aria-labelledby="glance-heading">
   <div class="container">
-    <div class="blueprint dn-sheet">
+    <div class="blueprint dn-sheet dn-glance">
       <header class="dn-sheet__header">
         <h2 id="glance-heading">{% trans "DevNepal — platform at a glance" %}</h2>
-        <span>{% trans "Pilot 2026" %}</span>
-        <span>{% trans "Updated daily" %}</span>
       </header>
       <div class="dn-sheet__table">
         <table class="dn-metrics-table">
@@ -51,7 +48,6 @@
             <tr><td>01</td><td>{% trans "Ministries publishing" %}</td><td>{{ platform_metrics.ministries }}</td><td>{% trans "Named officers, MFA enforced; every action attributable" %}</td></tr>
             <tr><td>02</td><td>{% trans "Projects open for contribution" %}</td><td>{{ platform_metrics.open_projects }}</td><td>{% trans "Only reviewed public work is counted" %}</td></tr>
             <tr><td>03</td><td>{% trans "Verified contributions" %}</td><td>{{ platform_metrics.verified_contributions }}</td><td>{% trans "Accepted by a named maintainer — not commit counts" %}</td></tr>
-            <tr><td>04</td><td>{% trans "Public member profiles" %}</td><td>{{ platform_metrics.public_members }}</td><td>{% trans "Visible by each member’s own choice" %}</td></tr>
           </tbody>
         </table>
       </div>
@@ -62,9 +58,8 @@
 
 <section class="section dn-home" aria-labelledby="opportunities-heading">
   <div class="container">
-    <header class="dn-home-section-heading">
+    <header class="dn-home-section-heading dn-home-section-heading--flush">
       <div>
-        <span class="dn-section-kicker">{% trans "Open for contribution" %}</span>
         <h2 id="opportunities-heading">{% trans "Featured government projects" %}</h2>
         <p>{% trans "Open work is listed only after a named owner, contribution guidance, and suitability review." %}</p>
       </div>
@@ -73,12 +68,13 @@
     {% if featured_projects %}
     <div class="dn-card-grid">
       {% for project in featured_projects %}
-      <article class="card blueprint">
-        <div class="dn-catalog-card__head"><span class="tag tag-accent">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% endif %}</span><span class="Label{% if project.status == 'open_for_contribution' %} Label--success{% elif project.status == 'paused' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span></div>
-        <div class="dn-catalog-card__identity"><h3><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h3>{% if project.title_ne %}<p lang="ne">{{ project.title_ne }}</p>{% endif %}</div>
-        <p class="dn-catalog-card__summary">{{ project.localized_summary }}</p>
-        {% if project.contribution_types.all %}<div class="dn-catalog-card__tags">{% for contribution_type in project.contribution_types.all %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}</div>{% endif %}
-        <dl class="dn-catalog-card__facts"><div><dt>{% trans "Difficulty" %}</dt><dd>{{ project.get_difficulty_display|default:"—" }}</dd></div><div><dt>{% trans "Effort" %}</dt><dd>{{ project.get_estimated_effort_display|default:"—" }}</dd></div><div><dt>{% trans "First response" %}</dt><dd>{{ project.get_response_sla_display|default:"—" }}</dd></div></dl>
+      <article class="card dn-featured-card">
+        <p class="dn-featured-card__source">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% endif %}</p>
+        <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h3>
+        {% if project.title_ne %}<p lang="ne">{{ project.title_ne }}</p>{% endif %}
+        <p class="dn-featured-card__summary">{{ project.localized_summary }}</p>
+        {% if project.contribution_types.all %}<div class="dn-featured-card__tags">{% for contribution_type in project.contribution_types.all %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}</div>{% endif %}
+        <p class="dn-featured-card__meta">{{ project.get_difficulty_display|default:"—" }} · {{ project.get_estimated_effort_display|default:"—" }} · {{ project.get_response_sla_display|default:"—" }}</p>
       </article>
       {% endfor %}
     </div>
@@ -118,16 +114,12 @@
   </div>
 </section>
 
-{% comment %} Community projects as rows in a sheet: title and summary, owner,
-   stack, then where the code lives and whether ownership is verified. The
-   boundary — no government endorsement — is a header cell, read before any row. {% endcomment %}
 <section class="section dn-home" aria-labelledby="community-projects-heading">
   <div class="container">
     <div class="blueprint dn-sheet">
       <header class="dn-sheet__header">
         <h2 id="community-projects-heading">{% trans "Community projects — listed by members" %}</h2>
-        <span>{{ platform_metrics.community_projects }} {% trans "listed" %}</span>
-        <span>{% trans "No government endorsement" %}</span>
+        <a href="{% url 'projects:community' %}">{% trans "All community projects" %} →</a>
       </header>
       <div class="dn-community-rows">
         {% for project in featured_community_projects %}
@@ -151,10 +143,6 @@
         {% empty %}
         {% url 'projects:community' as community_url %}{% include "components/dn_empty.html" with title=_("No public community projects are listed yet.") body=_("Member projects are listed by their owners and are not reviewed by PMO. Ownership is verified through the owner’s connected GitHub account where possible.") action_url=community_url action_label=_("All community projects") %}
         {% endfor %}
-      </div>
-      <div class="dn-sheet__foot">
-        <p>{% trans "Member projects are listed by their owners and are not reviewed by PMO. Ownership is verified through the owner’s connected GitHub account where possible." %}</p>
-        <nav aria-label="{% trans 'Community projects' %}"><a href="{% url 'projects:community' %}">{% trans "All community projects" %} →</a></nav>
       </div>
     </div>
   </div>

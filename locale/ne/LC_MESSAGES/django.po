@@ -4967,17 +4967,22 @@ msgstr "सबै प्रविधिहरू"
 msgid "built in public."
 msgstr "सार्वजनिक रूपमा निर्माण गरिएको।"
 
-#: apps/projects/templates/projects/home.html:17
+#: apps/projects/templates/projects/home.html:16
 msgid ""
 "DevNepal is where ministries open suitable technology projects to public "
 "contribution — and where Nepal’s developers, designers, writers and testers "
-"earn recognition that a ministry has actually verified. Code stays on "
-"GitHub; DevNepal holds identity, listings, participation and the record."
+"earn recognition that a ministry has actually verified."
 msgstr ""
 "DevNepal मा मन्त्रालयहरूले उपयुक्त प्रविधि परियोजना सार्वजनिक योगदानका लागि खोल्छन् — "
 "र नेपालका विकासकर्ता, डिजाइनर, लेखक र परीक्षकले मन्त्रालयले वास्तवमै प्रमाणित गरेको "
-"पहिचान पाउँछन्। कोड GitHub मै रहन्छ; DevNepal ले पहिचान, सूचीकरण, सहभागिता र अभिलेख "
-"राख्छ।"
+"पहिचान पाउँछन्।"
+
+#: apps/projects/templates/projects/home.html:17
+msgid ""
+"Code stays on GitHub; DevNepal holds identity, listings, participation and "
+"the record."
+msgstr ""
+"कोड GitHub मै रहन्छ; DevNepal ले पहिचान, सूचीकरण, सहभागिता र अभिलेख राख्छ।"
 
 #: apps/projects/templates/projects/home.html:19
 #: apps/projects/templates/projects/home.html:98

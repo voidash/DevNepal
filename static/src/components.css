@@ -58,9 +58,12 @@
 .data-table tbody tr:hover, .dn-data-table tbody tr:hover, .dn-metrics-table tbody tr:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
 
 .hero { margin: 0; border: 0; background: transparent; }
-.hero__panel { max-width: 1040px; padding: 72px 0 64px; }
+.hero__panel { max-width: 1040px; padding: 72px 0 56px; }
 .hero h1 { font-size: clamp(48px, 7.7vw, 96px); line-height: .96; letter-spacing: .01em; text-transform: uppercase; }
-.hero__lead { max-width: 60ch; color: var(--color-neutral-800); font-size: 18px; line-height: 1.55; }
+.hero__lead { max-width: 58ch; margin: 22px 0 0; color: var(--color-neutral-800); font-size: 18px; line-height: 1.55; }
+.hero__boundary { max-width: 58ch; margin: 12px 0 0; color: var(--color-neutral-700); font-size: 16px; line-height: 1.55; }
+.hero .hero__actions { align-items: center; margin-top: 28px; }
+.hero .hero__actions form { display: inline-flex; margin: 0; }
 .dn-home-hero { display: block; padding: 0; }
 .dn-hero-proof { padding: 20.4px; border: 1px solid var(--color-divider); background: transparent; }
 .dn-hero-proof ul { margin: 0; padding: 0; list-style: none; }
@@ -99,5 +102,5 @@
 
 @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1180px) { .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .filterbar { grid-template-columns: 2fr 1fr 1fr auto; align-items: end; } }
-@media (max-width: 800px) { .dn-home-hero, .dn-project-grid, .dn-contribution-layout, .dn-review-grid, .dn-form-layout { grid-template-columns: 1fr; } .dn-home-hero { gap: 40.8px; padding: 54.4px 0; } }
-@media (max-width: 520px) { :root { --page-gutter: 12px; } .container, .dn-container { width: calc(100% - var(--page-gutter) * 2); } .hero h1 { font-size: clamp(42px, 15vw, 64px); } .btn--primary { width: 100%; } .dn-issue-list-header, .dn-issue-row, .dn-review-row { grid-template-columns: 20px minmax(0, 1fr); } .dn-issue-aside, .dn-review-row .btn { grid-column: 2; } .dn-accountability, .dn-source-grid, .dn-journey, .dn-flow-summary, .dn-contract-list { grid-template-columns: 1fr; } .dn-accountability-item + .dn-accountability-item, .dn-source + .dn-source, .dn-journey-step + .dn-journey-step, .dn-flow-summary > div + div, .dn-contract-list > div + div { border-top: 1px solid var(--color-divider); border-left: 0; } .dn-setting-row { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .dn-home-hero, .dn-project-grid, .dn-contribution-layout, .dn-review-grid, .dn-form-layout { grid-template-columns: 1fr; } .hero__panel { padding: 48px 0 40px; } }
+@media (max-width: 520px) { :root { --page-gutter: 12px; } .container, .dn-container { width: calc(100% - var(--page-gutter) * 2); } .hero h1 { font-size: clamp(42px, 15vw, 64px); } .hero .hero__actions { flex-direction: column; align-items: stretch; } .hero .hero__actions .btn, .hero .hero__actions form { width: 100%; } .btn--primary { width: 100%; } .dn-issue-list-header, .dn-issue-row, .dn-review-row { grid-template-columns: 20px minmax(0, 1fr); } .dn-issue-aside, .dn-review-row .btn { grid-column: 2; } .dn-accountability, .dn-source-grid, .dn-journey, .dn-flow-summary, .dn-contract-list { grid-template-columns: 1fr; } .dn-accountability-item + .dn-accountability-item, .dn-source + .dn-source, .dn-journey-step + .dn-journey-step, .dn-flow-summary > div + div, .dn-contract-list > div + div { border-top: 1px solid var(--color-divider); border-left: 0; } .dn-setting-row { grid-template-columns: 1fr; } }

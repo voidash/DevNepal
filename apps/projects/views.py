@@ -220,10 +220,6 @@ def home(request: HttpRequest) -> HttpResponse:
                 "verified_contributions": ContributionRecord.objects.filter(
                     status=VerificationStatus.ACCEPTED
                 ).count(),
-                "public_members": MemberProfile.objects.filter(directory_discoverable=True).count(),
-                "community_projects": public_projects()
-                .filter(project_type=ProjectType.PERSONAL)
-                .count(),
             },
         },
     )

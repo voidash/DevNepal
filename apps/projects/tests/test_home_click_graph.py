@@ -41,6 +41,25 @@ def test_home_labels_the_disabled_github_path_as_account_creation(client):
 
 
 @pytest.mark.unit
+@override_settings(GITHUB_CLIENT_ID="", GITHUB_CLIENT_SECRET="", GITHUB_OAUTH_ENABLED=False)
+def test_home_hero_offers_exactly_two_visitor_actions(client):
+    """DSC-001/GOV-007: the hero keeps one official catalog action and one account action."""
+    response = client.get(reverse("projects:home"))
+    hero = response.content.split(b'<section class="hero"', 1)[1].split(b"</section>", 1)[0]
+
+    assert response.status_code == 200
+    assert b"Government of Nepal" in hero
+    assert b"Digital Collaboration Initiative" not in hero
+    assert b"Browse government projects" in hero
+    assert b"Create an account" in hero
+    assert b"Community projects" not in hero
+    assert b"Ministry officer?" not in hero
+    assert reverse("projects:community").encode() not in hero
+    assert reverse("projects:ministry_onboarding").encode() not in hero
+    assert hero.count(b'class="btn') == 2
+
+
+@pytest.mark.unit
 def test_home_exposes_real_catalog_filters_and_public_recognition_destinations(client):
     """A2.1/A3.6/A3.7/GOV-008: home discovery links retain category and recognition destinations."""
     response = client.get(reverse("projects:home"))

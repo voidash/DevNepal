@@ -48,7 +48,9 @@
           <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
         </form>
         {% else %}
+        {% block header_signin %}
         <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a>
+        {% endblock %}
         {% endif %}
       </div>
       <details class="mobile-nav">

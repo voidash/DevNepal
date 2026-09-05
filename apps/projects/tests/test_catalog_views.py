@@ -80,6 +80,49 @@ def test_home_features_recent_open_government_opportunities_only(client):
 
 
 @pytest.mark.unit
+def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
+    """DSC-001/GOV-011: featured official cards name the ministry and the work."""
+    featured = make_public_project(title_en="Featured civic service", published_at=timezone.now())
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="opportunities-heading"', 1)[1]
+        .split(b'aria-labelledby="contribution-path-heading"', 1)[0]
+        .decode()
+    )
+
+    assert featured.title_en in section
+    assert "Official" in section
+    assert "See all government projects" in section
+    assert "Open for contribution" not in section
+    assert "dn-home-section-heading--flush" in section
+
+
+@pytest.mark.unit
+def test_home_community_sheet_puts_the_catalog_exit_in_the_header(client):
+    """DSC-001/GOV-011: community listings keep one catalog exit and no endorsement chrome."""
+    make_public_project(
+        project_type=ProjectType.PERSONAL,
+        ministry=None,
+        title_en="Community work that is not official",
+        published_at=timezone.now(),
+    )
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="community-projects-heading"', 1)[1]
+        .split(b'aria-labelledby="people-heading"', 1)[0]
+        .decode()
+    )
+
+    assert "Community work that is not official" in section
+    assert "All community projects" in section
+    assert section.count("All community projects") == 1
+    assert "No government endorsement" not in section
+    assert "not reviewed by PMO" not in section
+
+
+@pytest.mark.unit
 def test_home_explains_the_verified_empty_state_without_inventing_opportunities(client):
     """DSC-001/GOV-011: an empty official catalog explains its publication safeguard."""
     response = client.get(reverse("projects:home"))
@@ -118,9 +161,12 @@ def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
     assert "Ministries publishing" in content
     assert "Projects open for contribution" in content
     assert "Verified contributions" in content
+    assert "Public member profiles" not in content
+    assert "Pilot 2026" not in content
+    assert "Updated daily" not in content
     assert "Code is one of nine ways in" in content
     assert "Community projects — listed by members" in content
-    assert "No government endorsement" in content
+    assert "All community projects" in content
     assert "Recognition counts only work accepted by a named maintainer" in content
     assert 'class="blueprint' in content
     reference_image = Path(settings.BASE_DIR) / "static/images/devnepal-hydropower-reference.jpg"
