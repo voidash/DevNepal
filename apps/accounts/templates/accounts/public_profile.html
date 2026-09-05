@@ -1,26 +1,50 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{{ payload.username }} | DevNepal{% endblock %}
+{% block title %}{{ payload.display_name }} | DevNepal{% endblock %}
 {% block content %}
-<article class="section public-discovery public-discovery--profile" aria-labelledby="profile-heading">
+<article class="section member-profile" aria-labelledby="profile-heading">
   <div class="container">
-    <header class="public-discovery__profile-header">
-      <div class="public-discovery__monogram public-discovery__monogram--large" aria-hidden="true">{{ payload.username|slice:":1"|upper }}</div>
-      <div><p class="dn-section-kicker">{% trans "A3.4 · Public profile" %}</p><h1 id="profile-heading">@{{ payload.username }}</h1>{% if payload.headline %}<p class="hero__lead">{{ payload.headline }}</p>{% endif %}{% if payload.location %}<p class="public-discovery__meta">{{ payload.location }}</p>{% endif %}{% if payload.province %}<p class="public-discovery__meta">{{ payload.province }}</p>{% endif %}</div>
-      <div class="public-discovery__profile-actions"><p class="public-discovery__notice">{% trans "Private by default" %}<br><span>{% trans "Email, sign-in provider, education, and private contact details are never shown." %}</span></p><a class="btn btn--secondary" href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report this profile" %}</a></div>
-    </header>
-    {% if payload.bio %}<div class="public-discovery__profile-bio"><h2>{% trans "About" %}</h2><p>{{ payload.bio }}</p></div>{% endif %}
-    <div class="public-discovery__profile-layout">
-      <div class="public-discovery__profile-main">
-        <section class="public-discovery__section" aria-labelledby="skills-heading"><h2 id="skills-heading">{% trans "Skills" %}</h2><div class="dn-labels">{% for skill in payload.skills %}<span class="Label">{{ skill.name }}{% if skill.self_rating %} · {{ skill.self_rating }}{% endif %}</span>{% empty %}<p>{% trans "No public skills listed." %}</p>{% endfor %}</div></section>
-        <section class="public-discovery__section" aria-labelledby="projects-heading"><h2 id="projects-heading">{% trans "Projects" %}</h2><div class="dn-issue-list">{% for project in payload.projects %}<div class="dn-issue-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><div class="dn-issue-aside">{% if project.official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}</div></div>{% empty %}<p>{% trans "No public projects listed." %}</p>{% endfor %}</div></section>
-        <section class="public-discovery__section" aria-labelledby="contributions-heading"><div class="public-discovery__section-heading"><h2 id="contributions-heading">{% trans "Verified contributions" %}</h2><span>{% trans "Accepted work only" %}</span></div><ul class="public-discovery__fact-list">{% for item in payload.contributions %}<li><strong>{{ item.label }}</strong><span>{% blocktrans count counter=item.count %}{{ counter }} verified contribution{% plural %}{{ counter }} verified contributions{% endblocktrans %}</span></li>{% empty %}<li>{% trans "No verified contributions yet." %}</li>{% endfor %}</ul></section>
-        <section class="public-discovery__section" aria-labelledby="blogs-heading"><h2 id="blogs-heading">{% trans "Technical blogs" %}</h2><ul class="public-discovery__link-list">{% for post in payload.blogs %}<li><a href="{{ post.url }}"{% if post.external %} rel="noopener noreferrer"{% endif %}>{{ post.title }}</a>{% if post.external %} <span class="Label Label--outline">{% trans "External article" %}</span>{% endif %}{% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</li>{% empty %}<li>{% trans "No published blog listings." %}</li>{% endfor %}</ul></section>
+    <header class="member-profile__identity">
+      <div class="member-profile__avatar blueprint duotone" aria-hidden="true">{{ payload.display_name|slice:":1"|upper }}{{ payload.display_name|slice:"1:2"|upper }}<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></div>
+      <div class="member-profile__intro">
+        <p class="dn-section-kicker">{% trans "Public profile" %}</p>
+        <div class="member-profile__name-line"><h1 id="profile-heading">{{ payload.display_name }}</h1><span>@{{ payload.username }}</span></div>
+        {% if payload.headline %}<p class="member-profile__headline">{{ payload.headline }}</p>{% endif %}
+        <div class="member-profile__metadata">{% if payload.location %}<span>{{ payload.location }}{% if payload.province %}, {{ payload.province }}{% endif %}</span>{% elif payload.province %}<span>{{ payload.province }}</span>{% endif %}<span>{% blocktrans with joined=payload.member_since|date:"F Y" %}Member since {{ joined }}{% endblocktrans %}</span></div>
+        <div class="member-profile__badges" aria-label="{% trans 'Profile highlights' %}"><span class="tag tag-accent">{% blocktrans count counter=payload.accepted_contribution_total %}{{ counter }} verified contribution{% plural %}{{ counter }} verified contributions{% endblocktrans %}</span>{% for badge in payload.badges|slice:":4" %}<span class="tag tag-neutral">{{ badge.name }}</span>{% endfor %}{% if payload.badges %}<a href="{% url 'recognition:public_badges' %}">{% trans "View badge criteria" %}</a>{% endif %}</div>
       </div>
-      <aside class="public-discovery__aside" aria-label="{% trans 'Profile recognition and links' %}">
-        <section class="dn-sidebar-section"><h2 id="badges-heading">{% trans "Badges" %}</h2><div class="dn-labels">{% for badge in payload.badges %}<span class="Label">{{ badge.name }}</span>{% empty %}<p>{% trans "No badges awarded yet." %}</p>{% endfor %}</div><p>{% trans "Only active badge awards appear here." %}</p><a href="{% url 'recognition:public_badges' %}">{% trans "Badge criteria" %}</a></section>
-        <section class="dn-sidebar-section"><h2>{% trans "Public links" %}</h2><ul class="public-discovery__link-list">{% for link in payload.links %}<li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}</a> <span class="Label Label--outline">{% trans "External link" %}</span></li>{% empty %}<li>{% trans "No public links listed." %}</li>{% endfor %}</ul></section>
-        <section class="dn-sidebar-section"><h2>{% trans "Privacy boundary" %}</h2><p>{% trans "This page uses only fields the member made public plus public projects, published writing, accepted contribution totals, and active badges." %}</p></section>
+      <div class="member-profile__actions">{% for link in payload.links|slice:":1" %}<a class="btn btn--secondary blueprint" href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></a>{% endfor %}<span class="member-profile__private-note">{% trans "Email and sign-in provider are private" %}</span><a href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report impersonation" %}</a></div>
+    </header>
+
+    <div class="member-profile__layout">
+      <div class="member-profile__main">
+        <section class="member-profile__section" aria-labelledby="contributions-heading">
+          <div class="member-profile__section-heading"><h2 id="contributions-heading">{% trans "Verified contributions" %} · {{ payload.accepted_contribution_total }}</h2><span>{% trans "Accepted work only" %}</span></div>
+          <div class="member-profile__table-wrap"><table class="member-profile__contribution-table"><thead><tr><th>{% trans "Contribution" %}</th><th>{% trans "Project" %}</th><th>{% trans "Accepted by" %}</th><th>{% trans "Provenance" %}</th><th>{% trans "Date" %}</th></tr></thead><tbody>{% for item in payload.contribution_records %}<tr><td><strong>{{ item.title }}</strong><span class="member-profile__record-type">{{ item.type_label }}</span></td><td><a href="{% url 'projects:detail' item.project_slug %}">{{ item.project_title }}</a></td><td>{{ item.accepted_by }}</td><td><span class="tag tag-outline">{{ item.provenance }}</span></td><td><time datetime="{{ item.accepted_at|date:'Y-m-d' }}">{{ item.accepted_at|date:"j M Y" }}</time></td></tr>{% empty %}<tr><td colspan="5">{% trans "No verified contributions yet." %}</td></tr>{% endfor %}</tbody></table></div>
+        </section>
+
+        <section class="member-profile__section" aria-labelledby="projects-heading">
+          <div class="member-profile__section-heading"><h2 id="projects-heading">{% trans "Government projects" %}</h2></div>
+          <div class="dn-issue-list">{% for project in payload.projects %}{% if project.official %}<div class="member-profile__project-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><span class="Label Label--outline">{% trans "Official" %}</span></div>{% endif %}{% empty %}<p>{% trans "No public projects listed." %}</p>{% endfor %}</div>
+        </section>
+
+        <section class="member-profile__section" aria-labelledby="community-projects-heading">
+          <div class="member-profile__section-heading"><h2 id="community-projects-heading">{% trans "Community projects" %}</h2></div>
+          <div class="dn-issue-list">{% for project in payload.projects %}{% if not project.official %}<div class="member-profile__project-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><span class="Label Label--secondary">{% trans "Community project" %}</span></div>{% endif %}{% empty %}<p>{% trans "No community projects listed." %}</p>{% endfor %}</div>
+        </section>
+
+        <section class="member-profile__section" aria-labelledby="blogs-heading">
+          <div class="member-profile__section-heading"><h2 id="blogs-heading">{% trans "Technical blogs" %}</h2></div>
+          <ul class="member-profile__links">{% for post in payload.blogs %}<li><a href="{{ post.url }}"{% if post.external %} rel="noopener noreferrer"{% endif %}>{{ post.title }}</a>{% if post.external %}<span class="tag tag-outline">{% trans "External article" %}</span>{% endif %}{% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</li>{% empty %}<li>{% trans "No published blog listings." %}</li>{% endfor %}</ul>
+        </section>
+      </div>
+
+      <aside class="member-profile__aside" aria-label="{% trans 'Profile details' %}">
+        {% if payload.bio %}<section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2>{% trans "About" %}</h2><p>{{ payload.bio }}</p></section>{% endif %}
+        <section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2 id="skills-heading">{% trans "Skills" %}</h2><div class="member-profile__tag-list">{% for skill in payload.skills %}<span class="tag tag-neutral">{{ skill.name }}{% if skill.self_rating %} · {{ skill.self_rating }}{% endif %}</span>{% empty %}<p>{% trans "No public skills listed." %}</p>{% endfor %}</div></section>
+        <section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2 id="badges-heading">{% trans "Badges" %}</h2><ul class="member-profile__badge-list">{% for badge in payload.badges %}<li><strong>{{ badge.name }}</strong>{% if badge.description %}<span>{{ badge.description }}</span>{% endif %}<time datetime="{{ badge.issued_at|date:'Y-m-d' }}">{% blocktrans with date=badge.issued_at|date:"j M Y" %}Earned {{ date }}{% endblocktrans %}</time></li>{% empty %}<li>{% trans "No badges awarded yet." %}</li>{% endfor %}</ul></section>
+        <section class="member-profile__panel blueprint"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i><h2>{% trans "Public links" %}</h2><ul class="member-profile__links">{% for link in payload.links %}<li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}</a></li>{% empty %}<li>{% trans "No public links listed." %}</li>{% endfor %}</ul></section>
+        <section class="member-profile__panel member-profile__privacy"><span class="dn-section-kicker">{% trans "Private by default" %}</span><h2>{% trans "What stays private" %}</h2><p>{% trans "Email, sign-in provider, education, private contact details, tokens, and private GitHub activity are never shown here." %}</p></section>
       </aside>
     </div>
     {% include "github_sync/calendar.html" %}

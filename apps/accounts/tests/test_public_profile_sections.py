@@ -92,6 +92,11 @@ def test_mem005_i1_public_profile_renders_separate_public_sections(client):
     assert 'id="blogs-heading"' in content
     assert 'id="contributions-heading"' in content
     assert 'id="badges-heading"' in content
+    assert 'class="member-profile__identity"' in content
+    assert 'class="member-profile__contribution-table"' in content
+    assert "Government projects" in content
+    assert "Community projects" in content
+    assert "What stays private" in content
     assert f"/en/projects/{made['owned_open'].slug}/" in content
     assert f"/en/projects/{made['owned_completed'].slug}/" in content
     assert f"/en/projects/{made['joined'].slug}/" in content
@@ -126,6 +131,10 @@ def test_mem005_u1_payload_sections_exclude_nonpublic_and_unverified_items():
     }
     assert [row["title"] for row in payload["blogs"]] == [made["published"].title]
     assert payload["contributions"] == [{"label": "Civic Engineering", "count": 1}]
+    assert payload["contribution_records"][0]["title"]
+    assert payload["contribution_records"][0]["project_slug"]
+    assert payload["contribution_records"][0]["accepted_by"]
+    assert payload["accepted_contribution_total"] == 1
     assert [row["name"] for row in payload["badges"]] == [made["active_badge"].name]
 
 
