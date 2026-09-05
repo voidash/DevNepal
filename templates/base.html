@@ -40,15 +40,16 @@
           <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
         </form>
         {% if user.is_authenticated %}
-        <a class="dn-greeting" href="{% url 'accounts:dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
-        {% if viewer_is_ministry_publisher %}<a class="btn btn-sm" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>{% endif %}
+        {% if viewer_is_ministry_publisher %}<a class="dn-greeting" href="{% url 'projects:authoring_dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
+        <a class="btn btn-sm" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>
+        {% else %}<a class="dn-greeting" href="{% url 'accounts:dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>{% endif %}
         <form action="{% url 'accounts:logout' %}" method="post">
           {% csrf_token %}
           <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
         </form>
         {% else %}
         {% block header_signin %}
-        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a>
+        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a>
         {% endblock %}
         {% endif %}
       </div>
@@ -97,7 +98,7 @@
         <strong>DevNepal</strong>
         <small>{% trans "नेपाल सरकार · Government of Nepal" %}</small>
       </span>
-      <p>{% trans "A trusted registry and collaboration layer, not a replacement for GitHub. Code, issues and reviews stay in approved repositories; DevNepal records who did what, and for which ministry." %}</p>
+      <p>{% trans "A public register of the technology work Nepal's ministries want help with. Contributing needs no DevNepal account: issues, pull requests and contributors come from each project's public GitHub repository, and only ministry officers sign in." %}</p>
     </div>
     <div class="dn-container dn-footer-grid">
       <nav aria-label="{% trans 'Platform' %}">
@@ -127,8 +128,8 @@
       <nav aria-label="{% trans 'Help' %}">
         <h2>{% trans "Help" %}</h2>
         <ul>
-          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Sign in" %}</a></li>{% endif %}
-          {% url 'accounts:signup' as signup_url %}{% if signup_url %}<li><a href="{{ signup_url }}">{% trans "Create an account" %}</a></li>{% endif %}
+          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Ministry sign-in" %}</a></li>{% endif %}
+          {% url 'projects:ministry_onboarding' as onboarding_url %}{% if onboarding_url %}<li><a href="{{ onboarding_url }}">{% trans "Become a publishing ministry" %}</a></li>{% endif %}
           {% url 'github_sync:connection' as github_connection_url %}{% if github_connection_url %}<li><a href="{{ github_connection_url }}">{% trans "GitHub connection" %}</a></li>{% endif %}
         </ul>
       </nav>

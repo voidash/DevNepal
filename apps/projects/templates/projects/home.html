@@ -1,291 +1,152 @@
 {% extends "base.html" %}
-{% load i18n static %}
+{% load i18n %}
 {% block title %}{% trans "Home" %} — DevNepal{% endblock %}
+{% block meta_description %}{% trans "Browse Government of Nepal technology projects open to public contribution. Work happens on GitHub, and contributing needs no DevNepal account." %}{% endblock %}
 {% block content %}
+{% comment %} The visitor's first screen answers three questions in order: what
+   this is, what work is open, and how a contribution becomes a public record.
+   The hero states the claim beside the three figures that back it, so the page
+   shows its evidence before it asks for anything — and it asks for nothing but
+   a look at the catalogue, because contributing needs no account. {% endcomment %}
 <section class="hero" aria-labelledby="hero-heading">
   <div class="container">
     <div class="dn-home-hero">
       <div class="hero__panel">
         <div class="dn-trust-tags">
-          <span class="tag tag-accent">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-            {% trans "Government of Nepal · Office of the Prime Minister" %}
-          </span>
+          <span class="tag tag-accent">{% trans "Government of Nepal · Office of the Prime Minister" %}</span>
         </div>
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
-        <p class="hero__lead">{% trans "DevNepal is where ministries open suitable technology projects to public contribution — and where Nepal’s developers, designers, writers and testers earn recognition that a ministry has actually verified." %}</p>
-        <p class="hero__boundary">{% trans "Code stays on GitHub; DevNepal holds identity, listings, participation and the record." %}</p>
+        <p class="hero__lead">{% trans "Ministries publish the technology work they want help with. Pick an issue and contribute — code stays on GitHub, and no DevNepal account is needed." %}</p>
         <div class="hero__actions">
-          <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
-          {% if github_oauth_enabled %}
-          <form method="post" action="{% url 'accounts:github_connect' %}">
-            {% csrf_token %}
-            <button class="btn btn--ghost" type="submit">{% trans "Join with GitHub" %}</button>
-          </form>
-          {% else %}
-          <a class="btn btn--ghost" href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a>
-          {% endif %}
+          <a class="btn btn--primary" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+          <a class="btn" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
         </div>
+        <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a> · <a href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a></p>
       </div>
+      <aside class="dn-hero-proof blueprint" aria-labelledby="hero-proof-heading">
+        <h2 id="hero-proof-heading">{% trans "What is published here" %}</h2>
+        <ul>
+          <li><strong>{{ platform_metrics.ministries }}</strong><span>{% trans "ministries publishing, each through a named officer" %}</span></li>
+          <li><strong>{{ platform_metrics.open_projects }}</strong><span>{% trans "projects open for contribution right now" %}</span></li>
+          <li><strong>{{ platform_metrics.verified_contributions }}</strong><span>{% trans "contributions accepted by a named maintainer" %}</span></li>
+        </ul>
+        <p>{% trans "Only reviewed public work is listed. A listing is not a procurement commitment." %}</p>
+      </aside>
     </div>
   </div>
 </section>
 
-{% comment %} The platform's figures, drawn as the board draws them: a sheet with a
-   header bar, a numbered table of measure / value / remark, and a footnote. {% endcomment %}
-<section class="section dn-home" aria-labelledby="glance-heading">
+<section class="section" aria-labelledby="opportunities-heading">
   <div class="container">
-    <div class="blueprint dn-sheet dn-glance">
-      <header class="dn-sheet__header">
-        <h2 id="glance-heading">{% trans "DevNepal — platform at a glance" %}</h2>
-      </header>
-      <div class="dn-sheet__table">
-        <table class="dn-metrics-table">
-          <thead>
-            <tr><th scope="col">{% trans "No." %}</th><th scope="col">{% trans "Measure" %}</th><th scope="col">{% trans "Value" %}</th><th scope="col">{% trans "Remark" %}</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>01</td><td>{% trans "Ministries publishing" %}</td><td>{{ platform_metrics.ministries }}</td><td>{% trans "Named officers, MFA enforced; every action attributable" %}</td></tr>
-            <tr><td>02</td><td>{% trans "Projects open for contribution" %}</td><td>{{ platform_metrics.open_projects }}</td><td>{% trans "Only reviewed public work is counted" %}</td></tr>
-            <tr><td>03</td><td>{% trans "Verified contributions" %}</td><td>{{ platform_metrics.verified_contributions }}</td><td>{% trans "Accepted by a named maintainer — not commit counts" %}</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="dn-sheet__note">{% trans "Figures refresh daily. Recognition counts only work accepted by a named maintainer on a DevNepal-listed project." %}</p>
-    </div>
-  </div>
-</section>
-
-<section class="section dn-home" aria-labelledby="opportunities-heading">
-  <div class="container">
-    <header class="dn-home-section-heading dn-home-section-heading--flush">
+    <header class="dn-home-section-heading">
       <div>
+        <span class="dn-section-kicker">{% trans "Open public work" %}</span>
         <h2 id="opportunities-heading">{% trans "Featured government projects" %}</h2>
-        <p>{% trans "Open work is listed only after a named owner, contribution guidance, and suitability review." %}</p>
+        <p>{% trans "Only PMO-approved ministry projects are listed here. Open each project to see its owner, contribution route, response commitment and published repository, where available." %}</p>
       </div>
-      <a href="{% url 'projects:government' %}">{% trans "See all government projects" %} →</a>
+      <a class="dn-arrow-link" href="{% url 'projects:government' %}">{% trans "See all government projects" %} →</a>
     </header>
     {% if featured_projects %}
-    <div class="dn-card-grid">
+    <div class="dn-featured-grid">
       {% for project in featured_projects %}
-      <article class="card dn-featured-card">
-        <p class="dn-featured-card__source">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% endif %}</p>
-        <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h3>
-        {% if project.title_ne %}<p lang="ne">{{ project.title_ne }}</p>{% endif %}
+      <article class="card blueprint dn-featured-card">
+        <div class="dn-featured-card__head">
+          <span class="tag tag-accent">{% trans "Official" %}</span>
+          <span class="Label Label--success">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+        </div>
+        <div>
+          <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3>
+          {% if project.ministry %}<p class="dn-featured-card__owner">{{ project.ministry.localized_name }}</p>{% endif %}
+        </div>
         <p class="dn-featured-card__summary">{{ project.localized_summary }}</p>
-        {% if project.contribution_types.all %}<div class="dn-featured-card__tags">{% for contribution_type in project.contribution_types.all %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}</div>{% endif %}
-        <p class="dn-featured-card__meta">{{ project.get_difficulty_display|default:"—" }} · {{ project.get_estimated_effort_display|default:"—" }} · {{ project.get_response_sla_display|default:"—" }}</p>
+        <div class="dn-labels">
+          {% for contribution_type in project.contribution_types.all|slice:":3" %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}
+        </div>
+        <dl class="dn-featured-card__facts">
+          <div><dt>{% trans "How to join" %}</dt><dd>{{ project.get_contribution_mode_display|default:"—" }}</dd></div>
+          <div><dt>{% trans "First response" %}</dt><dd>{% if project.response_sla %}{{ project.get_response_sla_display }}{% else %}—{% endif %}</dd></div>
+          <div><dt>{% trans "Repository" %}</dt><dd>{% if project.repository_url %}{% trans "Published" %}{% else %}{% trans "Not published" %}{% endif %}</dd></div>
+        </dl>
       </article>
       {% endfor %}
     </div>
     {% else %}
-    <div class="dn-empty-opportunity">
-      {% url 'projects:government' as government_url %}{% include "components/dn_empty.html" with title=_("Government opportunities are being prepared.") body=_("They appear only after a named owner, contribution guidance, and suitability review are complete.") action_url=government_url action_label=_("Browse government projects") %}
-      <figure class="dn-public-work-illustration">
-        <picture>
-          <source type="image/webp" srcset="{% static 'images/devnepal-public-work-illustrations-v1.webp' %}">
-          <img src="{% static 'images/devnepal-public-work-illustrations-v1.png' %}" alt="{% trans 'Eight grayscale public-service scenes for citizen services, education, disaster readiness, maps, health, Nepali-language access, digital identity, and open data.' %}" width="1774" height="887" loading="lazy" decoding="async">
-        </picture>
-        <figcaption>{% trans "Illustrated public-interest work areas, not a list of open projects." %}</figcaption>
-      </figure>
-    </div>
+    <div class="dn-state-banner" role="status"><strong>{% trans "Government opportunities are being prepared." %}</strong><p>{% trans "They appear only after a named owner, contribution guidance, and suitability review are complete." %}</p><a href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a></div>
     {% endif %}
   </div>
 </section>
 
-<section class="section dn-home" aria-labelledby="contribution-path-heading">
+<section class="section" aria-labelledby="contribution-path-heading">
   <div class="container">
     <div class="dn-contribution-model">
-      <header class="dn-home-section-heading">
-        <div>
-          <span class="dn-section-kicker">{% trans "Ways to contribute" %}</span>
-          <h2 id="contribution-path-heading">{% trans "Code is one of nine ways in" %}</h2>
-          <p>{% trans "Every contribution type is weighted equally under the public scoring policy. Code goes through GitHub and is verified when a named maintainer merges it; everything else is submitted as evidence and accepted the same way." %}</p>
-        </div>
-        <a href="{% url 'projects:about' %}">{% trans "How to contribute" %} →</a>
+      <header>
+        <span class="dn-section-kicker">{% trans "How it works" %}</span>
+        <h2 id="contribution-path-heading">{% trans "Code is one of nine ways in" %}</h2>
+        <p>{% trans "Choose work that fits, read its contribution route, and start on GitHub. A named maintainer verifies accepted work, and the record stays public." %}</p>
+        <a class="dn-arrow-link" href="{% url 'projects:about' %}">{% trans "How to contribute" %} →</a>
       </header>
       <div class="dn-contribution-grid">
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Code & data" %}</a></h3><p>{% trans "Pick a labelled starter issue and open a pull request. A merge by a named maintainer is what counts — not commits, not stars." %}</p><div class="dn-labels"><span class="tag tag-neutral">{% trans "Engineering" %}</span><span class="tag tag-neutral">{% trans "Data" %}</span></div></article>
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "Design & research" %}</a></h3><p>{% trans "Audits, flows, interface work and user research are submitted as evidence and accepted by the ministry the same way a merge is." %}</p><div class="dn-labels"><span class="tag tag-neutral">{% trans "UI/UX" %}</span><span class="tag tag-neutral">{% trans "Research" %}</span></div></article>
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Docs & Nepali" %}</a></h3><p>{% trans "Documentation, translation and localisation count exactly like code. Nepali-language work is in demand on every listed project." %}</p><div class="dn-labels"><span class="tag tag-neutral">{% trans "Documentation" %}</span><span class="tag tag-neutral">{% trans "Localization" %}</span></div></article>
-        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA, security & community" %}</a></h3><p>{% trans "Test plans, reproductions, responsible disclosure and community support all produce verifiable records." %}</p><div class="dn-labels"><span class="tag tag-neutral">{% trans "QA" %}</span><span class="tag tag-neutral">{% trans "Security" %}</span><span class="tag tag-neutral">{% trans "Community" %}</span></div></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Code & data" %}</a></h3><p>{% trans "Find repository-backed work and published starter tasks where a project has them." %}</p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "Design & research" %}</a></h3><p>{% trans "Submit audits, flows, interface work or research as project evidence." %}</p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Documentation & Nepali" %}</a></h3><p>{% trans "Translation and documentation are verified contributions alongside code." %}</p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA & security" %}</a></h3><p>{% trans "Test plans, reproductions and responsible disclosure produce verifiable records." %}</p></article>
       </div>
     </div>
+    <ol class="dn-journey" aria-label="{% trans 'From listing to public record' %}">
+      <li class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry publishes" %}</strong><span>{% trans "A named officer lists the project with its repository, licence and response commitment." %}</span></li>
+      <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You pick an issue" %}</strong><span>{% trans "Open issues are synchronised from the project's public GitHub repository." %}</span></li>
+      <li class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute on GitHub" %}</strong><span>{% trans "Fork, branch and open a pull request. Discussion and review stay in the repository." %}</span></li>
+      <li class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "The work is recognised" %}</strong><span>{% trans "Merged work appears against the project and on your public contributor profile." %}</span></li>
+    </ol>
   </div>
 </section>
 
-<section class="section dn-home" aria-labelledby="community-projects-heading">
+<section class="section" aria-labelledby="community-heading">
   <div class="container">
-    <div class="blueprint dn-sheet">
-      <header class="dn-sheet__header">
-        <h2 id="community-projects-heading">{% trans "Community projects — listed by members" %}</h2>
-        <a href="{% url 'projects:community' %}">{% trans "All community projects" %} →</a>
-      </header>
-      <div class="dn-community-rows">
-        {% for project in featured_community_projects %}
-        <article class="dn-community-row">
-          <div class="dn-community-row__title">
-            <div class="dn-community-project-title"><h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3><span class="tag tag-neutral">{% trans "Community project" %}</span></div>
-            <p>{{ project.localized_summary }}</p>
-          </div>
-          <div class="dn-community-row__owner">
-            <span class="dn-avatar-tile" aria-hidden="true">{{ project.owner.get_full_name|default:project.owner.username|slice:":1"|upper }}</span>
-            <span>@{{ project.owner.username }}</span>
-          </div>
-          <div class="dn-community-row__tech">
-            {% for technology in project.technologies.all|slice:":2" %}<span class="tag tag-outline">{{ technology.label }}</span>{% empty %}{% for skill in project.skills.all|slice:":2" %}<span class="tag tag-outline">{{ skill.name }}</span>{% endfor %}{% endfor %}
-          </div>
-          <div class="dn-community-row__links">
-            {% if project.repository_url or project.documentation_url %}<span>{% if project.repository_url %}<a href="{{ project.repository_url }}" rel="noopener">{% trans "Repository" %} ↗</a>{% endif %}{% if project.repository_url and project.documentation_url %} · {% endif %}{% if project.documentation_url %}<a href="{{ project.documentation_url }}" rel="noopener">{% trans "Docs" %} ↗</a>{% endif %}</span>{% endif %}
-            <span{% if project.ownership_verification == 'verified' %} class="is-verified"{% endif %}>{% if project.ownership_verification == 'verified' %}✓ {% endif %}{{ project.get_ownership_verification_display }}</span>
-          </div>
-        </article>
-        {% empty %}
-        {% url 'projects:community' as community_url %}{% include "components/dn_empty.html" with title=_("No public community projects are listed yet.") body=_("Member projects are listed by their owners and are not reviewed by PMO. Ownership is verified through the owner’s connected GitHub account where possible.") action_url=community_url action_label=_("All community projects") %}
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</section>
-
-{% comment %} People: cells divided by hairlines inside one sheet. Public ranking
-   is off by ruling D12, so the cells carry the person, not a score. {% endcomment %}
-<section class="section dn-home" aria-labelledby="people-heading">
-  <div class="container">
-    <div class="blueprint dn-sheet">
-      <header class="dn-sheet__header">
-        <h2 id="people-heading">{% trans "People — verified impact and the people behind it" %}</h2>
-        <span>{% trans "Public by choice" %}</span>
-        <a href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a>
-      </header>
-      {% if featured_members %}
-      <div class="dn-people-grid">
-        {% for profile in featured_members %}
-        <article class="dn-person-card">
-          <span class="dn-person-avatar" aria-hidden="true">{{ profile.user.get_full_name|default:profile.user.username|slice:":1"|upper }}</span>
-          <h3><a href="{% url 'accounts:public_profile' profile.user.username %}">{{ profile.user.get_full_name|default:profile.user.username }}</a></h3>
-          {% if profile.headline %}<p class="dn-person-headline">{{ profile.headline }}</p>{% endif %}
-          <p>@{{ profile.user.username }}{% if profile.location %} · {{ profile.location }}{% endif %}</p>
-          {% if profile.availability %}<p class="dn-person-open">{% trans "Open to" %} · {{ profile.get_availability_display }}</p>{% endif %}
-          <span class="dn-person-meta">{{ profile.verified_count }} {% trans "verified" %} · {{ profile.user.badge_awards.all|length }} {% trans "badges" %}</span>
-        </article>
-        {% endfor %}
-      </div>
-      {% else %}
-      {% url 'accounts:member_directory' as members_url %}{% include "components/dn_empty.html" with title=_("No members have chosen public recognition yet.") body=_("Members appear here only after they opt in to public discovery.") action_url=members_url action_label=_("All members") %}
-      {% endif %}
-      <div class="dn-sheet__foot">
-        <p>{% trans "Commits, bot events and self-reported activity are not scored. MVP and Ambassador tiers are granted by the Office of the Prime Minister. Profiles are public by the member’s choice." %}</p>
-        <nav aria-label="{% trans 'Recognition' %}"><a href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard & badges" %} →</a><a href="{% url 'recognition:public_badges' %}">{% trans "Badges" %} →</a><a href="{% url 'accounts:member_directory' %}">{% trans "All members" %} →</a></nav>
-      </div>
-    </div>
-  </div>
-</section>
-
-{% comment %} Writing as a list: source and length on the left, the piece in the
-   middle, the byline on the right. Rows read faster than a wall of cards. {% endcomment %}
-<section class="section dn-home" aria-labelledby="writing-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
+    <div class="blueprint dn-community-boundary dn-community-boundary--compact">
       <div>
-        <span class="dn-section-kicker">{% trans "Tech blogs" %}</span>
-        <h2 id="writing-heading">{% trans "Writing from the community" %}</h2>
+        <span class="dn-section-kicker">{% trans "Listed by members" %}</span>
+        <h2 id="community-heading">{% trans "Community projects" %}</h2>
+        <p>{% trans "Member-owned projects are separate from Government of Nepal opportunities and never imply government endorsement." %}</p>
       </div>
-      <a href="{% url 'blogs:list' %}">{% trans "All posts" %} →</a>
-    </header>
-    <div class="dn-writing-list">
-      {% for post in featured_posts %}
-      <article class="dn-writing-row">
-        <div class="dn-writing-row__meta">
-          <span class="tag tag-neutral">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span>
-          <span>{{ post.language|upper }} · {% blocktrans with minutes=post.reading_time_minutes %}{{ minutes }} min read{% endblocktrans %}</span>
-        </div>
-        <div class="dn-writing-row__body">
-          <h3><a href="{% url 'blogs:detail' post.pk %}"{% if post.language == 'ne' %} lang="ne"{% endif %}>{{ post.title }}</a></h3>
-          <p{% if post.language == 'ne' %} lang="ne"{% endif %}>{{ post.excerpt }}</p>
-        </div>
-        <div class="dn-writing-row__aside">
-          <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
-          {% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"j M Y" }}</time>{% endif %}
-          {% if post.tags.all %}<span>{% for tag in post.tags.all|slice:":2" %}{{ tag.label }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}
-        </div>
-      </article>
-      {% empty %}
-      {% url 'blogs:list' as blogs_url %}{% include "components/dn_empty.html" with title=_("No public posts have been published yet.") body=_("Published member and official writing will appear here with its source label.") action_url=blogs_url action_label=_("Tech blogs") %}
-      {% endfor %}
+      <a class="btn" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
     </div>
-  </div>
-</section>
-
-<section class="section dn-home" aria-labelledby="public-work-quote">
-  <div class="container dn-public-work-story">
-    <figure class="blueprint duotone">
-      <img src="{% static 'images/devnepal-hydropower-reference.jpg' %}" alt="{% trans 'Hydropower dam in Nepal, duotoned in steel blue.' %}" width="1600" height="1187" loading="lazy" decoding="async">
-    </figure>
-    <figure>
-      <blockquote id="public-work-quote">{% trans "The first accepted fix to the Sewa portal came from a volunteer in Hetauda who had never set foot in our office. She could see exactly what we needed, and we could see exactly what she did." %}</blockquote>
-      <figcaption>{% trans "— Rajan Koirala, maintainer, Department of Information Technology" %}</figcaption>
-    </figure>
   </div>
 </section>
 
 {% if recommendations %}
-<section class="section dn-home" aria-labelledby="recommended-heading">
+<section class="section" aria-labelledby="recommended-heading">
   <div class="container">
     <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "For you" %}</span>
-        <h2 id="recommended-heading">{% trans "Recommended for you" %}</h2>
-        <p>{% trans "Open projects matched to your skills, contributions, saved projects, and experience." %}</p>
-      </div>
+      <div><span class="dn-section-kicker">{% trans "Your workspace" %}</span><h2 id="recommended-heading">{% trans "Recommended for you" %}</h2></div>
+      <a class="dn-arrow-link" href="{% url 'projects:government' %}">{% trans "Browse all projects" %} →</a>
     </header>
     <div class="dn-issue-list">
       {% for recommendation in recommendations %}
-      <div class="dn-issue-row">
+      <article class="dn-issue-row">
         {% include "components/status_octicon.html" with project_status=recommendation.project.status %}
         <div>
           <a class="dn-issue-title" href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a>
-          <div class="dn-issue-meta">
-            {% if recommendation.project.ministry %}{{ recommendation.project.ministry.localized_name }} · {% endif %}{{ recommendation.project.get_status_display }}
-          </div>
-          <div class="dn-labels">
-            {% for reason in recommendation.reasons %}<span class="tag tag-neutral">{{ reason }}</span> {% endfor %}
-          </div>
+          <div class="dn-labels">{% for reason in recommendation.reasons %}<span class="Label Label--secondary">{{ reason }}</span>{% endfor %}</div>
         </div>
-        <div class="dn-issue-aside">
-          {% if recommendation.project.deadline %}<time datetime="{{ recommendation.project.deadline|date:"Y-m-d" }}">{{ recommendation.project.deadline|date:"DATE_FORMAT" }}</time>{% else %}{% trans "No deadline" %}{% endif %}
-        </div>
-      </div>
+      </article>
       {% endfor %}
     </div>
   </div>
 </section>
 {% endif %}
 
-{% comment %} The close: one sheet, two cells, one route each — a primary action
-   and a quieter second link, never four equal buttons. {% endcomment %}
-<section class="section dn-home dn-get-started" aria-labelledby="get-started-heading">
+<section class="section" aria-labelledby="ministry-cta-heading">
   <div class="container">
-    <div class="blueprint dn-sheet">
-      <header class="dn-sheet__header">
-        <h2 id="get-started-heading">{% trans "Get started" %}</h2>
-      </header>
-      <div class="dn-get-started-grid">
-        <article>
-          <span class="dn-section-kicker">{% trans "For contributors" %}</span>
-          <h3>{% trans "Your first verified contribution" %}</h3>
-          <p>{% trans "Sign in, pick a project that fits your hours, and earn recognition a ministry has actually accepted — code or not. Most first contributions are verified within a month." %}</p>
-          <div class="hero__actions">
-            {% if github_oauth_enabled %}<form method="post" action="{% url 'accounts:github_connect' %}">{% csrf_token %}<button class="btn btn--primary" type="submit">{% trans "Join with GitHub" %}</button></form>{% else %}<a class="btn btn--primary" href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a>{% endif %}
-            <a class="dn-arrow-link" href="{% url 'projects:government' %}">{% trans "Browse projects" %} →</a>
-          </div>
-        </article>
-        <article>
-          <span class="dn-section-kicker">{% trans "For ministries" %}</span>
-          <h3>{% trans "Have a project ready for public contribution?" %}</h3>
-          <p>{% trans "A named officer completes the suitability checklist — rights, data classification, security, maintainer capacity — and PMO reviews within five working days." %}</p>
-          <div class="hero__actions"><a class="btn" href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a><a class="dn-arrow-link" href="{% url 'projects:ministry_onboarding' %}">{% trans "Nominate a publisher" %} →</a></div>
-        </article>
+    <div class="blueprint dn-closing-band">
+      <div>
+        <span class="dn-section-kicker">{% trans "For ministries" %}</span>
+        <h2 id="ministry-cta-heading">{% trans "Have a project ready for public contribution?" %}</h2>
+        <p>{% trans "A named officer connects the ministry's public repository and publishes the listing. DevNepal then keeps its issues, pull requests and contributors in view." %}</p>
+      </div>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a>
+        <a class="btn" href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a>
       </div>
     </div>
   </div>
