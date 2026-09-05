@@ -4275,8 +4275,8 @@ msgstr "श्रेय दिइएको काम"
 
 #: apps/github_sync/templates/github_sync/public_profile.html:44
 #| msgid "Available repositories"
-msgid "Work on DevNepal repositories"
-msgstr "DevNepal रिपोजिटरीहरूमा गरिएको काम"
+msgid "Activity on connected public projects"
+msgstr "जोडिएका सार्वजनिक परियोजनाहरूमा गतिविधि"
 
 #: apps/github_sync/templates/github_sync/public_profile.html:45
 #| msgid "GitHub boundary"

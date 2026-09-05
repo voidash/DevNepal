@@ -7,12 +7,12 @@
   <meta name="description" content="{% block meta_description %}{% trans "DevNepal — Government of Nepal public collaboration platform" %}{% endblock %}">
   <link rel="icon" href="{% static 'images/devnepal-mark.svg' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'vendor/primer/primer.css' %}">
-  <link rel="stylesheet" href="{% static 'src/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'src/tokens.css' %}?v=20260906-madan-demo2">
   <link rel="stylesheet" href="{% static 'src/base.css' %}?v=20260907">
-  <link rel="stylesheet" href="{% static 'src/components.css' %}">
+  <link rel="stylesheet" href="{% static 'src/components.css' %}?v=20260906-madan-demo2">
   <link rel="stylesheet" href="{% static 'src/devnepal.css' %}?v=20260906-madan-demo2">
-  <link rel="stylesheet" href="{% static 'src/onboarding.css' %}">
-  <link rel="stylesheet" href="{% static 'src/public-discovery.css' %}">
+  <link rel="stylesheet" href="{% static 'src/onboarding.css' %}?v=20260906-madan-demo2">
+  <link rel="stylesheet" href="{% static 'src/public-discovery.css' %}?v=20260906-madan-demo2">
 </head>
 <body>
   <a class="btn dn-skip-link" href="#main-content">{% trans "Skip to main content" %}</a>
@@ -42,7 +42,7 @@
         </form>
         {% if user.is_authenticated %}
         {% if viewer_is_ministry_publisher %}<span class="dn-greeting">{% blocktrans with name=user.get_full_name|default:user.username %}Ministry: {{ name }}{% endblocktrans %}</span><a class="btn btn-sm dn-header-pub" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>{% endif %}
-        <form action="{% url 'accounts:logout' %}" method="post">
+        <form class="dn-header-logout" action="{% url 'accounts:logout' %}" method="post">
           {% csrf_token %}
           <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
         </form>

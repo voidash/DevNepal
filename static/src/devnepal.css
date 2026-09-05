@@ -922,7 +922,7 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
    and one action; the greeting and the workspace link live in the menu, which
    is where a narrow screen looks for them. */
 @media (max-width: 700px) {
-  .dn-greeting, .dn-header-pub { display: none; }
+  .dn-greeting, .dn-header-pub, .dn-header-logout { display: none; }
   .dn-header-inner { gap: var(--space-2); }
   .dn-brand-copy strong { font-size: 20px; }
   .dn-brand-copy small { font-size: 9px; }
