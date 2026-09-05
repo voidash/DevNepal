@@ -33,7 +33,10 @@ def test_shared_shell_has_one_ordered_design_cascade_and_real_barlow_assets():
     """DSC-001/NFR-I18N-01: styling and bilingual typography load predictably."""
     root = Path(settings.BASE_DIR)
     base = (root / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}\"", base)
+    stylesheets = re.findall(
+        r"rel=\"stylesheet\" href=\"\{% static '([^']+)' %\}\"",
+        base,
+    )
 
     assert stylesheets == [
         "vendor/primer/primer.css",
@@ -53,6 +56,10 @@ def test_shared_shell_has_one_ordered_design_cascade_and_real_barlow_assets():
     ):
         asset = root / "static/fonts" / font
         assert asset.is_file() and asset.stat().st_size > 0, font
+
+    favicon = root / "static/favicon.svg"
+    assert 'rel="icon"' in base
+    assert favicon.is_file() and favicon.stat().st_size > 0
 
 
 @pytest.mark.django_db
