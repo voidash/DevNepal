@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import RequestDataTooBig
 from django.db import transaction
 from django.http import Http404, HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -24,7 +24,12 @@ from apps.github_sync.errors import (
     WebhookReplayError,
     WebhookSignatureError,
 )
-from apps.github_sync.models import GithubConnection, RepositoryConnection
+from apps.github_sync.models import (
+    GithubConnection,
+    GithubPublicProfileSnapshot,
+    GithubRepositoryContributor,
+    RepositoryConnection,
+)
 from apps.github_sync.services import (
     annual_contribution_calendar,
     bind_repository,
@@ -34,6 +39,7 @@ from apps.github_sync.services import (
     ingest_webhook,
     member_repositories,
 )
+from apps.projects.enums import ProjectStatus
 
 MAX_WEBHOOK_BODY_BYTES = 1_048_576
 
@@ -49,6 +55,31 @@ WEEKDAY_LABELS = (
     gettext_lazy("Sat"),
 )
 INTENSITY_LEVELS = range(5)
+
+
+@require_GET
+def public_profile(request: HttpRequest, login: str) -> HttpResponse:
+    """GIT-010: show a cached public GitHub identity and tracked repository work."""
+    profile = get_object_or_404(GithubPublicProfileSnapshot, login__iexact=login)
+    repository_activity = (
+        GithubRepositoryContributor.objects.filter(
+            github_user_id=profile.github_user_id,
+            repository__is_public=True,
+            repository__deactivated_at__isnull=True,
+            repository__project__status__in=(
+                ProjectStatus.OPEN_FOR_CONTRIBUTION,
+                ProjectStatus.PAUSED,
+                ProjectStatus.COMPLETED,
+            ),
+        )
+        .select_related("repository__project")
+        .order_by("repository__full_name")
+    )
+    return render(
+        request,
+        "github_sync/public_profile.html",
+        {"github_profile": profile, "repository_activity": repository_activity},
+    )
 
 
 @csrf_exempt

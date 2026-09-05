@@ -246,6 +246,28 @@ class GithubRepositoryContributor(models.Model):
         return f"{self.repository.full_name}: {self.login}"
 
 
+class GithubPublicProfileSnapshot(models.Model):
+    """Public GitHub identity used for in-app contributor profiles [GIT-010]."""
+
+    github_user_id = models.BigIntegerField(unique=True)
+    login = NFCCharField(100, db_index=True)
+    avatar_url = models.URLField(blank=True, default="")
+    html_url = models.URLField()
+    display_name = NFCCharField(255, blank=True, default="")
+    bio = NFCTextField(blank=True, default="")
+    location = NFCCharField(255, blank=True, default="")
+    company = NFCCharField(255, blank=True, default="")
+    public_repos = models.PositiveIntegerField(default=0)
+    followers = models.PositiveIntegerField(default=0)
+    fetched_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["login"]
+
+    def __str__(self) -> str:
+        return f"GitHub @{self.login}"
+
+
 class ProviderEvent(models.Model):
     """Immutable delivery ledger [GIT-004, GIT-005, GIT-012; A5, A9].
 

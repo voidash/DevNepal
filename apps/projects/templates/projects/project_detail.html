@@ -75,7 +75,7 @@
   {% if github_contributors %}
   <section aria-labelledby="contributors-heading">
     <div class="dn-section-heading-row"><h2 id="contributors-heading">{% trans "People working on this repository" %}</h2><span>{% trans "Public GitHub contributors" %}</span></div>
-    <div class="dn-github-contributors">{% for contributor in github_contributors %}<a class="dn-github-contributor" href="{{ contributor.profile_url }}" rel="noopener noreferrer">{% if contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40" loading="lazy">{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktrans %}</small></span></a>{% endfor %}</div>
+    <div class="dn-github-contributors">{% for contributor in github_contributors %}<a class="dn-github-contributor" href="{% url 'github_sync:public_profile' contributor.login %}">{% if contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40" loading="lazy">{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktrans %}</small></span></a>{% endfor %}</div>
   </section>
   {% endif %}
 

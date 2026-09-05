@@ -35,6 +35,7 @@ from apps.github_sync.errors import (
 from apps.github_sync.models import (
     GithubConnection,
     GithubIssueSnapshot,
+    GithubPublicProfileSnapshot,
     GithubPullRequestSnapshot,
     GithubRepositoryContributor,
     GithubStarterTask,
@@ -564,6 +565,7 @@ def refresh_public_repository_snapshot(
     contributor_records = [
         record for item in contributors if (record := _contributor_snapshot_record(item))
     ]
+    public_profiles = _public_profile_snapshots(client, contributor_records)
     with transaction.atomic():
         _replace_snapshot_rows(GithubIssueSnapshot, connection, "github_issue_id", issue_records)
         _replace_snapshot_rows(
@@ -572,6 +574,10 @@ def refresh_public_repository_snapshot(
         _replace_snapshot_rows(
             GithubRepositoryContributor, connection, "github_user_id", contributor_records
         )
+        for profile in public_profiles:
+            GithubPublicProfileSnapshot.objects.update_or_create(
+                github_user_id=profile["github_user_id"], defaults=profile
+            )
         RepositoryConnection.objects.filter(pk=connection.pk).update(
             public_snapshot_at=now, public_snapshot_note=""
         )
@@ -673,6 +679,57 @@ def _contributor_snapshot_record(item: object) -> dict | None:
         "avatar_url": str(item.get("avatar_url") or "").strip(),
         "profile_url": str(item.get("html_url") or "").strip(),
         "contributions": contributions,
+    }
+
+
+def _public_profile_snapshots(client: GithubAppClient, contributors: list[dict]) -> list[dict]:
+    profiles = []
+    for contributor in contributors[:20]:
+        try:
+            payload = client.get_public_user(contributor["login"])
+        except GithubAppError:
+            logger.warning(
+                "public GitHub contributor profile fetch failed for login=%s",
+                contributor["login"],
+            )
+            continue
+        record = _public_profile_snapshot_record(contributor, payload)
+        if record is None:
+            logger.warning(
+                "public GitHub contributor profile was malformed for login=%s",
+                contributor["login"],
+            )
+            continue
+        profiles.append(record)
+    return profiles
+
+
+def _public_profile_snapshot_record(contributor: dict, payload: object) -> dict | None:
+    if not isinstance(payload, dict):
+        return None
+    login = str(payload.get("login") or "").strip()
+    html_url = str(payload.get("html_url") or "").strip()
+    try:
+        github_user_id = int(payload["id"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if (
+        github_user_id != contributor["github_user_id"]
+        or login.casefold() != contributor["login"].casefold()
+        or html_url.casefold() != f"https://github.com/{login}".casefold()
+    ):
+        return None
+    return {
+        "github_user_id": github_user_id,
+        "login": login[:100],
+        "avatar_url": str(payload.get("avatar_url") or "").strip(),
+        "html_url": html_url,
+        "display_name": str(payload.get("name") or "").strip()[:255],
+        "bio": str(payload.get("bio") or "").strip()[:PUBLIC_SNAPSHOT_BODY_LIMIT],
+        "location": str(payload.get("location") or "").strip()[:255],
+        "company": str(payload.get("company") or "").strip()[:255],
+        "public_repos": _nonnegative_int(payload.get("public_repos")),
+        "followers": _nonnegative_int(payload.get("followers")),
     }
 
 

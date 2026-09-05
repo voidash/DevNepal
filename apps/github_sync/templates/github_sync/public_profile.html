@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{{ github_profile.display_name|default:github_profile.login }} | DevNepal{% endblock %}
+{% block content %}
+<main class="dn-container dn-provider-profile" aria-labelledby="profile-heading">
+  <header class="dn-provider-profile__identity">
+    <div class="blueprint dn-provider-profile__avatar">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      {% if github_profile.avatar_url %}<img src="{{ github_profile.avatar_url }}" alt="" width="128" height="128">{% else %}<span aria-hidden="true">{{ github_profile.login|slice:":2"|upper }}</span>{% endif %}
+    </div>
+    <div class="dn-provider-profile__intro">
+      <div class="dn-provider-profile__name-line">
+        <h1 id="profile-heading">{{ github_profile.display_name|default:github_profile.login }}</h1>
+        <span>@{{ github_profile.login }}</span>
+      </div>
+      {% if github_profile.bio %}<p class="dn-provider-profile__bio">{{ github_profile.bio }}</p>{% endif %}
+      <div class="dn-provider-profile__metadata">
+        {% if github_profile.company %}<span>{{ github_profile.company }}</span>{% endif %}
+        {% if github_profile.location %}<span>{{ github_profile.location }}</span>{% endif %}
+        <span>{% blocktrans count counter=github_profile.public_repos %}{{ counter }} public repository{% plural %}{{ counter }} public repositories{% endblocktrans %}</span>
+        <span>{% blocktrans count counter=github_profile.followers %}{{ counter }} follower{% plural %}{{ counter }} followers{% endblocktrans %}</span>
+      </div>
+    </div>
+    <div class="dn-provider-profile__actions">
+      <a class="btn btn--secondary blueprint" href="{{ github_profile.html_url }}" rel="noopener noreferrer">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        {% blocktrans with login=github_profile.login %}github.com/{{ login }}{% endblocktrans %}
+      </a>
+      <p>{% trans "Public information from GitHub. DevNepal never displays private repositories or activity." %}</p>
+    </div>
+  </header>
+
+  <div class="dn-provider-profile__layout">
+    <section aria-labelledby="tracked-work-heading">
+      <div class="dn-section-heading-row">
+        <h2 id="tracked-work-heading">{% trans "Work on DevNepal repositories" %}</h2>
+        <span>{% trans "GitHub source" %}</span>
+      </div>
+      <div class="dn-provider-profile__repositories">
+        {% for activity in repository_activity %}
+        <article class="blueprint">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div><h3><a href="{% url 'projects:detail' activity.repository.project.slug %}">{{ activity.repository.project.localized_title }}</a></h3><p>{{ activity.repository.full_name }}</p></div>
+          <strong>{% blocktrans count counter=activity.contributions %}{{ counter }} commit{% plural %}{{ counter }} commits{% endblocktrans %}</strong>
+        </article>
+        {% empty %}
+        <p>{% trans "No activity has been synchronized from a listed repository yet." %}</p>
+        {% endfor %}
+      </div>
+    </section>
+    <aside class="blueprint dn-provider-profile__source">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <h2>{% trans "About this profile" %}</h2>
+      <p>{% trans "This is a cached public GitHub profile, not a claim that this person has a DevNepal member account." %}</p>
+      <dl>
+        <dt>{% trans "Source" %}</dt><dd>{% trans "GitHub public API" %}</dd>
+        <dt>{% trans "Last synchronized" %}</dt><dd><time datetime="{{ github_profile.fetched_at|date:'c' }}">{{ github_profile.fetched_at|localtime }}</time></dd>
+      </dl>
+    </aside>
+  </div>
+</main>
+{% endblock %}

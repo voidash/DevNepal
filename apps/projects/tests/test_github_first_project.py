@@ -70,6 +70,7 @@ def test_dsc_005_project_shows_synced_github_issues_prs_and_contributors(client)
     )
     assert "Document keyboard-only contribution workflow" in content
     assert "voidash" in content
+    assert reverse("github_sync:public_profile", args=["voidash"]) in content
 
 
 def test_dsc_005_visitor_reads_full_synced_issue_before_starting_on_github(client):

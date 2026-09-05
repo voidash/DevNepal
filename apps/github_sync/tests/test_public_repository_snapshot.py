@@ -2,6 +2,7 @@ import pytest
 
 from apps.github_sync.models import (
     GithubIssueSnapshot,
+    GithubPublicProfileSnapshot,
     GithubPullRequestSnapshot,
     GithubRepositoryContributor,
 )
@@ -66,6 +67,20 @@ class SnapshotClient:
             }
         ]
 
+    def get_public_user(self, login):
+        return {
+            "id": 1,
+            "login": login,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1",
+            "html_url": f"https://github.com/{login}",
+            "name": "Voidash Maintainer",
+            "bio": "Maintains open civic software.",
+            "location": "Nepal",
+            "company": "Open source",
+            "public_repos": 12,
+            "followers": 34,
+        }
+
 
 def test_public_repository_sync_persists_bounded_public_issue_pr_and_contributor_snapshots():
     """GIT-003/GIT-010: only a public repository receives bounded public GitHub snapshots."""
@@ -79,6 +94,10 @@ def test_public_repository_sync_persists_bounded_public_issue_pr_and_contributor
     assert GithubIssueSnapshot.objects.get(repository=connection).body == "Public body"
     assert GithubPullRequestSnapshot.objects.get(repository=connection).author_login == "voidash"
     assert GithubRepositoryContributor.objects.get(repository=connection).contributions == 9
+    profile = GithubPublicProfileSnapshot.objects.get(github_user_id=1)
+    assert profile.login == "voidash"
+    assert profile.display_name == "Voidash Maintainer"
+    assert profile.bio == "Maintains open civic software."
 
 
 def test_public_repository_sync_never_fetches_private_repository_data():
