@@ -96,7 +96,7 @@
   {% block footer %}
   <footer class="dn-footer">
     <div class="dn-container dn-footer-grid">
-      <nav aria-label="{% trans 'Platform' %}">
+      <nav class="dn-footer-platform" aria-label="{% trans 'Platform' %}">
         <h2>{% trans "Platform" %}</h2>
         <ul>
           {% url 'projects:government' as government_url %}{% if government_url %}<li><a href="{{ government_url }}">{% trans "Government Projects" %}</a></li>{% endif %}
@@ -128,7 +128,7 @@
           {% url 'github_sync:connection' as github_connection_url %}{% if github_connection_url %}<li><a href="{{ github_connection_url }}">{% trans "GitHub connection" %}</a></li>{% endif %}
         </ul>
       </nav>
-      <div>
+      <div class="dn-footer-note">
         <h2>{% trans "Official platform" %}</h2>
         <p>{% trans "A Government of Nepal public collaboration platform." %}</p>
         <p lang="ne">{% trans "नेपाल सरकारको सार्वजनिक सहयोग मञ्च।" %}</p>
