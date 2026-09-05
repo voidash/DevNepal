@@ -643,7 +643,7 @@ def github_issue_detail(request: HttpRequest, slug: str, number: int) -> HttpRes
 def public_project_details():
     return (
         public_projects()
-        .select_related("license")
+        .select_related("license", "suitability")
         .prefetch_related(
             "links",
             "updates",
@@ -681,6 +681,13 @@ def public_project_detail_context(project: Project, **extra) -> dict:
     )
     github_starter_tasks, github_repositories = starter_tasks_for_project(project)
     public_repositories = getattr(project, "public_repositories", [])
+    github_issues = [
+        issue for repository in public_repositories for issue in repository.issue_snapshots.all()
+    ]
+    accepting_contributions = project.status == ProjectStatus.OPEN_FOR_CONTRIBUTION
+    has_public_github_path = bool(
+        project.repository_url or project.issue_tracker_url or github_issues or github_starter_tasks
+    )
     return {
         "project": project,
         "open_tasks": project.open_tasks,
@@ -688,17 +695,15 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         in {ContributionMode.OPEN_DIRECT, ContributionMode.HYBRID},
         "requires_application": project.contribution_mode
         in {ContributionMode.APPLICATION, ContributionMode.HYBRID},
+        "accepting_contributions": accepting_contributions,
+        "has_public_github_path": has_public_github_path,
         "last_activity_at": last_activity_at,
         "last_activity_days_ago": ((moment - last_activity_at).days if last_activity_at else None),
         "response_overdue": response_overdue(project, now=moment) if live else False,
         "maintainer_stale": maintainer_response_stale(project, now=moment) if live else False,
         "github_starter_tasks": github_starter_tasks,
         "github_repositories": github_repositories,
-        "github_issues": [
-            issue
-            for repository in public_repositories
-            for issue in repository.issue_snapshots.all()
-        ],
+        "github_issues": github_issues,
         "github_pull_requests": [
             pull_request
             for repository in public_repositories

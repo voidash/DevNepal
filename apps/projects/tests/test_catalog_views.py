@@ -26,6 +26,7 @@ from apps.projects.tests.factories import (
     ProjectFactory,
     ProjectLinkFactory,
     ProjectMaintainerFactory,
+    ProjectSuitabilityFactory,
     ProjectTaskFactory,
     ProjectVersionFactory,
     UserFactory,
@@ -37,7 +38,8 @@ pytestmark = pytest.mark.django_db
 
 
 def make_public_project(**kwargs):
-    project = ProjectFactory(status=ProjectStatus.OPEN_FOR_CONTRIBUTION, **kwargs)
+    kwargs.setdefault("status", ProjectStatus.OPEN_FOR_CONTRIBUTION)
+    project = ProjectFactory(**kwargs)
     version = ProjectVersionFactory(project=project)
     project.current_version = version
     project.save(update_fields=["current_version"])
@@ -677,6 +679,105 @@ def test_direct_project_detail_shows_only_open_tasks_and_contribution_guidance(c
     assert "Maintainer consensus" in content
     assert "DCO-style sign-off" in content
     assert "Apply to contribute" not in content
+    assert "View open issues" in content
+    assert "View on GitHub" in content
+    assert "Contributing needs no DevNepal account." in content
+    assert "Sign in to apply" not in content
+    assert content.index("View open issues") < content.index("Project sheet")
+    assert content.index("Open tasks") < content.index("Project sheet")
+    assert "Suitability checklist not started" not in content
+
+
+@pytest.mark.unit
+def test_direct_project_detail_without_a_repository_still_offers_a_task_without_signin(
+    client,
+):
+    """DSC-001/DSC-005: direct work can start from published tasks with no DevNepal account."""
+    project = make_public_project(contribution_mode=ContributionMode.OPEN_DIRECT)
+    ProjectTaskFactory(project=project, title="Document the first API call")
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Choose a task" in content
+    assert 'href="#open-tasks"' in content
+    assert "Sign in to apply" not in content
+    assert content.index("Choose a task") < content.index("Project sheet")
+
+
+@pytest.mark.unit
+def test_published_project_sheet_omits_unpublished_suitability_process(client):
+    """DSC-009: public pages do not expose unpublished suitability checklist chrome."""
+    project = make_public_project(contribution_mode=ContributionMode.OPEN_DIRECT)
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Suitability checklist not started" not in content
+    assert "Repository visibility and issue data are checked before publication." not in content
+
+
+@pytest.mark.unit
+def test_published_project_sheet_names_confirmed_suitability(client):
+    """DSC-009/BR-002: confirmed suitability is the only suitability state shown publicly."""
+    project = make_public_project(contribution_mode=ContributionMode.OPEN_DIRECT)
+    ProjectSuitabilityFactory(project=project, confirmed=True)
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Suitability confirmed" in content
+    assert "Suitability checklist not started" not in content
+
+
+@pytest.mark.unit
+def test_application_project_with_a_public_repository_still_starts_on_github(client):
+    """DSC-001/DSC-005: a controlled workstream does not block GitHub contribution."""
+    project = make_public_project(
+        contribution_mode=ContributionMode.APPLICATION,
+        repository_url="https://github.com/moit/controlled-workstream",
+        issue_tracker_url="https://github.com/moit/controlled-workstream/issues",
+    )
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "View open issues" in content
+    assert "View on GitHub" in content
+    assert "Contributing needs no DevNepal account." in content
+    assert "Application required" in content
+    assert "Sign in to apply" in content
+    assert "Open tasks" not in content
+    assert content.index("View open issues") < content.index("Sign in to apply")
+    assert content.index("View open issues") < content.index("Project sheet")
+
+
+@pytest.mark.unit
+def test_completed_project_detail_leads_with_the_public_record(client):
+    """GOV-011: completed listings are a public record, not an open call to apply."""
+    project = make_public_project(
+        status=ProjectStatus.COMPLETED,
+        contribution_mode=ContributionMode.APPLICATION,
+        repository_url="https://github.com/doit-np/sewa-portal",
+        issue_tracker_url="https://github.com/doit-np/sewa-portal/issues",
+        outcome_summary="Keyboard and bilingual recovery now meet WCAG 2.2 AA.",
+    )
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "View on GitHub" in content
+    assert "Completion summary" in content
+    assert "View open issues" not in content
+    assert "Choose an issue" not in content
+    assert "Sign in to apply" not in content
+    assert "Apply to contribute" not in content
+    assert content.index("Completion summary") < content.index("Project sheet")
 
 
 @pytest.mark.unit
@@ -744,7 +845,9 @@ def test_hybrid_project_detail_shows_open_tasks_and_application(client):
     assert list(response.context["open_tasks"]) == [task]
     assert "Hybrid (open tasks and application workstreams)" in content
     assert "Improve search labels" in content
+    assert "Choose a task" in content
     assert "Sign in to apply" in content
+    assert content.index("Choose a task") < content.index("Sign in to apply")
 
 
 @pytest.mark.unit
@@ -860,3 +963,7 @@ def test_public_project_displays_only_persisted_github_starter_task_snapshot(cli
     assert "doit-np/sewa-portal #131 · Add lang=&quot;ne&quot; to error strings" in content
     assert "good first issue" in content
     assert "Issue snapshot" in content
+    assert "Choose an issue" in content
+    assert "Contributing needs no DevNepal account." in content
+    assert "Sign in to apply" in content
+    assert content.index("Choose an issue") < content.index("Sign in to apply")

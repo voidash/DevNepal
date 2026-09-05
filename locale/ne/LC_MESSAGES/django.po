@@ -7115,3 +7115,46 @@ msgstr "मालिक"
 
 msgid "Listing"
 msgstr "सूचीकरण"
+
+msgid "How to join"
+msgstr "जोडिने तरिका"
+
+msgid "Choose an issue"
+msgstr "इशु छान्नुहोस्"
+
+msgid "Choose a task"
+msgstr "कार्य छान्नुहोस्"
+
+msgid "View open issues"
+msgstr "खुला इशु हेर्नुहोस्"
+
+msgid "View on GitHub"
+msgstr "GitHub मा हेर्नुहोस्"
+
+msgid "Contributing needs no DevNepal account."
+msgstr "योगदान गर्न DevNepal खाता चाहिँदैन।"
+
+msgid "Apply for assigned work"
+msgstr "तोकिएको कामका लागि आवेदन दिनुहोस्"
+
+msgid "Applying uses a DevNepal account. Public GitHub work, when listed, does not."
+msgstr "आवेदनका लागि DevNepal खाता चाहिन्छ। सूचीकृत सार्वजनिक GitHub कामका लागि चाहिँदैन।"
+
+msgid "Pick an issue on GitHub. No DevNepal account is needed."
+msgstr "GitHub मा इशु छान्नुहोस्। DevNepal खाता चाहिँदैन।"
+
+msgid "Start from an open task. No DevNepal account is needed."
+msgstr "खुला कार्यबाट सुरु गर्नुहोस्। DevNepal खाता चाहिँदैन।"
+
+msgid "Open tasks on GitHub, or apply for assigned work."
+msgstr "GitHub का खुला कार्य गर्नुहोस्, वा तोकिएको कामका लागि आवेदन दिनुहोस्।"
+
+msgid "Public GitHub work is open. Screened workstreams need an application."
+msgstr "सार्वजनिक GitHub काम खुला छ। जाँच गरिएका कार्यधाराका लागि आवेदन चाहिन्छ।"
+
+msgid "This ministry workstream is assigned after an application."
+msgstr "यो मन्त्रालय कार्यधारा आवेदनपछि तोकिन्छ।"
+
+msgid "You can already contribute on GitHub without a DevNepal account. Use this form only for screened workstreams."
+msgstr "तपाईं GitHub मा DevNepal खाता बिना नै योगदान गर्न सक्नुहुन्छ। यो फारम जाँच गरिएका कार्यधाराका लागि मात्र हो।"
+

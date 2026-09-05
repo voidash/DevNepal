@@ -356,9 +356,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "levels, wards and tole names."
         ),
         summary_ne="७५३ स्थानीय तह, वडा र टोल नामका लागि खुला JSON schema र validation library।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mofaga-np/local-address-schema",
+        issue_tracker_url="https://github.com/mofaga-np/local-address-schema/issues",
+        documentation_url="https://github.com/mofaga-np/local-address-schema#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         estimated_effort=EffortBand.SMALL,
@@ -371,7 +371,7 @@ def seed_prototype_demo() -> dict[str, int]:
         address_schema,
         "Document ward and tole name validation",
         "Documentation task for the unified local address schema.",
-        "",
+        "https://github.com/mofaga-np/local-address-schema/issues/1",
     )
 
     health_registry = _government_project(
@@ -386,9 +386,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "posts and birthing centres."
         ),
         summary_ne="अस्पताल, स्वास्थ्य चौकी र प्रसूति केन्द्रको राष्ट्रिय दर्ताका लागि सार्वजनिक API।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mohp-np/health-facility-registry",
+        issue_tracker_url="https://github.com/mohp-np/health-facility-registry/issues",
+        documentation_url="https://github.com/mohp-np/health-facility-registry#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         difficulty=DifficultyLevel.BEGINNER,
@@ -402,7 +402,7 @@ def seed_prototype_demo() -> dict[str, int]:
         health_registry,
         "Improve the first API contribution guide",
         "Beginner-friendly documentation task for the public health registry API.",
-        "",
+        "https://github.com/mohp-np/health-facility-registry/issues/1",
     )
 
     sajhabus, sajhabus_created = Project.objects.get_or_create(
@@ -485,6 +485,7 @@ def seed_prototype_demo() -> dict[str, int]:
         documentation_url="https://github.com/doit-np/sewa-portal#readme",
         status=ProjectStatus.COMPLETED,
         completion=True,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
     )
     _maintainer(completed, publisher, MaintainerRole.LEAD)
     completed.contribution_types.set([engineering, localization, documentation])
@@ -754,7 +755,7 @@ def _maintainer(project, user, role):
 
 
 def _task(project, title, description, issue_url):
-    return ProjectTask.objects.get_or_create(
+    task, created = ProjectTask.objects.get_or_create(
         project=project,
         title=title,
         defaults={
@@ -763,7 +764,12 @@ def _task(project, title, description, issue_url):
             "issue_url": issue_url,
             "status": TaskStatus.OPEN,
         },
-    )[0]
+    )
+    if not created and issue_url and task.issue_url != issue_url:
+        task.description = description
+        task.issue_url = issue_url
+        task.save(update_fields=["description", "issue_url", "updated_at"])
+    return task
 
 
 def _starter_task(repository, number, title, labels):

@@ -369,17 +369,18 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 /* Prototype A2.2 — public project sheet. */
 .dn-breadcrumbs { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 0; color: var(--color-neutral-700); font-size: 13px; }
 .dn-breadcrumbs a { color: var(--color-accent-700); text-decoration: none; }
-.dn-project-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 40px; align-items: end; padding: 26px 0 32px; }
+.dn-project-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); gap: 32px; align-items: start; padding: 8px 0 4px; }
 .dn-project-hero__labels { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .dn-project-hero .dn-repo-title { align-items: baseline; margin: 0; }
-.dn-project-hero .dn-repo-title h1 { font-size: clamp(38px, 5vw, 64px); line-height: .98; }
+.dn-project-hero .dn-repo-title h1 { font-size: clamp(32px, 4.4vw, 52px); line-height: .98; }
 .dn-project-record { color: var(--color-neutral-600); font: 12px var(--font-body); letter-spacing: .08em; text-transform: uppercase; }
 .dn-project-title-ne { margin: 12px 0 4px; color: var(--color-accent-800); font-size: 20px; }
 .dn-project-byline { max-width: 78ch; margin: 0; color: var(--color-neutral-700); font-size: 14px; }
-.dn-project-hero__actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.dn-project-hero__actions p { flex-basis: 100%; margin: 2px 0 0; color: var(--color-neutral-700); font-size: 12px; }
+.dn-project-hero__actions { display: grid; gap: var(--space-3); align-content: start; padding: var(--space-5); border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-accent-100); }
+.dn-project-hero__actions .btn { width: 100%; }
+.dn-project-hero__actions p { margin: 0; color: var(--color-neutral-700); font-size: var(--fs-sm); line-height: 1.45; }
 .dn-sheet .dn-accountability { grid-template-columns: repeat(3, minmax(0, 1fr)); border: 0; }
-.dn-sheet .dn-accountability-item { min-height: 104px; padding: 20px 24px; border-top: 1px solid var(--color-divider); }
+.dn-sheet .dn-accountability-item { min-height: 0; padding: 16px 20px; border-top: 1px solid var(--color-divider); }
 .dn-sheet .dn-accountability-item:nth-child(3n + 1) { border-left: 0; }
 .dn-sheet .dn-accountability-item strong { display: block; margin-bottom: 8px; color: var(--color-neutral-600); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 .dn-sheet .dn-accountability-item span { display: block; overflow-wrap: anywhere; font-family: var(--font-heading); font-size: 18px; font-weight: 600; line-height: 1.25; }
@@ -511,7 +512,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-greeting-item { color: var(--color-neutral-700); font-size: 13px; }
 
 /* GitHub-first project and profile surfaces. */
-.dn-github-project { display: grid; gap: var(--space-12); padding-block: var(--space-10) var(--space-16); }
+.dn-github-project { display: grid; gap: var(--space-8); padding-block: var(--space-6) var(--space-16); }
 
 .dn-github-project .dn-issue-list { border: 1px solid var(--color-divider); }
 .dn-github-project .dn-issue-row .dn-labels { margin: 0 0 var(--space-2); }
@@ -715,15 +716,16 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 }
 
 /* ── public project page ─────────────────────────────────────────────────── */
-.dn-project-owner { color: var(--color-neutral-600); font-family: var(--font-heading); font-size: clamp(24px, 3vw, 32px); font-weight: 600; }
+.dn-project-owner { color: var(--color-neutral-600); font-family: var(--font-heading); font-size: clamp(22px, 2.6vw, 30px); font-weight: 600; }
 .dn-project-hero .dn-lede { max-width: 66ch; margin: var(--space-3) 0 0; }
 .dn-project-byline { max-width: 78ch; margin: var(--space-3) 0 0; color: var(--color-neutral-600); font-size: var(--fs-sm); }
-.dn-project-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: flex-end; }
-.dn-project-hero__actions p { flex-basis: 100%; max-width: none; margin: 0; color: var(--color-neutral-600); font-size: var(--fs-xs); text-align: right; }
 .dn-project-sheet .dn-accountability { grid-template-columns: repeat(3, minmax(0, 1fr)); border: 0; border-radius: 0; }
-.dn-project-sheet .dn-accountability-item { border-top: 0; border-bottom: 1px solid var(--color-divider); }
+.dn-project-sheet .dn-accountability-item { min-height: 0; padding: 14px 20px; border-top: 0; border-bottom: 1px solid var(--color-divider); }
 .dn-project-sheet .dn-accountability-item:nth-child(3n + 1) { border-left: 0; }
 .dn-project-sheet .dn-accountability-item:nth-last-child(-n + 3) { border-bottom: 0; }
+.dn-project-sheet .dn-accountability-item span { font-size: 16px; }
+.dn-join-hint { margin: 8px 0 0; color: var(--color-neutral-700); font-family: var(--font-body); font-size: 13px; font-weight: 400; line-height: 1.45; }
+.dn-apply-note { max-width: 62ch; margin: 0 0 var(--space-4); color: var(--color-neutral-700); font-size: var(--fs-sm); }
 .dn-project-terms > summary { padding: var(--space-4) var(--space-5); cursor: pointer; font-size: var(--fs-base); font-weight: 600; }
 .dn-project-terms[open] > summary { border-bottom: 1px solid var(--color-divider); }
 .dn-project-terms__body { padding: var(--space-5); }
@@ -733,8 +735,6 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 .dn-outcome-sheet > :last-child { margin-bottom: 0; }
 
 @media (max-width: 900px) {
-  .dn-project-hero__actions { justify-content: flex-start; }
-  .dn-project-hero__actions p { text-align: left; }
   .dn-project-sheet .dn-accountability { grid-template-columns: 1fr; }
   .dn-project-sheet .dn-accountability-item { border-left: 0; }
 }
@@ -935,3 +935,4 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 /* Side-by-side fields share a row, so their rows must size to content or the
    taller neighbour pushes one input out of line with the other. */
 .dn-field-group > .dn-field { align-content: start; }
+.dn-application-row .dn-issue-aside { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: flex-end; }
