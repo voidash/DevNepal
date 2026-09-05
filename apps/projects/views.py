@@ -25,6 +25,7 @@ from apps.blogs.markdown import MarkdownValidationError, render_markdown
 from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
+from apps.github_sync.app_client import github_app_client
 from apps.github_sync.models import GithubIssueSnapshot, RepositoryConnection
 from apps.github_sync.services import starter_tasks_for_project
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
@@ -822,6 +823,7 @@ def _authoring_context(
         ),
         "suitability": suitability,
         "publish_readiness_violations": check_publish_readiness(project),
+        "github_app_configured": github_app_client().is_configured,
         "can_confirm_suitability": user.is_superuser and suitability is not None,
         "system_label": _("System"),
     }

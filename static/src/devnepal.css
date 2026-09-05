@@ -932,3 +932,6 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 .dn-mini-path li span { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--color-divider-strong); border-radius: var(--radius-pill); font-size: var(--fs-xs); }
 .dn-mini-path li[aria-current="step"] { color: var(--color-accent-800); }
 .dn-mini-path li[aria-current="step"] span { border-color: var(--color-accent-700); color: var(--color-paper); background: var(--color-accent-700); }
+/* Side-by-side fields share a row, so their rows must size to content or the
+   taller neighbour pushes one input out of line with the other. */
+.dn-field-group > .dn-field { align-content: start; }

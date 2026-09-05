@@ -82,8 +82,8 @@
       {% else %}
       <li class="is-blocking">
         <span class="dn-path-steps__mark" aria-hidden="true">3</span>
-        <div><strong>{% trans "Connect it to DevNepal" %}</strong><span>{% trans "Publication needs a verified public repository, not only a typed address. This is the last step before the listing can go live." %}</span></div>
-        <a class="btn btn-sm btn--primary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect repository" %}</a>
+        <div><strong>{% trans "Connect it to DevNepal" %}</strong><span>{% if github_app_configured %}{% trans "Publication needs a verified public repository, not only a typed address. This is the last step before the listing can go live." %}{% else %}{% trans "Publication needs a verified public repository, not only a typed address. The GitHub App is not configured on this installation, so a platform administrator connects it for you." %}{% endif %}</span></div>
+        {% if github_app_configured %}<a class="btn btn-sm btn--primary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect repository" %}</a>{% else %}<span class="Label Label--attention">{% trans "Waiting on the platform" %}</span>{% endif %}
       </li>
       {% endif %}
 
