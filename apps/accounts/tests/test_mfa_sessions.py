@@ -1,9 +1,10 @@
 import pytest
 from django.db import IntegrityError
+from django.test import override_settings
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.accounts.models import UserSession
-from apps.accounts.services import PrivilegedMFARequiredError, require_privileged_mfa
+from apps.accounts.services import PrivilegedMFARequiredError, mfa_verified, require_privileged_mfa
 from apps.accounts.tests.factories import UserFactory, UserSessionFactory
 from apps.audit.models import AuditEvent
 
@@ -62,3 +63,14 @@ def test_auth005_service_boundary_requires_a_session_verified_totp_device():
     actor.is_verified = lambda: True
 
     require_privileged_mfa(actor, action="test.privileged")
+
+
+@pytest.mark.unit
+@override_settings(DEMO_MFA_BYPASS_USERNAMES=["demo-doit-publisher"])
+def test_demo_mfa_bypass_is_scoped_to_the_named_account():
+    """AUTH-005: demo convenience never disables MFA for unrelated privileged users."""
+    demo_actor = UserFactory(username="demo-doit-publisher")
+    other_actor = UserFactory(username="other-publisher")
+
+    assert mfa_verified(demo_actor)
+    assert not mfa_verified(other_actor)
