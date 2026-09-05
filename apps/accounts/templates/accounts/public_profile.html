@@ -2,67 +2,27 @@
 {% load i18n %}
 {% block title %}{{ payload.username }} | DevNepal{% endblock %}
 {% block content %}
-<article class="section">
+<article class="section public-discovery public-discovery--profile" aria-labelledby="profile-heading">
   <div class="container">
-    <h1>{{ payload.username }}</h1>
-    {% if payload.headline %}<p class="hero__lead">{{ payload.headline }}</p>{% endif %}
-    {% if payload.bio %}<p>{{ payload.bio }}</p>{% endif %}
-    <p><a class="btn" href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report this profile" %}</a></p>
-    {% if payload.location %}<p>{% trans "Location" %}: {{ payload.location }}</p>{% endif %}
-    {% if payload.province %}<p>{% trans "Province" %}: {{ payload.province }}</p>{% endif %}
-    <section aria-labelledby="skills-heading">
-      <h2 id="skills-heading">{% trans "Skills" %}</h2>
-      <ul>{% for skill in payload.skills %}<li>{{ skill.name }}{% if skill.self_rating %}: {{ skill.self_rating }}{% endif %}</li>{% empty %}<li>{% trans "No public skills listed." %}</li>{% endfor %}</ul>
-    </section>
-    <section aria-labelledby="projects-heading">
-      <h2 id="projects-heading">{% trans "Projects" %}</h2>
-      <div class="dn-issue-list">
-        {% for project in payload.projects %}
-        <div class="dn-issue-row">
-          <div>
-            <a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a>
-            <div class="dn-issue-meta">{{ project.status }}</div>
-          </div>
-          <div class="dn-issue-aside">
-            {% if project.official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}
-          </div>
-        </div>
-        {% empty %}
-        <p>{% trans "No public projects listed." %}</p>
-        {% endfor %}
+    <header class="public-discovery__profile-header">
+      <div class="public-discovery__monogram public-discovery__monogram--large" aria-hidden="true">{{ payload.username|slice:":1"|upper }}</div>
+      <div><p class="dn-section-kicker">{% trans "A3.4 · Public profile" %}</p><h1 id="profile-heading">@{{ payload.username }}</h1>{% if payload.headline %}<p class="hero__lead">{{ payload.headline }}</p>{% endif %}{% if payload.location %}<p class="public-discovery__meta">{{ payload.location }}</p>{% endif %}{% if payload.province %}<p class="public-discovery__meta">{{ payload.province }}</p>{% endif %}</div>
+      <div class="public-discovery__profile-actions"><p class="public-discovery__notice">{% trans "Private by default" %}<br><span>{% trans "Email, sign-in provider, education, and private contact details are never shown." %}</span></p><a class="btn btn--secondary" href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report this profile" %}</a></div>
+    </header>
+    {% if payload.bio %}<div class="public-discovery__profile-bio"><h2>{% trans "About" %}</h2><p>{{ payload.bio }}</p></div>{% endif %}
+    <div class="public-discovery__profile-layout">
+      <div class="public-discovery__profile-main">
+        <section class="public-discovery__section" aria-labelledby="skills-heading"><h2 id="skills-heading">{% trans "Skills" %}</h2><div class="dn-labels">{% for skill in payload.skills %}<span class="Label">{{ skill.name }}{% if skill.self_rating %} · {{ skill.self_rating }}{% endif %}</span>{% empty %}<p>{% trans "No public skills listed." %}</p>{% endfor %}</div></section>
+        <section class="public-discovery__section" aria-labelledby="projects-heading"><h2 id="projects-heading">{% trans "Projects" %}</h2><div class="dn-issue-list">{% for project in payload.projects %}<div class="dn-issue-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><div class="dn-issue-aside">{% if project.official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}</div></div>{% empty %}<p>{% trans "No public projects listed." %}</p>{% endfor %}</div></section>
+        <section class="public-discovery__section" aria-labelledby="contributions-heading"><div class="public-discovery__section-heading"><h2 id="contributions-heading">{% trans "Verified contributions" %}</h2><span>{% trans "Accepted work only" %}</span></div><ul class="public-discovery__fact-list">{% for item in payload.contributions %}<li><strong>{{ item.label }}</strong><span>{% blocktrans count counter=item.count %}{{ counter }} verified contribution{% plural %}{{ counter }} verified contributions{% endblocktrans %}</span></li>{% empty %}<li>{% trans "No verified contributions yet." %}</li>{% endfor %}</ul></section>
+        <section class="public-discovery__section" aria-labelledby="blogs-heading"><h2 id="blogs-heading">{% trans "Technical blogs" %}</h2><ul class="public-discovery__link-list">{% for post in payload.blogs %}<li><a href="{{ post.url }}"{% if post.external %} rel="noopener noreferrer"{% endif %}>{{ post.title }}</a>{% if post.external %} <span class="Label Label--outline">{% trans "External article" %}</span>{% endif %}{% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</li>{% empty %}<li>{% trans "No published blog listings." %}</li>{% endfor %}</ul></section>
       </div>
-    </section>
-    <section aria-labelledby="blogs-heading">
-      <h2 id="blogs-heading">{% trans "Technical blogs" %}</h2>
-      <ul>
-        {% for post in payload.blogs %}
-        <li><a href="{{ post.url }}"{% if post.external %} rel="noopener noreferrer"{% endif %}>{{ post.title }}</a>{% if post.published_at %} <time datetime="{{ post.published_at|date:"Y-m-d" }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</li>
-        {% empty %}<li>{% trans "No published blog listings." %}</li>
-        {% endfor %}
-      </ul>
-    </section>
-    <section aria-labelledby="contributions-heading">
-      <h2 id="contributions-heading">{% trans "Verified contributions" %}</h2>
-      <ul>
-        {% for item in payload.contributions %}
-        <li>{{ item.label }}: {% blocktrans count counter=item.count %}{{ counter }} verified contribution{% plural %}{{ counter }} verified contributions{% endblocktrans %}</li>
-        {% empty %}<li>{% trans "No verified contributions yet." %}</li>
-        {% endfor %}
-      </ul>
-    </section>
-    <section aria-labelledby="badges-heading">
-      <h2 id="badges-heading">{% trans "Badges" %}</h2>
-      <ul>
-        {% for badge in payload.badges %}
-        <li><span class="Label">{{ badge.name }}</span>{% if badge.description %} <span class="dn-issue-meta">{{ badge.description }}</span>{% endif %}</li>
-        {% empty %}<li>{% trans "No badges awarded yet." %}</li>
-        {% endfor %}
-      </ul>
-    </section>
-    <section aria-labelledby="links-heading">
-      <h2 id="links-heading">{% trans "Links" %}</h2>
-      <ul>{% for link in payload.links %}<li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}</a></li>{% empty %}<li>{% trans "No public links listed." %}</li>{% endfor %}</ul>
-    </section>
+      <aside class="public-discovery__aside" aria-label="{% trans 'Profile recognition and links' %}">
+        <section class="dn-sidebar-section"><h2 id="badges-heading">{% trans "Badges" %}</h2><div class="dn-labels">{% for badge in payload.badges %}<span class="Label">{{ badge.name }}</span>{% empty %}<p>{% trans "No badges awarded yet." %}</p>{% endfor %}</div><p>{% trans "Only active badge awards appear here." %}</p><a href="{% url 'recognition:public_badges' %}">{% trans "Badge criteria" %}</a></section>
+        <section class="dn-sidebar-section"><h2>{% trans "Public links" %}</h2><ul class="public-discovery__link-list">{% for link in payload.links %}<li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}</a> <span class="Label Label--outline">{% trans "External link" %}</span></li>{% empty %}<li>{% trans "No public links listed." %}</li>{% endfor %}</ul></section>
+        <section class="dn-sidebar-section"><h2>{% trans "Privacy boundary" %}</h2><p>{% trans "This page uses only fields the member made public plus public projects, published writing, accepted contribution totals, and active badges." %}</p></section>
+      </aside>
+    </div>
     {% include "github_sync/calendar.html" %}
   </div>
 </article>

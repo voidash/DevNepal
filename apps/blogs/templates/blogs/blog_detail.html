@@ -2,62 +2,34 @@
 {% load i18n %}
 {% block title %}{{ post.title }} | DevNepal{% endblock %}
 {% block content %}
-<div class="dn-page-header">
-  <div class="dn-container">
-    <div class="dn-repo-title">
-      <a href="{% url 'blogs:list' %}">{% trans "Technical blogs" %}</a>
-      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
-      <span>{{ post.title }}</span>
-      {% if post.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% endif %}
-    </div>
-  </div>
-</div>
-<div class="dn-container">
-  <div class="dn-project-grid">
-    <article class="dn-readme">
-      <div class="dn-readme-header">{% if post.post_type == 'native' %}{% trans "Member article" %}{% else %}{% trans "External article listing" %}{% endif %}</div>
-      <div class="dn-readme-body">
-        <h1>{{ post.title }}</h1>
-        {% if post.is_official %}<p>{% trans "Official government publication" %}</p>{% endif %}
-        {% if post.excerpt %}<p>{{ post.excerpt }}</p>{% endif %}
-        {% if post.cover_image_url %}<figure><img src="{{ post.cover_image_url }}" alt="{{ post.cover_image_alt }}"></figure>{% endif %}
+<article class="section public-discovery public-discovery--detail" aria-labelledby="post-title">
+  <div class="container public-discovery__detail-layout">
+    <div>
+      <nav class="public-discovery__breadcrumb" aria-label="{% trans 'Breadcrumb' %}"><a href="{% url 'blogs:list' %}">{% trans "Technical blogs" %}</a><span aria-hidden="true">/</span><span>{{ post.title }}</span></nav>
+      <header class="public-discovery__article-header">
+        <div class="dn-labels"><span class="Label">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span><span class="Label Label--outline">{% if post.post_type == 'native' %}{% trans "DevNepal article" %}{% else %}{% trans "External article" %}{% endif %}</span></div>
+        <p class="public-discovery__meta">{{ post.get_language_display }} · {% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}{% if post.published_at %} · <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</p>
+        <h1 id="post-title">{{ post.title }}</h1>
+        {% if post.excerpt %}<p class="hero__lead">{{ post.excerpt }}</p>{% endif %}
+        <p>{% blocktrans with author=post.author.username %}Published by @{{ author }}{% endblocktrans %}</p>
+      </header>
+      {% if post.cover_image_url %}<figure class="public-discovery__article-cover"><img src="{{ post.cover_image_url }}" alt="{{ post.cover_image_alt }}">{% if post.cover_image_alt %}<figcaption>{{ post.cover_image_alt }}</figcaption>{% endif %}</figure>{% endif %}
+      <div class="dn-readme-body public-discovery__article-body">
         {% if post.post_type == 'native' %}
-        <div>{{ post.content_rendered|safe }}</div>
-        {% if post.canonical_url %}<p><a href="{{ post.canonical_url }}" rel="canonical noopener noreferrer">{% trans "Canonical source" %}</a></p>{% endif %}
+          {{ post.content_rendered|safe }}
+          {% if post.canonical_url %}<p><a href="{{ post.canonical_url }}" rel="canonical noopener noreferrer external">{% trans "Open canonical source" %}</a></p>{% endif %}
         {% else %}
-        <p><a class="btn" href="{{ post.canonical_url }}" rel="noopener noreferrer external">{% trans "Read the external article" %}</a></p>
+          <p>{% trans "This is an external article listing. DevNepal does not reproduce the original text." %}</p>
+          <p><a class="btn btn--primary" href="{{ post.canonical_url }}" rel="noopener noreferrer external">{% trans "Read the external article" %}</a></p>
         {% endif %}
       </div>
-    </article>
-    <aside class="dn-sidebar">
-      <section class="dn-sidebar-section">
-        <dl>
-          <dt>{% trans "Author" %}</dt>
-          <dd>{{ post.author.username }}</dd>
-          <dt>{% trans "Language" %}</dt>
-          <dd>{{ post.get_language_display }}</dd>
-          <dt>{% trans "Reading time" %}</dt>
-          <dd>{% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}</dd>
-          {% if post.published_at %}
-          <dt>{% trans "Published" %}</dt>
-          <dd><time datetime="{{ post.published_at|date:"Y-m-d" }}">{{ post.published_at|date:"DATE_FORMAT" }}</time></dd>
-          {% endif %}
-          <dt>{% trans "Provenance" %}</dt>
-          <dd>{% if post.is_official %}{% trans "Official government publication" %}{% else %}{% trans "Community contribution" %}{% endif %}</dd>
-          <dt>{% trans "Publication type" %}</dt>
-          <dd>{{ post.get_post_type_display }}</dd>
-        </dl>
-      </section>
-      {% if post.tags.all %}
-      <section class="dn-sidebar-section">
-        <h2>{% trans "Tags" %}</h2>
-        <div class="dn-labels">
-          {% for tag in post.tags.all %}<span class="Label">{{ tag.label }}</span>{% endfor %}
-        </div>
-      </section>
-      {% endif %}
-      <p><a href="{% url 'blogs:list' %}">{% trans "All technical blogs" %}</a></p>
+    </div>
+    <aside class="public-discovery__aside" aria-label="{% trans 'Publication details' %}">
+      <section class="dn-sidebar-section"><h2>{% trans "Publication details" %}</h2><dl><dt>{% trans "Author" %}</dt><dd>@{{ post.author.username }}</dd><dt>{% trans "Language" %}</dt><dd>{{ post.get_language_display }}</dd><dt>{% trans "Reading time" %}</dt><dd>{% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}</dd><dt>{% trans "Provenance" %}</dt><dd>{% if post.is_official %}{% trans "Official government publication" %}{% else %}{% trans "Member publication" %}{% endif %}</dd></dl>{% if author_profile_available %}<a href="{% url 'accounts:public_profile' post.author.username %}">{% trans "View author profile" %}</a>{% endif %}</section>
+      {% if post.tags.all %}<section class="dn-sidebar-section"><h2>{% trans "Topics" %}</h2><div class="dn-labels">{% for tag in post.tags.all %}<span class="Label">{{ tag.label }}</span>{% endfor %}</div></section>{% endif %}
+      <section class="dn-sidebar-section"><h2>{% trans "Safe Markdown" %}</h2><p>{% trans "DevNepal sanitizes native posts. External content remains on its original site." %}</p></section>
+      <a class="btn btn--secondary" href="{% url 'blogs:list' %}">{% trans "All technical blogs" %}</a>
     </aside>
   </div>
-</div>
+</article>
 {% endblock %}

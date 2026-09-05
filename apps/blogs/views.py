@@ -7,6 +7,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods, require_POST
 
+from apps.accounts.models import MemberProfile
 from apps.blogs.enums import BlogModerationState, BlogPostType, BlogStatus
 from apps.blogs.forms import ListingForm
 from apps.blogs.models import BlogPost
@@ -81,13 +82,25 @@ def _preview_context(form, post):
 
 def blog_list(request: HttpRequest) -> HttpResponse:
     """BLG-005/DSC-001: browse published, non-restricted external-article listings."""
-    return render(request, "blogs/blog_list.html", {"posts": public_posts()})
+    posts = public_posts()
+    featured_post = posts.filter(post_type=BlogPostType.NATIVE).first() or posts.first()
+    return render(request, "blogs/blog_list.html", {"posts": posts, "featured_post": featured_post})
 
 
 def blog_detail(request: HttpRequest, post_id: int) -> HttpResponse:
     """BLG-005/BLG-006: render a public external link without copied article content."""
     post = get_object_or_404(public_posts(), pk=post_id)
-    return render(request, "blogs/blog_detail.html", {"post": post})
+    return render(
+        request,
+        "blogs/blog_detail.html",
+        {
+            "post": post,
+            "author_profile_available": MemberProfile.objects.filter(
+                user=post.author,
+                user__is_active=True,
+            ).exists(),
+        },
+    )
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))

@@ -2,24 +2,10 @@
 {% load i18n %}
 {% block title %}{% trans "Scoring policy" %} | DevNepal{% endblock %}
 {% block content %}
-<div class="dn-page-header">
-  <div class="dn-container">
-    <div class="dn-repo-title"><h1>{% trans "Scoring policy" %}</h1><span class="Label">{% trans "Public record" %}</span></div>
-    <nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}"><a class="dn-tab" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a><a class="dn-tab" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><a class="dn-tab" aria-current="page" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a></nav>
+<section class="section public-discovery public-discovery--policy" aria-labelledby="policy-heading">
+  <div class="container">
+    <header class="public-discovery__header"><div><p class="dn-section-kicker">{% trans "A3.7 · Public record" %}</p><h1 id="policy-heading">{% trans "Scoring policy" %}</h1><p class="hero__lead">{% trans "Scoring is versioned, approved before activation, and applies to verified accepted work." %}</p></div><nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}"><a class="dn-tab" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a><a class="dn-tab" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><a class="dn-tab" aria-current="page" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a></nav></header>
+    {% if policy %}<div class="public-discovery__layout"><section class="dn-sheet blueprint public-discovery__stream"><div class="dn-sheet__header"><h2>{% blocktrans with version=policy.version %}Active policy · version {{ version }}{% endblocktrans %}</h2>{% if policy.activated_at %}<time datetime="{{ policy.activated_at|date:'c' }}">{{ policy.activated_at|date:"DATETIME_FORMAT" }}</time>{% endif %}</div><div class="dn-readme-body"><p>{% trans "Only contributions accepted by an authorized maintainer receive points. Scores remain pinned to this policy version for auditability." %}</p><table class="dn-data-table"><thead><tr><th>{% trans "Rule" %}</th><th>{% trans "Value" %}</th></tr></thead><tbody>{% for name, value in policy.rules.items %}<tr><td>{{ name }}</td><td>{{ value }}</td></tr>{% endfor %}</tbody></table>{% if policy.document_url %}<p><a class="btn btn--secondary" href="{{ policy.document_url }}" rel="noopener noreferrer external">{% trans "Open policy document" %}</a></p>{% endif %}</div></section><aside class="public-discovery__aside"><section class="dn-sidebar-section"><h2>{% trans "What is excluded" %}</h2><p>{% trans "No personal activity or private repository data is used. Raw commits, bots, and duplicate events do not receive direct credit." %}</p></section><section class="dn-sidebar-section"><h2>{% trans "Correction and accountability" %}</h2><p>{% trans "Recognition corrections preserve an audit reason. Changing a policy does not silently rewrite historical scores." %}</p></section></aside></div>{% else %}<div class="dn-state-banner" role="status"><strong>{% trans "No scoring policy is active." %}</strong><p>{% trans "Public rankings remain unavailable until an approved policy is activated." %}</p></div>{% endif %}
   </div>
-</div>
-<main class="section">
-  <div class="dn-container">
-    {% if policy %}
-    <section class="dn-sheet blueprint">
-      <div class="dn-sheet__header"><h2>{% blocktrans with version=policy.version %}Active policy · version {{ version }}{% endblocktrans %}</h2><span>{{ policy.activated_at }}</span></div>
-      <div class="dn-readme-body">
-        <p>{% trans "Only contributions accepted by an authorized maintainer receive points. Scores remain pinned to this policy version for auditability." %}</p>
-        <table class="dn-data-table"><thead><tr><th>{% trans "Rule" %}</th><th>{% trans "Value" %}</th></tr></thead><tbody>{% for name, value in policy.rules.items %}<tr><td>{{ name }}</td><td>{{ value }}</td></tr>{% endfor %}</tbody></table>
-        {% if policy.document_url %}<p><a class="btn" href="{{ policy.document_url }}" rel="noopener noreferrer">{% trans "Open policy document" %}</a></p>{% endif %}
-      </div>
-    </section>
-    {% else %}<div class="dn-state-banner"><p>{% trans "No scoring policy is active." %}</p></div>{% endif %}
-  </div>
-</main>
+</section>
 {% endblock %}

@@ -2,24 +2,10 @@
 {% load i18n %}
 {% block title %}{{ badge.name }} | DevNepal{% endblock %}
 {% block content %}
-<div class="dn-page-header">
-  <div class="dn-container">
-    <div class="dn-repo-title"><a href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><span class="dn-repo-title-separator" aria-hidden="true">/</span><h1>{{ badge.name }}</h1><span class="Label">{% trans "Active" %}</span></div>
+<article class="section public-discovery public-discovery--badge-detail" aria-labelledby="badge-heading">
+  <div class="container public-discovery__detail-layout">
+    <div><nav class="public-discovery__breadcrumb" aria-label="{% trans 'Breadcrumb' %}"><a href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><span aria-hidden="true">/</span><span>{{ badge.name }}</span></nav><header class="public-discovery__article-header"><p class="dn-section-kicker">{% trans "Published badge definition" %}</p><h1 id="badge-heading">{{ badge.name }}</h1>{% if badge.description %}<p class="hero__lead">{{ badge.description }}</p>{% endif %}</header><section class="dn-sheet blueprint" aria-labelledby="badge-criteria-heading"><div class="dn-sheet__header"><h2 id="badge-criteria-heading">{% trans "How to earn" %}</h2><span>{% blocktrans with version=badge.criteria_version %}Criteria version {{ version }}{% endblocktrans %}</span></div><div class="dn-readme-body">{{ badge.criteria_md|linebreaks }}</div></section></div>
+    <aside class="public-discovery__aside" aria-label="{% trans 'Award record' %}"><section class="dn-sidebar-section"><h2>{% trans "Award record" %}</h2><dl><dt>{% trans "Type" %}</dt><dd>{{ badge.get_kind_display }}</dd><dt>{% trans "Criteria version" %}</dt><dd>{{ badge.criteria_version }}</dd><dt>{% trans "Active awards" %}</dt><dd>{{ active_award_count }}</dd><dt>{% trans "Status" %}</dt><dd>{% trans "Active definition" %}</dd></dl></section><section class="dn-sidebar-section"><h2>{% trans "Privacy boundary" %}</h2><p>{% trans "This public definition does not reveal member-private recognition history or revoked award details." %}</p></section><a class="btn btn--secondary" href="{% url 'recognition:public_policy' %}">{% trans "Read scoring policy" %}</a></aside>
   </div>
-</div>
-<main class="section">
-  <div class="dn-container dn-form-layout">
-    <section class="dn-sheet blueprint" aria-labelledby="badge-criteria-heading">
-      <div class="dn-sheet__header"><h2 id="badge-criteria-heading">{% trans "Published criteria" %}</h2><span>{% blocktrans with version=badge.criteria_version %}Version {{ version }}{% endblocktrans %}</span></div>
-      <div class="dn-readme-body">
-        <p>{{ badge.description }}</p>
-        <div class="dn-readme">{{ badge.criteria_md|linebreaks }}</div>
-      </div>
-    </section>
-    <aside class="dn-sidebar">
-      <section class="dn-sidebar-section"><h2>{% trans "Recognition record" %}</h2><dl><dt>{% trans "Type" %}</dt><dd>{{ badge.get_kind_display }}</dd><dt>{% trans "Current criteria version" %}</dt><dd>{{ badge.criteria_version }}</dd><dt>{% trans "Active awards" %}</dt><dd>{{ active_award_count }}</dd></dl></section>
-      <a class="btn" href="{% url 'recognition:public_policy' %}">{% trans "Read scoring policy" %}</a>
-    </aside>
-  </div>
-</main>
+</article>
 {% endblock %}

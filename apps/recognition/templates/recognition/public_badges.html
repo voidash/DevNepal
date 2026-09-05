@@ -2,29 +2,13 @@
 {% load i18n %}
 {% block title %}{% trans "Public badges" %} | DevNepal{% endblock %}
 {% block content %}
-<div class="dn-page-header">
-  <div class="dn-container">
-    <div class="dn-repo-title"><h1>{% trans "Public badges" %}</h1><span class="Label">{% trans "Recognition" %}</span></div>
-    <nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}">
-      <a class="dn-tab" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a>
-      <a class="dn-tab" aria-current="page" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a>
-      <a class="dn-tab" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a>
-    </nav>
-  </div>
-</div>
-<main class="section">
-  <div class="dn-container">
-    <p class="dn-lede">{% trans "Badges recognize verified work. Each definition publishes its current criteria and version." %}</p>
-    <div class="card-grid">
-      {% for badge in badges %}
-      <article class="card blueprint">
-        <p class="dn-section-kicker">{% blocktrans with version=badge.criteria_version %}Criteria version {{ version }}{% endblocktrans %}</p>
-        <h2 class="card__title"><a class="card__title-link" href="{% url 'recognition:public_badge_detail' badge.slug %}">{{ badge.name }}</a></h2>
-        <p class="card__summary">{{ badge.description }}</p>
-        <a class="btn" href="{% url 'recognition:public_badge_detail' badge.slug %}">{% trans "View criteria" %}</a>
-      </article>
-      {% empty %}<div class="dn-state-banner"><p>{% trans "No public badges are active." %}</p></div>{% endfor %}
+<section class="section public-discovery public-discovery--badges" aria-labelledby="badges-heading">
+  <div class="container">
+    <header class="public-discovery__header"><div><p class="dn-section-kicker">{% trans "A3.7 · Recognition" %}</p><h1 id="badges-heading">{% trans "Earnable badges" %}</h1><p class="hero__lead">{% trans "Badges recognize verified work, not identity. Every active definition publishes its current criteria." %}</p></div><nav class="dn-tabs" aria-label="{% trans 'Recognition sections' %}"><a class="dn-tab" href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard" %}</a><a class="dn-tab" aria-current="page" href="{% url 'recognition:public_badges' %}">{% trans "Badges" %}</a><a class="dn-tab" href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %}</a></nav></header>
+    <div class="public-discovery__badge-grid">
+      {% for badge in badges %}<article class="card blueprint public-discovery__badge-card"><div class="dn-labels"><span class="Label">{{ badge.get_kind_display }}</span><span class="Label Label--outline">{% blocktrans with version=badge.criteria_version %}Criteria version {{ version }}{% endblocktrans %}</span></div><h2><a href="{% url 'recognition:public_badge_detail' badge.slug %}">{{ badge.name }}</a></h2>{% if badge.description %}<p>{{ badge.description }}</p>{% endif %}<div class="public-discovery__badge-footer"><span>{% trans "How to earn" %}</span><a href="{% url 'recognition:public_badge_detail' badge.slug %}">{% trans "View criteria" %}</a></div></article>{% empty %}<div class="dn-state-banner" role="status"><p>{% trans "No public badges are active." %}</p></div>{% endfor %}
     </div>
+    <div class="public-discovery__notice"><strong>{% trans "Recognition record" %}</strong><span>{% trans "Badge definitions, criteria versions, and active award counts are public. Member-private history and revoked award details are not shown here." %}</span></div>
   </div>
-</main>
+</section>
 {% endblock %}

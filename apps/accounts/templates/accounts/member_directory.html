@@ -2,58 +2,39 @@
 {% load i18n %}
 {% block title %}{% trans "Members" %} | DevNepal{% endblock %}
 {% block content %}
-<section class="section" aria-labelledby="members-heading">
+<section class="section public-discovery public-discovery--members" aria-labelledby="members-heading">
   <div class="container">
-    <header>
-      <h1 id="members-heading">{% trans "Members" %}</h1>
-      <p>{% trans "Find members who have chosen to be discoverable by their public skills or declared interests." %}</p>
+    <header class="public-discovery__header">
+      <div>
+        <p class="dn-section-kicker">{% trans "A3.3 · Public member directory" %}</p>
+        <h1 id="members-heading">{% trans "Members" %}</h1>
+        <p class="hero__lead">{% trans "Find members who chose to be discoverable by their public skills or declared interests." %}</p>
+      </div>
+      <p class="public-discovery__count" role="status">{% blocktrans count count=members.paginator.count %}{{ count }} public member{% plural %}{{ count }} public members{% endblocktrans %}</p>
     </header>
+
+    <p class="public-discovery__notice">{% trans "Public profiles appear only when a member chooses discovery. Email, sign-in provider, and private contact details are not shown." %}</p>
     <form class="filterbar catalog-filter" method="get" role="search">
-      <div class="filterbar__query">
-        <label for="member-search">{% trans "Search members" %}</label>
-        <input id="member-search" name="q" type="search" value="{{ query }}" placeholder="{% trans "Search names, skills, or interests" %}">
-      </div>
-      <div class="filterbar__query">
-        <label for="member-skill">{% trans "Skill" %}</label>
-        <select id="member-skill" name="skill">
-          <option value="">{% trans "All skills" %}</option>
-          {% for skill in skills %}<option value="{{ skill.slug }}"{% if filters.skill == skill.slug %} selected{% endif %}>{{ skill.name }}</option>{% endfor %}
-        </select>
-      </div>
+      <div class="filterbar__query"><label for="member-search">{% trans "Search members" %}</label><input id="member-search" name="q" type="search" value="{{ query }}" placeholder="{% trans 'Search names, skills, or interests' %}"></div>
+      <div class="filterbar__query"><label for="member-skill">{% trans "Skill" %}</label><select id="member-skill" name="skill"><option value="">{% trans "All skills" %}</option>{% for skill in skills %}<option value="{{ skill.slug }}"{% if filters.skill == skill.slug %} selected{% endif %}>{{ skill.name }}</option>{% endfor %}</select></div>
       <button class="btn btn--primary filterbar__submit" type="submit">{% trans "Search" %}</button>
     </form>
-    <p class="filterbar__count" role="status">{% blocktrans count count=members.paginator.count %}{{ count }} member{% plural %}{{ count }} members{% endblocktrans %}</p>
-    <div class="dn-issue-list">
+    <div class="public-discovery__directory-count" role="status">{% blocktrans count count=members.paginator.count %}{{ count }} member matches the current public directory{% plural %}{{ count }} members match the current public directory{% endblocktrans %}</div>
+
+    <div class="public-discovery__member-grid">
       {% for profile in members %}
-      <article class="dn-issue-row">
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M5.5 3.25a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0ZM8 2.25a1 1 0 1 0 0 2 1 1 0 0 0 0-2ZM3.5 8.75A2.75 2.75 0 0 1 6.25 6h3.5a2.75 2.75 0 0 1 2.75 2.75v3.5a.75.75 0 0 1-1.5 0v-3.5A1.25 1.25 0 0 0 9.75 7.5h-3.5A1.25 1.25 0 0 0 5 8.75v3.5a.75.75 0 0 1-1.5 0v-3.5Z"/></svg>
-        <div>
-          <a class="dn-issue-title" href="{% url 'accounts:public_profile' profile.user.username %}">{{ profile.user.username }}</a>
-          {% if profile.headline %}<div class="dn-issue-meta">{{ profile.headline }}</div>{% endif %}
-          {% if profile.field_visibility.skills == "public" and profile.user.directory_skills %}
-          <div class="dn-labels" aria-label="{% trans 'Public skills' %}">
-            {% for member_skill in profile.user.directory_skills %}<span class="Label">{{ member_skill.skill.name }}</span>{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        <div class="dn-issue-aside"><a href="{% url 'accounts:public_profile' profile.user.username %}">{% trans "View profile" %}</a></div>
+      <article class="card public-discovery__member-card" aria-labelledby="member-{{ profile.user.pk }}">
+        <div class="public-discovery__member-title"><span class="public-discovery__monogram" aria-hidden="true">{{ profile.user.username|slice:":1"|upper }}</span><div><h2 id="member-{{ profile.user.pk }}"><a href="{% url 'accounts:public_profile' profile.user.username %}">@{{ profile.user.username }}</a></h2>{% if profile.headline %}<p>{{ profile.headline }}</p>{% endif %}</div></div>
+        {% if profile.field_visibility.location == "public" and profile.location %}<p class="public-discovery__meta">{{ profile.location }}</p>{% endif %}
+        {% if profile.field_visibility.skills == "public" and profile.user.directory_skills %}<div class="dn-labels" aria-label="{% trans 'Public skills' %}">{% for member_skill in profile.user.directory_skills %}<span class="Label">{{ member_skill.skill.name }}</span>{% endfor %}</div>{% endif %}
+        <div class="public-discovery__member-footer"><span>{% trans "Discoverable profile" %}</span><a href="{% url 'accounts:public_profile' profile.user.username %}">{% trans "View profile" %}</a></div>
       </article>
       {% empty %}
-      <div class="dn-issue-row">
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13ZM8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3Zm0 2.5a.75.75 0 0 1 .75.75v1.3l.97.97a.75.75 0 1 1-1.06 1.06L7.47 8.39A.75.75 0 0 1 7.25 7.86V6.25A.75.75 0 0 1 8 5.5Z"/></svg>
-        <div>
-          <strong>{% trans "No members match these filters." %}</strong>
-          <div class="dn-issue-meta">{% trans "Members appear here only after they opt in to public discovery." %}</div>
-        </div>
-      </div>
+      <div class="dn-state-banner" role="status"><strong>{% trans "No members match these filters." %}</strong><p>{% trans "Try another public skill, name, or interest. Members appear here only after they opt in to public discovery." %}</p></div>
       {% endfor %}
     </div>
     {% if members.paginator.num_pages > 1 %}
-    <nav class="pagination" aria-label="{% trans 'Member pages' %}">
-      {% if members.has_previous %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ members.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
-      <span>{% blocktrans with current=members.number total=members.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>
-      {% if members.has_next %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ members.next_page_number }}">{% trans "Next" %}</a>{% endif %}
-    </nav>
+    <nav class="pagination" aria-label="{% trans 'Member pages' %}">{% if members.has_previous %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ members.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}<span>{% blocktrans with current=members.number total=members.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>{% if members.has_next %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ members.next_page_number }}">{% trans "Next" %}</a>{% endif %}</nav>
     {% endif %}
   </div>
 </section>

@@ -2,35 +2,59 @@
 {% load i18n %}
 {% block title %}{% trans "Technical blogs" %} | DevNepal{% endblock %}
 {% block content %}
-<div class="dn-container">
-  <header class="dn-contribution-header">
-    <h1>{% trans "Technical blogs" %}</h1>
-    <p class="dn-lede">{% trans "Technical writing from the community and the Government of Nepal: native DevNepal posts and clearly labelled external articles." %}</p>
-    <p role="status">{% blocktrans count count=posts|length %}{{ count }} published listing{% plural %}{{ count }} published listings{% endblocktrans %}</p>
-  </header>
-  <div class="dn-issue-list">
-    {% for post in posts %}
-    <div class="dn-issue-row">
-      {% include "components/status_octicon.html" with project_status=post.status %}
+<section class="section public-discovery public-discovery--blogs" aria-labelledby="blogs-heading">
+  <div class="container">
+    <header class="public-discovery__header">
       <div>
-        <a class="dn-issue-title" href="{% url 'blogs:detail' post.pk %}">{{ post.title }}</a>
-        <div class="dn-issue-meta">
-          {% blocktrans with author=post.author.username %}By {{ author }}{% endblocktrans %} · {% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}
-        </div>
-        <div class="dn-labels">
-          <span class="Label">{{ post.get_language_display }}</span>
-          <span class="Label">{{ post.get_post_type_display }}</span>
-          {% if post.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% endif %}
-        </div>
+        <p class="dn-section-kicker">{% trans "A3.1 · Public learning" %}</p>
+        <h1 id="blogs-heading">{% trans "Technical blogs" %}</h1>
+        <p class="hero__lead">{% trans "Technical writing from DevNepal members and project maintainers, in Nepali and English." %}</p>
       </div>
-      <div class="dn-issue-aside">
-        {% if post.post_type == 'external' %}<a href="{{ post.canonical_url }}" rel="noopener noreferrer external">{% trans "Read the external article" %}</a>{% else %}<a href="{% url 'blogs:detail' post.pk %}">{% trans "Read post" %}</a>{% endif %}
-        {% if post.published_at %}<time datetime="{{ post.published_at|date:"Y-m-d" }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}
+      <div class="public-discovery__actions">
+        <p class="public-discovery__count" role="status">{% blocktrans count count=posts|length %}{{ count }} published listing{% plural %}{{ count }} published listings{% endblocktrans %}</p>
+        {% if user.is_authenticated %}<a class="btn btn--primary" href="{% url 'blogs:create' %}">{% trans "Write a post" %}</a>{% else %}<a class="btn btn--secondary" href="{% url 'accounts:login' %}?next={% url 'blogs:create' %}">{% trans "Sign in to write" %}</a>{% endif %}
       </div>
+    </header>
+
+    <div class="public-discovery__layout">
+      <div class="public-discovery__stream">
+        {% if featured_post %}
+          {% with post=featured_post %}
+          <article class="public-discovery__feature blueprint" aria-labelledby="post-{{ post.pk }}-title">
+            <div class="public-discovery__feature-copy">
+              <div class="dn-labels"><span class="Label Label--accent">{% trans "Featured technical writing" %}</span><span class="Label">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span></div>
+              <p class="public-discovery__meta">{{ post.get_language_display }} · {% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}</p>
+              <h2 id="post-{{ post.pk }}-title"><a href="{% url 'blogs:detail' post.pk %}">{{ post.title }}</a></h2>
+              {% if post.excerpt %}<p>{{ post.excerpt }}</p>{% endif %}
+              <p class="public-discovery__meta">{% blocktrans with author=post.author.username %}Published by @{{ author }}{% endblocktrans %}{% if post.published_at %} · <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</p>
+              <a class="btn btn--primary" href="{% if post.post_type == 'external' %}{{ post.canonical_url }}{% else %}{% url 'blogs:detail' post.pk %}{% endif %}"{% if post.post_type == 'external' %} rel="noopener noreferrer external"{% endif %}>{% if post.post_type == 'external' %}{% trans "Read the external article" %}{% else %}{% trans "Read post" %}{% endif %}</a>
+            </div>
+            {% if post.cover_image_url %}<figure class="public-discovery__cover"><img src="{{ post.cover_image_url }}" alt="{{ post.cover_image_alt }}"></figure>{% endif %}
+          </article>
+          {% endwith %}
+        {% endif %}
+        {% for post in posts %}
+          {% if post.pk != featured_post.pk %}
+          <article class="public-discovery__row" aria-labelledby="post-{{ post.pk }}-title">
+            <div>
+              <div class="dn-labels"><span class="Label">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span><span class="Label Label--outline">{% if post.post_type == 'external' %}{% trans "External article" %}{% else %}{% trans "DevNepal article" %}{% endif %}</span></div>
+              <h2 id="post-{{ post.pk }}-title"><a href="{% if post.post_type == 'external' %}{{ post.canonical_url }}{% else %}{% url 'blogs:detail' post.pk %}{% endif %}"{% if post.post_type == 'external' %} rel="noopener noreferrer external"{% endif %}>{{ post.title }}</a></h2>
+              {% if post.excerpt %}<p>{{ post.excerpt }}</p>{% endif %}
+              <p class="public-discovery__meta">{% blocktrans with author=post.author.username %}Published by @{{ author }}{% endblocktrans %} · {{ post.get_language_display }} · {% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}</p>
+            </div>
+            <div class="public-discovery__row-action"><a href="{% if post.post_type == 'external' %}{{ post.canonical_url }}{% else %}{% url 'blogs:detail' post.pk %}{% endif %}"{% if post.post_type == 'external' %} rel="noopener noreferrer external"{% endif %}>{% if post.post_type == 'external' %}{% trans "Read the external article" %}{% else %}{% trans "Read post" %}{% endif %}</a>{% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</div>
+          </article>
+          {% endif %}
+        {% empty %}
+        <div class="dn-state-banner" role="status"><strong>{% trans "No technical blogs have been published yet." %}</strong><p>{% trans "Published member and official writing will appear here with its source label." %}</p></div>
+        {% endfor %}
+      </div>
+      <aside class="public-discovery__aside" aria-label="{% trans 'About technical blogs' %}">
+        <section class="dn-sidebar-section"><h2>{% trans "Reading labels" %}</h2><p>{% trans "Member and Official identify who is speaking. External article means DevNepal links to the original publication rather than copying it." %}</p></section>
+        <section class="dn-sidebar-section"><h2>{% trans "Safe Markdown" %}</h2><p>{% trans "Native posts are rendered with safe Markdown. Scripts and unsafe embeds are not published." %}</p></section>
+        <section class="dn-sidebar-section"><h2>{% trans "Discover writing" %}</h2><p>{% trans "Language, reading time, date, author handle, and tags help visitors evaluate a post before opening it." %}</p></section>
+      </aside>
     </div>
-    {% empty %}
-    <div class="dn-issue-row"><span aria-hidden="true"></span><div>{% trans "No technical blogs have been published yet." %}</div></div>
-    {% endfor %}
   </div>
-</div>
+</section>
 {% endblock %}
