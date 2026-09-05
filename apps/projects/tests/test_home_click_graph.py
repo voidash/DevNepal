@@ -111,6 +111,18 @@ def test_home_hero_keeps_air_between_the_claim_the_actions_and_the_officer_line(
 
 
 @pytest.mark.unit
+def test_home_hero_does_not_show_the_decorative_illustration(client):
+    """DSC-001: the hero leads with the claim; the board drawing stays parked."""
+    response = client.get(reverse("projects:home"))
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    hero_rule = css.split(".dn-home-hero {", 1)[1].split("}", 1)[0]
+
+    assert response.status_code == 200
+    assert b'class="dn-hero-illo"' not in response.content
+    assert "grid-template-columns: minmax(0, 1fr)" in hero_rule
+
+
+@pytest.mark.unit
 def test_home_chapters_group_grounds_instead_of_striping_every_section():
     """DSC-001: home chapters share a ground; follow-on sections do not open a new band."""
     root = Path(settings.BASE_DIR)

@@ -653,10 +653,9 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 }
 
 /* ── landing page ────────────────────────────────────────────────────────────
-   The hero states the claim on the left and the figures that back it on the
-   right, so a first-time visitor sees the evidence before any invitation. */
+   The hero is copy only for now. The board drawing is parked in home.html. */
 .hero { background: var(--color-paper); border-bottom: 0; }
-.dn-home-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr); gap: var(--space-12); align-items: center; padding-block: var(--space-12) var(--space-16); }
+.dn-home-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-12); align-items: center; padding-block: var(--space-12) var(--space-16); }
 .dn-home-hero .hero__panel { max-width: none; padding: 0; }
 .dn-home-hero h1 { max-width: 11em; }
 .dn-home-hero .hero__lead { max-width: 52ch; margin-top: var(--space-6); }
@@ -667,7 +666,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
    board of open work, with one accepted contribution resting on it. It is drawn
    from the design system's own parts — paper, hairline, 6px radius, the accent
    ramp — so it stays flat and needs no asset. */
-.dn-hero-illo { display: block; width: 100%; height: auto; align-self: center; }
+.dn-hero-illo { display: none; width: 100%; height: auto; align-self: center; }
 .dn-hero-illo__face { fill: var(--color-bg); stroke: var(--color-divider-strong); stroke-width: 1.5; }
 .dn-hero-illo__behind { fill: var(--color-paper); stroke: var(--color-divider); stroke-width: 1.5; }
 .dn-hero-illo__paper { fill: var(--color-paper); stroke: var(--color-divider-strong); stroke-width: 1.5; }

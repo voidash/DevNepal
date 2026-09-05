@@ -22,12 +22,8 @@
         </div>
         <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a> · <a href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a></p>
       </div>
-      {% comment %} The hero states the promise; the counts that substantiate it
-         read better as a measure below than as a boxed panel competing with
-         the headline. What balances the claim here is a picture of the thing
-         being promised: a public board of open work. It carries no
-         information of its own, so it is hidden from assistive technology.
-      {% endcomment %}
+      {% comment %} Parked: decorative board drawing. Restore by moving the
+         svg out of this comment. It carries no information of its own.
       <svg class="dn-hero-illo" viewBox="0 0 460 380" role="presentation" aria-hidden="true" focusable="false">
         <rect class="dn-hero-illo__behind" x="39" y="1" width="370" height="298" rx="6"/>
         <rect class="dn-hero-illo__face" x="9" y="9" width="370" height="298" rx="6"/>
@@ -65,6 +61,7 @@
         <path class="dn-hero-illo__rule" d="M269 326 H431"/>
         <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="269" y="342" width="128" height="8" rx="4"/>
       </svg>
+      {% endcomment %}
     </div>
   </div>
 </section>
