@@ -7023,3 +7023,15 @@ msgstr "सबै सामग्री अङ्ग्रेजी र ने�
 
 msgid "Ways to contribute"
 msgstr "योगदान गर्ने तरिका"
+
+msgid "Pilot 2026"
+msgstr "पाइलट २०२६"
+
+msgid "Docs"
+msgstr "कागजात"
+
+msgid "For you"
+msgstr "तपाईंका लागि"
+
+msgid "Open to"
+msgstr "उपलब्ध"
