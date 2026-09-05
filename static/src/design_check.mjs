@@ -83,6 +83,33 @@ for (const cssFile of ['src/onboarding.css', 'src/public-discovery.css']) {
   if (/\/\*/.test(css)) cssViolations.push(`${cssFile}: explanatory CSS comment`)
 }
 
+const componentsCss = await readFile(join(root, 'static', 'src/components.css'), 'utf8')
+if (/\.dn-state-dot\s*\{[^}]*width:\s*10px;[^}]*height:\s*10px/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: decorative state dot')
+}
+if (/\.dn-section-kicker\s*\{[^}]*text-transform:\s*uppercase/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: repeated uppercase section eyebrow')
+}
+
+const onboardingCss = await readFile(join(root, 'static', 'src/onboarding.css'), 'utf8')
+if (/\.dn-onboarding__heading\s*>\s*p:first-child\s*\{[^}]*text-transform:\s*uppercase/s.test(onboardingCss)) {
+  cssViolations.push('src/onboarding.css: repeated uppercase onboarding eyebrow')
+}
+
+const baseCss = await readFile(join(root, 'static', 'src/base.css'), 'utf8')
+for (const required of ['h1 {\n  font-size: clamp(', 'main :where(p, li, dd) a:not(.btn)']) {
+  if (!baseCss.includes(required)) cssViolations.push(`src/base.css: missing ${required}`)
+}
+
+const shellCss = await readFile(join(root, 'static', 'src/devnepal.css'), 'utf8')
+for (const required of [
+  '.dn-primary-nav a[aria-current="page"] {',
+  '.mobile-nav a[aria-current="page"] {',
+  '.dn-admin-nav a[aria-current="page"] {',
+]) {
+  if (!shellCss.includes(required)) cssViolations.push(`src/devnepal.css: missing ${required}`)
+}
+
 if (cssViolations.length > 0) {
   throw new Error(`Banned design-system patterns found: ${cssViolations.join(', ')}`)
 }
