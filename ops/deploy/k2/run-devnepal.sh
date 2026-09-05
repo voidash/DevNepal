@@ -3,6 +3,12 @@ set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
+runtime_env="${HOME}/.config/devnepal/runtime.env"
+if [[ ! -r "${runtime_env}" ]]; then
+  print -u2 "DevNepal runtime environment is missing: ${runtime_env}"
+  exit 1
+fi
+
 github_env="${HOME}/.config/devnepal/github.env"
 if [[ ! -r "${github_env}" ]]; then
   print -u2 "DevNepal GitHub environment is missing: ${github_env}"
@@ -16,6 +22,7 @@ if [[ ! -r "${github_private_key}" ]]; then
 fi
 
 set -a
+source "${runtime_env}"
 source "${github_env}"
 set +a
 export GITHUB_APP_PRIVATE_KEY="${github_private_key}"

@@ -10,17 +10,6 @@
   </array>
   <key>WorkingDirectory</key>
   <string>/Users/k2/github/DevNepal</string>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>DJANGO_SETTINGS_MODULE</key>
-    <string>config.settings.production</string>
-    <key>DJANGO_SECRET_KEY</key>
-    <string>REPLACE_DURING_DEPLOYMENT</string>
-    <key>DJANGO_ALLOWED_HOSTS</key>
-    <string>devnepal.zapper.cloud,k2.fell-truck.ts.net,192.168.10.30,100.80.123.8</string>
-    <key>DJANGO_CSRF_TRUSTED_ORIGINS</key>
-    <string>https://devnepal.zapper.cloud,https://k2.fell-truck.ts.net</string>
-  </dict>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
