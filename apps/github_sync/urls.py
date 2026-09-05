@@ -17,4 +17,9 @@ urlpatterns = [
         views.connect_repository,
         name="connect_repository",
     ),
+    path(
+        "github/projects/<str:project_slug>/repositories/<int:repository_id>/refresh/",
+        views.refresh_project_repository_snapshot,
+        name="refresh_project_repository_snapshot",
+    ),
 ]

@@ -7712,3 +7712,32 @@ msgstr "रोकिएको"
 
 msgid "Error"
 msgstr "त्रुटि"
+
+msgid "GitHub refresh unavailable"
+msgstr "GitHub रिफ्रेस उपलब्ध छैन"
+
+msgid "No existing issue, pull request, or contributor information was removed."
+msgstr "पहिलेको कुनै issue, pull request वा contributor जानकारी हटाइएको छैन।"
+
+msgid "Return to project workspace"
+msgstr "परियोजना कार्यस्थलमा फर्कनुहोस्"
+
+msgid "GitHub activity was just refreshed. Please wait before trying again."
+msgstr "GitHub गतिविधि भर्खरै रिफ्रेस गरिएको छ। फेरि प्रयास गर्नुअघि केही समय पर्खनुहोस्।"
+
+#, python-format
+msgid "GitHub activity refreshed: %(issues)s issues, %(pull_requests)s pull requests, and %(contributors)s contributors."
+msgstr "GitHub गतिविधि रिफ्रेस भयो: %(issues)s issues, %(pull_requests)s pull requests र %(contributors)s contributors।"
+
+msgid "GitHub could not be reached. The last synchronized activity remains available."
+msgstr "GitHub सँग सम्पर्क गर्न सकिएन। अन्तिम सिंक्रनाइज गरिएको गतिविधि उपलब्ध नै छ।"
+
+#, python-format
+msgid "Last synchronized %(synced)s"
+msgstr "अन्तिम सिंक्रनाइज %(synced)s"
+
+msgid "Not synchronized yet"
+msgstr "अहिलेसम्म सिंक्रनाइज गरिएको छैन"
+
+msgid "Refresh GitHub activity"
+msgstr "GitHub गतिविधि रिफ्रेस गर्नुहोस्"

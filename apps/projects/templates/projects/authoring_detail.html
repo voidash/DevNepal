@@ -33,7 +33,23 @@
   {% for repository in project.repository_connections.all %}
   <section class="blueprint dn-publisher-repository" aria-labelledby="repository-{{ repository.pk }}">
     <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-    <header><div><p class="dn-section-kicker">{% trans "Connected GitHub repository" %}</p><h2 id="repository-{{ repository.pk }}">{{ repository.full_name }}</h2></div><span class="Label Label--success">{{ repository.get_sync_state_display }}</span></header>
+    <header>
+      <div>
+        <p class="dn-section-kicker">{% trans "Connected GitHub repository" %}</p>
+        <h2 id="repository-{{ repository.pk }}">{{ repository.full_name }}</h2>
+        <p>{% if repository.public_snapshot_at %}{% blocktrans with synced=repository.public_snapshot_at %}Last synchronized {{ synced }}{% endblocktrans %}{% else %}{% trans "Not synchronized yet" %}{% endif %}</p>
+        {% if repository.public_snapshot_note %}<p class="dn-form-note" role="status">{{ repository.public_snapshot_note }}</p>{% endif %}
+      </div>
+      <div class="button-group">
+        <span class="Label Label--success">{{ repository.get_sync_state_display }}</span>
+        {% if repository.is_public and not repository.deactivated_at and repository.sync_state != 'stopped' %}
+        <form action="{% url 'github_sync:refresh_project_repository_snapshot' project.slug repository.pk %}" method="post">
+          {% csrf_token %}
+          <button class="btn btn--secondary" type="submit">{% trans "Refresh GitHub activity" %}</button>
+        </form>
+        {% endif %}
+      </div>
+    </header>
     <div class="dn-publisher-repository__columns">
       <section aria-labelledby="repo-issues-{{ repository.pk }}"><h3 id="repo-issues-{{ repository.pk }}">{% trans "Open issues" %} <span class="Counter">{{ repository.issue_snapshots.all|length }}</span></h3><ul>{% for issue in repository.issue_snapshots.all %}<li><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a></li>{% empty %}<li>{% trans "No open issues synchronized." %}</li>{% endfor %}</ul></section>
       <section aria-labelledby="repo-prs-{{ repository.pk }}"><h3 id="repo-prs-{{ repository.pk }}">{% trans "Open pull requests" %} <span class="Counter">{{ repository.pull_request_snapshots.all|length }}</span></h3><ul>{% for pull_request in repository.pull_request_snapshots.all %}<li><a href="{{ pull_request.url }}" rel="noopener noreferrer">#{{ pull_request.number }} · {{ pull_request.title }}</a>{% if pull_request.author_login %}<span>{% blocktrans with author=pull_request.author_login %}by @{{ author }}{% endblocktrans %}</span>{% endif %}</li>{% empty %}<li>{% trans "No open pull requests synchronized." %}</li>{% endfor %}</ul></section>

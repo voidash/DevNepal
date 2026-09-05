@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "GitHub refresh unavailable" %} | DevNepal{% endblock %}
+{% block content %}
+<main class="dn-container dn-narrow" id="main-content">
+  <section class="dn-empty-state" aria-labelledby="github-refresh-error-heading">
+    <h1 id="github-refresh-error-heading">{% trans "GitHub refresh unavailable" %}</h1>
+    <p role="alert">{{ error }}</p>
+    <p>{% trans "No existing issue, pull request, or contributor information was removed." %}</p>
+    <a class="btn btn--primary" href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Return to project workspace" %}</a>
+  </section>
+</main>
+{% endblock %}

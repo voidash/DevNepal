@@ -4,6 +4,7 @@ from math import ceil
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import RequestDataTooBig
 from django.db import transaction
 from django.http import Http404, HttpRequest, HttpResponse
@@ -16,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.permissions import privileged_mfa_required
+from apps.audit.services import record_audit
 from apps.github_sync.app_client import github_app_client
 from apps.github_sync.errors import (
     ConnectionNotFoundError,
@@ -38,10 +40,14 @@ from apps.github_sync.services import (
     enroll_repository,
     ingest_webhook,
     member_repositories,
+    refresh_public_repository_snapshot,
 )
-from apps.projects.enums import ProjectStatus
+from apps.ministries.services import is_publisher_active
+from apps.projects.enums import ProjectStatus, ProjectType
+from apps.projects.models import Project
 
 MAX_WEBHOOK_BODY_BYTES = 1_048_576
+LIVE_SNAPSHOT_COOLDOWN_SECONDS = 60
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +127,118 @@ def github_webhook(request: HttpRequest) -> HttpResponse:
     except WebhookReplayError:
         return HttpResponse(status=409)
     return HttpResponse(status=202)
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_POST
+def refresh_project_repository_snapshot(
+    request: HttpRequest, project_slug: str, repository_id: int
+) -> HttpResponse:
+    """GIT-003/GIT-010/SEC-006: refresh one authorized public GitHub projection.
+
+    This deliberately remains a publisher action rather than a visitor-page side
+    effect. A short repository-wide cache reservation coalesces double-clicks and
+    concurrent publisher tabs before the bounded GitHub App request starts.
+    """
+    project = get_object_or_404(
+        Project.objects.select_related("ministry"),
+        slug=project_slug,
+        project_type=ProjectType.GOVERNMENT,
+    )
+    if not is_publisher_active(request.user, project.ministry):
+        raise Http404
+    repository = get_object_or_404(
+        RepositoryConnection.objects.filter(
+            pk=repository_id,
+            project=project,
+            is_public=True,
+            deactivated_at__isnull=True,
+        ).exclude(sync_state="stopped")
+    )
+    reservation_key = f"github_sync.public_snapshot_refresh.v1:{repository.pk}"
+    try:
+        reserved = cache.add(
+            reservation_key,
+            timezone.now().isoformat(),
+            timeout=LIVE_SNAPSHOT_COOLDOWN_SECONDS,
+        )
+    except Exception:
+        logger.exception(
+            "GitHub public snapshot refresh cache failed (repository=%s)", repository.pk
+        )
+        record_audit(
+            actor=request.user,
+            action="github.public_snapshot.refresh_failed",
+            obj=repository,
+            after={"error": "rate_limit_unavailable"},
+            result="failure",
+        )
+        return _refresh_error(request, project, status=503)
+    if not reserved:
+        record_audit(
+            actor=request.user,
+            action="github.public_snapshot.refresh_rate_limited",
+            obj=repository,
+            after={"retry_after": LIVE_SNAPSHOT_COOLDOWN_SECONDS},
+            result="failure",
+        )
+        response = HttpResponse(
+            _("GitHub activity was just refreshed. Please wait before trying again."),
+            status=429,
+        )
+        response.headers["Retry-After"] = str(LIVE_SNAPSHOT_COOLDOWN_SECONDS)
+        return response
+    try:
+        outcome = refresh_public_repository_snapshot(repository, github_app_client())
+    except GithubAppError:
+        logger.exception(
+            "GitHub public snapshot refresh failed (repository=%s actor=%s)",
+            repository.pk,
+            request.user.pk,
+        )
+        record_audit(
+            actor=request.user,
+            action="github.public_snapshot.refresh_failed",
+            obj=repository,
+            after={"error": "provider_unavailable"},
+            result="failure",
+        )
+        return _refresh_error(request, project, status=503)
+    counts = {
+        "issues": outcome.issues,
+        "pull_requests": outcome.pull_requests,
+        "contributors": outcome.contributors,
+    }
+    record_audit(
+        actor=request.user,
+        action="github.public_snapshot.refresh",
+        obj=repository,
+        after=counts,
+    )
+    messages.success(
+        request,
+        _(
+            "GitHub activity refreshed: %(issues)s issues, "
+            "%(pull_requests)s pull requests, and %(contributors)s contributors."
+        )
+        % counts,
+    )
+    return redirect("projects:authoring_detail", slug=project.slug)
+
+
+def _refresh_error(request: HttpRequest, project: Project, *, status: int) -> HttpResponse:
+    return render(
+        request,
+        "github_sync/refresh_error.html",
+        {
+            "project": project,
+            "error": _(
+                "GitHub could not be reached. The last synchronized activity remains available."
+            ),
+        },
+        status=status,
+    )
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))
