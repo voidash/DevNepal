@@ -1,26 +1,36 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}{{ project.localized_title }} | DevNepal{% endblock %}
+{% block meta_description %}{{ project.localized_summary }}{% endblock %}
 {% block content %}
+{% comment %} A project page is read in one order: who owns this, what it is,
+   what I can pick up, and who is already working on it. The facts that decide
+   whether to start — how to join, the response commitment, the repository —
+   sit under the title as a strip rather than inside a collapsed sheet, because
+   a contributor with no account has no other place to learn them. {% endcomment %}
 <header class="dn-page-header">
+  <div class="dn-container">
+    <nav class="dn-breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+      <a href="{% if project.is_official %}{% url 'projects:government' %}{% else %}{% url 'projects:community' %}{% endif %}">{% if project.is_official %}{% trans "Government projects" %}{% else %}{% trans "Community projects" %}{% endif %}</a>
+      <span aria-hidden="true">/</span><span aria-current="page">{{ project.localized_title }}</span>
+    </nav>
+  </div>
   <div class="dn-container dn-project-hero">
     <div>
-      <nav class="dn-breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
-        <a href="{% if project.is_official %}{% url 'projects:government' %}{% else %}{% url 'projects:community' %}{% endif %}">{% if project.is_official %}{% trans "Government projects" %}{% else %}{% trans "Community projects" %}{% endif %}</a>
-        <span aria-hidden="true">/</span><span aria-current="page">{{ project.localized_title }}</span>
-      </nav>
       <div class="dn-project-hero__labels">
         {% if project.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}
         <span class="Label Label--success">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
         {% if project.difficulty %}<span class="Label">{{ project.get_difficulty_display }}</span>{% endif %}
       </div>
-      <div class="dn-repo-title"><span>{{ project.ministry.abbreviation|default:"DevNepal" }}</span><span class="dn-repo-title-separator" aria-hidden="true">/</span><h1>{{ project.localized_title }}</h1></div>
-      {% if project.ministry %}<p>{% blocktrans with ministry=project.ministry.localized_name %}A public project by {{ ministry }}{% endblocktrans %}</p>{% endif %}
+      <div class="dn-repo-title"><span class="dn-project-owner">{{ project.ministry.abbreviation|default:"DevNepal" }}</span><span class="dn-repo-title-separator" aria-hidden="true">/</span><h1>{{ project.localized_title }}</h1></div>
+      {% if project.title_ne and project.title_ne != project.localized_title %}<p class="dn-project-title-ne" lang="ne">{{ project.title_ne }}</p>{% endif %}
       <p class="dn-lede">{{ project.localized_summary }}</p>
+      {% if project.ministry %}<p class="dn-project-byline">{% blocktrans with ministry=project.ministry.localized_name %}Published by {{ ministry }}{% endblocktrans %}{% if last_activity_at %} · {% blocktrans count counter=last_activity_days_ago %}last maintainer activity {{ counter }} day ago{% plural %}last maintainer activity {{ counter }} days ago{% endblocktrans %}{% endif %}</p>{% endif %}
     </div>
     <div class="dn-project-hero__actions">
       {% if github_issues %}<a class="btn btn--primary" href="#open-github-issues">{% trans "Choose an issue" %}</a>{% elif project.issue_tracker_url %}<a class="btn btn--primary" href="{{ project.issue_tracker_url }}" rel="noopener noreferrer">{% trans "View open issues" %}</a>{% endif %}
       {% if project.repository_url %}<a class="btn btn--secondary" href="{{ project.repository_url }}" rel="noopener noreferrer">{% trans "View on GitHub" %}</a>{% endif %}
+      <p>{% trans "Contributing needs no DevNepal account." %}</p>
     </div>
   </div>
   <div class="dn-container"><nav class="dn-tabs" aria-label="{% trans 'Project sections' %}"><a class="dn-tab" aria-current="page" href="{% url 'projects:detail' project.slug %}">{% trans "Overview" %}</a><a class="dn-tab" href="{% url 'projects:updates' project.slug %}">{% trans "Updates" %} <span class="Counter">{{ project.updates.all|length }}</span></a></nav></div>
@@ -30,7 +40,19 @@
   {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
   {% if response_overdue %}<div class="dn-state-banner is-attention" role="status">{% trans "Response overdue: the maintainers have not answered within their published response window." %}</div>{% endif %}
   {% if maintainer_stale %}<div class="dn-state-banner is-danger" role="status">{% trans "Stale project: no maintainer activity has been recorded for an extended period." %}</div>{% endif %}
-  {% if last_activity_at %}<p><strong>{% trans "Last maintainer activity" %}</strong>: {% blocktrans count counter=last_activity_days_ago %}{{ counter }} day ago{% plural %}{{ counter }} days ago{% endblocktrans %}</p>{% endif %}
+
+  <section class="blueprint dn-sheet dn-project-sheet" aria-labelledby="project-sheet-heading">
+    <div class="dn-sheet__header"><span id="project-sheet-heading">{% trans "Project sheet" %}</span>{% if project.license %}<span>{{ project.license.spdx_id }}</span>{% endif %}<span>{% blocktrans with classification=project.get_data_classification_display %}Data: {{ classification }}{% endblocktrans %}</span></div>
+    <div class="dn-accountability">
+      <div class="dn-accountability-item"><strong>{% trans "How to join" %}</strong><span>{{ project.get_contribution_mode_display }}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Expected effort" %}</strong><span>{{ project.get_estimated_effort_display }}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "First response" %}</strong><span>{% if project.response_sla %}{{ project.get_response_sla_display }}{% else %}{% trans "First-response commitment not yet published" %}{% endif %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Maintainers" %}</strong><span>{% for maintainer in project.maintainer_assignments.all %}{{ maintainer.user.get_full_name|default:maintainer.user.username }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "No maintainer assigned yet" %}{% endfor %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Repository" %}</strong><span>{% if project.repository_url %}<a href="{{ project.repository_url }}" rel="noopener noreferrer">{{ project.repository_url|cut:"https://github.com/" }}</a>{% else %}{% trans "No public repository" %}{% endif %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Deadline" %}</strong><span>{% if project.deadline %}<time datetime="{{ project.deadline|date:'Y-m-d' }}">{{ project.deadline|date:"DATE_FORMAT" }}</time>{% else %}{% trans "No deadline" %}{% endif %}</span></div>
+    </div>
+    <p class="dn-sheet__note">{% if project.suitability.confirmed_at %}{% trans "Suitability confirmed" %} <time datetime="{{ project.suitability.confirmed_at|date:'Y-m-d' }}">{{ project.suitability.confirmed_at|date:"DATE_FORMAT" }}</time>{% else %}{% trans "In review" %} · {% trans "Suitability checklist not started" %} · {% trans "Repository visibility and issue data are checked before publication." %}{% endif %}</p>
+  </section>
 
   {% if github_issues %}
   <section id="open-github-issues" aria-labelledby="github-issues-heading">
@@ -41,7 +63,7 @@
     <div class="dn-issue-list">
       {% for issue in github_issues %}
       <article class="dn-issue-row">
-        <div><div>{% for label in issue.labels %}<span class="Label">{{ label }}</span>{% endfor %}</div><h3><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a></h3><p>{% blocktrans with author=issue.author_login comments=issue.comments_count %}Opened by @{{ author }} · {{ comments }} comments{% endblocktrans %}</p></div>
+        <div><div class="dn-labels">{% for label in issue.labels %}<span class="Label">{{ label }}</span>{% endfor %}</div><h3><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a></h3><p>{% blocktrans with author=issue.author_login comments=issue.comments_count %}Opened by @{{ author }} · {{ comments }} comments{% endblocktrans %}</p></div>
         <a href="{% url 'projects:github_issue' project.slug issue.number %}">{% trans "Read issue" %}</a>
       </article>
       {% endfor %}
@@ -49,67 +71,66 @@
   </section>
   {% elif supports_direct_contributions %}
   <section aria-labelledby="open-tasks-heading">
-    <h2 id="open-tasks-heading">{% trans "Open tasks" %}</h2>
-    {% if github_starter_tasks %}{% for task in github_starter_tasks %}<article><h3><a href="{{ task.url }}" rel="noopener noreferrer">#{{ task.number }} · {{ task.title }}</a></h3></article>{% endfor %}
-    {% elif open_tasks %}{% for task in open_tasks %}<article><h3>{{ task.title }}</h3>{% if task.description %}<p>{{ task.description }}</p>{% endif %}{% if task.issue_url %}<a href="{{ task.issue_url }}">{% trans "View task or issue" %}</a>{% endif %}</article>{% endfor %}
-    {% else %}<p role="status">{% trans "There are no open tasks right now." %}</p>{% endif %}
+    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "Contribute" %}</p><h2 id="open-tasks-heading">{% trans "Open tasks" %}</h2></div>{% if project.issue_tracker_url %}<a class="dn-arrow-link" href="{{ project.issue_tracker_url }}" rel="noopener noreferrer">{% trans "Issue tracker" %} →</a>{% endif %}</div>
+    <div class="dn-issue-list">
+      {% if github_starter_tasks %}{% for task in github_starter_tasks %}<article class="dn-issue-row"><div><div class="dn-labels">{% for label in task.labels %}<span class="Label">{{ label }}</span>{% endfor %}</div><h3><a href="{{ task.url }}" rel="noopener noreferrer">#{{ task.number }} · {{ task.title }}</a></h3></div><a href="{{ task.url }}" rel="noopener noreferrer">{% trans "Open on GitHub" %}</a></article>{% endfor %}
+      {% elif open_tasks %}{% for task in open_tasks %}<article class="dn-issue-row"><div><h3>{{ task.title }}</h3>{% if task.description %}<p>{{ task.description }}</p>{% endif %}</div>{% if task.issue_url %}<a href="{{ task.issue_url }}" rel="noopener noreferrer">{% trans "View task or issue" %}</a>{% endif %}</article>{% endfor %}
+      {% else %}<article class="dn-issue-row"><div><p role="status">{% trans "There are no open tasks right now." %}</p></div></article>{% endif %}
+    </div>
   </section>
   {% endif %}
-
-  {% if supports_direct_contributions and user.is_authenticated %}<p><a class="btn btn--secondary" href="{% url 'contributions:submit' project.pk %}">{% trans "Submit evidence" %}</a></p>{% endif %}
 
   {% if github_starter_tasks and not github_issues and not supports_direct_contributions %}
   <section aria-labelledby="github-starter-heading">
     <div class="dn-section-heading-row"><h2 id="github-starter-heading">{% trans "Starter tasks from GitHub" %}</h2><span>{% trans "Issue snapshot" %}</span></div>
-    {% for task in github_starter_tasks %}<article><div>{% for label in task.labels %}<span class="Label">{{ label }}</span>{% endfor %}</div><h3><a href="{{ task.url }}" rel="noopener noreferrer">{{ task.repository.full_name }} #{{ task.number }} · {{ task.title }}</a></h3></article>{% endfor %}
+    <div class="dn-issue-list">{% for task in github_starter_tasks %}<article class="dn-issue-row"><div><div class="dn-labels">{% for label in task.labels %}<span class="Label">{{ label }}</span>{% endfor %}</div><h3><a href="{{ task.url }}" rel="noopener noreferrer">{{ task.repository.full_name }} #{{ task.number }} · {{ task.title }}</a></h3></div></article>{% endfor %}</div>
   </section>
   {% endif %}
 
   {% if github_pull_requests %}
   <section aria-labelledby="pull-requests-heading">
-    <div class="dn-section-heading-row"><h2 id="pull-requests-heading">{% trans "Open pull requests" %}</h2><span>{% trans "Live work in review" %}</span></div>
+    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "In review" %}</p><h2 id="pull-requests-heading">{% trans "Open pull requests" %}</h2></div><span>{% trans "Live work in review" %}</span></div>
     <div class="dn-issue-list">{% for pull_request in github_pull_requests %}<article class="dn-issue-row"><div><h3><a href="{{ pull_request.url }}" rel="noopener noreferrer">#{{ pull_request.number }} · {{ pull_request.title }}</a></h3><p>{% blocktrans with author=pull_request.author_login %}Opened by @{{ author }}{% endblocktrans %}</p></div><span class="Label Label--success">{{ pull_request.state|capfirst }}</span></article>{% endfor %}</div>
   </section>
   {% endif %}
 
   {% if github_contributors %}
   <section aria-labelledby="contributors-heading">
-    <div class="dn-section-heading-row"><h2 id="contributors-heading">{% trans "People working on this repository" %}</h2><span>{% trans "Public GitHub contributors" %}</span></div>
-    <div class="dn-github-contributors">{% for contributor in github_contributors %}<a class="dn-github-contributor" href="{% url 'github_sync:public_profile' contributor.login %}">{% if contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40" loading="lazy">{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktrans %}</small></span></a>{% endfor %}</div>
+    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "People" %}</p><h2 id="contributors-heading">{% trans "People working on this repository" %}</h2></div><span>{% trans "Public GitHub contributors" %}</span></div>
+    <div class="dn-github-contributors">{% for contributor in github_contributors %}<a class="dn-github-contributor" href="{% url 'github_sync:public_profile' contributor.login %}">{% if contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40" loading="lazy">{% else %}<span class="dn-github-avatar" aria-hidden="true">{{ contributor.login|slice:":2"|upper }}</span>{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktrans %}</small></span></a>{% endfor %}</div>
   </section>
   {% endif %}
 
   {% if requires_application %}
   <section aria-labelledby="apply-heading">
-    <p class="dn-section-kicker">{{ project.get_contribution_mode_display }}</p><h2 id="apply-heading">{% trans "Apply to contribute" %}</h2>
-    {% if user.is_authenticated %}<form action="{% url 'projects:apply' project.slug %}" method="post" class="dn-form-stack">{% csrf_token %}{% for question in project.screening_questions.all %}{% if question.is_active %}<div class="dn-field"><label for="answer-{{ question.pk }}">{{ question.question }}</label><textarea id="answer-{{ question.pk }}" name="answer_{{ question.pk }}"{% if question.is_required %} required{% endif %}></textarea></div>{% endif %}{% endfor %}<div class="dn-field"><label for="motivation">{% trans "Why would you like to contribute?" %}</label><textarea id="motivation" name="motivation"></textarea></div><button class="btn btn--primary" type="submit">{% trans "Submit application" %}</button></form>
+    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{{ project.get_contribution_mode_display }}</p><h2 id="apply-heading">{% trans "Apply to contribute" %}</h2></div></div>
+    {% if user.is_authenticated %}<form action="{% url 'projects:apply' project.slug %}" method="post" class="dn-form-stack blueprint">{% csrf_token %}{% for question in project.screening_questions.all %}{% if question.is_active %}<div class="dn-field"><label for="answer-{{ question.pk }}">{{ question.question }}</label><textarea id="answer-{{ question.pk }}" name="answer_{{ question.pk }}"{% if question.is_required %} required{% endif %}></textarea></div>{% endif %}{% endfor %}<div class="dn-field"><label for="motivation">{% trans "Why would you like to contribute?" %}</label><textarea id="motivation" name="motivation"></textarea></div><button class="btn btn--primary" type="submit">{% trans "Submit application" %}</button></form>
     {% else %}<a class="btn btn--primary" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">{% trans "Sign in to apply" %}</a>{% endif %}
   </section>
   {% endif %}
 
   {% if project.status == 'completed' %}
-  <section aria-labelledby="completed-outcomes-heading"><h2 id="completed-outcomes-heading">{% trans "Completion summary" %}</h2><p>{% trans "Completed outcomes" %}</p><h3>{% trans "Outcome summary" %}</h3><p>{{ project.outcome_summary }}</p><h3>{% trans "Deliverables and releases" %}</h3><ul>{% for deliverable in project.deliverables %}<li>{% if deliverable.url %}<a href="{{ deliverable.url }}">{{ deliverable.label }}</a>{% else %}{{ deliverable.label|default:deliverable }}{% endif %}</li>{% endfor %}</ul><h3>{% trans "Impact summary" %}</h3><p>{{ project.impact_summary }}</p><h3>{% trans "Lessons learned" %}</h3><p>{{ project.lessons_learned }}</p></section>
+  <section aria-labelledby="completed-outcomes-heading">
+    <div class="dn-section-heading-row"><h2 id="completed-outcomes-heading">{% trans "Completion summary" %}</h2><span>{% trans "Completed outcomes" %}</span></div>
+    <div class="blueprint dn-outcome-sheet">
+      <h3>{% trans "Outcome summary" %}</h3><p>{{ project.outcome_summary }}</p>
+      <h3>{% trans "Deliverables and releases" %}</h3><ul>{% for deliverable in project.deliverables %}<li>{% if deliverable.url %}<a href="{{ deliverable.url }}">{{ deliverable.label }}</a>{% else %}{{ deliverable.label|default:deliverable }}{% endif %}</li>{% endfor %}</ul>
+      <h3>{% trans "Impact summary" %}</h3><p>{{ project.impact_summary }}</p>
+      <h3>{% trans "Lessons learned" %}</h3><p>{{ project.lessons_learned }}</p>
+    </div>
+  </section>
   {% endif %}
 
-  <details class="blueprint dn-sheet">
-    <summary>{% trans "Project sheet" %}</summary>
-    <div class="dn-accountability">
-      <div class="dn-accountability-item"><strong>{% trans "Contribution mode" %}</strong><span>{{ project.get_contribution_mode_display }}</span></div>
-      <div class="dn-accountability-item"><strong>{% trans "Expected effort" %}</strong><span>{{ project.get_estimated_effort_display }}</span></div>
-      <div class="dn-accountability-item"><strong>{% trans "First response" %}</strong><span>{% if project.response_sla %}{{ project.get_response_sla_display }} · {% trans "Response commitment" %}{% else %}{% trans "First-response commitment not yet published" %}{% endif %}</span></div>
-      <div class="dn-accountability-item"><strong>{% trans "Maintainers" %}</strong><span>{% for maintainer in project.maintainer_assignments.all %}{{ maintainer.user.username }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "No maintainer assigned yet" %}{% endfor %}</span></div>
+  <details class="blueprint dn-sheet dn-project-terms">
+    <summary>{% trans "Before you contribute — prerequisites, governance and security" %}</summary>
+    <div class="dn-project-terms__body">
+      {% if project.prerequisites %}<h3>{% trans "Before you contribute" %}</h3><p>{{ project.prerequisites }}</p>{% endif %}
+      {% if project.communication_channel %}<p><a href="{{ project.communication_channel }}">{% trans "Contact the maintainers" %}</a></p>{% endif %}
+      {% if project.governance_model or project.signoff_model %}<h3>{% trans "Governance and sign-off" %}</h3><p>{{ project.get_governance_model_display }}{% if project.signoff_model %} · {{ project.get_signoff_model_display }}{% endif %}</p>{% endif %}
+      {% if project.security_contact or project.vulnerability_disclosure_url %}<h3>{% trans "Security and reporting" %}</h3><p>{% if project.security_contact %}<a href="mailto:{{ project.security_contact }}">{{ project.security_contact }}</a>{% endif %}{% if project.vulnerability_disclosure_url %} · <a href="{{ project.vulnerability_disclosure_url }}">{% trans "Security policy" %}</a>{% endif %}</p>{% endif %}
+      <ul>{% if project.documentation_url %}<li><a href="{{ project.documentation_url }}">{% trans "Documentation" %}</a></li>{% endif %}{% for link in project.links.all %}<li><a href="{{ link.url }}">{{ link.label|default:link.get_kind_display }}</a></li>{% endfor %}</ul>
     </div>
-    <p>{% if project.suitability.confirmed_at %}{% trans "Suitability confirmed" %} {{ project.suitability.confirmed_at }}{% else %}{% trans "In review" %} · {% trans "Suitability checklist not started" %} · {% trans "Repository visibility and issue data are checked before publication." %}{% endif %}</p>
-    <div class="dn-accountability">
-      <div class="dn-accountability-item"><strong>{% trans "Repository" %}</strong><span>{{ project.repository_url }}</span></div>
-      <div class="dn-accountability-item"><strong>{% trans "Deadline" %}</strong><span>{% if project.deadline %}{{ project.deadline }}{% else %}{% trans "No deadline" %}{% endif %}</span></div>
-    </div>
-    {% if project.prerequisites %}<h3>{% trans "Before you contribute" %}</h3><p>{{ project.prerequisites }}</p>{% endif %}
-    {% if project.communication_channel %}<p><a href="{{ project.communication_channel }}">{% trans "Contact the maintainers" %}</a></p>{% endif %}
-    {% if project.governance_model or project.signoff_model %}<h3>{% trans "Governance and sign-off" %}</h3><p>{{ project.get_governance_model_display }}{% if project.signoff_model %} · {{ project.get_signoff_model_display }}{% endif %}</p>{% endif %}
-    {% if project.security_contact or project.vulnerability_disclosure_url %}<h3>{% trans "Security and reporting" %}</h3><p>{% if project.security_contact %}<a href="mailto:{{ project.security_contact }}">{{ project.security_contact }}</a>{% endif %}{% if project.vulnerability_disclosure_url %} · <a href="{{ project.vulnerability_disclosure_url }}">{% trans "Security policy" %}</a>{% endif %}</p>{% endif %}
-    <ul>{% if project.documentation_url %}<li><a href="{{ project.documentation_url }}">{% trans "Documentation" %}</a></li>{% endif %}{% for link in project.links.all %}<li><a href="{{ link.url }}">{{ link.label|default:link.get_kind_display }}</a></li>{% endfor %}</ul>
   </details>
-  <p id="updates"><a href="{% url 'projects:updates' project.slug %}">{% trans "View project updates" %}</a></p>
+  <p id="updates"><a class="dn-arrow-link" href="{% url 'projects:updates' project.slug %}">{% trans "View project updates" %} →</a></p>
 </div>
 {% endblock %}
