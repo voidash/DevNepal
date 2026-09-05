@@ -61,6 +61,9 @@ INTENSITY_LEVELS = range(5)
 def public_profile(request: HttpRequest, login: str) -> HttpResponse:
     """GIT-010: show a cached public GitHub identity and tracked repository work."""
     profile = get_object_or_404(GithubPublicProfileSnapshot, login__iexact=login)
+    community_profiles = GithubPublicProfileSnapshot.objects.exclude(pk=profile.pk).order_by(
+        "-followers", "login"
+    )[:3]
     repository_activity = (
         GithubRepositoryContributor.objects.filter(
             github_user_id=profile.github_user_id,
@@ -78,7 +81,11 @@ def public_profile(request: HttpRequest, login: str) -> HttpResponse:
     return render(
         request,
         "github_sync/public_profile.html",
-        {"github_profile": profile, "repository_activity": repository_activity},
+        {
+            "github_profile": profile,
+            "repository_activity": repository_activity,
+            "community_profiles": community_profiles,
+        },
     )
 
 

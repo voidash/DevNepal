@@ -405,6 +405,7 @@ def seed_prototype_demo() -> dict[str, int]:
     )
     _github_contributor(repository)
     _github_profile()
+    _github_community_profiles()
 
     address_schema = _government_project(
         slug="unified-local-address-schema",
@@ -907,6 +908,42 @@ def _github_profile():
             "followers": 135,
         },
     )[0]
+
+
+def _github_community_profiles():
+    profiles = (
+        {
+            "github_user_id": 39_838_116,
+            "login": "iamtekson",
+            "avatar_url": "https://avatars.githubusercontent.com/u/39838116?v=4",
+            "html_url": "https://github.com/iamtekson",
+            "display_name": "Tek Kshetri",
+            "bio": "OSGeo Nepal | Geospatial researcher | Web-GIS | FOSS4G Developer",
+            "location": "Nepal",
+            "company": "The Solution Stack",
+            "public_repos": 88,
+            "followers": 936,
+        },
+        {
+            "github_user_id": 58_947_310,
+            "login": "hemantapkh",
+            "avatar_url": "https://avatars.githubusercontent.com/u/58947310?v=4",
+            "html_url": "https://github.com/hemantapkh",
+            "display_name": "Hemanta Pokharel",
+            "bio": "Building and breaking things",
+            "location": "Kathmandu, Nepal",
+            "company": "",
+            "public_repos": 34,
+            "followers": 2_686,
+        },
+    )
+    for profile in profiles:
+        github_user_id = profile["github_user_id"]
+        defaults = {key: value for key, value in profile.items() if key != "github_user_id"}
+        GithubPublicProfileSnapshot.objects.update_or_create(
+            github_user_id=github_user_id,
+            defaults=defaults,
+        )
 
 
 def _contribution(

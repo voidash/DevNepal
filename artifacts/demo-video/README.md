@@ -3,7 +3,7 @@
 The Playwright source recordings show the live Django application and the real
 `voidash/civic-help-directory` repository. They are captured with Brave through
 Playwright's Chromium API. The Remotion composition adds role labels, scene
-titles, captions, and ElevenLabs narration.
+titles, captions, and Piper narration.
 
 The current captioned preview is `DevNepal-GitHub-flow-preview.mp4`.
 
@@ -16,11 +16,12 @@ records the resulting canonical GitHub page.
 
 To refresh the Brave recordings, run `npm run record:brave` from `remotion/`.
 
-To create the narrated delivery:
+To create the narrated delivery with Piper:
 
-1. Export `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_VOICE_ID`).
-2. Run `node scripts/generate-voiceover.mjs` from `remotion/`.
-3. Run `npm run render` from `remotion/`.
+1. Download a voice, for example `python -m piper.download_voices en_US-lessac-medium`.
+2. Export `PIPER_BIN` and `PIPER_MODEL` with the absolute binary and `.onnx` paths.
+3. Run `npm run voice:piper` from `remotion/`.
+4. Run `npm run render` from `remotion/`.
 
-The narration generator fails explicitly when the ElevenLabs key is absent; it
-does not substitute another speech engine.
+The narration generator fails explicitly when the model is absent or Piper
+cannot synthesize a scene.

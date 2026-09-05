@@ -149,7 +149,9 @@ await record({
     await moveTo(page, contributor);
     await contributor.click();
     await page.waitForLoadState('networkidle');
-    await pause(2500);
+    await pause(1800);
+    await moveTo(page, page.getByRole('heading', {name: 'More GitHub profiles'}));
+    await pause(2200);
   },
 });
 
@@ -176,4 +178,3 @@ await record({
 
 await browser.close();
 await rm(rawDirectory, {recursive: true, force: true});
-

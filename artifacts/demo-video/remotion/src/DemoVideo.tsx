@@ -29,7 +29,7 @@ const scenes: Scene[] = [
     caption:
       'Visitors browse approved government work without an account, choose Civic Help Directory, and see the public need before deciding whether to contribute.',
     video: 'videos/01-visitor.webm',
-    audio: 'voice/01-visitor.mp3',
+    audio: 'voice/01-visitor.wav',
   },
   {
     duration: 420,
@@ -39,7 +39,7 @@ const scenes: Scene[] = [
     caption:
       'A ministry publisher starts a bilingual project, uses the small demo-fill helper, and connects the real Civic Help Directory repository before review and publication.',
     video: 'videos/02-ministry-create.webm',
-    audio: 'voice/02-ministry-create.mp3',
+    audio: 'voice/02-ministry-create.wav',
   },
   {
     duration: 420,
@@ -49,7 +49,7 @@ const scenes: Scene[] = [
     caption:
       'Issue #11 was created in the live voidash/civic-help-directory repository. GitHub remains the source of truth for discussion, assignment, and code.',
     video: 'videos/03-github-proof.webm',
-    audio: 'voice/03-github-proof.mp3',
+    audio: 'voice/03-github-proof.wav',
   },
   {
     duration: 480,
@@ -59,7 +59,7 @@ const scenes: Scene[] = [
     caption:
       'After synchronization, issue #11 appears inside DevNepal with its complete goal and acceptance criteria, a safe GitHub handoff, and a public GitHub-only contributor profile.',
     video: 'videos/04-visitor-issue-profile.webm',
-    audio: 'voice/04-visitor-issue-profile.mp3',
+    audio: 'voice/04-visitor-issue-profile.wav',
   },
   {
     duration: 420,
@@ -69,7 +69,7 @@ const scenes: Scene[] = [
     caption:
       'The ministry workspace now shows four open issues, pull request #10, and the public contributor snapshot. It reports activity without pretending that open work is verified.',
     video: 'videos/05-ministry-activity.webm',
-    audio: 'voice/05-ministry-activity.mp3',
+    audio: 'voice/05-ministry-activity.wav',
   },
 ];
 
@@ -143,7 +143,7 @@ const SceneCard = ({scene, withAudio}: {scene: Scene; withAudio: boolean}) => {
         <div style={{fontSize: 30, lineHeight: 1.08, fontWeight: 850}}>{scene.title}</div>
         <div style={{fontSize: 23, lineHeight: 1.4, color: '#f3f4f6'}}>{scene.caption}</div>
       </div>
-      {withAudio ? <Audio src={staticFile(scene.audio)} volume={1} /> : null}
+      {withAudio ? <Audio src={staticFile(scene.audio)} volume={0.82} /> : null}
     </AbsoluteFill>
   );
 };

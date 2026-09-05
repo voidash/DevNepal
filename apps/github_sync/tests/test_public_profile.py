@@ -37,6 +37,22 @@ def test_git_010_public_github_profile_uses_provider_data_and_tracked_repository
         profile_url=profile.html_url,
         contributions=9,
     )
+    GithubPublicProfileSnapshot.objects.create(
+        github_user_id=2,
+        login="iamtekson",
+        html_url="https://github.com/iamtekson",
+        display_name="Tek Kshetri",
+        location="Nepal",
+        followers=936,
+    )
+    GithubPublicProfileSnapshot.objects.create(
+        github_user_id=3,
+        login="hemantapkh",
+        html_url="https://github.com/hemantapkh",
+        display_name="Hemanta Pokharel",
+        location="Kathmandu, Nepal",
+        followers=2686,
+    )
 
     response = client.get(reverse("github_sync_public:public_profile", args=[profile.login]))
 
@@ -49,6 +65,13 @@ def test_git_010_public_github_profile_uses_provider_data_and_tracked_repository
     assert "civic-help-directory" in content
     assert "9 commits" in content
     assert profile.html_url in content
+    assert "Public GitHub profile · last checked" in content
+    assert "This page is not a DevNepal member account." in content
+    assert "More GitHub profiles" in content
+    assert "Tek Kshetri" in content
+    assert "Hemanta Pokharel" in content
+    assert "iamtekson" in content
+    assert "hemantapkh" in content
     assert "Skills" not in content
     assert "Badges" not in content
     assert "Verified contributions" not in content

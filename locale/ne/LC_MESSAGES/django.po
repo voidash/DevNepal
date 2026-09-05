@@ -7567,11 +7567,11 @@ msgstr[1] "%(counter)s फलोअरहरू"
 msgid "github.com/%(login)s"
 msgstr "github.com/%(login)s"
 
-msgid "Public information from GitHub. DevNepal never displays private repositories or activity."
-msgstr "GitHub बाट प्राप्त सार्वजनिक जानकारी। DevNepal ले निजी रिपोजिटरी वा गतिविधि कहिल्यै देखाउँदैन।"
+msgid "Public GitHub profile · last checked %(checked)s"
+msgstr "सार्वजनिक GitHub प्रोफाइल · अन्तिम जाँच %(checked)s"
 
-msgid "Work on DevNepal repositories"
-msgstr "DevNepal रिपोजिटरीहरूमा काम"
+msgid "Activity on connected projects"
+msgstr "जोडिएका परियोजनाहरूमा गतिविधि"
 
 msgid "GitHub source"
 msgstr "GitHub स्रोत"
@@ -7581,14 +7581,26 @@ msgid_plural "%(counter)s commits"
 msgstr[0] "%(counter)s कमिट"
 msgstr[1] "%(counter)s कमिटहरू"
 
-msgid "No activity has been synchronized from a listed repository yet."
-msgstr "सूचीबद्ध रिपोजिटरीबाट अहिलेसम्म कुनै गतिविधि सिङ्क गरिएको छैन।"
+msgid "Shown only when GitHub activity has been synchronized from a connected public repository."
+msgstr "जोडिएको सार्वजनिक रिपोजिटरीबाट GitHub गतिविधि सिङ्क भएपछि मात्र देखाइन्छ।"
 
-msgid "About this profile"
-msgstr "यस प्रोफाइलबारे"
+msgid "No activity recorded on a DevNepal-connected repository."
+msgstr "DevNepal सँग जोडिएको रिपोजिटरीमा कुनै गतिविधि रेकर्ड भएको छैन।"
 
-msgid "This is a cached public GitHub profile, not a claim that this person has a DevNepal member account."
-msgstr "यो क्यास गरिएको सार्वजनिक GitHub प्रोफाइल हो; यस व्यक्तिसँग DevNepal सदस्य खाता छ भन्ने दाबी होइन।"
+msgid "Profile source"
+msgstr "प्रोफाइल स्रोत"
+
+msgid "Identity and profile statistics come from the public GitHub profile. This page is not a DevNepal member account."
+msgstr "पहिचान र प्रोफाइल तथ्याङ्क सार्वजनिक GitHub प्रोफाइलबाट आउँछन्। यो पृष्ठ DevNepal सदस्य खाता होइन।"
+
+msgid "More GitHub profiles"
+msgstr "थप GitHub प्रोफाइलहरू"
+
+msgid "Public GitHub information"
+msgstr "सार्वजनिक GitHub जानकारी"
+
+msgid "Explore people visible across DevNepal. Project activity appears only when it has been synchronized from a connected repository."
+msgstr "DevNepal मा देखिने व्यक्तिहरू अन्वेषण गर्नुहोस्। जोडिएको रिपोजिटरीबाट सिङ्क भएपछि मात्र परियोजना गतिविधि देखिन्छ।"
 
 msgid "GitHub public API"
 msgstr "GitHub सार्वजनिक API"
