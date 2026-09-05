@@ -132,7 +132,7 @@ def build_catalogue_entries():
         {
             "id": "skills",
             "title": _("Skills and tags"),
-            "url": reverse("admin:taxonomy_skill_changelist"),
+            "url": reverse("taxonomy:skill_management"),
             "count": Skill.objects.filter(is_active=True).count(),
             "total": Skill.objects.count(),
         },
@@ -146,7 +146,7 @@ def build_catalogue_entries():
         {
             "id": "licenses",
             "title": _("Approved licenses"),
-            "url": reverse("admin:taxonomy_approvedlicense_changelist"),
+            "url": reverse("taxonomy:license_management"),
             "count": ApprovedLicense.objects.filter(is_approved=True).count(),
             "total": ApprovedLicense.objects.count(),
         },
