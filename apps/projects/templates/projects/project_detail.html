@@ -66,17 +66,38 @@
   </section>
   {% endif %}
 
+  {% if project.problem_statement or project.description_md or project.target_users or project.expected_outcome %}
+  <section class="dn-project-about" aria-labelledby="about-heading">
+    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "About" %}</p><h2 id="about-heading">{% trans "What this project is for" %}</h2></div></div>
+    <div class="dn-project-about__grid">
+      {% if project.problem_statement or project.description_md %}
+      <div><h3>{% trans "The problem" %}</h3><p>{{ project.problem_statement|default:project.description_md }}</p></div>
+      {% endif %}
+      {% if project.target_users %}<div><h3>{% trans "Who it serves" %}</h3><p>{{ project.target_users }}</p></div>{% endif %}
+      {% if project.expected_outcome %}<div><h3>{% trans "What done looks like" %}</h3><p>{{ project.expected_outcome }}</p></div>{% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if accepting_contributions and project.prerequisites %}
+  <aside class="blueprint dn-project-prereq" aria-labelledby="prereq-heading">
+    <h2 id="prereq-heading">{% trans "Before you start" %}</h2>
+    <p>{{ project.prerequisites }}</p>
+    {% if project.communication_channel %}<a class="dn-arrow-link" href="{{ project.communication_channel }}" rel="noopener noreferrer">{% trans "Ask the maintainers" %} →</a>{% endif %}
+  </aside>
+  {% endif %}
+
   {% if accepting_contributions and github_issues %}
   <section id="open-github-issues" aria-labelledby="github-issues-heading">
     <div class="dn-section-heading-row">
       <div><p class="dn-section-kicker">{% trans "Contribute" %}</p><h2 id="github-issues-heading">{% trans "Open issues from GitHub" %}</h2></div>
-      {% for repository in public_github_repositories %}<span>{{ repository.full_name }}{% if repository.public_snapshot_at %} · {% trans "synced" %} {{ repository.public_snapshot_at|timesince }} {% trans "ago" %}{% endif %}</span>{% endfor %}
+      <span>{% if starter_issue_count %}{% blocktrans count counter=starter_issue_count %}{{ counter }} good first issue{% plural %}{{ counter }} good first issues{% endblocktrans %} · {% endif %}{% for repository in public_github_repositories %}{{ repository.full_name }}{% if repository.public_snapshot_at %} · {% trans "synced" %} {{ repository.public_snapshot_at|timesince }} {% trans "ago" %}{% endif %}{% endfor %}</span>
     </div>
     <div class="dn-issue-list">
       {% for issue in github_issues %}
       <article class="dn-issue-row">
         <div><div class="dn-labels">{% for label in issue.labels %}<span class="Label">{{ label }}</span>{% endfor %}</div><h3><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a></h3><p>{% blocktrans with author=issue.author_login comments=issue.comments_count %}Opened by @{{ author }} · {{ comments }} comments{% endblocktrans %}</p></div>
-        <a href="{% url 'projects:github_issue' project.slug issue.number %}">{% trans "Read issue" %}</a>
+        <span class="dn-issue-actions"><a href="{% url 'projects:github_issue' project.slug issue.number %}">{% trans "Read issue" %}</a><a href="{{ issue.url }}" rel="noopener noreferrer">{% trans "Open on GitHub" %} ↗</a></span>
       </article>
       {% endfor %}
     </div>
@@ -116,17 +137,17 @@
 
   {% if accepting_contributions and supports_direct_contributions and user.is_authenticated %}<p><a class="btn btn--secondary" href="{% url 'contributions:submit' project.pk %}">{% trans "Submit evidence" %}</a></p>{% endif %}
 
-  {% if github_pull_requests %}
-  <section aria-labelledby="pull-requests-heading">
-    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "In review" %}</p><h2 id="pull-requests-heading">{% trans "Open pull requests" %}</h2></div><span>{% trans "Live work in review" %}</span></div>
-    <div class="dn-issue-list">{% for pull_request in github_pull_requests %}<article class="dn-issue-row"><div><h3><a href="{{ pull_request.url }}" rel="noopener noreferrer">#{{ pull_request.number }} · {{ pull_request.title }}</a></h3><p>{% blocktrans with author=pull_request.author_login %}Opened by @{{ author }}{% endblocktrans %}</p></div><span class="Label Label--success">{{ pull_request.state|capfirst }}</span></article>{% endfor %}</div>
-  </section>
-  {% endif %}
-
   {% if github_contributors %}
   <section aria-labelledby="contributors-heading">
     <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "People" %}</p><h2 id="contributors-heading">{% trans "People working on this repository" %}</h2></div><span>{% trans "Public GitHub contributors" %}</span></div>
     <div class="dn-github-contributors">{% for contributor in github_contributors %}<a class="dn-github-contributor" href="{% url 'github_sync:public_profile' contributor.login %}">{% if contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40" loading="lazy">{% else %}<span class="dn-github-avatar" aria-hidden="true">{{ contributor.login|slice:":2"|upper }}</span>{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} contribution{% plural %}{{ counter }} contributions{% endblocktrans %}</small></span></a>{% endfor %}</div>
+  </section>
+  {% endif %}
+
+  {% if github_pull_requests %}
+  <section aria-labelledby="pull-requests-heading">
+    <div class="dn-section-heading-row"><div><p class="dn-section-kicker">{% trans "In review" %}</p><h2 id="pull-requests-heading">{% trans "Open pull requests" %}</h2></div><span>{% trans "Live work in review" %}</span></div>
+    <div class="dn-issue-list">{% for pull_request in github_pull_requests %}<article class="dn-issue-row"><div><h3><a href="{{ pull_request.url }}" rel="noopener noreferrer">#{{ pull_request.number }} · {{ pull_request.title }}</a></h3><p>{% blocktrans with author=pull_request.author_login %}Opened by @{{ author }}{% endblocktrans %}</p></div><span class="Label Label--success">{{ pull_request.state|capfirst }}</span></article>{% endfor %}</div>
   </section>
   {% endif %}
 
@@ -142,7 +163,7 @@
   <details class="blueprint dn-sheet dn-project-terms">
     <summary>{% trans "Before you contribute — prerequisites, governance and security" %}</summary>
     <div class="dn-project-terms__body">
-      {% if project.prerequisites %}<h3>{% trans "Before you contribute" %}</h3><p>{{ project.prerequisites }}</p>{% endif %}
+      {% if project.prerequisites and not accepting_contributions %}<h3>{% trans "Before you contribute" %}</h3><p>{{ project.prerequisites }}</p>{% endif %}
       {% if project.communication_channel %}<p><a href="{{ project.communication_channel }}">{% trans "Contact the maintainers" %}</a></p>{% endif %}
       {% if project.governance_model or project.signoff_model %}<h3>{% trans "Governance and sign-off" %}</h3><p>{{ project.get_governance_model_display }}{% if project.signoff_model %} · {{ project.get_signoff_model_display }}{% endif %}</p>{% endif %}
       {% if project.security_contact or project.vulnerability_disclosure_url %}<h3>{% trans "Security and reporting" %}</h3><p>{% if project.security_contact %}<a href="mailto:{{ project.security_contact }}">{{ project.security_contact }}</a>{% endif %}{% if project.vulnerability_disclosure_url %} · <a href="{{ project.vulnerability_disclosure_url }}">{% trans "Security policy" %}</a>{% endif %}</p>{% endif %}

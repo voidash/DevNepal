@@ -730,9 +730,19 @@ def public_project_detail_context(project: Project, **extra) -> dict:
     )
     github_starter_tasks, github_repositories = starter_tasks_for_project(project)
     public_repositories = getattr(project, "public_repositories", [])
-    github_issues = [
-        issue for repository in public_repositories for issue in repository.issue_snapshots.all()
-    ]
+    # A newcomer scans from the top, so issues labelled for a first contribution
+    # lead, then the rest by issue number.
+    github_issues = sorted(
+        (issue for repository in public_repositories for issue in repository.issue_snapshots.all()),
+        key=lambda issue: (
+            0
+            if any(
+                label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or [])
+            )
+            else 1,
+            issue.number,
+        ),
+    )
     accepting_contributions = project.status == ProjectStatus.OPEN_FOR_CONTRIBUTION
     has_public_github_path = bool(
         project.repository_url or project.issue_tracker_url or github_issues or github_starter_tasks
@@ -753,6 +763,11 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         "github_starter_tasks": github_starter_tasks,
         "github_repositories": github_repositories,
         "github_issues": github_issues,
+        "starter_issue_count": sum(
+            1
+            for issue in github_issues
+            if any(label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or []))
+        ),
         "github_pull_requests": [
             pull_request
             for repository in public_repositories

@@ -62,7 +62,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
    sections, and a framed sheet with a header bar for the data-dense ones —
    glance table, community rows, people cells, the two ways in. Sheets, cards
    and tiles all share the 6px radius; nothing carries registration ticks. */
-.section.dn-home { padding-block: 44px; }
+.section.dn-home { padding-block: var(--space-16); }
 .dn-home-section-heading { display: flex; flex-wrap: wrap; gap: 12px 32px; align-items: end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--color-divider); }
 .dn-home-section-heading > div { min-width: 0; }
 .dn-home-section-heading .dn-section-kicker { display: block; }
@@ -659,12 +659,12 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-featured-card__facts dt { margin-bottom: 2px; color: var(--color-neutral-600); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .dn-featured-card__facts dd { margin: 0; font-size: var(--fs-sm); font-weight: 500; overflow-wrap: anywhere; }
 
-/* The four steps run as one banded strip: a contribution's whole path, left to
-   right, rather than a second wall of cards. */
-.dn-path { margin-top: var(--space-10); }
-.dn-path h3 { margin: 0 0 var(--space-4); font-family: var(--font-heading); font-size: var(--fs-xl); }
-ol.dn-journey { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
-ol.dn-journey .dn-journey-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 6px 14px; align-items: start; list-style: none; padding: var(--space-6) var(--space-5); }
+.dn-path { margin: 0; }
+.dn-path h2 { margin: 0 0 var(--space-6); font-family: var(--font-heading); font-size: var(--fs-2xl); line-height: 1.12; }
+ol.dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+ol.dn-journey .dn-journey-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--space-2) var(--space-5); align-items: start; list-style: none; padding: var(--space-8); }
+ol.dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
+ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
 ol.dn-journey .dn-journey-step:hover { background: transparent; }
 ol.dn-journey .dn-journey-step .Counter { grid-row: 1 / span 2; justify-self: start; align-self: start; box-sizing: border-box; width: 28px; min-width: 28px; height: 28px; padding: 0; border-color: var(--color-accent-300); color: var(--color-accent-800); background: var(--color-accent-100); font-size: 12px; }
 ol.dn-journey .dn-journey-step strong { grid-column: 2; }
@@ -702,9 +702,6 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 @media (max-width: 1080px) {
   .dn-home-hero { grid-template-columns: 1fr; gap: var(--space-8); padding-block: var(--space-10) var(--space-12); }
   .dn-home-hero h1 { max-width: none; }
-  ol.dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  ol.dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
-  ol.dn-journey .dn-journey-step:nth-child(3) { border-left: 0; }
   .dn-trust-split { grid-template-columns: 1fr; }
   .dn-trust-split > div + div { border-top: 1px solid var(--color-divider); border-left: 0; }
   .dn-home-faq dl { grid-template-columns: 1fr; gap: var(--space-5); }
@@ -976,3 +973,16 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 .dn-catalog-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-4) var(--space-5); align-items: start; }
 .dn-catalog-filters legend { margin-bottom: var(--space-2); }
 .dn-catalog-filters[open] > .btn { margin-top: var(--space-5); }
+
+/* ── project page: what it is, and what you need before starting ─────────── */
+.dn-project-about__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6); }
+.dn-project-about__grid h3 { margin: 0 0 var(--space-2); font-family: var(--font-body); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--color-neutral-600); }
+.dn-project-about__grid p { margin: 0; max-width: 60ch; color: var(--color-neutral-800); }
+.dn-project-prereq { display: grid; gap: var(--space-2); justify-items: start; padding: var(--space-5); border-color: var(--color-accent-300); background: var(--color-accent-100); }
+.dn-project-prereq h2 { margin: 0; font-family: var(--font-body); font-size: var(--fs-base); font-weight: 700; letter-spacing: 0; }
+.dn-project-prereq p { max-width: 78ch; margin: 0; color: var(--color-accent-900); }
+.dn-issue-actions { display: flex; flex-direction: column; gap: var(--space-1); align-items: flex-end; white-space: nowrap; }
+.dn-issue-actions a { color: var(--color-accent-700); font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
+.dn-issue-actions a + a { color: var(--color-neutral-600); font-weight: 500; }
+.dn-issue-actions a:hover { text-decoration: underline; }
+@media (max-width: 640px) { .dn-issue-actions { flex-direction: row; gap: var(--space-4); align-items: baseline; } }
