@@ -24,7 +24,7 @@
       </div>
 
       <div class="dn-catalog-body">
-        <details class="dn-catalog-filters">
+        <details class="dn-catalog-filters" open>
           <summary>{% trans "Advanced filters" %}{% if active_filters %} <span class="Counter">{{ active_filters|length }}</span>{% endif %}</summary>
           <div class="dn-catalog-filter-head"><strong>{% trans "Advanced filters" %}</strong><a href="{{ request.path }}">{% trans "Clear all" %}</a></div>
           <fieldset><legend>{% trans "Sort" %}</legend><label class="sr-only" for="catalog-sort">{% trans "Sort" %}</label><select id="catalog-sort" name="sort" data-auto-submit>{% for value, label in sort_choices %}<option value="{{ value }}"{% if sort == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></fieldset>
@@ -59,24 +59,23 @@
           <div class="dn-catalog-results dn-catalog-results--{{ layout }}">
             {% for project in projects %}
             <article class="card blueprint">
-              <div class="dn-catalog-card__head">{% if project.is_official %}<span class="tag tag-accent">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.localized_name }}{% endif %}</span>{% elif project.project_type == "government" %}<span class="tag tag-outline">{% trans "Government project" %}</span>{% else %}<span class="tag tag-neutral">{% trans "Community project" %}</span>{% endif %}<span class="Label{% if project.status == 'open_for_contribution' %} Label--success{% elif project.status == 'paused' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span></div>
+              <div class="dn-catalog-card__head">
+                {% if project.is_official %}<span class="tag tag-accent">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% endif %}</span>{% elif project.project_type == "government" %}<span class="tag tag-outline">{% trans "Government project" %}</span>{% else %}<span class="tag tag-neutral">{% trans "Community project" %}</span>{% endif %}
+                <span class="Label{% if project.status == 'open_for_contribution' %} Label--success{% elif project.status == 'paused' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=project.status %} {% if project.status == 'open_for_contribution' %}{% trans "Open" %}<span class="visually-hidden"> · {{ project.get_status_display }}</span>{% else %}{{ project.get_status_display }}{% endif %}</span>
+              </div>
               <div class="dn-catalog-card__identity"><h2><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h2>{% if project.title_ne %}<p lang="ne">{{ project.title_ne }}</p>{% endif %}</div>
               <p class="dn-catalog-card__summary">{{ project.localized_summary }}</p>
-              {% comment %} The line a contributor actually scans: how much work
-                 is open here, and how much of it is meant for a first-timer.
-              {% endcomment %}
               <p class="dn-catalog-card__work">
-                {% if project.open_issue_count %}<strong>{% blocktrans count counter=project.open_issue_count %}{{ counter }} open issue{% plural %}{{ counter }} open issues{% endblocktrans %}</strong>{% if project.starter_issue_count %} <span class="Label Label--accent">{% blocktrans count counter=project.starter_issue_count %}{{ counter }} good first issue{% plural %}{{ counter }} good first issues{% endblocktrans %}</span>{% endif %}
+                {% if project.open_issue_count %}<strong>{% blocktrans count counter=project.open_issue_count %}{{ counter }} open issue{% plural %}{{ counter }} open issues{% endblocktrans %}</strong>{% if project.starter_issue_count %}<span class="Label Label--accent">{% blocktrans count counter=project.starter_issue_count %}{{ counter }} good first{% plural %}{{ counter }} good first{% endblocktrans %}</span>{% endif %}
                 {% elif project.open_task_count %}<strong>{% blocktrans count count=project.open_task_count %}{{ count }} open task{% plural %}{{ count }} open tasks{% endblocktrans %}</strong>
-                {% elif project.status == 'completed' %}<span class="dn-catalog-card__work--quiet">{% trans "Closed record — no new contributions" %}</span>
+                {% elif project.status == 'completed' %}<span class="dn-catalog-card__work--quiet">{% trans "Closed record" %}</span>
                 {% else %}<span class="dn-catalog-card__work--quiet">{% trans "No open work listed yet" %}</span>{% endif %}
               </p>
-              {% if project.contribution_types.all %}<div class="dn-catalog-card__tags">{% for contribution_type in project.contribution_types.all|slice:":4" %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}</div>{% endif %}
               <dl class="dn-catalog-card__facts">
-                <div><dt>{% trans "Mode" %}</dt><dd>{{ project.get_contribution_mode_display|default:"—" }}</dd></div>
-                <div><dt>{% trans "Difficulty" %}</dt><dd>{{ project.get_difficulty_display|default:"—" }}</dd></div>
-                <div><dt>{% trans "Effort" %}</dt><dd>{{ project.get_estimated_effort_display|default:"—" }}</dd></div>
-                <div><dt>{% trans "First response" %}</dt><dd>{{ project.get_response_sla_display|default:"—" }}</dd></div>
+                <div><dt class="visually-hidden">{% trans "Mode" %}</dt><dd>{% if project.contribution_mode == "open_direct" %}{% trans "Start any time" %}{% elif project.contribution_mode == "application" %}{% trans "Apply first" %}{% elif project.contribution_mode == "hybrid" %}{% trans "Start or apply" %}{% else %}—{% endif %}<span class="visually-hidden"> {{ project.get_contribution_mode_display }}</span></dd></div>
+                {% if project.difficulty %}<div><dt class="visually-hidden">{% trans "Difficulty" %}</dt><dd>{{ project.get_difficulty_display }}</dd></div>{% endif %}
+                {% if project.estimated_effort %}<div><dt class="visually-hidden">{% trans "Effort" %}</dt><dd>{{ project.get_estimated_effort_display }}</dd></div>{% endif %}
+                {% if project.response_sla %}<div><dt class="visually-hidden">{% trans "First response" %}</dt><dd>{% blocktrans with sla=project.get_response_sla_display|lower %}replies {{ sla }}{% endblocktrans %}</dd></div>{% endif %}
               </dl>
               <div class="dn-catalog-card__foot">
                 <a class="dn-arrow-link" href="{% url 'projects:detail' project.slug %}">{% if project.open_issue_count %}{% trans "See the open issues" %}{% else %}{% trans "Open the project" %}{% endif %} →</a>

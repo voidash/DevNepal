@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 
@@ -70,6 +73,41 @@ def test_home_exposes_real_catalog_filters_and_public_recognition_destinations(c
     assert f"{reverse('projects:government')}?contribution_type=uiux" in content
     assert reverse("recognition:public_badges") in content
     assert reverse("recognition:public_policy") in content
+
+
+@pytest.mark.unit
+def test_home_names_nine_contribution_types_as_a_legend_not_a_filter_wall(client):
+    """DSC-001/GOV-008: nine types are named as a legend; filters stay on the door cards."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+    way_line = content.split('class="dn-way-line"', 1)[1].split("</ul>", 1)[0]
+
+    assert "<a " not in way_line
+    for label in (
+        "Engineering",
+        "UI/UX",
+        "QA",
+        "Security",
+        "Data",
+        "Documentation",
+        "Localization",
+        "Research",
+        "Community support",
+    ):
+        assert label in way_line
+    assert f"{reverse('projects:government')}?contribution_type=engineering" in content
+    assert f"{reverse('projects:government')}?contribution_type=uiux" in content
+    assert "dn-way-chips" not in content
+
+
+@pytest.mark.unit
+def test_home_hero_keeps_air_between_the_claim_the_actions_and_the_officer_line():
+    """DSC-001: the home hero separates the lead, the two catalog actions, and the officer line."""
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+
+    assert ".dn-home-hero .hero__lead { max-width: 52ch; margin-top: var(--space-6); }" in css
+    assert ".dn-home-hero .hero__actions { margin-top: var(--space-8); }" in css
+    assert ".dn-home-hero .hero__ministry-link { display: block; margin: var(--space-8) 0 0;" in css
 
 
 @pytest.mark.unit

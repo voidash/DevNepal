@@ -586,21 +586,20 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
 
 
 @pytest.mark.unit
-def test_catalog_defers_secondary_controls_until_a_visitor_asks_for_them(client):
-    """DSC-001/DSC-002: first-time visitors see search and fit before advanced metadata."""
+def test_catalog_keeps_search_simple_and_the_filter_rail_in_view(client):
+    """DSC-001/DSC-002: search stays a single field while the filters stay visible beside it."""
     response = client.get(reverse("projects:government"))
     content = response.content.decode()
 
     toolbar = content.split('<div class="dn-catalog-toolbar">', 1)[1].split("</div>", 1)[0]
-    filters = content.split('<details class="dn-catalog-filters">', 1)[1].split("</details>", 1)[0]
+    filters = content.split('<details class="dn-catalog-filters" open>', 1)[1].split("</details>", 1)[0]
 
     assert 'name="q"' in toolbar
     assert 'name="sort"' not in toolbar
     assert 'name="layout"' not in toolbar
-    assert '<details class="dn-catalog-filters">' in content
-    assert '<details class="dn-catalog-filters" open>' not in content
     assert 'name="technology"' in filters
     assert 'name="deadline_from"' in filters
+    assert 'name="difficulty"' in filters
 
 
 @pytest.mark.unit
