@@ -1,0 +1,25 @@
+{
+	email admin@zapper.cloud
+}
+
+zapper.cloud {
+	bind 192.168.10.30
+	encode zstd gzip
+
+	handle_path /static/* {
+		root * /Users/k2/github/DevNepal/staticfiles
+		file_server
+	}
+
+	handle_path /media/* {
+		root * /Users/k2/github/DevNepal/media
+		file_server
+	}
+
+	reverse_proxy 127.0.0.1:8000
+}
+
+www.zapper.cloud {
+	bind 192.168.10.30
+	redir https://zapper.cloud{uri} permanent
+}
