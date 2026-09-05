@@ -1,46 +1,94 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Project authoring" %} | DevNepal{% endblock %}
+{% block title %}{% trans "Publishing dashboard" %} | DevNepal{% endblock %}
 {% block content %}
+{% comment %} A ministry officer signs in to answer three questions: what has my
+   ministry published, what is happening on those repositories, and what needs
+   me next. The page answers them in that order — identity, the count of work
+   by state, then a row per project carrying its live GitHub signals. {% endcomment %}
 <div class="dn-page-header">
   <div class="dn-container">
     <div class="dn-repo-title">
-      <h1>{% trans "Government project authoring" %}</h1>
+      <h1>{% trans "Publishing dashboard" %}</h1>
       <span class="Label">{% trans "Ministry workspace" %}</span>
     </div>
     <nav class="dn-tabs" aria-label="{% trans 'Project authoring sections' %}">
       <a class="dn-tab" aria-current="page" href="{% url 'projects:authoring_dashboard' %}">{% trans "Projects" %} <span class="Counter">{{ projects|length }}</span></a>
       <a class="dn-tab" href="{% url 'projects:application_list' %}">{% trans "Applications" %}</a>
+      <a class="dn-tab" href="{% url 'contributions:verification_queue' %}">{% trans "Verification queue" %}</a>
     </nav>
   </div>
 </div>
-<main class="section">
-  <div class="dn-container">
-    <header class="card__head">
-      <div>
-        <p class="dn-section-kicker">{% trans "Government publishing" %}</p>
-        <h2>{% trans "Ministry projects" %}</h2>
-      </div>
-      {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
-      {% if user.is_superuser %}<a class="btn btn--secondary" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>{% endif %}
-    </header>
-    <div class="table-scroll">
-    <table class="dn-data-table">
-      <thead><tr><th>{% trans "Project" %}</th><th>{% trans "Ministry" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead>
-      <tbody>
-        {% for project in projects %}
-        <tr>
-          <td><a class="card__title-link" href="{% url 'projects:authoring_detail' project.slug %}"><strong>{{ project.localized_title }}</strong></a></td>
-          <td>{{ project.ministry.localized_name }}</td>
-          <td><span class="Label">{{ project.get_status_display }}</span></td>
-          <td><a class="btn btn-sm" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit" %}</a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">{% trans "No government projects are available for your ministry assignments." %}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+<main class="dn-container dn-workspace">
+  {% for assignment in user.publisher_assignments.all %}{% if forloop.first %}
+  <section class="blueprint dn-workspace-identity" aria-labelledby="ministry-heading">
+    <div>
+      {% if assignment.ministry.name_ne %}<p class="dn-workspace-identity__ne" lang="ne">{{ assignment.ministry.name_ne }}</p>{% endif %}
+      <h2 id="ministry-heading">{{ assignment.ministry.name_en }}</h2>
+      <p>{{ user.get_full_name|default:user.username }} · {{ assignment.title }} · {{ assignment.official_email }}</p>
     </div>
-  </div>
+    <dl class="dn-workspace-identity__facts">
+      <div><dt>{% trans "Named officers" %}</dt><dd>{{ assignment.ministry.publishers.count }}</dd></div>
+      <div><dt>{% trans "Projects" %}</dt><dd>{{ projects|length }}</dd></div>
+      <div><dt>{% trans "Sign-in" %}</dt><dd>{% trans "MFA enforced" %}</dd></div>
+    </dl>
+  </section>
+  {% endif %}{% endfor %}
+
+  <section class="dn-workspace-work" aria-labelledby="ministry-projects-heading">
+    <header class="dn-home-section-heading">
+      <div>
+        <span class="dn-section-kicker">{% trans "Government publishing" %}</span>
+        <h2 id="ministry-projects-heading">{% trans "Ministry projects" %}</h2>
+        <p>{% trans "Each listing shows what the public sees and what its repository is doing right now. Issues, pull requests and contributors are synchronised from GitHub." %}</p>
+      </div>
+      <div class="button-group">
+        {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
+        {% if user.is_superuser %}<a class="btn" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>{% endif %}
+      </div>
+    </header>
+
+    <div class="dn-project-rows">
+      {% for project in projects %}
+      <article class="blueprint dn-project-row">
+        <div class="dn-project-row__identity">
+          <div class="dn-project-row__head">
+            <span class="Label{% if project.status == 'open_for_contribution' %} Label--success{% elif project.status == 'draft' %} Label--secondary{% elif project.status == 'paused' or project.status == 'changes_requested' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+            {% if project.ministry %}<span class="dn-project-row__ministry">{{ project.ministry.abbreviation|default:project.ministry.localized_name }}</span>{% endif %}
+          </div>
+          <h3><a href="{% url 'projects:authoring_detail' project.slug %}">{{ project.localized_title }}</a></h3>
+          {% for repository in project.repository_connections.all %}{% if forloop.first %}
+          <p class="dn-project-row__repo">{{ repository.full_name }}{% if repository.public_snapshot_at %} · {% trans "synced" %} {{ repository.public_snapshot_at|timesince }} {% trans "ago" %}{% endif %}</p>
+          {% endif %}{% empty %}
+          <p class="dn-project-row__repo dn-project-row__repo--missing">{% trans "No repository connected" %}</p>
+          {% endfor %}
+        </div>
+        <dl class="dn-project-row__signals">
+          {% for repository in project.repository_connections.all %}{% if forloop.first %}
+          <div><dt>{% trans "Open issues" %}</dt><dd>{{ repository.issue_snapshots.all|length }}</dd></div>
+          <div><dt>{% trans "Pull requests" %}</dt><dd>{{ repository.pull_request_snapshots.all|length }}</dd></div>
+          <div><dt>{% trans "Contributors" %}</dt><dd>{{ repository.contributor_snapshots.all|length }}</dd></div>
+          {% endif %}{% empty %}
+          <div><dt>{% trans "Open issues" %}</dt><dd class="is-none">—</dd></div>
+          <div><dt>{% trans "Pull requests" %}</dt><dd class="is-none">—</dd></div>
+          <div><dt>{% trans "Contributors" %}</dt><dd class="is-none">—</dd></div>
+          {% endfor %}
+        </dl>
+        <div class="dn-project-row__actions">
+          <a class="btn btn--primary" href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Open workspace" %}</a>
+          <a class="btn" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit" %}</a>
+          {% if project.status == 'open_for_contribution' or project.status == 'paused' or project.status == 'completed' %}<a class="dn-arrow-link" href="{% url 'projects:detail' project.slug %}">{% trans "View public page" %} →</a>{% endif %}
+        </div>
+      </article>
+      {% empty %}
+      <div class="dn-empty" role="status">
+        <strong>{% trans "No projects yet" %}</strong>
+        <p>{% trans "Create a project, connect the ministry's public GitHub repository, and DevNepal will show its issues, pull requests and contributors here." %}</p>
+        {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 </main>
 {% endblock %}
