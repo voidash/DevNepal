@@ -43,12 +43,24 @@
         <p>{% blocktrans with status=post.get_status_display %}Current status: {{ status }}{% endblocktrans %}</p>
         {% if post.status == 'draft' or post.status == 'unpublished' %}
         <form method="post" action="{% url 'blogs:publish' post.pk %}" class="dn-form-stack">{% csrf_token %}<button class="btn btn--primary" type="submit">{% trans "Publish" %}</button></form>
+        {% if can_publish_official %}
+        <form method="post" action="{% url 'blogs:publish_official' post.pk %}" class="dn-form-stack">
+          {% csrf_token %}
+          {{ official_publication_form.non_field_errors }}
+          <div class="dn-field"><label for="{{ official_publication_form.project.id_for_label }}">{{ official_publication_form.project.label }}</label>{{ official_publication_form.project }}{{ official_publication_form.project.errors }}</div>
+          <p class="dn-field-help">{% trans "Publish as ministry creates an official government communication, links it to the selected project, and records your MFA-verified action under your name." %}</p>
+          <button class="btn btn--secondary" type="submit">{% trans "Publish as ministry" %}</button>
+        </form>
+        {% endif %}
         {% endif %}
         {% if post.status == 'published' %}
         <form method="post" action="{% url 'blogs:unpublish' post.pk %}" class="dn-form-stack">{% csrf_token %}<button class="btn btn--secondary" type="submit">{% trans "Unpublish" %}</button></form>
         {% endif %}
         {% if post.status != 'archived' %}
         <form method="post" action="{% url 'blogs:archive' post.pk %}" class="dn-form-stack">{% csrf_token %}<button class="btn btn--secondary" type="submit">{% trans "Archive" %}</button></form>
+        {% endif %}
+        {% if post.is_official and post.official_project %}
+        <p>{% blocktrans with project=post.official_project.localized_title %}Official for: {{ project }}{% endblocktrans %}</p>
         {% endif %}
       </section>
       {% endif %}

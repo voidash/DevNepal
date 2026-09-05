@@ -3,6 +3,9 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.blogs.enums import BlogPostType
 from apps.blogs.services import BlogContentError, render_safe_markdown
+from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
+from apps.projects.enums import ProjectStatus, ProjectType
+from apps.projects.models import Project
 from apps.taxonomy.enums import ContentLanguage, TermVocabulary
 from apps.taxonomy.models import TaxonomyTerm
 
@@ -116,3 +119,31 @@ class ListingForm(forms.Form):
                 _("A cover image URL is required when alternative text is provided."),
             )
         return cleaned
+
+
+class OfficialPublicationForm(forms.Form):
+    project = forms.ModelChoiceField(
+        label=_("Project this post is official for"),
+        queryset=Project.objects.none(),
+        empty_label=_("Select a public ministry project"),
+    )
+
+    def __init__(self, *args, actor, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["project"].queryset = (
+            Project.objects.filter(
+                project_type=ProjectType.GOVERNMENT,
+                status__in=(
+                    ProjectStatus.OPEN_FOR_CONTRIBUTION,
+                    ProjectStatus.PAUSED,
+                    ProjectStatus.COMPLETED,
+                ),
+                ministry__status=OrgStatus.ACTIVE,
+                ministry__publishers__user=actor,
+                ministry__publishers__status=PublisherStatus.ACTIVE,
+                ministry__publishers__contact_verification_status=ContactVerificationStatus.VERIFIED,
+            )
+            .select_related("ministry")
+            .distinct()
+            .order_by("title_en", "pk")
+        )

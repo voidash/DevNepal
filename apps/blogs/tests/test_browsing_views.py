@@ -1,10 +1,15 @@
 import pytest
 from django.test import override_settings
 from django.urls import reverse
+from django_otp.oath import totp
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.blogs.enums import BlogModerationState, BlogStatus
 from apps.blogs.services import publish_listing
 from apps.blogs.tests.factories import BlogPostFactory, TagFactory, UserFactory
+from apps.ministries.tests.factories import MinistryPublisherFactory
+from apps.projects.enums import ProjectStatus
+from apps.projects.tests.factories import ProjectFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -110,3 +115,76 @@ def test_author_surfaces_require_login_and_never_expose_another_authors_listing(
     client.force_login(other_member)
     assert client.get(reverse("blogs:edit", kwargs={"post_id": post.pk})).status_code == 404
     assert client.post(reverse("blogs:publish", kwargs={"post_id": post.pk})).status_code == 404
+
+
+@pytest.mark.integration
+def test_publisher_can_publish_an_official_project_post_from_the_edit_screen(client):
+    """BLG-007/AUTH-005: an MFA-verified publisher selects an assigned ministry project."""
+    publisher = MinistryPublisherFactory()
+    project = ProjectFactory(
+        ministry=publisher.ministry,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
+    post = BlogPostFactory(author=publisher.user)
+    client.force_login(publisher.user)
+    device = TOTPDevice.objects.get(user=publisher.user)
+    token = totp(
+        device.bin_key,
+        step=device.step,
+        t0=device.t0,
+        digits=device.digits,
+        drift=device.drift,
+    )
+    mfa_response = client.post(reverse("accounts:mfa_setup"), {"token": token})
+
+    assert mfa_response.status_code == 302
+
+    edit_response = client.get(reverse("blogs:edit", kwargs={"post_id": post.pk}))
+
+    assert edit_response.status_code == 200
+    assert "Publish as ministry" in edit_response.content.decode()
+    assert str(project.pk) in edit_response.content.decode()
+
+    publish_response = client.post(
+        reverse("blogs:publish_official", kwargs={"post_id": post.pk}),
+        {"project": project.pk},
+    )
+
+    assert publish_response.status_code == 302
+    post.refresh_from_db()
+    assert post.status == BlogStatus.PUBLISHED
+    assert post.is_official is True
+    assert post.official_published_by == publisher.user
+    assert post.official_project == project
+
+    public_response = client.get(reverse("blogs:detail", kwargs={"post_id": post.pk}))
+
+    assert public_response.status_code == 200
+    assert project.localized_title in public_response.content.decode()
+    assert (
+        reverse("projects:detail", kwargs={"slug": project.slug})
+        in public_response.content.decode()
+    )
+
+
+@pytest.mark.integration
+def test_regular_member_cannot_see_or_submit_official_publication(client):
+    """BLG-007: a member has only the personal publication path."""
+    member = UserFactory()
+    post = BlogPostFactory(author=member)
+    client.force_login(member)
+
+    edit_response = client.get(reverse("blogs:edit", kwargs={"post_id": post.pk}))
+
+    assert edit_response.status_code == 200
+    assert "Publish as ministry" not in edit_response.content.decode()
+
+    publish_response = client.post(
+        reverse("blogs:publish_official", kwargs={"post_id": post.pk}),
+        {},
+    )
+
+    assert publish_response.status_code == 400
+    post.refresh_from_db()
+    assert post.status == BlogStatus.DRAFT
+    assert post.is_official is False

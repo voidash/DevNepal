@@ -11,6 +11,11 @@ urlpatterns = [
     path("blogs/<int:post_id>/", views.blog_detail, name="detail"),
     path("blogs/<int:post_id>/edit/", views.blog_edit, name="edit"),
     path("blogs/<int:post_id>/publish/", views.blog_publish, name="publish"),
+    path(
+        "blogs/<int:post_id>/publish-official/",
+        views.blog_publish_official,
+        name="publish_official",
+    ),
     path("blogs/<int:post_id>/unpublish/", views.blog_unpublish, name="unpublish"),
     path("blogs/<int:post_id>/archive/", views.blog_archive, name="archive"),
 ]

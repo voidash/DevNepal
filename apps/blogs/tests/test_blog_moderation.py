@@ -2,6 +2,7 @@ import unicodedata
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
+from django.db import IntegrityError
 
 from apps.audit.models import AuditEvent
 from apps.blogs.enums import BlogModerationState, BlogStatus
@@ -11,6 +12,7 @@ from apps.blogs.services import (
     BlogOwnershipError,
     BlogStateError,
     OfficialPostPermissionError,
+    OfficialPostProjectError,
     OfficialSealWordingError,
     create_listing,
     edit_listing,
@@ -23,6 +25,8 @@ from apps.blogs.services import (
 from apps.blogs.tests.factories import BlogPostFactory, UserFactory
 from apps.ministries.enums import PublisherStatus
 from apps.ministries.tests.factories import MinistryPublisherFactory
+from apps.projects.enums import ProjectStatus
+from apps.projects.tests.factories import ProjectFactory
 
 pytestmark = [pytest.mark.django_db]
 
@@ -127,12 +131,17 @@ def test_official_publishing_denied_without_publisher_role():
 def test_active_publisher_publishes_official_with_boolean_label_contract():
     """BLG-007: active publisher publishes official; is_official is the label contract."""
     publisher = MinistryPublisherFactory()
+    project = ProjectFactory(
+        ministry=publisher.ministry,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
     post = BlogPostFactory(author=publisher.user)
 
-    published = publish_official(publisher.user, post)
+    published = publish_official(publisher.user, post, project=project)
 
     assert published.is_official is True
     assert published.official_published_by == publisher.user
+    assert published.official_project == project
     assert published.status == BlogStatus.PUBLISHED
     assert published.published_at is not None
 
@@ -143,6 +152,19 @@ def test_active_publisher_publishes_official_with_boolean_label_contract():
     )
     assert event.actor == publisher.user
     assert event.after["is_official"] is True
+
+
+@pytest.mark.integration
+def test_official_post_provenance_is_enforced_by_the_database():
+    """BLG-007: no official row can omit its accountable publisher or public project."""
+    publisher = MinistryPublisherFactory()
+
+    with pytest.raises(IntegrityError):
+        BlogPost.objects.create(
+            author=publisher.user,
+            title="Unaudited official statement",
+            is_official=True,
+        )
 
 
 @pytest.mark.integration
@@ -171,15 +193,41 @@ def test_official_publication_rejects_a_different_publisher_as_author():
 def test_official_publication_rejects_an_unverified_publisher_session():
     """BLG-007/AUTH-005: an official publication requires a verified MFA session."""
     publisher = MinistryPublisherFactory()
+    project = ProjectFactory(
+        ministry=publisher.ministry,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
     publisher.user.is_verified = lambda: False
     post = BlogPostFactory(author=publisher.user)
 
     with pytest.raises(OfficialPostPermissionError):
-        publish_official(publisher.user, post)
+        publish_official(publisher.user, post, project=project)
 
     post.refresh_from_db()
     assert post.status == BlogStatus.DRAFT
     assert post.is_official is False
+    assert AuditEvent.objects.filter(
+        actor=publisher.user,
+        action="blog.official.denied",
+        content_type=ContentType.objects.get_for_model(BlogPost),
+        object_id=str(post.pk),
+        result="failure",
+    ).exists()
+
+
+@pytest.mark.integration
+def test_official_publication_rejects_a_project_outside_the_publisher_ministry():
+    """BLG-007: an official post cannot be attributed to a different ministry's project."""
+    publisher = MinistryPublisherFactory()
+    other_project = ProjectFactory(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
+    post = BlogPostFactory(author=publisher.user)
+
+    with pytest.raises(OfficialPostProjectError):
+        publish_official(publisher.user, post, project=other_project)
+
+    post.refresh_from_db()
+    assert post.status == BlogStatus.DRAFT
+    assert post.official_project is None
     assert AuditEvent.objects.filter(
         actor=publisher.user,
         action="blog.official.denied",

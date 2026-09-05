@@ -15,6 +15,8 @@ from apps.blogs.models import BlogPost, BlogVersion
 from apps.ministries.enums import PublisherStatus
 from apps.ministries.models import MinistryPublisher
 from apps.ministries.services import is_publisher_active
+from apps.projects.enums import ProjectStatus, ProjectType
+from apps.projects.models import Project
 from apps.taxonomy.enums import ContentLanguage, TermVocabulary
 from apps.taxonomy.fields import normalize_nfc
 
@@ -86,6 +88,10 @@ class BlogModerationTransitionError(BlogServiceError):
 
 class OfficialPostPermissionError(BlogServiceError):
     """BLG-007: publishing an official post requires an active publisher role and verified MFA."""
+
+
+class OfficialPostProjectError(BlogServiceError):
+    """BLG-007: an official post must identify a public project owned by the publisher ministry."""
 
 
 class OfficialSealWordingError(BlogServiceError):
@@ -202,6 +208,7 @@ def _snapshot(post):
         "cover_image_alt": post.cover_image_alt,
         "language": post.language,
         "reading_time_minutes": post.reading_time_minutes,
+        "official_project_id": post.official_project_id,
         "tags": sorted(post.tags.values_list("slug", flat=True)),
     }
 
@@ -293,6 +300,47 @@ def _holds_active_publisher_role(user):
         status=PublisherStatus.ACTIVE,
     ).select_related("ministry")
     return any(is_publisher_active(user, assignment.ministry) for assignment in assignments)
+
+
+def can_publish_official(user) -> bool:
+    return _holds_active_publisher_role(user)
+
+
+def _official_project_or_error(author, post, project):
+    project_id = getattr(project, "pk", None)
+    if project_id is None:
+        _deny_official_publication(
+            author,
+            post,
+            OfficialPostProjectError,
+            "official publication requires a public ministry project",
+        )
+    try:
+        selected_project = Project.objects.select_related("ministry").get(pk=project_id)
+    except Project.DoesNotExist:
+        _deny_official_publication(
+            author,
+            post,
+            OfficialPostProjectError,
+            "the selected project no longer exists",
+        )
+    if (
+        selected_project.project_type != ProjectType.GOVERNMENT
+        or selected_project.status
+        not in {
+            ProjectStatus.OPEN_FOR_CONTRIBUTION,
+            ProjectStatus.PAUSED,
+            ProjectStatus.COMPLETED,
+        }
+        or not is_publisher_active(author, selected_project.ministry)
+    ):
+        _deny_official_publication(
+            author,
+            post,
+            OfficialPostProjectError,
+            "official publication requires a public project from your active ministry assignment",
+        )
+    return selected_project
 
 
 def _deny_official_publication(actor, post, error_type, message):
@@ -473,7 +521,7 @@ def publish_listing(member, post):
     return post
 
 
-def publish_official(author, post):
+def publish_official(author, post, *, project=None):
     """BLG-007: official publishing needs an active publisher role; sets the label contract."""
     if (
         author is None
@@ -511,6 +559,7 @@ def publish_official(author, post):
             OfficialPostPermissionError,
             "official publishing requires an active ministry publisher role",
         )
+    selected_project = _official_project_or_error(author, post, project)
     require_privileged_mfa(
         author,
         action="blog.official",
@@ -520,9 +569,14 @@ def publish_official(author, post):
     _prepare_native_for_publication(post)
 
     with transaction.atomic():
-        before = {"status": post.status, "is_official": post.is_official}
+        before = {
+            "status": post.status,
+            "is_official": post.is_official,
+            "official_project_id": post.official_project_id,
+        }
         post.is_official = True
         post.official_published_by = author
+        post.official_project = selected_project
         post.status = BlogStatus.PUBLISHED
         if post.published_at is None:
             post.published_at = timezone.now()
@@ -537,6 +591,7 @@ def publish_official(author, post):
                 "status": post.status,
                 "is_official": post.is_official,
                 "official_published_by": author.username,
+                "official_project_id": selected_project.pk,
             },
         )
     return post

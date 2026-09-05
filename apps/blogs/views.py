@@ -9,16 +9,18 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from apps.accounts.models import MemberProfile
 from apps.blogs.enums import BlogModerationState, BlogPostType, BlogStatus
-from apps.blogs.forms import ListingForm
+from apps.blogs.forms import ListingForm, OfficialPublicationForm
 from apps.blogs.models import BlogPost
 from apps.blogs.services import (
     BlogServiceError,
     archive,
+    can_publish_official,
     create_listing,
     create_native_post,
     edit_listing,
     edit_native_post,
     publish_listing,
+    publish_official,
     unpublish,
 )
 
@@ -29,7 +31,7 @@ def public_posts():
     return (
         BlogPost.objects.filter(status=BlogStatus.PUBLISHED)
         .exclude(moderation_state=BlogModerationState.RESTRICTED)
-        .select_related("author", "official_published_by")
+        .select_related("author", "official_published_by", "official_project")
         .prefetch_related("tags")
     )
 
@@ -37,7 +39,7 @@ def public_posts():
 def author_posts(author):
     return (
         BlogPost.objects.filter(author=author)
-        .select_related("author", "official_published_by")
+        .select_related("author", "official_published_by", "official_project")
         .prefetch_related("tags")
     )
 
@@ -61,6 +63,16 @@ def _post_fields(form):
 
 def _service_form_error(form):
     form.add_error(None, _("The listing could not be saved. Review the fields and try again."))
+
+
+def _official_publication_context(request, post, form=None):
+    allowed = can_publish_official(request.user)
+    return {
+        "can_publish_official": allowed,
+        "official_publication_form": form
+        if form is not None
+        else OfficialPublicationForm(actor=request.user),
+    }
 
 
 def _preview_context(form, post):
@@ -151,7 +163,9 @@ def blog_edit(request: HttpRequest, post_id: int) -> HttpResponse:
             _service_form_error(form)
         else:
             return redirect("blogs:edit", post_id=post.pk)
-    return render(request, "blogs/blog_form.html", {"form": form, "post": post})
+    context = {"form": form, "post": post}
+    context.update(_official_publication_context(request, post))
+    return render(request, "blogs/blog_form.html", context)
 
 
 def _transition(request: HttpRequest, post_id: int, transition):
@@ -176,6 +190,35 @@ def _transition(request: HttpRequest, post_id: int, transition):
 def blog_publish(request: HttpRequest, post_id: int) -> HttpResponse:
     """BLG-001: publish an author-owned listing through the lifecycle service."""
     return _transition(request, post_id, publish_listing)
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_POST
+def blog_publish_official(request: HttpRequest, post_id: int) -> HttpResponse:
+    """BLG-007: publish an author-owned post with an assigned ministry project and MFA."""
+    post = _author_post_or_404(request.user, post_id)
+    official_form = OfficialPublicationForm(request.POST, actor=request.user)
+    if not official_form.is_valid():
+        official_form.add_error(None, _("Select a project you are authorized to publish for."))
+        form = ListingForm(post=post)
+        context = {"form": form, "post": post}
+        context.update(_official_publication_context(request, post, official_form))
+        return render(request, "blogs/blog_form.html", context, status=400)
+    try:
+        publish_official(request.user, post, project=official_form.cleaned_data["project"])
+    except BlogServiceError as error:
+        logger.warning(
+            "Official blog publication denied for author=%s post=%s: %s",
+            request.user.pk,
+            post.pk,
+            error,
+        )
+        official_form.add_error(None, _("The official publication could not be completed."))
+        form = ListingForm(post=post)
+        context = {"form": form, "post": post}
+        context.update(_official_publication_context(request, post, official_form))
+        return render(request, "blogs/blog_form.html", context, status=400)
+    return redirect("blogs:mine")
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))

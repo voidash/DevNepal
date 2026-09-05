@@ -59,6 +59,13 @@ class BlogPost(models.Model):
         on_delete=models.SET_NULL,
         related_name="official_blog_posts",
     )
+    official_project = models.ForeignKey(
+        "projects.Project",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="official_blog_posts",
+    )
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,6 +76,16 @@ class BlogPost(models.Model):
             models.Index(fields=["status", "-published_at"], name="idx_blog_status_published"),
             models.Index(fields=["author", "-published_at"], name="idx_blog_author_published"),
             models.Index(fields=["language", "status"], name="idx_blog_language_status"),
+        ]
+        constraints: typing.ClassVar[list] = [
+            models.CheckConstraint(
+                condition=models.Q(is_official=False)
+                | (
+                    models.Q(official_published_by__isnull=False)
+                    & models.Q(official_project__isnull=False)
+                ),
+                name="chk_official_blog_provenance",
+            ),
         ]
 
     def __str__(self):
