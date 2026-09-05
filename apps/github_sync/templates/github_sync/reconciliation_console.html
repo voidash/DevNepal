@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n tz %}
+{% block title %}{% trans "Reconciliation run" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container">
+  <div class="dn-repo-title"><h1>{% trans "Reconciliation run" %}</h1><span class="Label">{% trans "Super Admin" %}</span></div>
+  <p class="dn-lede">{% blocktrans with repository=repository.full_name %}Sync health / {{ repository }} / Reconciliation{% endblocktrans %}</p>
+</div></div>
+<main class="section"><div class="dn-container">
+  <p><a href="{% url 'administration:console' %}">{% trans "Back to the administration console" %}</a></p>
+  <section aria-labelledby="run-heading">
+    <h2 id="run-heading">{{ repository.full_name }}</h2>
+    <p class="dn-lede">{% trans "Review the provider page before applying it. A dry run never changes the repository or delivery ledger. Applying uses the same idempotent reconciliation service as the scheduled recovery command." %}</p>
+    <form method="post" class="dn-form-stack">{% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="dn-field"><label for="{{ form.purpose.id_for_label }}">{{ form.purpose.label }}</label>{{ form.purpose }}{% if form.purpose.help_text %}<span class="dn-field-help">{{ form.purpose.help_text }}</span>{% endif %}{{ form.purpose.errors }}</div>
+      <div class="dn-form-actions"><button class="btn" type="submit" name="action" value="dry_run">{% trans "Dry run" %}</button>{% if preview %}<button class="btn btn--primary" type="submit" name="action" value="apply">{% trans "Apply reconciliation" %}</button>{% endif %}</div>
+    </form>
+  </section>
+  {% if preview %}
+  <section aria-labelledby="results-heading">
+    <h2 id="results-heading">{% trans "Reconciliation results" %}</h2>
+    <dl class="dn-definition-list">
+      <dt>{% trans "Window" %}</dt><dd>{% if preview.since %}<time datetime="{{ preview.since|date:'c' }}">{{ preview.since|localtime }}</time>{% else %}{% trans "First recorded sync to now" %}{% endif %}</dd>
+      <dt>{% trans "Events found" %}</dt><dd>{{ preview.events_found }}</dd>
+      <dt>{% trans "Qualifying" %}</dt><dd>{{ preview.qualifying }}</dd>
+      <dt>{% trans "Already in the delivery ledger" %}</dt><dd>{{ preview.already_recorded }}</dd>
+    </dl>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="{% trans 'Reconciliation event results' %}"><table class="dn-data-table">
+      <caption class="visually-hidden">{% trans "Events returned by the provider and the reconciliation result that would be applied" %}</caption>
+      <thead><tr><th scope="col">{% trans "Event" %}</th><th scope="col">{% trans "Actor" %}</th><th scope="col">{% trans "Result" %}</th></tr></thead>
+      <tbody>{% for event in preview.events %}<tr>
+        <td>{{ event.event_kind }}{% if event.number %} #{{ event.number }}{% endif %}</td>
+        <td>{% if event.actor_login %}@{{ event.actor_login }}{% else %}—{% endif %}</td>
+        <td>{% if event.status == "pending" %}<span class="Label Label--attention">{% trans "Candidate will enter the ledger" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Skipped · already recorded" %}</span>{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="3">{% trans "No qualifying provider events were returned for this page." %}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <div class="dn-state-banner" role="status"><strong>{% trans "Provenance is kept on every record." %}</strong><p>{% trans "Each applied event retains its reconciliation source, repository identity, provider event identifier, actor mapping, and verification state. Re-running safely skips an already-ledgered provider event." %}</p></div>
+  </section>
+  {% endif %}
+</div></main>
+{% endblock %}

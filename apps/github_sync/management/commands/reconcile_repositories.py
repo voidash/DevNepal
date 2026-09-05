@@ -1,7 +1,5 @@
-import importlib
 import logging
 
-from django.conf import settings
 from django.core.management.base import CommandError
 from django.db.models import Q
 from django.utils import timezone
@@ -14,14 +12,6 @@ from apps.observability.commands import InstrumentedCommand
 logger = logging.getLogger(__name__)
 
 
-def load_fetcher(dotted_path: str):
-    """GIT-006: resolve the settings-configured fetcher from its dotted class path."""
-    module_name, _, attribute = dotted_path.rpartition(".")
-    if not module_name:
-        raise ImportError(f"{dotted_path!r} is not a dotted import path")
-    return getattr(importlib.import_module(module_name), attribute)
-
-
 class Command(InstrumentedCommand):
     help = (
         "GIT-006: sweep every active repository connection through the configured "
@@ -30,17 +20,11 @@ class Command(InstrumentedCommand):
     )
 
     def handle(self, *args, **options):
-        dotted_path = getattr(settings, "GITHUB_RECONCILE_FETCHER", "")
-        if dotted_path:
-            try:
-                fetcher_class = load_fetcher(dotted_path)
-            except (AttributeError, ImportError, ModuleNotFoundError) as exc:
-                logger.exception("reconcile_repositories has an invalid fetcher path")
-                raise CommandError(
-                    f"GITHUB_RECONCILE_FETCHER is not importable: {dotted_path}"
-                ) from exc
-        else:
-            fetcher_class = services.GithubReconciliationFetcher
+        try:
+            fetcher = services.configured_reconciliation_fetcher()
+        except services.ReconciliationError as exc:
+            logger.exception("reconcile_repositories has an invalid fetcher path")
+            raise CommandError("GITHUB_RECONCILE_FETCHER is not importable") from exc
 
         connections = (
             RepositoryConnection.objects.exclude(sync_state=SyncState.STOPPED)
@@ -54,7 +38,7 @@ class Command(InstrumentedCommand):
         for connection in connections:
             try:
                 recovered = services.reconcile(
-                    connection, since=connection.last_synced_at, fetcher=fetcher_class()
+                    connection, since=connection.last_synced_at, fetcher=fetcher
                 )
             except services.ReconciliationError:
                 failures += 1

@@ -4,7 +4,7 @@ from math import ceil
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import RequestDataTooBig
+from django.core.exceptions import PermissionDenied, RequestDataTooBig
 from django.db import transaction
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
@@ -17,22 +17,30 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from apps.accounts.permissions import privileged_mfa_required
 from apps.github_sync.app_client import github_app_client
+from apps.github_sync.enums import SyncState
 from apps.github_sync.errors import (
     ConnectionNotFoundError,
     GithubAppError,
+    ReconciliationAuthorizationError,
+    ReconciliationError,
     RepositoryBindingError,
     WebhookReplayError,
     WebhookSignatureError,
 )
+from apps.github_sync.forms import ReconciliationRunForm
 from apps.github_sync.models import GithubConnection, RepositoryConnection
 from apps.github_sync.services import (
     annual_contribution_calendar,
+    audit_reconciliation_preview,
     bind_repository,
     binding_projects,
+    configured_reconciliation_fetcher,
     disconnect,
     enroll_repository,
     ingest_webhook,
     member_repositories,
+    preview_reconciliation,
+    run_reconciliation,
 )
 
 MAX_WEBHOOK_BODY_BYTES = 1_048_576
@@ -105,6 +113,88 @@ def connection_status(request: HttpRequest) -> HttpResponse:
         request,
         "github_sync/connection.html",
         {"connection": connection, "repositories": repositories},
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_http_methods(["GET", "POST"])
+def reconciliation_console(request: HttpRequest, pk: int) -> HttpResponse:
+    """D5.4/GIT-006/AUTH-005: Super Admin dry-run and idempotent repository reconciliation."""
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    repository = (
+        RepositoryConnection.objects.select_related("project")
+        .filter(pk=pk, project__isnull=False, deactivated_at__isnull=True)
+        .exclude(sync_state=SyncState.STOPPED)
+        .first()
+    )
+    if repository is None:
+        raise Http404("repository is not available for reconciliation")
+    form = ReconciliationRunForm(request.POST or None)
+    preview = None
+    if request.method == "POST":
+        if not form.is_valid():
+            return render(
+                request,
+                "github_sync/reconciliation_console.html",
+                {"repository": repository, "form": form},
+                status=400,
+            )
+        try:
+            fetcher = configured_reconciliation_fetcher()
+            if request.POST.get("action") == "dry_run":
+                preview = preview_reconciliation(request.user, repository, fetcher=fetcher)
+                audit_reconciliation_preview(request.user, preview, form.cleaned_data["purpose"])
+                messages.info(
+                    request,
+                    _("Dry run completed. No repository or delivery ledger records changed."),
+                )
+            elif request.POST.get("action") == "apply":
+                recovered = run_reconciliation(
+                    request.user,
+                    repository,
+                    purpose=form.cleaned_data["purpose"],
+                    fetcher=fetcher,
+                )
+                messages.success(
+                    request,
+                    _(
+                        "Reconciliation completed. %(count)s new event(s) entered "
+                        "the delivery ledger."
+                    )
+                    % {"count": recovered},
+                )
+                return redirect("github_sync:reconciliation", pk=repository.pk)
+            else:
+                form.add_error(None, _("Choose dry run or apply."))
+                return render(
+                    request,
+                    "github_sync/reconciliation_console.html",
+                    {"repository": repository, "form": form},
+                    status=400,
+                )
+        except ReconciliationAuthorizationError as exc:
+            raise PermissionDenied from exc
+        except ReconciliationError:
+            logger.exception("reconciliation console failed (repository=%s)", repository.pk)
+            form.add_error(
+                None,
+                _(
+                    "Reconciliation could not complete. The repository was left "
+                    "recoverable for a retry."
+                ),
+            )
+            return render(
+                request,
+                "github_sync/reconciliation_console.html",
+                {"repository": repository, "form": form},
+                status=503,
+            )
+    return render(
+        request,
+        "github_sync/reconciliation_console.html",
+        {"repository": repository, "form": form, "preview": preview},
     )
 
 
