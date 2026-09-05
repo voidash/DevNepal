@@ -86,7 +86,13 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-glance dt { color: var(--color-neutral-700); font-size: 13px; }
 .dn-glance dd { margin: 0; font-family: var(--font-heading); font-size: 28px; font-weight: 600; line-height: 1.1; }
 @media (max-width: 719px) { .dn-glance { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.dn-glance-note { margin: 6px 0 0; color: var(--color-neutral-600); font-size: 12px; }
+.dn-glance-note { max-width: 90ch; margin: 10px 0 0; color: var(--color-neutral-600); font-size: 12px; }
+.dn-glance > div p { margin: 4px 0 0; color: var(--color-neutral-600); font-size: 12px; line-height: 1.45; }
+.dn-glance > div { flex-direction: column; gap: 0; }
+.dn-glance dd { order: -1; }
+.dn-person-headline { font-size: 14px; color: var(--color-text) !important; }
+.dn-person-open { color: var(--color-accent-700) !important; font-size: 12px; }
+.dn-contribution-grid .dn-labels { margin-top: 12px; }
 /* People as cards, not a ranked table: D12 keeps scores off public pages. */
 .dn-people-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
 .dn-person-card { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-bg); }
