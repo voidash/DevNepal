@@ -10,16 +10,23 @@ from django.utils import timezone
 
 from apps.audit.tests.factories import AuditEventFactory, UserFactory
 from apps.audit.tests.test_views import verify_mfa
+from apps.contributions.enums import VerificationStatus
+from apps.contributions.tests.factories import ContributionRecordFactory
 from apps.github_sync.enums import ProcessingState, SyncState
 from apps.github_sync.tests.factories import ProviderEventFactory, RepositoryConnectionFactory
-from apps.ministries.tests.factories import SuperAdminFactory
+from apps.ministries.enums import OrgStatus
+from apps.ministries.tests.factories import MinistryOrganizationFactory, SuperAdminFactory
 from apps.moderation.enums import CaseStatus
 from apps.moderation.tests.factories import ModerationCaseFactory
 from apps.notifications.enums import DeliveryStatus
 from apps.notifications.tests.factories import NotificationFactory
-from apps.projects.enums import ProjectStatus
-from apps.projects.models import Project
-from apps.projects.tests.factories import ProjectFactory
+from apps.projects.enums import ApplicationEventType, ApplicationStatus, ProjectStatus, ResponseSla
+from apps.projects.models import Application, Project
+from apps.projects.tests.factories import (
+    ApplicationEventFactory,
+    ApplicationFactory,
+    ProjectFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -281,4 +288,61 @@ def test_page_query_count_is_bounded(client):
         response = client.get(reverse("audit:ops_dashboard"))
 
     assert response.status_code == 200
-    assert len(queries) <= 12
+    assert len(queries) <= 24
+
+
+def test_d5_1_operational_adoption_metrics_and_application_sla_are_live(client):
+    """ADM-006/DSC-009: D5.1 aggregates live adoption, response, verification, and probe data."""
+    super_admin = SuperAdminFactory()
+    first_ministry = MinistryOrganizationFactory(status=OrgStatus.ACTIVE)
+    second_ministry = MinistryOrganizationFactory(status=OrgStatus.ACTIVE)
+    first_project = ProjectFactory(
+        ministry=first_ministry,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
+    second_project = ProjectFactory(
+        ministry=second_ministry,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
+    old_application = ApplicationFactory(
+        project=first_project,
+    )
+    first_project.response_sla = ResponseSla.WITHIN_24_HOURS
+    first_project.save(update_fields=["response_sla"])
+    Application.objects.filter(pk=old_application.pk).update(submitted_at=moment_from_now(days=-3))
+    responded_application = ApplicationFactory(project=second_project)
+    Application.objects.filter(pk=responded_application.pk).update(
+        submitted_at=moment_from_now(days=-4)
+    )
+    with mock.patch("django.utils.timezone.now", return_value=moment_from_now(days=-2)):
+        ApplicationEventFactory(
+            application=responded_application,
+            actor=responded_application.project.owner,
+            event=ApplicationEventType.STATUS_CHANGED,
+            to_status=ApplicationStatus.ACCEPTED,
+        )
+    ContributionRecordFactory(
+        project=first_project,
+        status=VerificationStatus.ACCEPTED,
+        verified_at=moment_from_now(days=-1),
+    )
+    audit_event_at(moment_from_now(days=-3), action="ops.availability_probe", result="success")
+    audit_event_at(moment_from_now(days=-2), action="ops.availability_probe", result="failure")
+    verify_mfa(client, super_admin)
+
+    response = client.get(reverse("audit:ops_dashboard"))
+    metrics = {metric["id"]: metric for metric in response.context["adoption_metrics"]}
+    tiles = {tile["id"]: tile for tile in response.context["summary_tiles"]}
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert metrics["ministries_active"]["value"] == 2
+    assert metrics["open_projects"]["value"] == 2
+    assert metrics["median_first_response"]["value"] == 2
+    assert metrics["verified_contributions"]["value"] == 1
+    assert metrics["availability"]["value"] == 50
+    assert tiles["applications_past_sla"]["count"] == 1
+    assert "Applications past SLA" in content
+    assert "Ministries active" in content
+    assert "Median first response" in content
+    assert "Availability · 30 d" in content
