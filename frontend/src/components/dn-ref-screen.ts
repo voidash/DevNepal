@@ -2,32 +2,24 @@ import { LitElement, html, nothing } from "lit"
 import { customElement, property, state } from "lit/decorators.js"
 import { unsafeHTML } from "lit/directives/unsafe-html.js"
 
-import type { Actor } from "../data/api"
+import { api, type Actor, type Session } from "../data"
 import { referenceScope } from "../data/seed"
-import { pathFor } from "../router"
+import { href, navigate, pathFor } from "../router"
+import { live, type LiveCtx } from "../screens/live/registry"
 
 /**
- * A Reference screen: one board of the design canvas, extracted by
- * scripts/extract-canvas.py, mounted inside the real shell.
+ * One board of the design canvas, extracted by scripts/extract-canvas.py,
+ * mounted inside the real shell — and, when an Enhancer is registered for it,
+ * made to work.
  *
- * Reference is the honest tier. The board looks right — it is the approved
- * drawing — and does not write anything: no store, no forms that submit. Its
- * links DO navigate, because their text says where they meant to go and the
- * router knows those places. A screen leaves this tier when a Live component
- * claims its route; the URL never changes.
+ * The design is locked: this element never re-authors a board. It renders the
+ * drawn markup, resolves the canvas's own templates against data (seed for a
+ * Reference board, the store for a Live one), and hands the result to the
+ * board's enhancer to wire up. Same markup either way; the "Reference" chip is
+ * the only visible difference, and it goes when the enhancer arrives.
  *
- * Renders into the light DOM on purpose. The board's markup is styled by
- * industry.css through global class names (.btn, .card, .tag …); a shadow
- * root would cut it off from every one of them.
- *
- * The canvas runtime is not loaded, so its two template constructs are
- * resolved here against the shared seed instead:
- *
- *   <sc-for list="{{ catalog }}" as="p">…{{ p.title }}…</sc-for>
- *   <sc-if value="{{ story }}">…</sc-if>
- *
- * Expanding from seed.ts rather than placeholder text means a Reference board
- * and the Live screen beside it show the same ministries, people and projects.
+ * Light DOM on purpose: the board is styled by industry.css through global
+ * class names, and a shadow root would fence it off from every one of them.
  */
 const boards = import.meta.glob<string>("../screens/ref/*.html", {
   query: "?raw",
@@ -71,7 +63,7 @@ function substituteNode(root: Node, scope: Scope) {
   }
 }
 
-/** Expand the canvas's template elements in place, outermost loop first. */
+/** Expand the canvas's <sc-for> / <sc-if> in place, outermost loop first. */
 function expand(root: ParentNode, scope: Scope) {
   let loop: Element | null
   while ((loop = root.querySelector("sc-for"))) {
@@ -128,7 +120,7 @@ function restoreTables(root: ParentNode) {
     for (const el of Array.from(root.querySelectorAll(from))) {
       const to = document.createElement(RAW_TAGS[from])
       for (const attr of Array.from(el.attributes)) to.setAttribute(attr.name, attr.value)
-      if (!to.classList.contains("table") && to.tagName === "TABLE") to.classList.add("table")
+      if (to.tagName === "TABLE") to.classList.add("table")
       while (el.firstChild) to.appendChild(el.firstChild)
       el.replaceWith(to)
     }
@@ -143,9 +135,8 @@ export function renderBoard(raw: string, actor: Actor, scope: Scope = referenceS
   restoreTables(tpl.content)
 
   /* Every link on the canvas is href="#". Its text says where it meant to go;
-     the router knows most of those places. Wired links become real
-     navigation; the rest are made inert rather than left to scroll to the top
-     and clobber the URL. */
+     the router knows most of those places. The rest are made inert rather
+     than left to scroll to the top and clobber the URL. */
   for (const a of Array.from(tpl.content.querySelectorAll('a[href="#"]'))) {
     const to = pathFor(a.textContent ?? "", actor)
     if (to) {
@@ -156,7 +147,6 @@ export function renderBoard(raw: string, actor: Actor, scope: Scope = referenceS
       a.setAttribute("aria-disabled", "true")
     }
   }
-  /* Buttons that read as navigation on the drawing. */
   for (const b of Array.from(tpl.content.querySelectorAll("button"))) {
     const to = pathFor(b.textContent ?? "", actor)
     if (to) b.setAttribute("data-goto", to)
@@ -171,13 +161,20 @@ export function renderBoard(raw: string, actor: Actor, scope: Scope = referenceS
 export class DnRefScreen extends LitElement {
   /** Canvas board id, e.g. "b2-3". */
   @property({ type: String }) screen = ""
-  /** Shown in the chip; the board's code from routes.json. */
+  /** The board's code from routes.json, for the chip. */
   @property({ type: String }) label = ""
   /** Whose screen this is — Overview means a different place per actor. */
   @property({ type: String }) actor: Actor = "public"
+  @property({ attribute: false }) params: Record<string, string> = {}
+  @property({ attribute: false }) session: Session | null = null
 
   @state() private markup: string | null = null
   @state() private missing = false
+
+  private loadToken = 0
+  private lastKey = ""
+  private needsMount = false
+  private unsubscribe?: () => void
 
   protected createRenderRoot() {
     return this
@@ -186,31 +183,87 @@ export class DnRefScreen extends LitElement {
   connectedCallback() {
     super.connectedCallback()
     this.addEventListener("click", this.onClick)
+    this.unsubscribe = api.onChange(() => {
+      if (live[this.screen]) void this.load()
+    })
+  }
+
+  disconnectedCallback() {
+    this.unsubscribe?.()
+    super.disconnectedCallback()
   }
 
   private onClick = (e: MouseEvent) => {
-    const b = (e.target as Element).closest?.("button[data-goto]") as HTMLElement | null
-    if (!b) return
+    const goto = (e.target as Element).closest?.("[data-goto]") as HTMLElement | null
+    if (!goto || (e.target as Element).closest("a[href], button:not([data-goto]), input, textarea, select")) return
     e.preventDefault()
-    this.dispatchEvent(new CustomEvent("dn-goto", { detail: b.dataset.goto, bubbles: true, composed: true }))
-    history.pushState({}, "", b.dataset.goto!)
-    window.dispatchEvent(new CustomEvent("dn:navigate"))
+    navigate(goto.dataset.goto!)
   }
 
-  protected willUpdate(changed: Map<string, unknown>) {
-    if (changed.has("screen") || changed.has("actor")) void this.load()
+  private get ctx(): LiveCtx {
+    return {
+      boardId: this.screen,
+      params: this.params,
+      session: this.session,
+      navigate,
+      href,
+      signIn: () => this.dispatchEvent(new CustomEvent("dn-signin", { bubbles: true, composed: true })),
+      reload: () => void this.load(),
+    }
+  }
+
+  protected willUpdate() {
+    const key = `${this.screen}|${this.actor}|${JSON.stringify(this.params)}|${this.session?.user.handle ?? ""}`
+    if (key !== this.lastKey) {
+      this.lastKey = key
+      void this.load()
+    }
   }
 
   private async load() {
-    this.markup = null
-    this.missing = false
+    const token = ++this.loadToken
     const loader = boards[`../screens/ref/${this.screen}.html`]
     if (!loader) {
       this.missing = true
+      this.markup = null
       return
     }
     const raw = await loader()
-    this.markup = renderBoard(raw, this.actor)
+    const enhancer = live[this.screen]
+    let scope: Scope = referenceScope
+    if (enhancer?.scope) {
+      try {
+        scope = { ...referenceScope, ...(await enhancer.scope(this.ctx)) }
+      } catch (err) {
+        console.error(`[dn-ref-screen] scope failed for ${this.screen}`, err)
+      }
+    }
+    if (token !== this.loadToken) return
+    this.missing = false
+    const next = renderBoard(raw, this.actor, scope)
+    /* A board with no scope renders the same string every time, and Lit sees
+       an unchanged @state as no change at all — no render, no updated(), no
+       mount. But the reason we reloaded (a sign-in, a store write) means the
+       enhancer must run again over fresh DOM. Clear first, then set. */
+    if (next === this.markup) {
+      this.markup = null
+      await this.updateComplete
+      if (token !== this.loadToken) return
+    }
+    this.markup = next
+    this.needsMount = !!enhancer?.mount
+  }
+
+  protected async updated() {
+    if (!this.needsMount || !this.markup) return
+    this.needsMount = false
+    const root = this.querySelector<HTMLElement>(".dn-ref")
+    if (!root) return
+    try {
+      await live[this.screen]?.mount?.(root, this.ctx)
+    } catch (err) {
+      console.error(`[dn-ref-screen] mount failed for ${this.screen}`, err)
+    }
   }
 
   render() {
@@ -219,12 +272,15 @@ export class DnRefScreen extends LitElement {
         No reference board for <code>${this.screen}</code>.
       </p>`
     }
+    const isLive = !!live[this.screen]
     return html`
-      <div class="dn-ref" data-screen=${this.screen}>
+      <div class="dn-ref ${isLive ? "is-live" : "is-reference"}" data-screen=${this.screen}>
         ${this.markup ? unsafeHTML(this.markup) : nothing}
-        <span class="dn-ref-chip" title="Drawn, not wired yet. Navigation works; forms do not.">
-          Reference · ${this.label || this.screen}
-        </span>
+        ${isLive
+          ? nothing
+          : html`<span class="dn-ref-chip" title="Drawn, not wired yet. Navigation works; forms do not.">
+              Reference · ${this.label || this.screen}
+            </span>`}
       </div>
     `
   }

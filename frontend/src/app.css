@@ -144,5 +144,30 @@ body { margin: 0; background: var(--color-bg); color: var(--color-text); }
 .dn-ref-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--color-neutral-500); }
 .dn-ref a[data-ref-link] { cursor: default; }
 
+/* ── live boards: drawn controls made real ────────────────────────────── */
+.seg-opt.is-on, .tag.is-on { background: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent); }
+.is-on:not(.seg-opt):not(.tag) { color: var(--color-accent-800); font-weight: 500; }
+textarea.input, input.input, select.input {
+  font: inherit; font-size: 14px; line-height: 1.5; color: var(--color-text);
+  width: 100%; box-sizing: border-box;
+}
+textarea.input { resize: vertical; min-height: 72px; }
+select.input { appearance: auto; cursor: pointer; }
+.btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+[data-goto] { cursor: pointer; }
+tr[data-goto]:hover td { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+.dn-ref [role="button"] { user-select: none; }
+
+/* ── toasts ───────────────────────────────────────────────────────────── */
+.dn-toasts { position: fixed; left: 20px; bottom: 20px; z-index: 60; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.dn-toast {
+  font: 500 13px/1.4 var(--font-body); color: var(--color-bg); background: var(--color-text);
+  padding: 10px 14px; border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+  max-width: 42ch; opacity: 1; transform: translateY(0);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+.dn-toast.is-ok::before { content: "✓ "; color: var(--color-accent-300); }
+.dn-toast.is-out { opacity: 0; transform: translateY(6px); }
+
 /* ── not found ────────────────────────────────────────────────────────── */
 .dn-notfound { padding: 64px 48px; max-width: 60ch; }

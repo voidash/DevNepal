@@ -1,6 +1,5 @@
 import { LitElement, html, nothing } from "lit"
 import { customElement, state } from "lit/decorators.js"
-import { unsafeStatic, html as staticHtml } from "lit/static-html.js"
 
 import "./tokens/industry.css"
 import "./tokens/industry-ext.css"
@@ -15,7 +14,6 @@ import "./components/dn-ref-screen"
 import "./screens/live"
 
 import { api, type Actor, type Session } from "./data"
-import { live } from "./screens/live"
 import { NAVIGATE, match, navigate, type Match } from "./router"
 
 /**
@@ -160,15 +158,16 @@ export class DnApp extends LitElement {
     }
   }
 
+  /* Every screen is its drawn board. The viewer decides whether an enhancer
+     makes it live; the shell does not need to know. */
   private screen(m: Match) {
-    const tag = live[m.route.id]
-    if (tag) {
-      /* A Live screen. Params arrive as attributes; the component reads the
-         store itself. */
-      const t = unsafeStatic(tag)
-      return staticHtml`<${t} .params=${m.params} .session=${this.session}></${t}>`
-    }
-    return html`<dn-ref-screen .screen=${m.route.id} .label=${m.route.code} .actor=${m.route.actor}></dn-ref-screen>`
+    return html`<dn-ref-screen
+      .screen=${m.route.id}
+      .label=${m.route.code}
+      .actor=${m.route.actor}
+      .params=${m.params}
+      .session=${this.session}
+    ></dn-ref-screen>`
   }
 
   render() {
