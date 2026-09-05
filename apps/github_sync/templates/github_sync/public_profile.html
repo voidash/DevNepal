@@ -1,14 +1,24 @@
 {% extends "base.html" %}
 {% load i18n tz %}
 {% block title %}{{ github_profile.display_name|default:github_profile.login }} | DevNepal{% endblock %}
+{% block meta_description %}{% blocktrans with login=github_profile.login %}Public GitHub profile for @{{ login }} and their work on DevNepal-listed repositories.{% endblocktrans %}{% endblock %}
 {% block content %}
+{% comment %} A contributor has no DevNepal account, so this page is a cached
+   view of their public GitHub identity plus the work DevNepal can attribute to
+   them. Every claim on it names its source, and the primary action is the way
+   out to GitHub, where the person actually is. {% endcomment %}
 <section class="dn-container dn-provider-profile" aria-labelledby="profile-heading">
+  <nav class="dn-breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+    <a href="{% url 'projects:government' %}">{% trans "Government projects" %}</a>
+    <span aria-hidden="true">/</span><span aria-current="page">{% blocktrans with login=github_profile.login %}@{{ login }}{% endblocktrans %}</span>
+  </nav>
+
   <header class="dn-provider-profile__identity">
-    <div class="blueprint dn-provider-profile__avatar">
-      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <div class="dn-provider-profile__avatar">
       {% if github_profile.avatar_url %}<img src="{{ github_profile.avatar_url }}" alt="" width="128" height="128">{% else %}<span aria-hidden="true">{{ github_profile.login|slice:":2"|upper }}</span>{% endif %}
     </div>
     <div class="dn-provider-profile__intro">
+      <p class="dn-section-kicker">{% trans "Public contributor profile" %}</p>
       <div class="dn-provider-profile__name-line">
         <h1 id="profile-heading">{{ github_profile.display_name|default:github_profile.login }}</h1>
         <span>@{{ github_profile.login }}</span>
@@ -22,10 +32,7 @@
       </div>
     </div>
     <div class="dn-provider-profile__actions">
-      <a class="btn btn--secondary blueprint" href="{{ github_profile.html_url }}" rel="noopener noreferrer">
-        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-        {% blocktrans with login=github_profile.login %}github.com/{{ login }}{% endblocktrans %}
-      </a>
+      <a class="btn btn--primary" href="{{ github_profile.html_url }}" rel="noopener noreferrer">{% blocktrans with login=github_profile.login %}github.com/{{ login }}{% endblocktrans %}</a>
       <p>{% trans "Public information from GitHub. DevNepal never displays private repositories or activity." %}</p>
     </div>
   </header>
@@ -33,23 +40,28 @@
   <div class="dn-provider-profile__layout">
     <section aria-labelledby="tracked-work-heading">
       <div class="dn-section-heading-row">
-        <h2 id="tracked-work-heading">{% trans "Work on DevNepal repositories" %}</h2>
+        <div><p class="dn-section-kicker">{% trans "Attributed work" %}</p><h2 id="tracked-work-heading">{% trans "Work on DevNepal repositories" %}</h2></div>
         <span>{% trans "GitHub source" %}</span>
       </div>
       <div class="dn-provider-profile__repositories">
         {% for activity in repository_activity %}
         <article class="blueprint">
-          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
-          <div><h3><a href="{% url 'projects:detail' activity.repository.project.slug %}">{{ activity.repository.project.localized_title }}</a></h3><p>{{ activity.repository.full_name }}</p></div>
+          <div>
+            <h3><a href="{% url 'projects:detail' activity.repository.project.slug %}">{{ activity.repository.project.localized_title }}</a></h3>
+            <p>{{ activity.repository.full_name }}{% if activity.repository.project.ministry %} · {{ activity.repository.project.ministry.localized_name }}{% endif %}</p>
+          </div>
           <strong>{% blocktrans count counter=activity.contributions %}{{ counter }} commit{% plural %}{{ counter }} commits{% endblocktrans %}</strong>
         </article>
         {% empty %}
-        <p>{% trans "No activity has been synchronized from a listed repository yet." %}</p>
+        <div class="dn-empty" role="status">
+          <strong>{% trans "No attributed work yet" %}</strong>
+          <p>{% trans "No activity has been synchronized from a listed repository yet. Work appears here once a project's public repository is synchronised." %}</p>
+          <a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+        </div>
         {% endfor %}
       </div>
     </section>
     <aside class="blueprint dn-provider-profile__source">
-      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
       <h2>{% trans "About this profile" %}</h2>
       <p>{% trans "This is a cached public GitHub profile, not a claim that this person has a DevNepal member account." %}</p>
       <dl>

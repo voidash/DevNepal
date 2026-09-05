@@ -12,7 +12,6 @@
     {% blocktrans with start=health.period_start|localtime|date:"F j" end=health.period_end|localtime|date:"F j, Y" %}Current-month aggregate moderation data from {{ start }} through {{ end }}.{% endblocktrans %}
   </p>
   <section aria-label="{% trans 'Community health summary' %}" class="blueprint dn-health-summary">
-    <i class="corner tl" aria-hidden="true"></i><i class="corner tr" aria-hidden="true"></i><i class="corner bl" aria-hidden="true"></i><i class="corner br" aria-hidden="true"></i>
     <div>
       <span>{% trans "Reports" %}</span>
       <strong>{{ health.report_count }}</strong>

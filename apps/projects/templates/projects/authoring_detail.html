@@ -32,7 +32,7 @@
 
   {% for repository in project.repository_connections.all %}
   <section class="blueprint dn-publisher-repository" aria-labelledby="repository-{{ repository.pk }}">
-    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    
     <header><div><p class="dn-section-kicker">{% trans "Connected GitHub repository" %}</p><h2 id="repository-{{ repository.pk }}">{{ repository.full_name }}</h2></div><span class="Label Label--success">{{ repository.get_sync_state_display }}</span></header>
     <div class="dn-publisher-repository__columns">
       <section aria-labelledby="repo-issues-{{ repository.pk }}"><h3 id="repo-issues-{{ repository.pk }}">{% trans "Open issues" %} <span class="Counter">{{ repository.issue_snapshots.all|length }}</span></h3><ul>{% for issue in repository.issue_snapshots.all %}<li><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a></li>{% empty %}<li>{% trans "No open issues synchronized." %}</li>{% endfor %}</ul></section>
