@@ -8,6 +8,9 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.accounts.tests.factories import MemberProfileFactory
+from apps.blogs.enums import BlogModerationState, BlogStatus
+from apps.blogs.tests.factories import BlogPostFactory
 from apps.github_sync.models import GithubStarterTask
 from apps.github_sync.tests.factories import RepositoryConnectionFactory
 from apps.projects.enums import (
@@ -23,6 +26,7 @@ from apps.projects.tests.factories import (
     ProjectFactory,
     ProjectLinkFactory,
     ProjectMaintainerFactory,
+    ProjectSuitabilityFactory,
     ProjectTaskFactory,
     ProjectVersionFactory,
     UserFactory,
@@ -34,7 +38,8 @@ pytestmark = pytest.mark.django_db
 
 
 def make_public_project(**kwargs):
-    project = ProjectFactory(status=ProjectStatus.OPEN_FOR_CONTRIBUTION, **kwargs)
+    kwargs.setdefault("status", ProjectStatus.OPEN_FOR_CONTRIBUTION)
+    project = ProjectFactory(**kwargs)
     version = ProjectVersionFactory(project=project)
     project.current_version = version
     project.save(update_fields=["current_version"])
@@ -88,7 +93,7 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
     response = client.get(reverse("projects:home"))
     section = (
         response.content.split(b'aria-labelledby="opportunities-heading"', 1)[1]
-        .split(b'aria-labelledby="contribution-path-heading"', 1)[0]
+        .split(b'aria-labelledby="community-heading"', 1)[0]
         .decode()
     )
 
@@ -96,12 +101,12 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
     assert "Official" in section
     assert "See all government projects" in section
     assert "Open for contribution" not in section
-    assert "dn-home-section-heading--flush" in section
+    assert "dn-featured-card__facts" in section
 
 
 @pytest.mark.unit
 def test_home_does_not_promote_community_projects_on_the_visitor_entry(client):
-    """DSC-001/GOV-011: the stripped visitor entry is limited to government work."""
+    """DSC-001/GOV-011: first-time visitors see government work, not secondary catalogs."""
     make_public_project(
         project_type=ProjectType.PERSONAL,
         ministry=None,
@@ -111,11 +116,93 @@ def test_home_does_not_promote_community_projects_on_the_visitor_entry(client):
 
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
-
     assert response.status_code == 200
+    assert "Community projects" not in content
+    assert "Browse community projects" not in content
     assert "Community work that is not official" not in content
-    assert "All community projects" not in content
-    assert 'id="community-projects-heading"' not in content
+    assert reverse("projects:community") not in content
+
+
+@pytest.mark.unit
+def test_home_does_not_leak_community_owner_data_into_the_government_entry(client):
+    """DSC-001/GOV-011: hidden secondary listings do not leak owner identity on home."""
+    community = make_public_project(
+        project_type=ProjectType.PERSONAL,
+        ministry=None,
+        title_en="Valley bus timetable",
+        published_at=timezone.now(),
+    )
+
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+    assert community.title_en not in content
+    assert f"@{community.owner.username}" not in content
+    assert reverse("projects:detail", args=[community.slug]) not in content
+
+
+@pytest.mark.unit
+def test_home_keeps_legacy_member_directory_off_the_visitor_entry(client):
+    """MEM-003/REC-001: member records remain stored without expanding the demo home."""
+    visible = MemberProfileFactory(
+        headline="Civic accessibility reviewer",
+        directory_discoverable=True,
+        leaderboard_opt_out=False,
+    )
+    hidden = MemberProfileFactory(
+        headline="Private operator",
+        directory_discoverable=False,
+        leaderboard_opt_out=False,
+    )
+    opted_out = MemberProfileFactory(
+        headline="Leaderboard opted out",
+        directory_discoverable=True,
+        leaderboard_opt_out=True,
+    )
+
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+    assert visible.user.username not in content
+    assert visible.headline not in content
+    assert hidden.user.username not in content
+    assert opted_out.headline not in content
+    assert reverse("accounts:member_directory") not in content
+
+
+@pytest.mark.unit
+def test_home_keeps_technical_writing_off_the_minimal_visitor_entry(client):
+    """BLG-005/DSC-001: blog records remain available without competing with open work."""
+    published = BlogPostFactory(
+        title="Shipping Nepali issue templates",
+        excerpt="A maintainer note on bilingual contribution guidance.",
+        status=BlogStatus.PUBLISHED,
+        published_at=timezone.now(),
+    )
+    BlogPostFactory(title="Draft that must stay private", status=BlogStatus.DRAFT)
+    BlogPostFactory(
+        title="Restricted post",
+        status=BlogStatus.PUBLISHED,
+        published_at=timezone.now(),
+        moderation_state=BlogModerationState.RESTRICTED,
+    )
+
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+    assert published.title not in content
+    assert published.excerpt not in content
+    assert reverse("blogs:detail", args=[published.pk]) not in content
+    assert reverse("blogs:list") not in content
+
+
+@pytest.mark.unit
+def test_home_sends_policy_detail_to_guidance_instead_of_repeating_it(client):
+    """DSC-001/GOV-007: the stripped home links to guidance and keeps the ministry CTA."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+
+    assert "What DevNepal verifies" not in content
+    assert 'aria-labelledby="safeguards-heading"' not in content
+    assert reverse("projects:about") in content
+    assert 'aria-labelledby="ministry-cta-heading"' in content
 
 
 @pytest.mark.unit
@@ -140,54 +227,60 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
     assert response.status_code == 200
     assert b"Public technology," in response.content
     assert b"built in public." in response.content
-    assert b"Code stays on GitHub" in response.content
+    assert b"public repository on GitHub" in response.content
+    assert b"anyone can contribute" in response.content
     assert b"Browse government projects" in response.content
     assert b"Government of Nepal" in response.content
     assert b"Collaborate on Nepal's digital future" not in response.content
 
 
 @pytest.mark.unit
-def test_home_exposes_the_compact_trust_and_contribution_model(client):
-    """DSC-001/GOV-011: home explains the GitHub-first path without secondary products."""
+def test_home_exposes_compact_live_metrics_and_the_github_contribution_path(client):
+    """DSC-001/GOV-011: home keeps Madan's metric and journey design without extra products."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
 
     assert response.status_code == 200
+    assert "On DevNepal today" in content
+    assert "ministries publishing, each through a named officer" in content
+    assert "projects open for contribution" in content
+    assert "contributions accepted by a named maintainer" in content
     assert "From public project to GitHub contribution" in content
-    assert "Featured government projects" in content
+    assert "You pick an issue" in content
+    assert "You contribute on GitHub" in content
+    assert "Nine ways to contribute" not in content
     assert "Community projects" not in content
-    assert "No DevNepal account is required" in content
-    assert "3. Contribute on GitHub" in content
+    assert "People in the directory" not in content
+    assert "Technical writing" not in content
     assert 'class="blueprint' in content
 
 
 @pytest.mark.unit
-def test_home_empty_state_uses_a_bounded_editorial_image_without_misrepresenting_open_work(client):
-    """DSC-001/NFR-A11Y-01/NFR-PERF-01: empty-state imagery is contextual, labelled, optional."""
+def test_home_never_asks_a_visitor_for_an_account(client):
+    """DSC-001/AUTH-001: contributing needs no account, so home offers none."""
     response = client.get(reverse("projects:home"))
-    content = response.content.decode()
-    asset = Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.png"
-    modern_asset = (
-        Path(settings.BASE_DIR) / "static/images/devnepal-public-work-illustrations-v1.webp"
-    )
+    main = response.content.split(b"<main", 1)[1].split(b"</main>", 1)[0].decode()
 
     assert response.status_code == 200
-    assert asset.is_file()
-    assert asset.stat().st_size > 0
-    assert modern_asset.is_file()
-    assert modern_asset.stat().st_size > 0
-    assert modern_asset.stat().st_size < asset.stat().st_size
-    assert 'class="dn-public-work-illustration"' in content
-    assert (
-        'type="image/webp" srcset="/static/images/devnepal-public-work-illustrations-v1.webp"'
-        in content
-    )
-    assert 'src="/static/images/devnepal-public-work-illustrations-v1.png"' in content
-    assert 'loading="lazy"' in content
-    assert 'decoding="async"' in content
-    assert 'width="1774" height="887"' in content
-    assert 'alt="Eight grayscale public-service scenes' in content
-    assert "Illustrated public-interest work areas, not a list of open projects." in content
+    assert "no DevNepal account is needed" in main
+    assert reverse("accounts:signup") not in main
+    assert "Create an account" not in main
+    assert "Join with GitHub" not in main
+    assert reverse("accounts:login") in main
+    assert "Ministry sign-in" in main
+
+
+@pytest.mark.unit
+def test_home_empty_state_explains_the_publication_safeguard_without_filler(client):
+    """DSC-001/NFR-A11Y-01: an empty catalogue states its reason and offers the exit."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Government opportunities are being prepared." in content
+    assert "a named owner, contribution guidance, and suitability review" in content
+    assert 'class="dn-public-work-illustration"' not in content
+    assert f'href="{reverse("projects:government")}"' in content
 
 
 @pytest.mark.unit
@@ -207,6 +300,9 @@ def test_about_page_lays_out_a_grounded_contribution_flow_in_both_languages(clie
     assert b"Frequently asked questions" in english.content
     assert b"How are contributions verified?" in english.content
     assert b"Support and next steps" in english.content
+    assert b'href="/en/issues/"' in english.content
+    assert reverse("projects:community").encode() not in english.content
+    assert reverse("accounts:member_directory").encode() not in english.content
     assert b'aria-labelledby="about-heading"' in english.content
     assert nepali.status_code == 200
     assert "कसरी योगदान गर्ने" in nepali.content.decode()
@@ -219,7 +315,7 @@ def test_about_page_uses_the_a1_2_process_and_policy_sheets(client):
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert 'class="blueprint dn-sheet"' in content
+    assert "blueprint dn-sheet" in content
     assert "01 · The process" in content
     assert "A ministry lists a project" in content
     assert "PMO approves" in content
@@ -376,8 +472,8 @@ def test_catalog_uses_the_a2_1_blueprint_filter_and_project_sheet(client):
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert 'class="blueprint dn-sheet catalog-filter"' in content
-    assert "Project catalog" in content
+    assert 'class="dn-catalog-form catalog-filter"' in content
+    assert "dn-sheet__header" not in content
     assert "Advanced filters" in content
     assert 'class="card blueprint"' in content
     assert government.title_en in content
@@ -424,7 +520,6 @@ def test_catalog_matches_a2_1_status_sort_layout_and_active_filter_controls(clie
     content = response.content.decode()
     assert 'class="dn-catalog-results dn-catalog-results--list"' in content
     assert "Recently updated" in content
-    assert "Grid" in content and "List" in content
     assert "Active filters" in content
     assert "Difficulty: Beginner" in content
     assert "Clear all" in content
@@ -448,7 +543,6 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
     assert response.status_code == 200
     for field_name in (
         "sort",
-        "layout",
         "contribution_type",
         "technology",
         "skill",
@@ -458,45 +552,64 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
         "language",
     ):
         assert f'name="{field_name}" data-auto-submit' in content
-    assert 'src="/static/src/catalog-controls.js"' in content
+    assert 'src="/static/src/catalog-controls.js?v=' in content
     assert "onchange=" not in content
     assert '<button class="btn btn--secondary" type="submit">Apply filters</button>' in content
     script = (Path(settings.BASE_DIR) / "static/src/catalog-controls.js").read_text()
     assert 'querySelectorAll("[data-auto-submit]")' in script
     assert 'addEventListener("change"' in script
     assert "form.requestSubmit()" in script
+    assert "fetch(" in script
+    assert "DOMParser" in script
+    assert "history.pushState" in script
+    assert "popstate" in script
+    assert "event.preventDefault()" in script
+    assert "AbortController" in script
+    assert "incoming?.abort()" in script
+    assert "window.location.assign(url)" in script
+    assert 'closest(".dn-catalog-results")' in script
+    assert "loadCatalog(window.location.href, { push: false })" in script
+    assert 'credentials: "same-origin"' in script
+    assert 'headers: { Accept: "text/html" }' in script
+    assert "catalog.replaceWith(next)" in script
+    assert "enhance(next)" in script
+    assert "new FormData(form)" in script
+    assert "url.origin === window.location.origin" in script
+    assert "url.pathname === window.location.pathname" in script
+    assert "event.button !== 0" in script
+    assert "event.metaKey || event.ctrlKey || event.shiftKey || event.altKey" in script
+    assert 'history.pushState({}, "", url)' in script
+    assert 'element.getAttribute("href") === focusHref' in script
+    assert 'next.querySelector("#projects-heading")' in script
+    catalog = (
+        Path(settings.BASE_DIR) / "apps/projects/templates/projects/project_list.html"
+    ).read_text()
+    results_open = catalog.index(
+        '<div class="dn-catalog-results dn-catalog-results--{{ layout }}">'
+    )
+    endfor = catalog.index("{% endfor %}", results_open)
+    results_close = catalog.index("</div>", endfor)
+    pagination = catalog.index('class="pagination dn-catalog-pagination"', results_close)
+    assert "{% url 'projects:detail' project.slug %}" in catalog[results_open:results_close]
+    assert pagination > results_close
 
 
 @pytest.mark.unit
-def test_catalog_defers_secondary_controls_until_a_visitor_asks_for_them(client):
-    """DSC-001/DSC-002: first-time visitors see search and fit before advanced metadata."""
+def test_catalog_keeps_search_simple_and_the_filter_rail_in_view(client):
+    """DSC-001/DSC-002: search stays a single field while the filters stay visible beside it."""
     response = client.get(reverse("projects:government"))
     content = response.content.decode()
 
     toolbar = content.split('<div class="dn-catalog-toolbar">', 1)[1].split("</div>", 1)[0]
-    filters = content.split('<details class="dn-catalog-filters">', 1)[1].split("</details>", 1)[0]
+    rail = content.split('<details class="dn-catalog-filters" open>', 1)[1]
+    filters = rail.split("</details>", 1)[0]
 
     assert 'name="q"' in toolbar
     assert 'name="sort"' not in toolbar
     assert 'name="layout"' not in toolbar
     assert 'name="technology"' in filters
     assert 'name="deadline_from"' in filters
-
-
-@pytest.mark.unit
-def test_catalog_results_use_full_width_with_collapsed_advanced_filters(client):
-    """DSC-001/DSC-002: the catalog has no empty filter rail and retains optional filters."""
-    response = client.get(reverse("projects:government"))
-    content = response.content.decode()
-    stylesheet = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
-
-    assert response.status_code == 200
-    assert '<details class="dn-catalog-filters">' in content
-    assert '<details class="dn-catalog-filters" open>' not in content
-    assert ".dn-catalog-body { display: block;" in stylesheet
-    assert ".dn-catalog-filters { display: block;" in stylesheet
-    assert ".dn-catalog-filters > summary { display: flex;" in stylesheet
-    assert ".dn-catalog-filters { display: none;" not in stylesheet
+    assert 'name="difficulty"' in filters
 
 
 @pytest.mark.unit
@@ -537,8 +650,8 @@ def test_project_detail_resolves_nfd_nepali_slug_and_displays_official_status(cl
 
 
 @pytest.mark.unit
-def test_direct_project_detail_shows_only_open_tasks_and_github_exit(client):
-    """DSC-005: direct projects expose actionable work without legacy account workflows."""
+def test_direct_project_detail_shows_only_open_tasks_and_contribution_guidance(client):
+    """DSC-005: direct projects expose actionable open tasks and their published guidance."""
     project = make_public_project(
         contribution_mode=ContributionMode.OPEN_DIRECT,
         prerequisites="Read the contribution guide before claiming a task.",
@@ -565,17 +678,118 @@ def test_direct_project_detail_shows_only_open_tasks_and_github_exit(client):
     content = response.content.decode()
     assert response.status_code == 200
     assert list(response.context["open_tasks"]) == [open_task]
+    assert "Open direct contribution" in content
     assert "Translate service labels" in content
     assert "Completed private task" not in content
+    assert "Read the contribution guide before claiming a task." in content
+    assert "https://matrix.to/#/#service-directory:matrix.org" in content
     assert "https://github.com/moit/service-directory" in content
+    assert "Contribution handbook" in content
+    assert "Maintainer consensus" in content
+    assert "DCO-style sign-off" in content
     assert "Apply to contribute" not in content
-    assert "Submit evidence" not in content
-    assert "Project sheet" not in content
+    assert "View open issues" in content
+    assert "View on GitHub" in content
+    assert "Contributing needs no DevNepal account." in content
+    assert "Sign in to apply" not in content
+    assert content.index("View open issues") < content.index("Project sheet")
+    assert content.index("Open tasks") < content.index("Project sheet")
+    assert "Suitability checklist not started" not in content
 
 
 @pytest.mark.unit
-def test_project_detail_keeps_accountability_data_out_of_the_minimal_visitor_surface(client):
-    """A1.3/A2.2/GOV-011: publisher metadata does not overwhelm the issue-first page."""
+def test_direct_project_detail_without_a_repository_still_offers_a_task_without_signin(
+    client,
+):
+    """DSC-001/DSC-005: direct work can start from published tasks with no DevNepal account."""
+    project = make_public_project(contribution_mode=ContributionMode.OPEN_DIRECT)
+    ProjectTaskFactory(project=project, title="Document the first API call")
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Choose a task" in content
+    assert 'href="#open-tasks"' in content
+    assert "Sign in to apply" not in content
+    assert content.index("Choose a task") < content.index("Project sheet")
+
+
+@pytest.mark.unit
+def test_published_project_sheet_omits_unpublished_suitability_process(client):
+    """DSC-009: public pages do not expose unpublished suitability checklist chrome."""
+    project = make_public_project(contribution_mode=ContributionMode.OPEN_DIRECT)
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Suitability checklist not started" not in content
+    assert "Repository visibility and issue data are checked before publication." not in content
+
+
+@pytest.mark.unit
+def test_published_project_sheet_names_confirmed_suitability(client):
+    """DSC-009/BR-002: confirmed suitability is the only suitability state shown publicly."""
+    project = make_public_project(contribution_mode=ContributionMode.OPEN_DIRECT)
+    ProjectSuitabilityFactory(project=project, confirmed=True)
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Suitability confirmed" in content
+    assert "Suitability checklist not started" not in content
+
+
+@pytest.mark.unit
+def test_application_project_with_a_public_repository_starts_only_on_github(client):
+    """DSC-001/DSC-005: a public repository remains usable without member application UI."""
+    project = make_public_project(
+        contribution_mode=ContributionMode.APPLICATION,
+        repository_url="https://github.com/moit/controlled-workstream",
+        issue_tracker_url="https://github.com/moit/controlled-workstream/issues",
+    )
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "View open issues" in content
+    assert "View on GitHub" in content
+    assert "Contributing needs no DevNepal account." in content
+    assert "Sign in to apply" not in content
+    assert "Open tasks" not in content
+    assert content.index("View open issues") < content.index("Project sheet")
+
+
+@pytest.mark.unit
+def test_completed_project_detail_leads_with_the_public_record(client):
+    """GOV-011: completed listings are a public record, not an open call to apply."""
+    project = make_public_project(
+        status=ProjectStatus.COMPLETED,
+        contribution_mode=ContributionMode.APPLICATION,
+        repository_url="https://github.com/doit-np/sewa-portal",
+        issue_tracker_url="https://github.com/doit-np/sewa-portal/issues",
+        outcome_summary="Keyboard and bilingual recovery now meet WCAG 2.2 AA.",
+    )
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "View on GitHub" in content
+    assert "Completion summary" in content
+    assert "View open issues" not in content
+    assert "Choose an issue" not in content
+    assert "Sign in to apply" not in content
+    assert "Apply to contribute" not in content
+    assert content.index("Completion summary") < content.index("Project sheet")
+
+
+@pytest.mark.unit
+def test_project_detail_uses_the_a1_3_a2_2_project_sheet_with_real_accountability_data(client):
+    """A1.3/A2.2/GOV-007/GOV-011: sheets disclose maintainers, route, SLA, governance, security."""
     project = make_public_project(
         contribution_mode=ContributionMode.HYBRID,
         estimated_effort=EffortBand.MEDIUM,
@@ -593,17 +807,25 @@ def test_project_detail_keeps_accountability_data_out_of_the_minimal_visitor_sur
 
     content = response.content.decode()
     assert response.status_code == 200
+    assert "blueprint dn-sheet" in content
+    assert "Project sheet" in content
+    assert "Maintainers" in content
+    assert first.user.username in content
+    assert second.user.username in content
+    assert "How to join" in content
+    assert "Expected effort" in content
+    assert "First response" in content
     assert "Open tasks" in content
     assert task.title in content
-    assert "Project sheet" not in content
-    assert first.user.username not in content
-    assert second.user.username not in content
-    assert "security@example.gov.np" not in content
+    assert "Governance and sign-off" in content
+    assert "Security and reporting" in content
+    assert "security@example.gov.np" in content
+    assert "https://example.gov.np/security" in content
 
 
 @pytest.mark.unit
-def test_application_project_detail_does_not_expose_the_retired_member_application_flow(client):
-    """DSC-005/DSC-006: the visitor surface does not request a DevNepal account."""
+def test_application_project_detail_hides_the_retired_member_application_flow(client):
+    """DSC-005/DSC-006: application records do not expose a contributor account flow."""
     project = make_public_project(contribution_mode=ContributionMode.APPLICATION)
     ProjectTaskFactory(project=project, title="Task reserved for assignment")
 
@@ -611,15 +833,14 @@ def test_application_project_detail_does_not_expose_the_retired_member_applicati
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Application required" not in content
     assert "Sign in to apply" not in content
     assert "Open tasks" not in content
     assert "Task reserved for assignment" not in content
 
 
 @pytest.mark.unit
-def test_hybrid_project_detail_keeps_open_tasks_but_hides_member_application(client):
-    """DSC-005: hybrid records retain open work without exposing the retired member flow."""
+def test_hybrid_project_detail_shows_open_tasks_without_member_application(client):
+    """DSC-005: hybrid records expose GitHub work without a contributor account flow."""
     project = make_public_project(contribution_mode=ContributionMode.HYBRID)
     task = ProjectTaskFactory(project=project, title="Improve search labels")
 
@@ -628,7 +849,9 @@ def test_hybrid_project_detail_keeps_open_tasks_but_hides_member_application(cli
     content = response.content.decode()
     assert response.status_code == 200
     assert list(response.context["open_tasks"]) == [task]
+    assert "Hybrid (open tasks and application workstreams)" in content
     assert "Improve search labels" in content
+    assert "Choose a task" in content
     assert "Sign in to apply" not in content
 
 
@@ -745,3 +968,6 @@ def test_public_project_displays_only_persisted_github_starter_task_snapshot(cli
     assert "doit-np/sewa-portal #131 · Add lang=&quot;ne&quot; to error strings" in content
     assert "good first issue" in content
     assert "Issue snapshot" in content
+    assert "Choose an issue" in content
+    assert "Contributing needs no DevNepal account." in content
+    assert "Sign in to apply" not in content

@@ -8,13 +8,7 @@ from apps.blogs.enums import BlogPostType, BlogStatus
 from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
-from apps.github_sync.models import (
-    GithubIssueSnapshot,
-    GithubPublicProfileSnapshot,
-    GithubPullRequestSnapshot,
-    GithubRepositoryContributor,
-    GithubStarterTask,
-)
+from apps.github_sync.models import GithubRepositoryContributor, GithubStarterTask
 from apps.ministries.enums import OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import ProjectStatus
@@ -92,28 +86,13 @@ def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials():
         .count()
         == 3
     )
-    assert list(
-        GithubIssueSnapshot.objects.filter(repository__project=sewa).values_list(
-            "number", flat=True
-        )
-    ) == [7, 8, 9]
-    assert GithubIssueSnapshot.objects.get(repository__project=sewa, number=7).body.startswith(
-        "## Goal"
+    people = GithubRepositoryContributor.objects.filter(
+        repository__project__slug="sewa-portal-accessibility-remediation"
     )
-    assert GithubPullRequestSnapshot.objects.filter(
-        repository__project=sewa,
-        number=10,
-        title="Document keyboard-only contribution workflow",
-    ).exists()
-    assert GithubRepositoryContributor.objects.filter(
-        repository__project=sewa,
-        login="voidash",
-        contributions=9,
-    ).exists()
-    assert GithubPublicProfileSnapshot.objects.filter(
-        login="voidash",
-        html_url="https://github.com/voidash",
-    ).exists()
+    assert people.count() >= 1
+    assert people.exclude(avatar_url="").count() == people.count()
+    for login, avatar_url in people.values_list("login", "avatar_url"):
+        assert avatar_url == f"https://avatars.githubusercontent.com/{login}?s=80&v=4"
     assert MemberProfile.objects.filter(directory_discoverable=True).count() >= 2
     assert User.objects.get(username="kritika-poudel").skills.exists()
     assert MemberProfile.objects.get(user__first_name="Bibek").headline == (
@@ -147,10 +126,6 @@ def test_seed_prototype_demo_is_idempotent_and_preserves_the_active_policy():
         "projects": Project.objects.count(),
         "tasks": ProjectTask.objects.count(),
         "starter_tasks": GithubStarterTask.objects.count(),
-        "issue_snapshots": GithubIssueSnapshot.objects.count(),
-        "pull_request_snapshots": GithubPullRequestSnapshot.objects.count(),
-        "contributors": GithubRepositoryContributor.objects.count(),
-        "github_profiles": GithubPublicProfileSnapshot.objects.count(),
         "posts": BlogPost.objects.count(),
         "contributions": ContributionRecord.objects.count(),
         "awards": BadgeAward.objects.count(),
@@ -163,10 +138,6 @@ def test_seed_prototype_demo_is_idempotent_and_preserves_the_active_policy():
         "projects": Project.objects.count(),
         "tasks": ProjectTask.objects.count(),
         "starter_tasks": GithubStarterTask.objects.count(),
-        "issue_snapshots": GithubIssueSnapshot.objects.count(),
-        "pull_request_snapshots": GithubPullRequestSnapshot.objects.count(),
-        "contributors": GithubRepositoryContributor.objects.count(),
-        "github_profiles": GithubPublicProfileSnapshot.objects.count(),
         "posts": BlogPost.objects.count(),
         "contributions": ContributionRecord.objects.count(),
         "awards": BadgeAward.objects.count(),

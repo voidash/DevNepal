@@ -5,46 +5,60 @@
 @font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fonts/barlow-condensed-latin-600.woff2") format("woff2"); }
 
 :root {
+  /* Ground and paper. The page is a grey desk; every card, sheet and queue is a
+     white sheet laid on it. Shadows are banned by the design gate, so this pair
+     carries the whole depth model — a surface reads as raised because it is
+     lighter than the ground and edged with a hairline. */
   --color-bg: #f2f2f3;
+  --color-paper: #ffffff;
   --color-surface: #e9e9ea;
   --color-text: #1d1f20;
-  /* Primary. The canvas shipped a muted steel blue (#5980a6); this is the
-     brighter blue chosen for the platform. Every step is checked against
-     white and against the page ground — the accent carries white button text
-     at 4.76:1, and -700/-800 are the text steps on the -100 tint. */
+
+  /* Primary. The platform blue. Steps are checked against white and against the
+     grey ground: -700 carries white button text at 7.7:1 and reads on the ground
+     at 6.9:1, so it is the one step that may carry text. The base accent is a
+     non-text signal — borders, focus rings, chart fills. */
   --color-accent: #3b6fd4;
   --color-accent-100: #eaf0fc;
-  --color-accent-200: #d5e2f8;
+  --color-accent-200: #dbe6fa;
   --color-accent-300: #a9c1ee;
   --color-accent-600: #3160bd;
   --color-accent-700: #27509f;
   --color-accent-800: #1d3c78;
+  --color-accent-900: #16305f;
+
   --color-neutral-100: #f5f5f8;
+  --color-neutral-200: #ebebee;
   --color-neutral-300: #d4d4d7;
-  --color-neutral-500: #8d8d90;
+  --color-neutral-500: #9a9a9e;
   --color-neutral-600: #7a7a7d;
   --color-neutral-700: #5d5d60;
   --color-neutral-800: #424244;
-  --color-divider: color-mix(in srgb, #1d1f20 16%, transparent);
+
+  --color-divider: color-mix(in srgb, #1d1f20 14%, transparent);
+  --color-divider-strong: color-mix(in srgb, #1d1f20 26%, transparent);
   --color-fg: var(--color-text);
   --color-bg-muted: var(--color-surface);
   --color-bg-subtle: var(--color-neutral-100);
   --color-text-secondary: var(--color-neutral-700);
   --color-border: var(--color-divider);
   --color-rule: var(--color-divider);
+
   --color-error: #8a3f3f;
-  --color-error-subtle: #f4dddd;
+  --color-error-subtle: #f7e6e6;
   --color-attention: #735910;
-  --color-attention-subtle: #f5edcf;
-  --color-success: #416b53;
-  --color-paper: #ffffff;
-  --color-divider-strong: color-mix(in srgb, #1d1f20 28%, transparent);
-  --color-accent-900: #152a56;
+  --color-attention-subtle: #f7f0d8;
+  --color-success: #2f6b4a;
+  --color-success-subtle: #e2f0e8;
+  --color-accent-subtle-1: #d6ebff;
+  --color-accent-subtle-2: #94bce3;
+
   --font-body: "Barlow", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-heading: "Barlow Condensed", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-latin: var(--font-body);
   --font-nepali: "Noto Sans Devanagari", system-ui, sans-serif;
   --font-heading-weight: 600;
+
   --fs-xs: 11px;
   --fs-sm: 13px;
   --fs-base: 15px;
@@ -53,30 +67,38 @@
   --fs-xl: 25px;
   --fs-2xl: 32px;
   --fs-3xl: 42px;
-  --space-1: 3.4px;
-  --space-2: 6.8px;
-  --space-3: 10.2px;
-  --space-4: 13.6px;
-  --space-5: 17px;
-  --space-6: 20.4px;
-  --space-8: 27.2px;
-  --space-10: 34px;
-  --space-12: 40.8px;
-  --space-16: 54.4px;
-  --space-24: 81.6px;
-  --space-32: 108.8px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
   --border-1: 1px solid var(--color-divider);
   --border-2: 1px solid var(--color-divider);
   --border-4: 1px solid var(--color-divider);
+
+  /* One radius scale. Every bordered surface is rounded to the same 6px unless
+     it is nested inside another rounded frame, where 4px keeps the inner corner
+     concentric. */
   --radius-none: 0;
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-lg: 10px;
   --radius-pill: 999px;
-  /* Full width. The cap was 1248px, which left a third of a 2000px screen empty while
-     card facts wrapped inside crowded columns. Content now runs to the viewport with
-     page gutters, and grids gain columns as the width allows. */
-  --container-max: none;
+
+  /* Wide, but not edge-to-edge: a 2000px screen kept a card's facts crowded
+     while a 1248px cap left a third of it empty. 1440px holds four catalogue
+     columns and still keeps prose under 80 characters. */
+  --container-max: 1440px;
+  --container-narrow: 900px;
   --page-gutter: 40px;
   --target-min: 44px;
   --focus-outline: 2px solid var(--color-accent);

@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+from django.conf import settings
 from django.urls import reverse
 
 from apps.accounts.models import UserSession
@@ -14,31 +17,34 @@ def test_auth001_login_is_explicitly_for_ministry_publishers(client):
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "Ministry Publisher sign in" in content
-    assert "account issued for your ministry" in content
-    assert "Visitors and contributors do not need an account" in content
+    assert "Ministry publisher" in content
+    assert "ministry's projects" in content
+    assert "You do not need a DevNepal account" in content
     assert "GitHub connection" not in content
+    assert reverse("accounts:github_connect") not in content
 
 
 @pytest.mark.unit
-def test_auth001_login_leads_with_the_form_not_policy_chrome(client):
-    """AUTH-001/AUTH-002: the ministry sign-in card is the page, not member onboarding."""
+def test_auth001_login_leads_with_the_form_and_sends_contributors_back(client):
+    """AUTH-001/AUTH-002: sign-in serves ministry officers; contributors need no account."""
     response = client.get(reverse("accounts:login"))
     content = response.content.decode()
 
     assert response.status_code == 200
     assert "dn-auth-page--signin" in content
-    assert content.index("Ministry Publisher sign in") < content.index("dn-auth-form")
-    assert content.index("dn-auth-form") < content.index(
-        "Visitors and contributors do not need an account"
-    )
+    assert content.index("dn-auth-form") < content.index("You do not need a DevNepal account")
     assert "Member account" not in content
     assert "safe return address" not in content
+    assert "Ministry publisher" in content
+    assert "You do not need a DevNepal account" in content
+    assert reverse("projects:government") in content
     assert reverse("accounts:signup") not in content
     assert reverse("accounts:github_connect") not in content
     assert "dn-primary-nav" not in content
     assert "dn-footer--auth" in content
     assert "dn-footer-grid" not in content
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    assert ".dn-footer--auth { margin-top: auto; padding: 10px 0; }" in css
 
 
 @pytest.mark.unit

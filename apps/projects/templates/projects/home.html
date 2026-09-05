@@ -1,82 +1,159 @@
 {% extends "base.html" %}
-{% load i18n static %}
-{% block title %}{% trans "Home" %} — DevNepal{% endblock %}
+{% load i18n %}
+{% block title %}DevNepal — {% trans "public technology projects from the Government of Nepal" %}{% endblock %}
+{% block meta_description %}{% trans "Browse Government of Nepal technology projects open to public contribution. Work happens on GitHub, and contributing needs no DevNepal account." %}{% endblock %}
 {% block content %}
+{% comment %} One short visitor story: what this is, how contribution works,
+   what government work is open, and how a ministry publishes. Secondary
+   products stay implemented but do not compete with this demo path. {% endcomment %}
 <section class="hero" aria-labelledby="hero-heading">
   <div class="container">
     <div class="dn-home-hero">
       <div class="hero__panel">
         <div class="dn-trust-tags">
-          <span class="tag tag-accent">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-            {% trans "Government of Nepal · Office of the Prime Minister" %}
-          </span>
+          <span class="tag tag-accent">{% trans "Government of Nepal · Office of the Prime Minister" %}</span>
         </div>
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
-        <p class="hero__lead">{% trans "Discover government technology projects that need public help. See the work, read live GitHub issues, and choose where you can contribute." %}</p>
-        <p class="hero__boundary">{% trans "Code stays on GitHub: issues, discussions and pull requests remain in the project's public repository." %}</p>
+        <p class="hero__lead">{% trans "Ministries publish the technology work they need help with, and anyone can contribute. The work happens in each project’s public repository on GitHub, so no DevNepal account is needed." %}</p>
         <div class="hero__actions">
-          <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
-          <a class="btn btn--ghost" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
+          <a class="btn btn--primary" href="{% url 'projects:issue_index' %}">{% trans "Browse open issues" %}</a>
+          <a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
         </div>
+        <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a> · <a href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a></p>
       </div>
+      {% comment %} Parked: decorative board drawing. Restore by moving the
+         svg out of this comment. It carries no information of its own.
+      <svg class="dn-hero-illo" viewBox="0 0 460 380" role="presentation" aria-hidden="true" focusable="false">
+        <rect class="dn-hero-illo__behind" x="39" y="1" width="370" height="298" rx="6"/>
+        <rect class="dn-hero-illo__face" x="9" y="9" width="370" height="298" rx="6"/>
+        <rect class="dn-hero-illo__title" x="30" y="26" width="104" height="13" rx="6"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="296" y="28" width="26" height="10" rx="5"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="330" y="28" width="34" height="10" rx="5"/>
+        <path class="dn-hero-illo__rule" d="M9 57 H379"/>
+        <rect class="dn-hero-illo__tint" x="10" y="140" width="368" height="76"/>
+        <g class="dn-hero-illo__row">
+          <circle class="dn-hero-illo__ring" cx="46" cy="94" r="9"/>
+          <circle class="dn-hero-illo__dot" cx="46" cy="94" r="3.5"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="70" y="80" width="196" height="12" rx="6"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="70" y="102" width="118" height="8" rx="4"/>
+        </g>
+        <path class="dn-hero-illo__rule" d="M30 140 H358"/>
+        <g class="dn-hero-illo__row">
+          <circle class="dn-hero-illo__ring" cx="46" cy="170" r="9"/>
+          <circle class="dn-hero-illo__dot" cx="46" cy="170" r="3.5"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="70" y="156" width="164" height="12" rx="6"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="70" y="178" width="96" height="8" rx="4"/>
+          <rect class="dn-hero-illo__chip" x="272" y="155" width="80" height="17" rx="8.5"/>
+        </g>
+        <path class="dn-hero-illo__rule" d="M30 216 H358"/>
+        <g class="dn-hero-illo__row">
+          <circle class="dn-hero-illo__ring" cx="46" cy="246" r="9"/>
+          <circle class="dn-hero-illo__dot" cx="46" cy="246" r="3.5"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="70" y="232" width="212" height="12" rx="6"/>
+          <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="70" y="254" width="140" height="8" rx="4"/>
+        </g>
+        <rect class="dn-hero-illo__paper" x="249" y="249" width="202" height="122" rx="6"/>
+        <circle class="dn-hero-illo__seal" cx="283" cy="291" r="15"/>
+        <path class="dn-hero-illo__check" d="M276 291 l5 5 l9 -10"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--lead" x="312" y="282" width="106" height="10" rx="5"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="312" y="300" width="70" height="8" rx="4"/>
+        <path class="dn-hero-illo__rule" d="M269 326 H431"/>
+        <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="269" y="342" width="128" height="8" rx="4"/>
+      </svg>
+      {% endcomment %}
     </div>
   </div>
 </section>
 
-<section class="section dn-home" aria-labelledby="opportunities-heading">
+<section class="dn-measure" aria-labelledby="hero-proof-heading">
   <div class="container">
-    <header class="dn-home-section-heading dn-home-section-heading--flush">
+    <h2 id="hero-proof-heading">{% trans "On DevNepal today" %}</h2>
+    <dl class="dn-measure__figures">
+      <div><dt>{{ platform_metrics.ministries }}</dt><dd>{% trans "ministries publishing, each through a named officer" %}</dd></div>
+      <div><dt>{{ platform_metrics.open_projects }}</dt><dd>{% trans "projects open for contribution" %}</dd></div>
+      <div><dt>{{ platform_metrics.verified_contributions }}</dt><dd>{% trans "contributions accepted by a named maintainer" %}</dd></div>
+    </dl>
+    <p class="dn-measure__note">{% trans "Only reviewed public work is listed." %}</p>
+  </div>
+</section>
+
+<section class="section dn-home" aria-labelledby="path-heading">
+  <div class="container">
+    <div class="dn-path">
+      <p class="dn-section-kicker">{% trans "How it works" %}</p>
+      <h2 id="path-heading">{% trans "From public project to GitHub contribution" %}</h2>
+      <ol class="dn-journey" aria-labelledby="path-heading">
+        <li class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry publishes" %}</strong><span>{% trans "A named officer publishes the project with its repository, its licence and its first-response time." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You pick an issue" %}</strong><span>{% trans "Open issues come straight from the project's public GitHub repository." %} <a href="{% url 'projects:issue_index' %}">{% trans "Browse open issues" %}</a></span></li>
+        <li class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute on GitHub" %}</strong><span>{% trans "Fork, branch and open a pull request. Discussion and review stay in the repository." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "The work is recognised" %}</strong><span>{% trans "Accepted work appears on the project page and on your public contributor profile." %}</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="section dn-home dn-home--band" aria-labelledby="opportunities-heading">
+  <div class="container">
+    <header class="dn-home-section-heading">
       <div>
+        <span class="dn-section-kicker">{% trans "Open public work" %}</span>
         <h2 id="opportunities-heading">{% trans "Featured government projects" %}</h2>
-        <p>{% trans "Open work is listed only after a named owner, contribution guidance, and suitability review." %}</p>
+        <p>{% trans "Every listing here is approved by the Office of the Prime Minister. Open one to see its owner, how to join, its first-response time and where its code lives." %}</p>
       </div>
-      <a href="{% url 'projects:government' %}">{% trans "See all government projects" %} →</a>
+      <a class="dn-arrow-link" href="{% url 'projects:government' %}">{% trans "See all government projects" %} →</a>
     </header>
     {% if featured_projects %}
-    <div class="dn-card-grid">
+    <div class="dn-featured-grid">
       {% for project in featured_projects %}
-      <article class="card dn-featured-card">
-        <p class="dn-featured-card__source">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% endif %}</p>
-        <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h3>
-        {% if project.title_ne %}<p lang="ne">{{ project.title_ne }}</p>{% endif %}
+      <article class="card blueprint dn-featured-card">
+        <div class="dn-featured-card__head">
+          <span class="tag tag-accent">{% trans "Official" %}</span>
+          {% if project.ministry.abbreviation %}<span class="dn-featured-card__code">{{ project.ministry.abbreviation }}</span>{% endif %}
+        </div>
+        <div>
+          <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3>
+          {% if project.ministry %}<p class="dn-featured-card__owner">{{ project.ministry.localized_name }}</p>{% endif %}
+        </div>
         <p class="dn-featured-card__summary">{{ project.localized_summary }}</p>
-        {% if project.contribution_types.all %}<div class="dn-featured-card__tags">{% for contribution_type in project.contribution_types.all %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}</div>{% endif %}
-        <p class="dn-featured-card__meta">{{ project.get_difficulty_display|default:"—" }} · {{ project.get_estimated_effort_display|default:"—" }} · {{ project.get_response_sla_display|default:"—" }}</p>
+        <div class="dn-labels">
+          {% for contribution_type in project.contribution_types.all|slice:":3" %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}
+        </div>
+        <dl class="dn-featured-card__facts">
+          <div><dt>{% trans "How to join" %}</dt><dd>{% if project.contribution_mode == "open_direct" %}{% trans "Start any time" %}{% elif project.contribution_mode == "application" %}{% trans "Apply first" %}{% elif project.contribution_mode == "hybrid" %}{% trans "Start or apply" %}{% else %}—{% endif %}<span class="visually-hidden"> {{ project.get_contribution_mode_display }}</span></dd></div>
+          <div><dt>{% trans "First response" %}</dt><dd>{% if project.response_sla %}{{ project.get_response_sla_display }}{% else %}—{% endif %}</dd></div>
+          <div><dt>{% trans "Repository" %}</dt><dd>{% if project.repository_url %}{% trans "Published" %}{% else %}{% trans "Not published" %}{% endif %}</dd></div>
+        </dl>
       </article>
       {% endfor %}
     </div>
     {% else %}
-    <div class="dn-empty-opportunity">
-      {% url 'projects:government' as government_url %}{% include "components/dn_empty.html" with title=_("Government opportunities are being prepared.") body=_("They appear only after a named owner, contribution guidance, and suitability review are complete.") action_url=government_url action_label=_("Browse government projects") %}
-      <figure class="dn-public-work-illustration">
-        <picture>
-          <source type="image/webp" srcset="{% static 'images/devnepal-public-work-illustrations-v1.webp' %}">
-          <img src="{% static 'images/devnepal-public-work-illustrations-v1.png' %}" alt="{% trans 'Eight grayscale public-service scenes for citizen services, education, disaster readiness, maps, health, Nepali-language access, digital identity, and open data.' %}" width="1774" height="887" loading="lazy" decoding="async">
-        </picture>
-        <figcaption>{% trans "Illustrated public-interest work areas, not a list of open projects." %}</figcaption>
-      </figure>
-    </div>
+    <div class="dn-empty" role="status"><strong>{% trans "Government opportunities are being prepared." %}</strong><p>{% trans "They appear only after a named owner, contribution guidance, and suitability review are complete." %}</p><a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a></div>
     {% endif %}
   </div>
 </section>
 
-<section class="section dn-home" aria-labelledby="contribution-path-heading">
+<section class="section dn-home" aria-labelledby="ministry-cta-heading">
   <div class="container">
-    <div class="dn-contribution-model">
-      <header>
-        <span class="dn-section-kicker">{% trans "How it works" %}</span>
-        <h2 id="contribution-path-heading">{% trans "From public project to GitHub contribution" %}</h2>
-        <p>{% trans "No DevNepal account is required. Find government work here, choose a synchronized issue, then contribute in the project's GitHub repository." %}</p>
-        <a href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
-      </header>
-      <div class="dn-contribution-grid">
-        <article class="blueprint"><h3>{% trans "1. Find public work" %}</h3><p>{% trans "Browse approved government projects with a named ministry owner and public repository." %}</p></article>
-        <article class="blueprint"><h3>{% trans "2. Choose an issue" %}</h3><p>{% trans "Read the complete synchronized issue, its goal, and its acceptance criteria before leaving DevNepal." %}</p></article>
-        <article class="blueprint"><h3>{% trans "3. Contribute on GitHub" %}</h3><p>{% trans "Use GitHub for assignment, discussion, commits, and pull requests. DevNepal reflects public activity back to the ministry." %}</p></article>
-      </div>
+    <div class="dn-get-started-grid">
+      <article class="blueprint">
+        <span class="dn-section-kicker">{% trans "For contributors" %}</span>
+        <h3>{% trans "Start with a listed project" %}</h3>
+        <p>{% trans "Pick an issue, read how the project wants contributions, and work on GitHub. Recognition follows accepted work." %}</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+          <a class="btn" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
+        </div>
+      </article>
+      <article class="blueprint dn-get-started-ministry">
+        <span class="dn-section-kicker">{% trans "For ministries" %}</span>
+        <h2 id="ministry-cta-heading">{% trans "Have a project ready for public contribution?" %}</h2>
+        <p>{% trans "A named officer connects the ministry's public repository and publishes the listing. DevNepal then keeps its issues, pull requests and contributors in one place." %}</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a>
+          <a class="btn" href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a>
+        </div>
+      </article>
     </div>
   </div>
 </section>
-
 {% endblock %}

@@ -12,9 +12,6 @@ from apps.contributions.enums import ContributionSource, ImpactTier, Verificatio
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.enums import Provider, SyncState
 from apps.github_sync.models import (
-    GithubIssueSnapshot,
-    GithubPublicProfileSnapshot,
-    GithubPullRequestSnapshot,
     GithubRepositoryContributor,
     GithubStarterTask,
     RepositoryConnection,
@@ -350,62 +347,16 @@ def seed_prototype_demo() -> dict[str, int]:
         "Document keyboard-first contribution workflow",
         ["good first issue"],
     )
-    _github_issue(
+    _github_people(
         repository,
-        7,
-        "Add Nepali eligibility text for scholarship programs",
         (
-            "## Goal\n\nAdd an `eligibility_ne` field to every entry in "
-            "`data/scholarships.json` so visitors can understand eligibility in Nepali.\n\n"
-            "## Acceptance criteria\n\n- Every scholarship has concise Nepali eligibility text.\n"
-            "- JSON remains valid against `data/programs.schema.json`.\n"
-            "- Existing English content is unchanged.\n\n"
-            "## How to contribute\n\nFork the repository, update the data file, validate the "
-            "JSON, and open a pull request linked to this issue."
-        ),
-        ["help wanted", "good first issue"],
-    )
-    _github_issue(
-        repository,
-        8,
-        "Check health subsidy contact details against official sources",
-        (
-            "## Goal\n\nVerify that every health subsidy entry points to a current official "
-            "contact and source page.\n\n## Acceptance criteria\n\n"
-            "- Contact details are checked against official sources.\n"
-            "- Broken or superseded links are replaced.\n"
-            "- Each change names the official source used.\n\n"
-            "## How to contribute\n\nChoose an entry, verify it against the responsible agency, "
-            "and open a pull request with the source link."
-        ),
-        ["documentation", "help wanted"],
-    )
-    _github_issue(
-        repository,
-        9,
-        "Document keyboard-first contribution workflow",
-        (
-            "## Goal\n\nDocument a keyboard-only workflow for contributing to the directory.\n\n"
-            "## Acceptance criteria\n\n- Covers finding an issue, editing data, validation, and "
-            "opening a pull request.\n- Uses clear focus and keyboard instructions.\n"
-            "- Includes a short accessibility check.\n\n"
-            "## How to contribute\n\nUpdate the contributor guide and link the pull request to "
-            "this issue."
-        ),
-        ["accessibility", "good first issue"],
-    )
-    _github_pull_request(
-        repository,
-        10,
-        "Document keyboard-only contribution workflow",
-        (
-            "Adds a keyboard-first path for finding an issue, editing data, validating JSON, "
-            "and opening a pull request.\n\nCloses #9"
+            (1, "voidash", 41),
+            (42, "aarati-shrestha", 9),
+            (43, "kritika-poudel", 6),
+            (44, "bibek-gurung", 4),
+            (45, "sujata-tamang", 2),
         ),
     )
-    _github_contributor(repository)
-    _github_profile()
-    _github_community_profiles()
 
     address_schema = _government_project(
         slug="unified-local-address-schema",
@@ -419,9 +370,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "levels, wards and tole names."
         ),
         summary_ne="७५३ स्थानीय तह, वडा र टोल नामका लागि खुला JSON schema र validation library।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mofaga-np/local-address-schema",
+        issue_tracker_url="https://github.com/mofaga-np/local-address-schema/issues",
+        documentation_url="https://github.com/mofaga-np/local-address-schema#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         estimated_effort=EffortBand.SMALL,
@@ -434,7 +385,7 @@ def seed_prototype_demo() -> dict[str, int]:
         address_schema,
         "Document ward and tole name validation",
         "Documentation task for the unified local address schema.",
-        "",
+        "https://github.com/mofaga-np/local-address-schema/issues/1",
     )
 
     health_registry = _government_project(
@@ -449,9 +400,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "posts and birthing centres."
         ),
         summary_ne="अस्पताल, स्वास्थ्य चौकी र प्रसूति केन्द्रको राष्ट्रिय दर्ताका लागि सार्वजनिक API।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mohp-np/health-facility-registry",
+        issue_tracker_url="https://github.com/mohp-np/health-facility-registry/issues",
+        documentation_url="https://github.com/mohp-np/health-facility-registry#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         difficulty=DifficultyLevel.BEGINNER,
@@ -465,7 +416,7 @@ def seed_prototype_demo() -> dict[str, int]:
         health_registry,
         "Improve the first API contribution guide",
         "Beginner-friendly documentation task for the public health registry API.",
-        "",
+        "https://github.com/mohp-np/health-facility-registry/issues/1",
     )
 
     sajhabus, sajhabus_created = Project.objects.get_or_create(
@@ -548,6 +499,7 @@ def seed_prototype_demo() -> dict[str, int]:
         documentation_url="https://github.com/doit-np/sewa-portal#readme",
         status=ProjectStatus.COMPLETED,
         completion=True,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
     )
     _maintainer(completed, publisher, MaintainerRole.LEAD)
     completed.contribution_types.set([engineering, localization, documentation])
@@ -817,7 +769,7 @@ def _maintainer(project, user, role):
 
 
 def _task(project, title, description, issue_url):
-    return ProjectTask.objects.get_or_create(
+    task, created = ProjectTask.objects.get_or_create(
         project=project,
         title=title,
         defaults={
@@ -826,7 +778,12 @@ def _task(project, title, description, issue_url):
             "issue_url": issue_url,
             "status": TaskStatus.OPEN,
         },
-    )[0]
+    )
+    if not created and issue_url and task.issue_url != issue_url:
+        task.description = description
+        task.issue_url = issue_url
+        task.save(update_fields=["description", "issue_url", "updated_at"])
+    return task
 
 
 def _starter_task(repository, number, title, labels):
@@ -843,106 +800,28 @@ def _starter_task(repository, number, title, labels):
     )[0]
 
 
-def _github_issue(repository, number, title, body, labels):
-    return GithubIssueSnapshot.objects.update_or_create(
-        repository=repository,
-        github_issue_id=number,
-        defaults={
-            "number": number,
-            "title": title,
-            "body": body,
-            "state": "open",
-            "comments_count": 0,
-            "url": f"https://github.com/{repository.full_name}/issues/{number}",
-            "labels": labels,
-            "author_login": "voidash",
-            "author_avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
-            "source_updated_at": timezone.now(),
-        },
-    )[0]
+def _github_avatar_url(login):
+    return f"https://avatars.githubusercontent.com/{login}?s=80&v=4"
 
 
-def _github_pull_request(repository, number, title, body):
-    return GithubPullRequestSnapshot.objects.update_or_create(
-        repository=repository,
-        github_pull_request_id=number,
-        defaults={
-            "number": number,
-            "title": title,
-            "body": body,
-            "state": "open",
-            "comments_count": 0,
-            "url": f"https://github.com/{repository.full_name}/pull/{number}",
-            "author_login": "voidash",
-            "author_avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
-            "source_updated_at": timezone.now(),
-        },
-    )[0]
-
-
-def _github_contributor(repository):
-    return GithubRepositoryContributor.objects.update_or_create(
-        repository=repository,
-        github_user_id=23_181_294,
-        defaults={
-            "login": "voidash",
-            "avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
-            "profile_url": "https://github.com/voidash",
-            "contributions": 9,
-        },
-    )[0]
-
-
-def _github_profile():
-    return GithubPublicProfileSnapshot.objects.update_or_create(
-        github_user_id=23_181_294,
-        defaults={
-            "login": "voidash",
-            "avatar_url": "https://avatars.githubusercontent.com/u/23181294?v=4",
-            "html_url": "https://github.com/voidash",
-            "display_name": "voidash",
-            "bio": "",
-            "location": "",
-            "company": "",
-            "public_repos": 155,
-            "followers": 135,
-        },
-    )[0]
-
-
-def _github_community_profiles():
-    profiles = (
-        {
-            "github_user_id": 39_838_116,
-            "login": "iamtekson",
-            "avatar_url": "https://avatars.githubusercontent.com/u/39838116?v=4",
-            "html_url": "https://github.com/iamtekson",
-            "display_name": "Tek Kshetri",
-            "bio": "OSGeo Nepal | Geospatial researcher | Web-GIS | FOSS4G Developer",
-            "location": "Nepal",
-            "company": "The Solution Stack",
-            "public_repos": 88,
-            "followers": 936,
-        },
-        {
-            "github_user_id": 58_947_310,
-            "login": "hemantapkh",
-            "avatar_url": "https://avatars.githubusercontent.com/u/58947310?v=4",
-            "html_url": "https://github.com/hemantapkh",
-            "display_name": "Hemanta Pokharel",
-            "bio": "Building and breaking things",
-            "location": "Kathmandu, Nepal",
-            "company": "",
-            "public_repos": 34,
-            "followers": 2_686,
-        },
-    )
-    for profile in profiles:
-        github_user_id = profile["github_user_id"]
-        defaults = {key: value for key, value in profile.items() if key != "github_user_id"}
-        GithubPublicProfileSnapshot.objects.update_or_create(
+def _github_people(repository, people):
+    existing = list(repository.contributor_snapshots.all())
+    if existing:
+        for contributor in existing:
+            avatar_url = _github_avatar_url(contributor.login)
+            if contributor.avatar_url == avatar_url:
+                continue
+            contributor.avatar_url = avatar_url
+            contributor.save(update_fields=["avatar_url"])
+        return
+    for github_user_id, login, contributions in people:
+        GithubRepositoryContributor.objects.create(
+            repository=repository,
             github_user_id=github_user_id,
-            defaults=defaults,
+            login=login,
+            avatar_url=_github_avatar_url(login),
+            profile_url=f"https://github.com/{login}",
+            contributions=contributions,
         )
 
 

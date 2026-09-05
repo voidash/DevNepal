@@ -66,8 +66,6 @@
       <dl>
         <dt><strong>{% trans "How are contributions verified?" %}</strong></dt>
         <dd>{% trans "A maintainer or authorised reviewer checks the evidence and records a reasoned decision. A self-submitted claim is not official recognition by itself." %}</dd>
-        <dt><strong>{% trans "Is every listed project a government project?" %}</strong></dt>
-        <dd>{% trans "No. Government and community projects are labelled separately, and a community listing is not a government endorsement." %}</dd>
         <dt><strong>{% trans "What should I do if a project is not a fit?" %}</strong></dt>
         <dd>{% trans "Do not submit sensitive material. Read the brief, use the stated contact path, or choose another project whose scope and response expectations fit your time." %}</dd>
       </dl>
@@ -75,13 +73,11 @@
 
     <section aria-labelledby="next-heading">
       <h2>{% trans "Support and next steps" %}</h2>
-      <p>{% trans "For account, safety, or moderation questions, use the relevant signed-in workflow or confidential report form so the right record is created." %}</p>
       <h2 id="next-heading">{% trans "Choose where to start" %}</h2>
       <p>{% trans "Use the route that matches your intent, then read the project’s own brief before contacting a maintainer." %}</p>
       <p class="BtnGroup">
         <a class="btn btn-primary" href="{% url 'projects:government' %}">{% trans "Government Projects" %}</a>
-        <a class="btn" href="{% url 'projects:community' %}">{% trans "Community Projects" %}</a>
-        <a class="btn" href="{% url 'accounts:member_directory' %}">{% trans "Members" %}</a>
+        <a class="btn" href="{% url 'projects:issue_index' %}">{% trans "Open issues" %}</a>
       </p>
     </section>
   </article>

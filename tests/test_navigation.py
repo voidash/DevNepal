@@ -12,6 +12,7 @@ def test_shared_navigation_uses_resolvable_localized_routes(client):
     assert response.status_code == 200
     for destination in (
         reverse("projects:home"),
+        reverse("projects:issue_index"),
         reverse("projects:government"),
         reverse("projects:about"),
         reverse("accounts:login"),
@@ -29,6 +30,7 @@ def test_primary_navigation_exposes_only_the_validated_visitor_choices(client):
     primary = response.content[primary_start:primary_end]
 
     assert reverse("projects:government").encode() in primary
+    assert reverse("projects:issue_index").encode() in primary
     assert reverse("projects:about").encode() in primary
     assert reverse("projects:community").encode() not in primary
 
@@ -43,5 +45,6 @@ def test_home_calls_to_action_keep_visitors_in_the_active_language(client):
         hero_end = response.content.index(b"</section>", hero_start)
         hero = response.content[hero_start:hero_end]
 
+        assert f'href="{reverse("projects:issue_index")}"'.encode() in hero
         assert f'href="{reverse("projects:government")}"'.encode() in hero
-        assert f'href="{reverse("projects:about")}"'.encode() in hero
+        assert f'href="{reverse("projects:about")}"'.encode() in response.content

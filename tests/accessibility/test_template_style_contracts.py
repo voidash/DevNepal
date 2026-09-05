@@ -68,7 +68,8 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260905-minimal2\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906-madan-demo1\"" in base
+    assert "href=\"{% static 'images/devnepal-mark.svg' %}\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -173,18 +174,21 @@ def test_official_provenance_uses_textual_prototype_labels():
 
 
 @pytest.mark.unit
-def test_project_detail_keeps_the_public_github_path_textual():
-    """A1.3/A2.2/NFR-A11Y-01: the minimal visitor path remains explicit and textual."""
+def test_project_detail_carries_contribution_and_accountability_sheets():
+    """A1.3/A2.2/NFR-A11Y-01: project facts and accountability remain textual."""
     detail = (
         Path(settings.BASE_DIR) / "apps/projects/templates/projects/project_detail.html"
     ).read_text()
 
-    assert '{% trans "Open issues from GitHub" %}' in detail
-    assert '{% trans "Read issue" %}' in detail
-    assert '{% trans "People working on this repository" %}' in detail
-    assert '{% trans "Project sheet" %}' not in detail
-    assert '{% trans "Submit evidence" %}' not in detail
-    assert '{% trans "Sign in to apply" %}' not in detail
+    assert 'class="dn-accountability"' in detail
+    assert detail.count('class="dn-accountability-item"') >= 6
+    assert '{% trans "Project sheet" %}' in detail
+    assert "project.suitability" in detail and "confirmed_at" in detail
+    assert "maintainer_assignments" in detail
+    assert "get_response_sla_display" in detail
+    assert '{% trans "No maintainer assigned yet" %}' in detail
+    assert '{% trans "Suitability checklist not started" %}' in detail
+    assert '{% trans "First-response commitment not yet published" %}' in detail
 
 
 @pytest.mark.unit
@@ -202,6 +206,12 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
     assert "transition-duration: 0.01ms !important;" in base_css
     assert "animation-duration: 0.01ms !important;" in base_css
     assert "scroll-behavior: auto !important;" in base_css
+    assert "@view-transition" in base_css
+    assert "navigation: auto" in base_css
+    view_transition = base_css.split("@view-transition", 1)[1].split("@media", 1)[0]
+    assert "animation: none" in view_transition
+    assert "mix-blend-mode: normal" in view_transition
+    assert "140ms" not in view_transition
     assert "--target-min: 44px;" in tokens_css
     assert ".btn" in shell_css or ".btn" in components_css
     for selector in (
@@ -212,24 +222,6 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
         assert selector in shell_css
     assert "flex-wrap: wrap" in shell_css
     assert ".dn-state-dot" in components_css
-
-
-@pytest.mark.unit
-def test_public_demo_layouts_avoid_empty_rails_and_keep_mobile_actions_tappable():
-    """DSC-001/NFR-A11Y-01: core public layouts use space intentionally at every width."""
-    shell_css = _read("static/src/devnepal.css")
-    components_css = _read("static/src/components.css")
-
-    assert ".dn-home-hero { max-width: 1040px; margin-inline: auto;" in components_css
-    assert "grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));" in shell_css
-    assert ".dn-provider-profile { max-width: 1200px;" in shell_css
-    assert (
-        ".dn-project-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto;" in shell_css
-    )
-    assert (
-        ".dn-github-project .dn-issue-row > a:last-child { display: inline-flex; "
-        "min-height: var(--target-min);"
-    ) in shell_css
 
 
 @pytest.mark.unit
@@ -400,6 +392,7 @@ def test_project_pages_carry_a_context_header_with_underline_tabs_and_counters()
     assert 'id="overview"' in detail
     assert '{% trans "Overview" %}</a>' not in detail
     assert "{% url 'projects:updates' project.slug %}" not in detail
+    assert 'href="#updates"' not in detail
 
     for tab, route in (
         ("Overview", "projects:authoring_detail"),
@@ -586,6 +579,9 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
 
     assert 'class="dn-footer"' in base
     assert 'class="dn-container dn-footer-grid"' in base
+    assert 'class="dn-footer-platform"' in base
+    assert 'class="dn-footer-note"' in base
+    assert "dn-footer-brand" not in base
     assert base.count("<footer") == 1
     for label in ("Platform", "Policies", "Help"):
         assert f"aria-label=\"{{% trans '{label}' %}}\"" in base, label
@@ -595,8 +591,8 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
 
     assert base.count("{% url ") == base.count("{% url ") and "_url %}" in base
     assert '<a href="{% url' not in base.split("<footer")[1]
+    assert '<li><a href="{{ issues_url }}">{% trans "Open issues" %}</a></li>' in base
     assert '<li><a href="{{ government_url }}">{% trans "Government Projects" %}</a></li>' in base
-    assert '<li><a href="{{ about_url }}">{% trans "How to contribute" %}</a></li>' in base
     assert "report_url" not in base
     assert "github_connection_url" not in base
 
@@ -606,4 +602,33 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
         " min-height: var(--target-min, 44px);"
     )
     assert footer_link_rule in footer_css
+    assert (
+        ".dn-footer { margin-top: var(--space-10); padding: var(--space-8) 0 var(--space-5);"
+        in (footer_css)
+    )
+    assert ".dn-footer-grid { display: grid; gap: var(--space-6) var(--space-8); }" in footer_css
+    assert "@media (min-width: 640px) { .dn-footer-grid { grid-template-columns:" in footer_css
+    assert "repeat(2, minmax(0, 1fr)); } }" in footer_css
     assert ".dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }" in footer_css
+    assert (
+        ".dn-footer-platform ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));"
+        in footer_css
+    )
+
+
+@pytest.mark.unit
+def test_public_demo_layouts_keep_filters_visible_and_mobile_actions_tappable():
+    """DSC-001/DSC-002/NFR-A11Y-01: core public layouts avoid empty rails and tiny actions."""
+    shell_css = _read("static/src/devnepal.css")
+    catalog = _read("apps/projects/templates/projects/project_list.html")
+
+    assert '<details class="dn-catalog-filters" open>' in catalog
+    assert ".dn-catalog-filters > summary { display: none;" in shell_css
+    assert "@media (max-width: 1000px)" in shell_css
+    assert ".dn-catalog-filters > summary { display: flex; min-height: 44px;" in shell_css
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in shell_css
+    assert ".dn-provider-profile { max-width: 1200px;" in shell_css
+    assert (
+        ".dn-github-project .dn-issue-row > a:last-child { display: inline-flex; "
+        "min-height: var(--target-min);"
+    ) in shell_css

@@ -5,7 +5,10 @@
 <section class="section" aria-labelledby="verification-queue-heading">
   <div class="container">
     <header class="section__header">
-      <h1 id="verification-queue-heading">{% trans "Verification queue" %}</h1>
+      <div>
+        <p class="dn-section-kicker">{% trans "Ministry review" %}</p>
+        <h1 id="verification-queue-heading">{% trans "Verification queue" %}</h1>
+      </div>
       <p>{% trans "Candidate evidence for projects you are authorized to review. Every decision requires a reason and remains in the audit history." %}</p>
     </header>
     <div class="dn-issue-list">
@@ -14,19 +17,23 @@
         {% include "components/status_octicon.html" with project_status=contribution.status %}
         <div>
           <h2 class="dn-issue-title"><a href="{% url 'contributions:detail' contribution.pk %}">{{ contribution.title }}</a></h2>
-          <p class="dn-issue-meta">{{ contribution.project.localized_title }} · {{ contribution.contributor.username }}</p>
-          <p class="dn-issue-meta">{{ contribution.contribution_type.label }} · {{ contribution.get_status_display }} · {% trans "Evidence source:" %} {{ contribution.get_source_display }}</p>
-          <p class="dn-issue-meta">
-            {% if contribution.has_recorded_automated_check %}{% trans "Automated check: provider event reference recorded" %}{% else %}{% trans "Automated check: no provider check recorded" %}{% endif %}
-            · {% trans "Age:" %} {{ contribution.created_at|timesince }}
-            · {% trans "Review SLA:" %} {{ contribution.project.get_response_sla_display }}
-          </p>
+          <p class="dn-issue-meta">{{ contribution.project.localized_title }} · <strong>@{{ contribution.contributor.username }}</strong> · {{ contribution.contribution_type.label }}</p>
+          <dl class="dn-queue-facts">
+            <div><dt>{% trans "Evidence source" %}</dt><dd>{{ contribution.get_source_display }}</dd></div>
+            <div><dt>{% trans "Automated check" %}</dt><dd>{% if contribution.has_recorded_automated_check %}{% trans "provider event reference recorded" %}{% else %}{% trans "no provider check recorded" %}{% endif %}</dd></div>
+            <div><dt>{% trans "Age" %}</dt><dd>{{ contribution.created_at|timesince }}</dd></div>
+            <div><dt>{% trans "Review SLA" %}</dt><dd>{{ contribution.project.get_response_sla_display }}</dd></div>
+          </dl>
           <p class="dn-issue-meta">{% trans "Escalation:" %} {% if contribution.project.escalation_path %}{{ contribution.project.escalation_path }}{% else %}{% trans "No escalation path has been recorded for this project." %}{% endif %}</p>
         </div>
         <div class="dn-issue-aside"><a class="btn btn--secondary" href="{% url 'contributions:detail' contribution.pk %}">{% trans "Review evidence" %}</a></div>
       </article>
       {% empty %}
-      <p role="status">{% trans "No candidate evidence needs your review." %}</p>
+      <div class="dn-empty" role="status">
+        <strong>{% trans "Nothing is waiting for you" %}</strong>
+        <p>{% trans "No candidate evidence needs your review. Merged pull requests and submitted evidence appear here for a named maintainer to accept." %}</p>
+        <a class="btn" href="{% url 'projects:authoring_dashboard' %}">{% trans "Back to ministry projects" %}</a>
+      </div>
       {% endfor %}
     </div>
     {% if held_contributions %}

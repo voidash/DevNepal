@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}{{ project.localized_title }} | {% trans "Project authoring" %}{% endblock %}
+{% comment %} The publisher's project workspace answers one question: is this
+   listing working? So it leads with the counts a repository is producing, then
+   the issues, pull requests and people behind them. Lifecycle machinery stays
+   on the PMO's side of the branch below. {% endcomment %}
 {% block content %}
 <div class="dn-page-header">
   <div class="dn-container">
@@ -23,16 +27,104 @@
 <div class="dn-container dn-publisher-project">
   {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
   <header class="dn-publisher-project__summary">
-    <div><p class="dn-section-kicker">{% trans "Ministry project" %}</p><h2>{% trans "GitHub activity" %}</h2><p>{{ project.ministry.localized_name }} · {{ project.get_status_display }}</p></div>
+    <div>
+      <p class="dn-section-kicker">{% trans "Ministry project" %}</p>
+      <h2>{% if project.status == 'draft' %}{% trans "Draft workspace" %}{% else %}{% trans "Project workspace" %}{% endif %}</h2>
+      <p>{{ project.ministry.localized_name }} · {{ project.get_status_display }}{% if project.repository_url %} · <a href="{{ project.repository_url }}" rel="noopener noreferrer">{{ project.repository_url|cut:"https://github.com/" }}</a>{% endif %}</p>
+    </div>
     <div class="button-group">
       {% if editable %}<a class="btn btn--secondary" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit project" %}</a>{% endif %}
       {% if project.status == 'open_for_contribution' or project.status == 'paused' or project.status == 'completed' %}<a class="btn btn--primary" href="{% url 'projects:detail' project.slug %}">{% trans "View public project" %}</a>{% endif %}
     </div>
   </header>
 
+  {% if project.status == 'draft' %}
+  {% comment %} A draft is invisible to the public, so the workspace leads with
+     the four things standing between it and a live listing, and ends with the
+     one button that closes the gap. {% endcomment %}
+  <section class="blueprint dn-path-sheet" aria-labelledby="publication-path-heading">
+    <div class="dn-sheet__header"><span id="publication-path-heading">{% trans "Path to publication" %}</span><span>{% trans "Not visible to the public yet" %}</span></div>
+    <ol class="dn-path-steps">
+      {% if project.title_en and project.title_ne and project.summary_en and project.summary_ne %}
+      <li class="is-done">
+        <span class="dn-path-steps__mark" aria-hidden="true">✓</span>
+        <div><strong>{% trans "Describe the project" %}</strong><span>{% trans "Bilingual title and summary are saved." %}</span></div>
+        <span class="Label Label--success">{% trans "Done" %}</span>
+      </li>
+      {% else %}
+      <li>
+        <span class="dn-path-steps__mark" aria-hidden="true">1</span>
+        <div><strong>{% trans "Describe the project" %}</strong><span>{% trans "A bilingual title and summary are required before anyone sees this listing." %}</span></div>
+        <a class="btn btn-sm" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Add the details" %}</a>
+      </li>
+      {% endif %}
+
+      {% if project.repository_url and project.default_branch and project.issue_tracker_url and project.documentation_url and project.license %}
+      <li class="is-done">
+        <span class="dn-path-steps__mark" aria-hidden="true">✓</span>
+        <div><strong>{% trans "Point at the repository" %}</strong><span>{{ project.repository_url|cut:"https://github.com/" }} · {{ project.default_branch }} · {{ project.license.spdx_id }}</span></div>
+        <span class="Label Label--success">{% trans "Done" %}</span>
+      </li>
+      {% else %}
+      <li>
+        <span class="dn-path-steps__mark" aria-hidden="true">2</span>
+        <div><strong>{% trans "Point at the repository" %}</strong><span>{% trans "Repository address, default branch, issue tracker, documentation and an approved licence." %}</span></div>
+        <a class="btn btn-sm" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Add the repository" %}</a>
+      </li>
+      {% endif %}
+
+      {% if project.repository_connections.all %}
+      <li class="is-done">
+        <span class="dn-path-steps__mark" aria-hidden="true">✓</span>
+        <div><strong>{% trans "Connect it to DevNepal" %}</strong><span>{% trans "Issues, pull requests and contributors will synchronise from GitHub." %}</span></div>
+        <span class="Label Label--success">{% trans "Connected" %}</span>
+      </li>
+      {% else %}
+      <li class="is-blocking">
+        <span class="dn-path-steps__mark" aria-hidden="true">3</span>
+        <div><strong>{% trans "Connect it to DevNepal" %}</strong><span>{% if github_app_configured %}{% trans "Publication needs a verified public repository, not only a typed address. This is the last step before the listing can go live." %}{% else %}{% trans "Publication needs a verified public repository, not only a typed address. The GitHub App is not configured on this installation, so a platform administrator connects it for you." %}{% endif %}</span></div>
+        {% if github_app_configured %}<a class="btn btn-sm btn--primary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect repository" %}</a>{% else %}<span class="Label Label--attention">{% trans "Waiting on the platform" %}</span>{% endif %}
+      </li>
+      {% endif %}
+
+      <li class="dn-path-steps__final">
+        <span class="dn-path-steps__mark" aria-hidden="true">4</span>
+        <div>
+          <strong>{% trans "Publish the listing" %}</strong>
+          {% if project.repository_connections.all and project.title_ne and project.summary_ne and project.license %}
+          <span>{% trans "The project appears in the public catalogue immediately, under your ministry's name." %}</span>
+          {% else %}
+          <span>{% trans "Finish the steps above and this becomes available." %}</span>
+          {% endif %}
+        </div>
+        {% if project.repository_connections.all and project.title_ne and project.summary_ne and project.license %}
+        <form action="{% url 'projects:authoring_workflow' project.slug %}" method="post">
+          {% csrf_token %}<input type="hidden" name="action" value="publish">
+          <button class="btn btn--primary" type="submit">{% trans "Publish" %}</button>
+        </form>
+        {% else %}
+        <button class="btn" type="button" disabled>{% trans "Publish" %}</button>
+        {% endif %}
+      </li>
+    </ol>
+  </section>
+  {% endif %}
+
+  {% for repository in project.repository_connections.all %}{% if forloop.first %}
+  <div class="dn-section-heading-row">
+    <div><p class="dn-section-kicker">{% trans "Synchronised from the repository" %}</p><h2>{% trans "GitHub activity" %}</h2></div>
+    <span>{{ repository.full_name }}</span>
+  </div>
+  <dl class="dn-publisher-tiles">
+    <div><dt>{% trans "Open issues" %}</dt><dd>{{ repository.issue_snapshots.all|length }}</dd><span>{% trans "waiting for a contributor" %}</span></div>
+    <div><dt>{% trans "Open pull requests" %}</dt><dd>{{ repository.pull_request_snapshots.all|length }}</dd><span>{% trans "waiting for your review" %}</span></div>
+    <div><dt>{% trans "Contributors" %}</dt><dd>{{ repository.contributor_snapshots.all|length }}</dd><span>{% trans "people with merged work" %}</span></div>
+    <div><dt>{% trans "Last synchronised" %}</dt><dd class="dn-publisher-tiles__age">{% if repository.public_snapshot_at %}{{ repository.public_snapshot_at|timesince }}{% else %}—{% endif %}</dd><span>{% trans "from the public GitHub API" %}</span></div>
+  </dl>
+  {% endif %}{% endfor %}
+
   {% for repository in project.repository_connections.all %}
   <section class="blueprint dn-publisher-repository" aria-labelledby="repository-{{ repository.pk }}">
-    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
     <header>
       <div>
         <p class="dn-section-kicker">{% trans "Connected GitHub repository" %}</p>
@@ -51,16 +143,44 @@
       </div>
     </header>
     <div class="dn-publisher-repository__columns">
-      <section aria-labelledby="repo-issues-{{ repository.pk }}"><h3 id="repo-issues-{{ repository.pk }}">{% trans "Open issues" %} <span class="Counter">{{ repository.issue_snapshots.all|length }}</span></h3><ul>{% for issue in repository.issue_snapshots.all %}<li><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a></li>{% empty %}<li>{% trans "No open issues synchronized." %}</li>{% endfor %}</ul></section>
+      <section aria-labelledby="repo-issues-{{ repository.pk }}"><h3 id="repo-issues-{{ repository.pk }}">{% trans "Open issues" %} <span class="Counter">{{ repository.issue_snapshots.all|length }}</span></h3><ul>{% for issue in repository.issue_snapshots.all %}<li><a href="{% url 'projects:github_issue' project.slug issue.number %}">#{{ issue.number }} · {{ issue.title }}</a>{% if issue.author_login %}<span>{% blocktrans with author=issue.author_login %}by @{{ author }}{% endblocktrans %}</span>{% endif %}</li>{% empty %}<li>{% trans "No open issues synchronized." %}</li>{% endfor %}</ul></section>
       <section aria-labelledby="repo-prs-{{ repository.pk }}"><h3 id="repo-prs-{{ repository.pk }}">{% trans "Open pull requests" %} <span class="Counter">{{ repository.pull_request_snapshots.all|length }}</span></h3><ul>{% for pull_request in repository.pull_request_snapshots.all %}<li><a href="{{ pull_request.url }}" rel="noopener noreferrer">#{{ pull_request.number }} · {{ pull_request.title }}</a>{% if pull_request.author_login %}<span>{% blocktrans with author=pull_request.author_login %}by @{{ author }}{% endblocktrans %}</span>{% endif %}</li>{% empty %}<li>{% trans "No open pull requests synchronized." %}</li>{% endfor %}</ul></section>
     </div>
-    <section aria-labelledby="repo-contributors-{{ repository.pk }}"><h3 id="repo-contributors-{{ repository.pk }}">{% trans "Repository contributors" %}</h3><div class="dn-github-contributors">{% for contributor in repository.contributor_snapshots.all %}<a class="dn-github-contributor" href="{% url 'github_sync_public:public_profile' contributor.login %}">{% if contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40">{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} commit{% plural %}{{ counter }} commits{% endblocktrans %}</small></span></a>{% empty %}<p>{% trans "No contributors synchronized." %}</p>{% endfor %}</div></section>
+    <section aria-labelledby="repo-contributors-{{ repository.pk }}"><h3 id="repo-contributors-{{ repository.pk }}">{% trans "Repository contributors" %}</h3><div class="dn-github-contributors">{% for contributor in repository.contributor_snapshots.all %}<a class="dn-github-contributor" href="{% url 'github_sync_public:public_profile' contributor.login %}">{% if contributor.login %}<img src="https://avatars.githubusercontent.com/{{ contributor.login }}?s=80&v=4" alt="" width="40" height="40" referrerpolicy="no-referrer">{% elif contributor.avatar_url %}<img src="{{ contributor.avatar_url }}" alt="" width="40" height="40" referrerpolicy="no-referrer">{% else %}<span class="dn-github-avatar" aria-hidden="true">{{ contributor.login|slice:":2"|upper }}</span>{% endif %}<span><strong>@{{ contributor.login }}</strong><small>{% blocktrans count counter=contributor.contributions %}{{ counter }} commit{% plural %}{{ counter }} commits{% endblocktrans %}</small></span></a>{% empty %}<p>{% trans "No contributors synchronized." %}</p>{% endfor %}</div></section>
   </section>
   {% empty %}
-  <section class="dn-empty-state"><h2>{% trans "Connect the GitHub repository" %}</h2><p>{% trans "Connect the public repository to synchronize its issues, pull requests, and contributors." %}</p>{% if editable %}<a class="btn btn--primary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect or review repository" %}</a>{% endif %}</section>
+  {% if project.status != 'draft' %}
+  <section class="dn-empty-state">
+    <h2>{% trans "Connect the GitHub repository" %}</h2>
+    <p>{% trans "Connect the public repository to synchronize its issues, pull requests, and contributors. Until it is connected, the public page has nothing for a contributor to pick up." %}</p>
+    {% if editable %}<a class="btn btn--primary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect repository" %}</a>{% endif %}
+  </section>
+  {% endif %}
   {% endfor %}
 
-  <div class="button-group">
+  {% if project.status == 'open_for_contribution' or project.status == 'paused' or project.status == 'completed' %}
+  <section class="blueprint dn-manage-listing" aria-labelledby="manage-listing-heading">
+    <div>
+      <h2 id="manage-listing-heading">{% trans "Manage this listing" %}</h2>
+      <p>{% if project.status == 'open_for_contribution' %}{% trans "Pausing keeps the page public but tells contributors not to start new work. Completing it closes the listing and preserves its record." %}{% elif project.status == 'paused' %}{% trans "Resuming reopens the listing to new contributors. Completing it closes the listing and preserves its record." %}{% else %}{% trans "Archiving removes the listing from the catalogue while keeping its record." %}{% endif %}</p>
+    </div>
+    <div class="button-group">
+      {% if project.status == 'open_for_contribution' %}
+      <form action="{% url 'projects:authoring_workflow' project.slug %}" method="post">{% csrf_token %}<input type="hidden" name="action" value="pause"><button class="btn" type="submit">{% trans "Pause listing" %}</button></form>
+      <form action="{% url 'projects:authoring_workflow' project.slug %}" method="post">{% csrf_token %}<input type="hidden" name="action" value="complete"><button class="btn" type="submit">{% trans "Mark complete" %}</button></form>
+      {% elif project.status == 'paused' %}
+      <form action="{% url 'projects:authoring_workflow' project.slug %}" method="post">{% csrf_token %}<input type="hidden" name="action" value="resume"><button class="btn btn--primary" type="submit">{% trans "Resume listing" %}</button></form>
+      <form action="{% url 'projects:authoring_workflow' project.slug %}" method="post">{% csrf_token %}<input type="hidden" name="action" value="complete"><button class="btn" type="submit">{% trans "Mark complete" %}</button></form>
+      {% else %}
+      <form action="{% url 'projects:authoring_workflow' project.slug %}" method="post">{% csrf_token %}<input type="hidden" name="action" value="archive"><button class="btn" type="submit">{% trans "Archive listing" %}</button></form>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="button-group dn-publisher-project__foot">
+    {% if editable and project.status != 'draft' and not project.repository_connections.all %}<a class="btn btn--secondary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect repository" %}</a>{% endif %}
+    <a class="btn btn--secondary" href="{% url 'contributions:verification_queue' %}">{% trans "Review verified contributions" %}</a>
     <a href="{% url 'projects:authoring_dashboard' %}">{% trans "Back to ministry projects" %}</a>
   </div>
 </div>
@@ -105,8 +225,8 @@
       </li>
       {% empty %}<li>{% trans "No GitHub App repository is connected to this project." %}</li>{% endfor %}
     </ul>
-    {% if editable %}
-    <p><a class="btn btn--secondary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect or review repository" %}</a></p>
+    {% if editable and not project.repository_connections.all %}
+    <p><a class="btn btn--secondary" href="{% url 'github_sync:connect_repository' %}?project_id={{ project.pk }}">{% trans "Connect repository" %}</a></p>
     {% endif %}
     {% if project.status == 'open_for_contribution' or project.status == 'paused' or project.status == 'completed' %}
     <p><a class="btn btn--primary" href="{% url 'projects:completion_summary' project.slug %}">{% if project.status == 'completed' %}{% trans "View completion summary" %}{% else %}{% trans "Prepare completion summary" %}{% endif %}</a></p>

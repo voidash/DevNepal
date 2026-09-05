@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% get_current_language as CURRENT_LANGUAGE %}
-{% block title %}{% trans "Ministry sign in" %} | DevNepal{% endblock %}
+{% block title %}{% trans "Ministry sign-in" %} | DevNepal{% endblock %}
+{% block meta_description %}{% trans "Sign-in for named ministry officers. Contributing to a listed project needs no DevNepal account." %}{% endblock %}
 {% block header_nav %}
 <div class="dn-header-actions dn-header-actions--end">
   <form class="lang-switch" action="/i18n/setlang/" method="post" aria-label="{% trans 'Language' %}">
@@ -11,6 +12,7 @@
     <span class="lang-switch__divider" aria-hidden="true">|</span>
     <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
   </form>
+  <a class="btn btn-sm" href="{% url 'projects:government' %}">{% trans "Browse projects" %}</a>
 </div>
 {% endblock %}
 {% block footer %}
@@ -25,40 +27,52 @@
 </footer>
 {% endblock %}
 {% block content %}
+{% comment %} Only named ministry officers sign in. Anyone who lands here by
+   mistake is a contributor, and the panel beside the form tells them so and
+   sends them back to the work rather than into an account they do not need.
+{% endcomment %}
 <section class="section dn-auth" aria-labelledby="signin-heading">
   <div class="container dn-auth-page dn-auth-page--signin">
-    <div class="blueprint dn-sheet dn-auth-card">
-      <div class="dn-auth-body">
-        <header>
-          <p class="dn-section-kicker">{% trans "Ministry workspace" %}</p>
-          <h1 id="signin-heading">{% trans "Ministry Publisher sign in" %}</h1>
-          <p class="dn-lede">{% trans "Sign in with the account issued for your ministry to publish projects and review public GitHub activity." %}</p>
-        </header>
-        {% if messages %}
-        <ul role="status">
-          {% for message in messages %}<li>{{ message }}</li>{% endfor %}
-        </ul>
-        {% endif %}
-        <form method="post" class="dn-auth-form" novalidate>
-          {% csrf_token %}
-          {% if form.non_field_errors %}<div class="dn-state-banner is-danger error-summary" role="alert"><h2>{% trans "There is a problem" %}</h2>{{ form.non_field_errors }}</div>{% endif %}
-          <div class="field">
-            <label for="{{ form.username.id_for_label }}">{% trans "Username" %}</label>
-            <input id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="text" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" required{% if form.username.errors %} aria-invalid="true" aria-describedby="{{ form.username.id_for_label }}_error"{% endif %}>
-            {% if form.username.errors %}<p class="field__error" id="{{ form.username.id_for_label }}_error" role="alert">{{ form.username.errors.0 }}</p>{% endif %}
-          </div>
-          <div class="field">
-            <label for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
-            <input id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" type="password" autocomplete="current-password" required{% if form.password.errors %} aria-invalid="true" aria-describedby="{{ form.password.id_for_label }}_error"{% endif %}>
-            {% if form.password.errors %}<p class="field__error" id="{{ form.password.id_for_label }}_error" role="alert">{{ form.password.errors.0 }}</p>{% endif %}
-          </div>
-          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-          <button class="btn btn--primary" type="submit">{% trans "Sign in" %}</button>
-        </form>
+    <div class="dn-auth-columns">
+      <div class="blueprint dn-sheet dn-auth-card">
+        <div class="dn-auth-body">
+          <header>
+            <p class="dn-section-kicker">{% trans "Ministry publisher" %}</p>
+            <h1 id="signin-heading">{% trans "Sign in" %}</h1>
+            <p class="dn-lede">{% trans "Signing in proves who you are. It gives you access to your ministry's projects, their GitHub activity, and the contribution records you verify." %}</p>
+          </header>
+          {% if messages %}
+          <ul role="status">
+            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+          <form method="post" class="dn-auth-form" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="dn-state-banner is-danger error-summary" role="alert"><h2>{% trans "There is a problem" %}</h2>{{ form.non_field_errors }}</div>{% endif %}
+            <div class="field">
+              <label for="{{ form.username.id_for_label }}">{% trans "Username" %}</label>
+              <input id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="text" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" required{% if form.username.errors %} aria-invalid="true" aria-describedby="{{ form.username.id_for_label }}_error"{% endif %}>
+              {% if form.username.errors %}<p class="field__error" id="{{ form.username.id_for_label }}_error" role="alert">{{ form.username.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="field">
+              <label for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
+              <input id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" type="password" autocomplete="current-password" required{% if form.password.errors %} aria-invalid="true" aria-describedby="{{ form.password.id_for_label }}_error"{% endif %}>
+              {% if form.password.errors %}<p class="field__error" id="{{ form.password.id_for_label }}_error" role="alert">{{ form.password.errors.0 }}</p>{% endif %}
+            </div>
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <button class="btn btn--primary" type="submit">{% trans "Sign in" %}</button>
+          </form>
+        </div>
+        <div class="dn-sheet__foot">
+          <p>{% trans "Officers are provisioned by the Office of the Prime Minister." %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How a ministry joins" %} →</a></p>
+        </div>
       </div>
-      <div class="dn-sheet__foot">
-        <p>{% trans "Visitors and contributors do not need an account. Contributions happen in each project's public GitHub repository." %}</p>
-      </div>
+      <aside class="dn-auth-aside" aria-labelledby="contributor-note-heading">
+        <h2 id="contributor-note-heading">{% trans "Here to contribute?" %}</h2>
+        <p>{% trans "You do not need a DevNepal account. Open a project, pick an issue, and work in the ministry's public GitHub repository." %}</p>
+        <a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+        <p class="dn-auth-note" role="note">{% trans "Contributor profiles and activity come from public GitHub data. DevNepal does not require a separate contributor account." %}</p>
+      </aside>
     </div>
   </div>
 </section>

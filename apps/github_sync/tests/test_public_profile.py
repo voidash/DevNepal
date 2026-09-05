@@ -65,8 +65,10 @@ def test_git_010_public_github_profile_uses_provider_data_and_tracked_repository
     assert "civic-help-directory" in content
     assert "9 commits" in content
     assert profile.html_url in content
-    assert "Public GitHub profile · last checked" in content
-    assert "This page is not a DevNepal member account." in content
+    assert "Public information from GitHub" in content
+    assert "Last synchronized" in content
+    assert "This profile uses public information from GitHub." in content
+    assert "It does not create or require a DevNepal account." in content
     assert "More GitHub profiles" in content
     assert "Tek Kshetri" in content
     assert "Hemanta Pokharel" in content
