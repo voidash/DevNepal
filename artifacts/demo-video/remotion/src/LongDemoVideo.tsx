@@ -62,7 +62,7 @@ const scenes: LongScene[] = [
     role: 'VISITOR · GITHUB SNAPSHOT',
     title: 'Read the project and its current work',
     summary: 'A timestamped GitHub snapshot brings open issues, pull requests, and contributors into one public page.',
-    proof: ['4 open issues', 'PR #10 visible', 'Contributor activity visible'],
+    proof: ['Synchronized issue list', 'PR #10 visible', 'Contributor activity visible'],
     audio: 'voice-long/03-project-github.mp3',
     audioPlaybackRate: 1,
     media: [
@@ -75,7 +75,7 @@ const scenes: LongScene[] = [
     seconds: 135,
     chapter: '04 / 10',
     role: 'VISITOR · ISSUE HANDOFF',
-    title: 'Understand the issue before opening GitHub',
+    title: 'Understand issue #7 before opening GitHub',
     summary: 'DevNepal explains the work; GitHub remains the source of truth for discussion, assignment, and code.',
     proof: ['Full issue body', 'Acceptance criteria', 'Direct GitHub source link'],
     audio: 'voice-long/04-issue-handoff.mp3',
@@ -90,8 +90,8 @@ const scenes: LongScene[] = [
     chapter: '05 / 10',
     role: 'VISITOR · GITHUB IDENTITY',
     title: 'Use a public GitHub profile—not another résumé',
-    summary: 'The contributor view is a cached public GitHub identity tied to visible repository activity.',
-    proof: ['Public fields only', 'Repository activity', 'More community profiles'],
+    summary: 'The contributor view is public GitHub identity tied to visible repository activity.',
+    proof: ['Public fields only', 'Repository activity', 'Original GitHub profile linked'],
     audio: 'voice-long/05-public-profile.mp3',
     audioPlaybackRate: 1,
     media: [{kind: 'image', source: 'long/05-profile-ne.png'}],
@@ -117,11 +117,11 @@ const scenes: LongScene[] = [
     role: 'MINISTRY PUBLISHER · LIVE REFRESH',
     title: 'Refresh GitHub activity from the workspace',
     summary: 'One permission-checked POST refreshes the bounded public snapshot and records a new synchronization time.',
-    proof: ['CSRF + MFA protected', 'Repository-wide cooldown', 'Last good snapshot preserved on failure'],
+    proof: ['Live deployed POST', 'New sync timestamp', 'Last good snapshot preserved on failure'],
     audio: 'voice-long/07-live-refresh.mp3',
     audioPlaybackRate: 1.02,
     media: [
-      {kind: 'video', source: 'videos/06-live-github-refresh.webm', playbackRate: 0.72},
+      {kind: 'video', source: 'videos/06-live-github-refresh.webm', playbackRate: 0.38},
       {kind: 'image', source: 'long/07-workspace-refreshed.png'},
       {kind: 'image', source: 'long/07-workspace-contributors.png'},
     ],
@@ -131,8 +131,8 @@ const scenes: LongScene[] = [
     chapter: '08 / 10',
     role: 'PROOF · LIVE GITHUB',
     title: 'Verify the same work at its source',
-    summary: 'Issue #11 and pull request #10 remain visible in the real civic-help-directory repository.',
-    proof: ['Issue #11 open', 'PR #10 open', 'No duplicated code workflow'],
+    summary: 'Issue #7 and pull request #10 remain visible in the real civic-help-directory repository.',
+    proof: ['Issue #7 on GitHub', 'PR #10 open', 'DevNepal links to the source'],
     audio: 'voice-long/08-github-proof.mp3',
     audioPlaybackRate: 1,
     media: [
@@ -174,7 +174,7 @@ const scenes: LongScene[] = [
 export const LONG_TOTAL_FRAMES = scenes.reduce((sum, scene) => sum + scene.seconds * FPS, 0);
 
 const BrowserFrame = ({media, sceneFrame}: {media: Media; sceneFrame: number}) => {
-  const scale = interpolate(sceneFrame, [0, 1800], [1, 1.025], {
+  const scale = interpolate(sceneFrame, [0, 1800], [1, 1.008], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.quad),
@@ -186,17 +186,17 @@ const BrowserFrame = ({media, sceneFrame}: {media: Media; sceneFrame: number}) =
           width: 438,
           height: 820,
           margin: '0 auto',
-          border: '3px solid #111827',
-          borderRadius: 34,
-          background: '#111827',
-          padding: '18px 22px',
-          boxShadow: '14px 14px 0 #bfdc79',
+          border: '1px solid rgba(29, 31, 32, 0.28)',
+          borderRadius: 28,
+          background: '#fff',
+          padding: '16px 20px',
+          boxShadow: '0 18px 44px rgba(21, 42, 86, 0.14)',
           overflow: 'hidden',
         }}
       >
         <Img
           src={staticFile(media.source)}
-          style={{width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top'}}
+          style={{width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top'}}
         />
       </div>
     );
@@ -223,7 +223,7 @@ const BrowserFrame = ({media, sceneFrame}: {media: Media; sceneFrame: number}) =
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: 'contain',
             transform: `scale(${scale})`,
           }}
         />
@@ -250,7 +250,7 @@ const LongSceneCard = ({scene, index}: {scene: LongScene; index: number}) => {
   const totalElapsed = scenes.slice(0, index).reduce((sum, item) => sum + item.seconds, 0);
 
   return (
-    <AbsoluteFill style={{background: '#e9e9e6', color: '#111827'}}>
+    <AbsoluteFill style={{background: '#f2f2f3', color: '#1d1f20'}}>
       <div
         style={{
           position: 'absolute',
@@ -258,9 +258,13 @@ const LongSceneCard = ({scene, index}: {scene: LongScene; index: number}) => {
           top: 54,
           width: scene.media[mediaIndex].mobile ? 520 : 1250,
           height: 820,
-          border: scene.media[mediaIndex].mobile ? 'none' : '2px solid #111827',
+          border: scene.media[mediaIndex].mobile
+            ? 'none'
+            : '1px solid rgba(29, 31, 32, 0.16)',
           background: '#fff',
-          boxShadow: scene.media[mediaIndex].mobile ? 'none' : '14px 14px 0 #111827',
+          boxShadow: scene.media[mediaIndex].mobile
+            ? 'none'
+            : '0 18px 44px rgba(21, 42, 86, 0.12)',
           opacity: fade,
         }}
       >
@@ -275,32 +279,44 @@ const LongSceneCard = ({scene, index}: {scene: LongScene; index: number}) => {
           height: 820,
           padding: '42px 38px',
           boxSizing: 'border-box',
-          background: '#111827',
-          color: '#fff',
-          border: '2px solid #111827',
+          background: '#fff',
+          color: '#1d1f20',
+          border: '1px solid rgba(29, 31, 32, 0.16)',
+          borderTop: '8px solid #3b6fd4',
+          borderRadius: 8,
+          boxShadow: '0 18px 44px rgba(21, 42, 86, 0.1)',
           opacity: intro,
           transform: `translateX(${(1 - intro) * 24}px)`,
-          fontFamily: 'Arial, sans-serif',
+          fontFamily: 'Barlow, Arial, sans-serif',
         }}
       >
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-          <span style={{color: '#d9f99d', fontSize: 21, fontWeight: 800, letterSpacing: 1.1}}>
+          <span style={{color: '#27509f', fontSize: 21, fontWeight: 700, letterSpacing: 1.1}}>
             {scene.chapter}
           </span>
-          <span style={{fontSize: 18, color: '#cbd5e1', minWidth: 72, textAlign: 'right'}}>
+          <span style={{fontSize: 18, color: '#5d5d60', minWidth: 72, textAlign: 'right'}}>
             {Math.floor(totalElapsed / 60)}:{String(totalElapsed % 60).padStart(2, '0')}
           </span>
         </div>
-        <p style={{margin: '54px 0 18px', color: '#d9f99d', fontSize: 19, fontWeight: 800}}>
+        <p style={{margin: '54px 0 18px', color: '#27509f', fontSize: 19, fontWeight: 700}}>
           {scene.role}
         </p>
-        <h1 style={{margin: 0, fontSize: 46, lineHeight: 1.05, letterSpacing: -1.2}}>
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: 'Barlow Condensed, Arial Narrow, sans-serif',
+            fontSize: 48,
+            fontWeight: 600,
+            lineHeight: 1.05,
+            letterSpacing: -0.6,
+          }}
+        >
           {scene.title}
         </h1>
-        <p style={{margin: '30px 0 34px', color: '#e5e7eb', fontSize: 25, lineHeight: 1.45}}>
+        <p style={{margin: '30px 0 34px', color: '#424244', fontSize: 25, lineHeight: 1.45}}>
           {scene.summary}
         </p>
-        <div style={{height: 2, background: '#334155', marginBottom: 30}} />
+        <div style={{height: 1, background: '#d4d4d7', marginBottom: 30}} />
         {scene.proof.map((item) => (
           <div
             key={item}
@@ -312,7 +328,15 @@ const LongSceneCard = ({scene, index}: {scene: LongScene; index: number}) => {
               fontSize: 23,
             }}
           >
-            <span style={{width: 13, height: 13, background: '#d9f99d', flex: '0 0 auto'}} />
+            <span
+              style={{
+                width: 13,
+                height: 13,
+                borderRadius: 3,
+                background: '#3b6fd4',
+                flex: '0 0 auto',
+              }}
+            />
             {item}
           </div>
         ))}
@@ -324,14 +348,14 @@ const LongSceneCard = ({scene, index}: {scene: LongScene; index: number}) => {
           right: 64,
           bottom: 28,
           height: 7,
-          background: '#cbd5e1',
+          background: '#d4d4d7',
         }}
       >
         <div
           style={{
             width: `${((totalElapsed * FPS + frame) / LONG_TOTAL_FRAMES) * 100}%`,
             height: '100%',
-            background: '#315b7d',
+            background: '#3b6fd4',
           }}
         />
       </div>
