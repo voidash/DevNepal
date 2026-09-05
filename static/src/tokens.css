@@ -8,11 +8,16 @@
   --color-bg: #f2f2f3;
   --color-surface: #e9e9ea;
   --color-text: #1d1f20;
-  --color-accent: #5980a6;
-  --color-accent-600: #597ea3;
-  --color-accent-700: #416180;
-  --color-accent-100: #eef6ff;
-  --color-accent-800: #2c455d;
+  /* Primary. The canvas shipped a muted steel blue (#5980a6); this is the
+     brighter blue chosen for the platform. Every step is checked against
+     white and against the page ground — the accent carries white button text
+     at 4.76:1, and -700/-800 are the text steps on the -100 tint. */
+  --color-accent: #3b6fd4;
+  --color-accent-100: #eaf0fc;
+  --color-accent-300: #a9c1ee;
+  --color-accent-600: #3160bd;
+  --color-accent-700: #27509f;
+  --color-accent-800: #1d3c78;
   --color-neutral-100: #f5f5f8;
   --color-neutral-300: #d4d4d7;
   --color-neutral-600: #7a7a7d;
