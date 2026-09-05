@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, timedelta
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Count, F, Prefetch, Q, Sum
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
@@ -47,6 +47,8 @@ from apps.projects.forms import (
     ProjectCompletionForm,
     ProjectMaintainerForm,
     ProjectMilestoneForm,
+    ProjectReviewAssignmentForm,
+    ProjectReviewDecisionForm,
     ProjectScreeningQuestionForm,
     ProjectTaskForm,
     ProjectUpdateForm,
@@ -80,7 +82,9 @@ from apps.projects.services import (
     approve,
     archive,
     assign_maintainer,
+    assign_reviewer,
     can_view_timeline,
+    cancel,
     check_publish_readiness,
     complete,
     complete_suitability,
@@ -91,6 +95,7 @@ from apps.projects.services import (
     create_task,
     current_community_terms_version,
     decide_application,
+    extend_deadline,
     has_accepted_community_terms,
     latest_public_update,
     maintainer_response_stale,
@@ -101,6 +106,7 @@ from apps.projects.services import (
     provide_info,
     publish,
     recommended_projects,
+    reject_submission,
     remove_screening_question,
     request_changes,
     request_github_ownership_verification,
@@ -108,6 +114,7 @@ from apps.projects.services import (
     restore,
     resubmit,
     resume,
+    revoke_approval,
     save_completion_summary,
     set_screening_question_active,
     submit_for_review,
@@ -682,11 +689,17 @@ def _manageable_project_or_404(user, slug: str) -> Project:
 def _allowed_workflow_actions(user, project: Project) -> set[str]:
     status_actions = {
         ProjectStatus.DRAFT: {"submit"},
-        ProjectStatus.IN_REVIEW: {"request_changes", "approve"},
+        ProjectStatus.IN_REVIEW: {"request_changes", "reject", "approve"},
         ProjectStatus.CHANGES_REQUESTED: {"resubmit"},
-        ProjectStatus.APPROVED: {"publish"},
-        ProjectStatus.OPEN_FOR_CONTRIBUTION: {"pause", "complete", "archive"},
-        ProjectStatus.PAUSED: {"resume", "complete", "archive"},
+        ProjectStatus.APPROVED: {"publish", "revoke_approval"},
+        ProjectStatus.OPEN_FOR_CONTRIBUTION: {
+            "pause",
+            "complete",
+            "cancel",
+            "extend_deadline",
+            "archive",
+        },
+        ProjectStatus.PAUSED: {"resume", "complete", "cancel", "extend_deadline", "archive"},
         ProjectStatus.COMPLETED: {"archive"},
         ProjectStatus.CANCELLED: {"archive"},
         ProjectStatus.ARCHIVED: {"restore"},
@@ -696,7 +709,14 @@ def _allowed_workflow_actions(user, project: Project) -> set[str]:
         return actions
     if not is_publisher_active(user, project.ministry):
         return set()
-    return actions - {"request_changes", "approve", "publish", "restore"}
+    return actions - {
+        "request_changes",
+        "reject",
+        "approve",
+        "revoke_approval",
+        "publish",
+        "restore",
+    }
 
 
 def _authoring_context(
@@ -964,6 +984,188 @@ def authoring_dashboard(request: HttpRequest) -> HttpResponse:
 
 @login_required(login_url=reverse_lazy("accounts:login"))
 @privileged_mfa_required
+def review_queue(request: HttpRequest) -> HttpResponse:
+    """ADM-002/GOV-005/D2: PMO queue, assignment, comparison, and decisions."""
+    if not request.user.is_active or not request.user.is_superuser:
+        raise PermissionDenied
+    projects_query = Project.objects.filter(
+        project_type=ProjectType.GOVERNMENT,
+        status__in={
+            ProjectStatus.IN_REVIEW,
+            ProjectStatus.CHANGES_REQUESTED,
+            ProjectStatus.APPROVED,
+        },
+    )
+    allowed_state_filters = {
+        ProjectStatus.IN_REVIEW,
+        ProjectStatus.CHANGES_REQUESTED,
+        ProjectStatus.APPROVED,
+    }
+    state_filter = request.GET.get("state", "")
+    if state_filter in allowed_state_filters:
+        projects_query = projects_query.filter(status=state_filter)
+    else:
+        state_filter = ""
+    assigned_filter = "me" if request.GET.get("assigned") == "me" else ""
+    if assigned_filter:
+        projects_query = projects_query.filter(review_assignment__reviewer=request.user)
+    projects = list(
+        projects_query.select_related("ministry", "review_assignment__reviewer")
+        .prefetch_related("versions", "reviews", "attachments", "suitability")
+        .order_by("status_changed_at", "pk")
+    )
+    selected = next(
+        (item for item in projects if item.slug == request.GET.get("project")),
+        projects[0] if projects else None,
+    )
+    assignment_form = ProjectReviewAssignmentForm()
+    decision_form = ProjectReviewDecisionForm(allowed_actions=_review_actions(selected))
+    error = ""
+    if request.method == "POST":
+        selected = next(
+            (item for item in projects if item.slug == request.POST.get("project")), None
+        )
+        if selected is None:
+            raise Http404
+        intent = request.POST.get("intent")
+        try:
+            if intent == "assign":
+                assignment_form = ProjectReviewAssignmentForm(request.POST)
+                if assignment_form.is_valid():
+                    assign_reviewer(
+                        request.user,
+                        selected,
+                        reviewer=assignment_form.cleaned_data["reviewer"],
+                        due_at=assignment_form.cleaned_data["due_at"],
+                        reviewer_note=assignment_form.cleaned_data["reviewer_note"],
+                        checklist=assignment_form.checklist(),
+                    )
+                else:
+                    error = _("Correct the reviewer assignment errors below.")
+            elif intent == "decision":
+                decision_form = ProjectReviewDecisionForm(
+                    request.POST, allowed_actions=_review_actions(selected)
+                )
+                if decision_form.is_valid():
+                    action = decision_form.cleaned_data["action"]
+                    comment = decision_form.cleaned_data["comment"]
+                    decisions = {
+                        "request_changes": lambda: request_changes(
+                            request.user, selected, reason=comment
+                        ),
+                        "reject": lambda: reject_submission(request.user, selected, reason=comment),
+                        "approve": lambda: approve(
+                            request.user,
+                            selected,
+                            publish_at=decision_form.cleaned_data["publish_at"],
+                            comment=comment,
+                        ),
+                        "revoke_approval": lambda: revoke_approval(
+                            request.user, selected, reason=comment
+                        ),
+                        "publish": lambda: publish(request.user, selected, comment=comment),
+                    }
+                    decisions[action]()
+                else:
+                    error = _("Correct the review decision errors below.")
+            else:
+                raise ProjectLifecycleError(_("Unknown review action."))
+        except ProjectAuthorizationError as exc:
+            raise PermissionDenied from exc
+        except (ProjectLifecycleError, PublishReadinessError) as exc:
+            error = str(exc)
+        if not error:
+            query = {"project": selected.slug}
+            if state_filter:
+                query["state"] = state_filter
+            if assigned_filter:
+                query["assigned"] = assigned_filter
+            return redirect(f"{reverse('projects:review_queue')}?{urlencode(query)}")
+    now = timezone.now()
+    queue = []
+    for item in projects:
+        version = item.versions.order_by("-version_number").first()
+        assignment = getattr(item, "review_assignment", None)
+        submitted_at = (
+            version.submitted_at if version else item.status_changed_at or item.created_at
+        )
+        current_assignment = (
+            assignment
+            if assignment and assignment.version_id == getattr(version, "pk", None)
+            else None
+        )
+        due_at = (
+            current_assignment.due_at if current_assignment else submitted_at + timedelta(days=5)
+        )
+        checklist = current_assignment.checklist if current_assignment else {}
+        select_query = {"project": item.slug}
+        if state_filter:
+            select_query["state"] = state_filter
+        if assigned_filter:
+            select_query["assigned"] = assigned_filter
+        queue.append(
+            {
+                "project": item,
+                "version": version,
+                "assignment": current_assignment,
+                "checklist_done": sum(bool(value) for value in checklist.values()),
+                "checklist_total": len(checklist),
+                "sla_age": max(0, (now - submitted_at).days),
+                "due_at": due_at,
+                "overdue": due_at < now,
+                "select_url": f"?{urlencode(select_query)}",
+            }
+        )
+    return render(
+        request,
+        "projects/review_queue.html",
+        {
+            "queue": queue,
+            "selected": selected,
+            "assignment_form": assignment_form,
+            "decision_form": decision_form,
+            "version_diff": _project_version_diff(selected),
+            "review_actions": _review_actions(selected),
+            "error": error,
+            "state_filter": state_filter,
+            "assigned_filter": assigned_filter,
+        },
+        status=400 if error else 200,
+    )
+
+
+def _project_version_diff(project):
+    if project is None:
+        return []
+    versions = list(project.versions.order_by("-version_number")[:2])
+    if len(versions) < 2:
+        return []
+    current, previous = versions
+    return [
+        {
+            "field": key,
+            "before": previous.snapshot.get(key),
+            "after": current.snapshot.get(key),
+            "from_version": previous.version_number,
+            "to_version": current.version_number,
+        }
+        for key in sorted(set(current.snapshot) | set(previous.snapshot))
+        if previous.snapshot.get(key) != current.snapshot.get(key)
+    ]
+
+
+def _review_actions(project):
+    if project is None:
+        return set()
+    return {
+        ProjectStatus.IN_REVIEW: {"request_changes", "reject", "approve"},
+        ProjectStatus.APPROVED: {"revoke_approval", "publish"},
+        ProjectStatus.CHANGES_REQUESTED: set(),
+    }.get(project.status, set())
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
 def authoring_create(request: HttpRequest) -> HttpResponse:
     """GOV-001/GOV-002: create a ministry-scoped government project draft."""
     if not _can_author_projects(request.user):
@@ -1084,11 +1286,22 @@ def authoring_workflow(request: HttpRequest, slug: str) -> HttpResponse:
         "submit": lambda: submit_for_review(request.user, project),
         "resubmit": lambda: resubmit(request.user, project),
         "request_changes": lambda: request_changes(request.user, project, reason=reason),
-        "approve": lambda: approve(request.user, project),
+        "reject": lambda: reject_submission(request.user, project, reason=reason),
+        "approve": lambda: approve(
+            request.user,
+            project,
+            publish_at=form.cleaned_data["publish_at"],
+            comment=reason,
+        ),
+        "revoke_approval": lambda: revoke_approval(request.user, project, reason=reason),
         "publish": lambda: publish(request.user, project),
         "pause": lambda: pause(request.user, project),
         "resume": lambda: resume(request.user, project),
         "complete": lambda: complete(request.user, project),
+        "cancel": lambda: cancel(request.user, project, reason=reason),
+        "extend_deadline": lambda: extend_deadline(
+            request.user, project, new_deadline=form.cleaned_data["new_deadline"]
+        ),
         "archive": lambda: archive(request.user, project, reason=reason),
         "restore": lambda: restore(request.user, project),
     }

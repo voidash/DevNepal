@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Review queue" %} | DevNepal{% endblock %}
+{% block content %}
+<div class="dn-page-header"><div class="dn-container"><div class="dn-repo-title"><h1>{% trans "Review queue" %}</h1><span class="Label">{% trans "PMO" %}</span></div><p>{% blocktrans with count=queue|length %}{{ count }} submissions requiring review or publication action.{% endblocktrans %}</p></div></div>
+<main class="section"><div class="dn-container">
+  {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
+  <nav class="dn-tabs" aria-label="{% trans 'Review queue filters' %}"><a class="dn-tab"{% if not state_filter and not assigned_filter %} aria-current="page"{% endif %} href="{% url 'projects:review_queue' %}">{% trans "All" %}</a><a class="dn-tab"{% if state_filter == 'in_review' %} aria-current="page"{% endif %} href="?state=in_review">{% trans "In review" %}</a><a class="dn-tab"{% if state_filter == 'changes_requested' %} aria-current="page"{% endif %} href="?state=changes_requested">{% trans "Changes requested" %}</a><a class="dn-tab"{% if state_filter == 'approved' %} aria-current="page"{% endif %} href="?state=approved">{% trans "Scheduled or approved" %}</a><a class="dn-tab"{% if assigned_filter %} aria-current="page"{% endif %} href="?assigned=me">{% trans "Assigned to me" %}</a></nav>
+  <div class="table-scroll"><table class="dn-data-table">
+    <thead><tr><th>{% trans "ID" %}</th><th>{% trans "Project" %}</th><th>{% trans "Ministry" %}</th><th>{% trans "Submitted" %}</th><th>{% trans "Checklist" %}</th><th>{% trans "Reviewer" %}</th><th>{% trans "SLA age" %}</th><th>{% trans "State" %}</th></tr></thead>
+    <tbody>{% for item in queue %}<tr{% if selected.pk == item.project.pk %} aria-current="true"{% endif %}>
+      <td>{{ item.project.pk }}</td><td><a href="{{ item.select_url }}"><strong>{{ item.project.localized_title }}</strong></a>{% if item.version %} · v{{ item.version.version_number }}{% endif %}</td>
+      <td>{{ item.project.ministry.localized_name }}</td><td>{% if item.version %}{{ item.version.submitted_at }}{% endif %}</td>
+      <td>{% if item.checklist_total %}{{ item.checklist_done }}/{{ item.checklist_total }}{% else %}—{% endif %}</td>
+      <td>{% if item.assignment %}{{ item.assignment.reviewer.username }}{% else %}{% trans "Unassigned" %}{% endif %}</td>
+      <td>{{ item.sla_age }} {% trans "days" %} · {% if item.overdue %}<span class="Label Label--attention">{% trans "Overdue" %}</span>{% else %}{% trans "due" %} {{ item.due_at }}{% endif %}</td>
+      <td><span class="Label">{{ item.project.get_status_display }}</span></td>
+    </tr>{% empty %}<tr><td colspan="8">{% trans "The review queue is clear." %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% if selected %}
+  <section class="card blueprint" aria-labelledby="selected-review-heading">
+    <h2 id="selected-review-heading">{{ selected.localized_title }}</h2>
+    <p>{{ selected.ministry.localized_name }} · {{ selected.get_status_display }} · <a href="{% url 'projects:authoring_detail' selected.slug %}">{% trans "Open submission" %}</a> · <a href="{% url 'projects:authoring_attachment' selected.slug %}">{% trans "Attachments" %} ({{ selected.attachments.all|length }})</a></p>
+    {% with suitability=selected.suitability %}<h3>{% trans "Suitability checklist" %}</h3><ul>{% for key,value in suitability.checklist.items %}<li>{{ key }}: {% if value.checked %}{% trans "Complete" %}{% else %}{% trans "Needs review" %}{% endif %}{% if value.note %} — {{ value.note }}{% endif %}</li>{% empty %}<li>{% trans "No suitability checklist has been submitted." %}</li>{% endfor %}</ul>{% endwith %}
+    {% if selected.status == 'in_review' %}<h3>{% trans "Assign reviewer and SLA" %}</h3>
+    <form method="post" class="dn-form-stack">{% csrf_token %}<input type="hidden" name="intent" value="assign"><input type="hidden" name="project" value="{{ selected.slug }}">{{ assignment_form.non_field_errors }}{% for field in assignment_form %}<div class="dn-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}<button class="btn btn--secondary" type="submit">{% trans "Save assignment" %}</button></form>
+    {% endif %}
+    <h3>{% trans "Version comparison" %}</h3>
+    {% if version_diff %}<div class="table-scroll"><table class="dn-data-table"><thead><tr><th>{% trans "Field" %}</th><th>{% trans "Before" %}</th><th>{% trans "After" %}</th></tr></thead><tbody>{% for change in version_diff %}<tr><td>{{ change.field }} · v{{ change.from_version }} → v{{ change.to_version }}</td><td>{{ change.before }}</td><td>{{ change.after }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p>{% trans "No earlier submitted version is available for comparison." %}</p>{% endif %}
+    {% if review_actions %}<h3>{% trans "Recorded decision" %}</h3>
+    <form method="post" class="dn-form-stack">{% csrf_token %}<input type="hidden" name="intent" value="decision"><input type="hidden" name="project" value="{{ selected.slug }}">{{ decision_form.non_field_errors }}{% for field in decision_form %}<div class="dn-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}<button class="btn btn--primary" type="submit">{% trans "Apply decision" %}</button></form>
+    {% else %}<p>{% trans "This submission is awaiting publisher changes and resubmission." %}</p>{% endif %}
+    <p class="text-muted">{% trans "Every decision records the named reviewer, timestamp, reason, submitted version, and status transition in the immutable audit trail." %}</p>
+  </section>{% endif %}
+</div></main>
+{% endblock %}

@@ -12,6 +12,7 @@ urlpatterns = [
     path("security/", views.security_policy, name="security_policy"),
     path("ministry-onboarding/", views.ministry_onboarding, name="ministry_onboarding"),
     path("authoring/", views.authoring_dashboard, name="authoring_dashboard"),
+    path("authoring/reviews/", views.review_queue, name="review_queue"),
     path("community/", views.community_dashboard, name="community_dashboard"),
     path("community/create/", views.community_create, name="community_create"),
     path("community/terms/accept/", views.community_accept_terms, name="community_accept_terms"),

@@ -22,6 +22,7 @@
         <h2>{% trans "Project drafts and review" %}</h2>
       </div>
       {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create draft" %}</a>{% endif %}
+      {% if user.is_superuser %}<a class="btn btn--secondary" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>{% endif %}
     </header>
     <div class="table-scroll">
     <table class="dn-data-table">

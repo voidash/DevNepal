@@ -332,6 +332,37 @@ class ProjectReview(models.Model):
         return f"{self.get_decision_display()} on {self.project} by {self.reviewer}"
 
 
+class ProjectReviewAssignment(models.Model):
+    """Current PMO review ownership and working notes for one immutable version."""
+
+    project = models.OneToOneField(
+        Project, on_delete=models.CASCADE, related_name="review_assignment"
+    )
+    version = models.ForeignKey(
+        ProjectVersion, on_delete=models.PROTECT, related_name="review_assignments"
+    )
+    reviewer = models.ForeignKey(
+        "accounts.User", on_delete=models.PROTECT, related_name="assigned_project_reviews"
+    )
+    assigned_by = models.ForeignKey(
+        "accounts.User",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="review_assignments_made",
+    )
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    due_at = models.DateTimeField(db_index=True)
+    reviewer_note = NFCTextField(blank=True, default="")
+    checklist = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["due_at", "project"]
+
+    def __str__(self) -> str:
+        return f"Review of {self.project} v{self.version.version_number} by {self.reviewer}"
+
+
 SUITABILITY_AREAS: typing.Final = (
     "legal_authority",
     "source_code_rights",

@@ -56,6 +56,7 @@ from apps.projects.models import (
     ProjectMaintainer,
     ProjectMilestone,
     ProjectReview,
+    ProjectReviewAssignment,
     ProjectScreeningQuestion,
     ProjectSuitability,
     ProjectTask,
@@ -636,9 +637,90 @@ def submit_for_review(publisher, project: Project) -> Project:
     return transitioned
 
 
+def assign_reviewer(
+    super_admin,
+    project: Project,
+    *,
+    reviewer,
+    due_at: datetime,
+    reviewer_note: str = "",
+    checklist: dict | None = None,
+) -> ProjectReviewAssignment:
+    """ADM-002/GOV-005: assign the current immutable submission to one PMO reviewer."""
+    _require_super_admin(super_admin, action="project.assign_reviewer", obj=project)
+    if project.status != ProjectStatus.IN_REVIEW:
+        raise ProjectLifecycleError("reviewer assignment requires an in-review project")
+    if reviewer is None or not reviewer.is_active or not reviewer.is_superuser:
+        raise ProjectLifecycleError("reviewer must be an active Super Admin")
+    if due_at is None or timezone.is_naive(due_at) or due_at <= timezone.now():
+        raise ProjectLifecycleError("review due date must be in the future")
+    version = _latest_version(project)
+    if version is None:
+        raise ProjectLifecycleError("reviewer assignment requires a submitted version")
+    checklist = checklist or {}
+    invalid = set(checklist) - set(SUITABILITY_AREAS)
+    if invalid or any(not isinstance(value, bool) for value in checklist.values()):
+        raise ProjectLifecycleError("review checklist contains invalid items")
+    with transaction.atomic():
+        current = (
+            ProjectReviewAssignment.objects.select_for_update().filter(project=project).first()
+        )
+        before = (
+            {
+                "version": str(current.version_id),
+                "reviewer_id": current.reviewer_id,
+                "due_at": current.due_at.isoformat(),
+                "reviewer_note": current.reviewer_note,
+                "checklist": current.checklist,
+            }
+            if current
+            else None
+        )
+        assignment, _created = ProjectReviewAssignment.objects.update_or_create(
+            project=project,
+            defaults={
+                "version": version,
+                "reviewer": reviewer,
+                "assigned_by": super_admin,
+                "due_at": due_at,
+                "reviewer_note": normalize_nfc(reviewer_note).strip(),
+                "checklist": checklist,
+            },
+        )
+        record_audit(
+            actor=super_admin,
+            action="project.reviewer_assigned",
+            obj=project,
+            before=before,
+            after={
+                "version": str(version.pk),
+                "reviewer_id": reviewer.pk,
+                "due_at": due_at.isoformat(),
+                "reviewer_note": assignment.reviewer_note,
+                "checklist": checklist,
+            },
+        )
+    return assignment
+
+
+def _require_assigned_reviewer(super_admin, project: Project) -> None:
+    assignment = ProjectReviewAssignment.objects.filter(
+        project=project, version=_latest_version(project)
+    ).first()
+    if assignment is not None and assignment.reviewer_id != super_admin.pk:
+        record_audit(
+            actor=super_admin,
+            action="project.review_decision.denied",
+            obj=project,
+            result="failure",
+        )
+        raise ProjectAuthorizationError("only the assigned reviewer may decide this submission")
+
+
 def request_changes(super_admin, project: Project, *, reason: str) -> Project:
     """GOV-004/GOV-005: Super Admin returns an in-review project with actionable comments."""
     _require_super_admin(super_admin, action="project.request_changes", obj=project)
+    _require_assigned_reviewer(super_admin, project)
     if project.status != ProjectStatus.IN_REVIEW:
         raise ProjectLifecycleError(
             f"transition from '{project.status}' to '{ProjectStatus.CHANGES_REQUESTED}' "
@@ -669,6 +751,7 @@ def request_changes(super_admin, project: Project, *, reason: str) -> Project:
 def reject_submission(super_admin, project: Project, *, reason: str) -> Project:
     """GOV-004/GOV-005: rejection returns the project to DRAFT with the decision recorded."""
     _require_super_admin(super_admin, action="project.reject", obj=project)
+    _require_assigned_reviewer(super_admin, project)
     if project.status != ProjectStatus.IN_REVIEW:
         raise ProjectLifecycleError(
             f"transition from '{project.status}' to '{ProjectStatus.DRAFT}' "
@@ -711,33 +794,43 @@ def resubmit(publisher, project: Project) -> Project:
     return transitioned
 
 
-def approve(super_admin, project: Project, *, publish_at: datetime | None = None) -> Project:
+def approve(
+    super_admin,
+    project: Project,
+    *,
+    publish_at: datetime | None = None,
+    comment: str = "",
+) -> Project:
     """GOV-004/GOV-005: Super Admin approves, optionally scheduling a future publication."""
     _require_super_admin(super_admin, action="project.approve", obj=project)
+    _require_assigned_reviewer(super_admin, project)
     if project.status != ProjectStatus.IN_REVIEW:
         raise ProjectLifecycleError(
             f"transition from '{project.status}' to '{ProjectStatus.APPROVED}' "
             f"is not allowed by the SRS 6.1 lifecycle"
         )
+    if publish_at is not None and (timezone.is_naive(publish_at) or publish_at <= timezone.now()):
+        raise ProjectLifecycleError("scheduled publication must be a timezone-aware future time")
     before_status = project.status
-    review = _review_row(
-        project,
-        super_admin,
-        "approved",
-        comment="",
-        from_status=before_status,
-        to_status=ProjectStatus.APPROVED,
-    )
-    if publish_at is not None:
-        project.scheduled_publication_at = publish_at
-        project.save(update_fields=["scheduled_publication_at"])
-    transitioned = _perform_transition(
-        project,
-        ProjectStatus.APPROVED,
-        actor=super_admin,
-        action="approved",
-        extra_after={"version": str(_latest_version(project).pk)},
-    )
+    with transaction.atomic():
+        review = _review_row(
+            project,
+            super_admin,
+            "approved",
+            comment=normalize_nfc(comment).strip(),
+            from_status=before_status,
+            to_status=ProjectStatus.APPROVED,
+        )
+        if publish_at is not None:
+            project.scheduled_publication_at = publish_at
+            project.save(update_fields=["scheduled_publication_at"])
+        transitioned = _perform_transition(
+            project,
+            ProjectStatus.APPROVED,
+            actor=super_admin,
+            action="approved",
+            extra_after={"version": str(_latest_version(project).pk)},
+        )
     _schedule_review_notifications(project, review)
     return transitioned
 
@@ -745,6 +838,7 @@ def approve(super_admin, project: Project, *, publish_at: datetime | None = None
 def revoke_approval(super_admin, project: Project, *, reason: str) -> Project:
     """GOV-004/GOV-005: revoking approval returns the project to CHANGES_REQUESTED."""
     _require_super_admin(super_admin, action="project.revoke_approval", obj=project)
+    _require_assigned_reviewer(super_admin, project)
     if project.status != ProjectStatus.APPROVED:
         raise ProjectLifecycleError(
             f"transition from '{project.status}' to '{ProjectStatus.CHANGES_REQUESTED}' "
@@ -760,6 +854,8 @@ def revoke_approval(super_admin, project: Project, *, reason: str) -> Project:
         from_status=project.status,
         to_status=ProjectStatus.CHANGES_REQUESTED,
     )
+    project.scheduled_publication_at = None
+    project.save(update_fields=["scheduled_publication_at"])
     transitioned = _perform_transition(
         project,
         ProjectStatus.CHANGES_REQUESTED,
@@ -849,7 +945,7 @@ def check_publish_readiness(project: Project) -> list[str]:
     return violations
 
 
-def publish(super_admin, project: Project) -> Project:
+def publish(super_admin, project: Project, *, comment: str = "") -> Project:
     """GOV-004/BR-002: publish an approved project, serving exactly the approved version."""
     _require_super_admin(super_admin, action="project.publish", obj=project)
     if project.status != ProjectStatus.APPROVED:
@@ -887,7 +983,7 @@ def publish(super_admin, project: Project) -> Project:
         project,
         super_admin,
         "published",
-        comment="",
+        comment=normalize_nfc(comment).strip(),
         from_status=before_status,
         to_status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
     )
@@ -1725,6 +1821,8 @@ def extend_deadline(actor, project: Project, new_deadline: date) -> Project:
     _require_owner_or_super_admin(actor, project, action="project.extend_deadline")
     if new_deadline is None:
         raise ProjectLifecycleError("a new deadline date is required")
+    if new_deadline <= timezone.localdate():
+        raise ProjectLifecycleError("the new deadline must be in the future")
     before = project.deadline.isoformat() if project.deadline else None
     project.deadline = new_deadline
     project.save(update_fields=["deadline"])

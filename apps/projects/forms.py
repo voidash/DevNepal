@@ -1,8 +1,10 @@
 import typing
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
@@ -252,16 +254,105 @@ class ProjectWorkflowForm(forms.Form):
             ("submit", _("Submit for review")),
             ("resubmit", _("Resubmit for review")),
             ("request_changes", _("Request changes")),
+            ("reject", _("Reject submission")),
             ("approve", _("Approve")),
+            ("revoke_approval", _("Revoke approval")),
             ("publish", _("Publish")),
             ("pause", _("Pause")),
             ("resume", _("Resume")),
             ("complete", _("Complete")),
+            ("cancel", _("Cancel")),
+            ("extend_deadline", _("Extend deadline")),
             ("archive", _("Archive")),
             ("restore", _("Restore from archive")),
         )
     )
     reason = forms.CharField(required=False, widget=forms.Textarea, label=_("Reason"))
+    publish_at = forms.DateTimeField(
+        required=False,
+        label=_("Schedule publication"),
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
+    new_deadline = forms.DateField(
+        required=False,
+        label=_("New deadline"),
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+
+    def __init__(self, *args, allowed_actions=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if allowed_actions is not None:
+            self.fields["action"].choices = [
+                choice for choice in self.fields["action"].choices if choice[0] in allowed_actions
+            ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        action = cleaned_data.get("action")
+        if (
+            action in {"request_changes", "reject", "revoke_approval", "cancel"}
+            and not cleaned_data.get("reason", "").strip()
+        ):
+            self.add_error("reason", _("A reason is required for this action."))
+        if action == "extend_deadline":
+            deadline = cleaned_data.get("new_deadline")
+            if deadline is None:
+                self.add_error("new_deadline", _("Choose a new deadline."))
+            elif deadline <= timezone.localdate():
+                self.add_error("new_deadline", _("The new deadline must be in the future."))
+        return cleaned_data
+
+
+class ProjectReviewAssignmentForm(forms.Form):
+    reviewer = forms.ModelChoiceField(queryset=get_user_model().objects.none(), label=_("Reviewer"))
+    due_at = forms.DateTimeField(
+        label=_("Decision due"),
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
+    reviewer_note = forms.CharField(
+        required=False, label=_("Reviewer note"), widget=forms.Textarea(attrs={"rows": 3})
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["reviewer"].queryset = (
+            get_user_model().objects.filter(is_active=True, is_superuser=True).order_by("username")
+        )
+        for area in SUITABILITY_AREAS:
+            self.fields[f"check_{area}"] = forms.BooleanField(
+                required=False, label=SUITABILITY_LABELS[area]
+            )
+
+    def checklist(self):
+        return {area: self.cleaned_data[f"check_{area}"] for area in SUITABILITY_AREAS}
+
+    def clean_due_at(self):
+        due_at = self.cleaned_data["due_at"]
+        if due_at <= timezone.now():
+            raise ValidationError(_("The review deadline must be in the future."))
+        return due_at
+
+
+class ProjectReviewDecisionForm(forms.Form):
+    action = forms.ChoiceField(
+        choices=(
+            ("request_changes", _("Request changes")),
+            ("reject", _("Reject")),
+            ("approve", _("Approve and schedule")),
+            ("revoke_approval", _("Revoke approval")),
+            ("publish", _("Publish now")),
+        )
+    )
+    comment = forms.CharField(
+        required=False,
+        label=_("Reviewer note (optional for approval or publication)"),
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+    publish_at = forms.DateTimeField(
+        required=False,
+        label=_("Publication date and time"),
+        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+    )
 
     def __init__(self, *args, allowed_actions=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -273,10 +364,10 @@ class ProjectWorkflowForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         if (
-            cleaned_data.get("action") == "request_changes"
-            and not cleaned_data.get("reason", "").strip()
+            cleaned_data.get("action") in {"request_changes", "reject", "revoke_approval"}
+            and not cleaned_data.get("comment", "").strip()
         ):
-            self.add_error("reason", _("A reason is required when requesting changes."))
+            self.add_error("comment", _("A reason is required for this decision."))
         return cleaned_data
 
 
