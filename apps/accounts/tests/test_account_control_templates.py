@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+from django.conf import settings
 from django.urls import reverse
 
 from apps.accounts.models import UserSession
@@ -40,6 +43,8 @@ def test_auth001_login_leads_with_the_form_and_sends_contributors_back(client):
     assert "dn-primary-nav" not in content
     assert "dn-footer--auth" in content
     assert "dn-footer-grid" not in content
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    assert ".dn-footer--auth { margin-top: auto; padding: 10px 0; }" in css
 
 
 @pytest.mark.unit

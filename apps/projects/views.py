@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, F, Prefetch, Q, Sum
+from django.db.models import Case, Count, F, IntegerField, Prefetch, Q, Sum, When
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -152,6 +152,30 @@ AUTHORING_MANAGE_TABS = {
     "screening_toggle": "questions",
     "screening_remove": "questions",
 }
+
+
+STARTER_ISSUE_LABELS = ("good first issue", "good-first-issue", "help wanted", "starter")
+
+
+def annotate_contribution_counts(project: Project) -> Project:
+    """DSC-005: attach the open-work counts a visitor scans a catalogue card for."""
+    connections = getattr(project, "public_connections", None)
+    if connections is None:
+        connections = [
+            connection
+            for connection in project.repository_connections.all()
+            if connection.is_public and connection.deactivated_at is None
+        ]
+    issues = [issue for connection in connections for issue in connection.issue_snapshots.all()]
+    if not issues:
+        issues = [task for connection in connections for task in connection.starter_tasks.all()]
+    project.open_issue_count = len(issues)
+    project.starter_issue_count = sum(
+        1
+        for issue in issues
+        if any(label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or []))
+    )
+    return project
 
 
 def public_projects():
@@ -454,14 +478,25 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
         )
     )
 
-    sort = normalize_nfc(request.GET.get("sort", "updated"))
+    # A visitor is shopping for work, so open listings lead and closed records
+    # follow, whatever their last-edited date says.
+    projects = projects.annotate(
+        contribution_rank=Case(
+            When(status=ProjectStatus.OPEN_FOR_CONTRIBUTION, then=0),
+            When(status=ProjectStatus.PAUSED, then=1),
+            default=2,
+            output_field=IntegerField(),
+        )
+    )
+    sort = normalize_nfc(request.GET.get("sort", "activity"))
     ordering = {
+        "activity": ("contribution_rank", "-updated_at", "-pk"),
         "updated": ("-updated_at", "-pk"),
         "deadline": (F("deadline").asc(nulls_last=True), "title_en", "pk"),
         "title": ("title_en", "pk"),
     }
     if sort not in ordering:
-        sort = "updated"
+        sort = "activity"
     projects = projects.order_by(*ordering[sort])
 
     layout = normalize_nfc(request.GET.get("layout", "grid"))
@@ -543,7 +578,20 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
         if filters[key]
     ]
 
-    page = Paginator(projects.distinct(), 24).get_page(request.GET.get("page"))
+    page = Paginator(
+        projects.distinct().prefetch_related(
+            Prefetch(
+                "repository_connections",
+                queryset=RepositoryConnection.objects.filter(
+                    is_public=True, deactivated_at__isnull=True
+                ).prefetch_related("issue_snapshots", "starter_tasks"),
+                to_attr="public_connections",
+            )
+        ),
+        24,
+    ).get_page(request.GET.get("page"))
+    for project in page:
+        annotate_contribution_counts(project)
     return render(
         request,
         "projects/project_list.html",
@@ -557,6 +605,7 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
             "sort": sort,
             "layout": layout,
             "sort_choices": (
+                ("activity", _("Open work first")),
                 ("updated", _("Recently updated")),
                 ("deadline", _("Deadline soonest")),
                 ("title", _("Title A to Z")),
