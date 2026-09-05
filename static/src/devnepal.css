@@ -936,3 +936,12 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
    taller neighbour pushes one input out of line with the other. */
 .dn-field-group > .dn-field { align-content: start; }
 .dn-application-row .dn-issue-aside { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; justify-content: flex-end; }
+/* An application row leads with its state, which is a label rather than a
+   22px glyph, so the row needs its own column for it. */
+.dn-application-row { grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; align-items: center; }
+.dn-application-row > .Label { align-self: center; }
+@media (max-width: 860px) {
+  .dn-application-row { grid-template-columns: minmax(0, 1fr); }
+  .dn-application-row > .Label { justify-self: start; }
+  .dn-application-row .dn-issue-aside { grid-column: 1; justify-content: flex-start; }
+}
