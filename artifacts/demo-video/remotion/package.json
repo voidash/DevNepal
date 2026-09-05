@@ -3,8 +3,12 @@
   "private": true,
   "scripts": {
     "record:brave": "node scripts/record-brave-flow.mjs",
+    "record:refresh": "node scripts/record-live-refresh.mjs",
+    "capture:long": "node scripts/capture-long-demo.mjs",
     "voice:kala": "node scripts/generate-voiceover.mjs",
+    "voice:long": "node scripts/generate-long-voiceover.mjs",
     "render": "remotion render src/index.ts DevNepalNarrated ../DevNepal-GitHub-flow-demo.mp4",
+    "render:long": "remotion render src/index.ts DevNepal20MinuteNepali ../DevNepal-20-minute-Nepali-demo.mp4 --codec=h264 --crf=23",
     "render:silent": "remotion render src/index.ts DevNepalSilent ../DevNepal-GitHub-flow-preview.mp4"
   },
   "dependencies": {
