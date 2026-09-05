@@ -17,9 +17,15 @@
         <p class="hero__lead">{% trans "DevNepal is where ministries open suitable technology projects to public contribution — and where Nepal’s developers, designers, writers and testers earn recognition that a ministry has actually verified. Code stays on GitHub; DevNepal holds identity, listings, participation and the record." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
-          <a class="btn btn--ghost" href="{% url 'accounts:login' %}?next={% url 'projects:home' %}">{% trans "Join with GitHub" %}</a>
-          <a class="btn btn--ghost" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
-          <span class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:about' %}">{% trans "How listing works" %}</a></span>
+          {% if github_oauth_enabled %}
+          <form method="post" action="{% url 'accounts:github_connect' %}">
+            {% csrf_token %}
+            <button class="btn btn--ghost" type="submit">{% trans "Join with GitHub" %}</button>
+          </form>
+          {% else %}
+          <a class="btn btn--ghost" href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a>
+          {% endif %}
+          <span class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a></span>
         </div>
       </div>
     </div>
@@ -50,7 +56,8 @@
 <section class="section" aria-labelledby="opportunities-heading">
   <div class="container">
     <header>
-      <h2 id="opportunities-heading">{% trans "Government opportunities" %}</h2>
+      <span class="dn-section-kicker">{% trans "02 · Featured government projects" %}</span>
+      <h2 id="opportunities-heading">{% trans "Featured government projects" %}</h2>
       <p>{% trans "Open work is listed only after a named owner, contribution guidance, and suitability review." %}</p>
     </header>
     {% if featured_projects %}
@@ -88,6 +95,7 @@
         </picture>
         <figcaption>{% trans "Illustrated public-interest work areas, not a list of open projects." %}</figcaption>
       </figure>
+      <p><a href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a></p>
     </div>
     {% endif %}
   </div>
@@ -102,10 +110,10 @@
         <a href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
       </header>
       <div class="dn-contribution-grid">
-        <article class="blueprint"><h3>{% trans "Code & data" %}</h3><p>{% trans "Pick a labelled starter issue and open a pull request. A merge by a named maintainer becomes a verified contribution." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "Engineering" %}</span><span class="tag tag-neutral">{% trans "Data" %}</span></p></article>
-        <article class="blueprint"><h3>{% trans "Design & research" %}</h3><p>{% trans "Audits, flows, interface work and user research are submitted as evidence and accepted by the ministry reviewer." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "UI/UX" %}</span><span class="tag tag-neutral">{% trans "Research" %}</span></p></article>
-        <article class="blueprint"><h3>{% trans "Docs & Nepali" %}</h3><p>{% trans "Documentation, translation and localisation count exactly like code. No contribution type is disadvantaged." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "Documentation" %}</span><span class="tag tag-neutral">{% trans "Localization" %}</span></p></article>
-        <article class="blueprint"><h3>{% trans "QA, security & community" %}</h3><p>{% trans "Test plans, reproductions, responsible disclosure and community facilitation all count." %}</p><p class="dn-labels"><span class="tag tag-neutral">{% trans "QA" %}</span><span class="tag tag-neutral">{% trans "Security" %}</span><span class="tag tag-neutral">{% trans "Community" %}</span></p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Code & data" %}</a></h3><p>{% trans "Pick a labelled starter issue and open a pull request. A merge by a named maintainer becomes a verified contribution." %}</p><p class="dn-labels"><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Engineering" %}</a><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=data">{% trans "Data" %}</a></p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "Design & research" %}</a></h3><p>{% trans "Audits, flows, interface work and user research are submitted as evidence and accepted by the ministry reviewer." %}</p><p class="dn-labels"><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "UI/UX" %}</a><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=research">{% trans "Research" %}</a></p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Docs & Nepali" %}</a></h3><p>{% trans "Documentation, translation and localisation count exactly like code. No contribution type is disadvantaged." %}</p><p class="dn-labels"><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Documentation" %}</a><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=localization">{% trans "Localization" %}</a></p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA, security & community" %}</a></h3><p>{% trans "Test plans, reproductions, responsible disclosure and community facilitation all count." %}</p><p class="dn-labels"><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=qa">{% trans "QA" %}</a><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=security">{% trans "Security" %}</a><a class="tag tag-neutral" href="{% url 'projects:government' %}?contribution_type=community-support">{% trans "Community" %}</a></p></article>
       </div>
     </div>
   </div>
@@ -115,12 +123,73 @@
     <div class="blueprint dn-community-boundary">
       <header class="dn-sheet__header">
         <h2 id="community-projects-heading">{% trans "Community projects — listed by members" %}</h2>
+        <span>{{ platform_metrics.community_projects }} {% trans "listed" %}</span>
         <span>{% trans "No government endorsement" %}</span>
+        <span>{% trans "Sheet 04 of 07" %}</span>
       </header>
+      <div class="dn-community-project-grid">
+        {% for project in featured_community_projects %}
+        <article>
+          <div class="dn-community-project-title"><h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3><span>{% trans "Community project" %}</span></div>
+          <p>{{ project.localized_summary }}</p>
+          <p class="dn-community-owner">{{ project.owner.get_full_name|default:project.owner.username }}</p>
+          <div class="dn-community-project-meta">
+            <span>{% for technology in project.technologies.all %}{{ technology.label }}{% if not forloop.last %} · {% endif %}{% empty %}{% for skill in project.skills.all|slice:":2" %}{{ skill.name }}{% if not forloop.last %} · {% endif %}{% endfor %}{% endfor %}</span>
+            <span>{{ project.get_ownership_verification_display }}</span>
+          </div>
+        </article>
+        {% empty %}
+        <p role="status">{% trans "No public community projects are listed yet." %}</p>
+        {% endfor %}
+      </div>
       <div class="dn-community-boundary__body">
         <p>{% trans "Member projects are listed by their owners and are not reviewed by PMO. Ownership is verified through the owner’s connected GitHub account where possible." %}</p>
-        <a href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
+        <a href="{% url 'projects:community' %}">{% trans "All community projects" %} →</a>
       </div>
+    </div>
+  </div>
+</section>
+<section class="section" aria-labelledby="people-heading">
+  <div class="container">
+    <div class="blueprint dn-sheet">
+      <header class="dn-sheet__header">
+        <h2 id="people-heading">{% trans "People — verified impact and the people behind it" %}</h2>
+        <span>{% now "Y" %}</span>
+        <span>{% trans "Scoring policy" %}</span>
+        <span>{% trans "Sheet 05 of 07" %}</span>
+      </header>
+      <div class="TableWrapper">
+        <table class="table dn-people-table">
+          <thead><tr><th>{% trans "Rank" %}</th><th>{% trans "Member" %}</th><th>{% trans "Verified" %}</th><th>{% trans "Badges" %}</th><th>{% trans "Score" %}</th></tr></thead>
+          <tbody>
+            {% for profile in featured_members %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td><a href="{% url 'accounts:public_profile' profile.user.username %}"><strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong></a><br><span>@{{ profile.user.username }}{% if profile.location %} · {{ profile.location }}{% endif %}</span></td>
+              <td>{{ profile.verified_count }}</td>
+              <td>{{ profile.user.badge_awards.all|length }}</td>
+              <td>{{ profile.total_score|default:0 }}</td>
+            </tr>
+            {% empty %}<tr><td colspan="5">{% trans "No members have chosen public recognition yet." %}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="dn-sheet-actions"><a href="{% url 'recognition:leaderboard' %}">{% trans "Leaderboard & badges" %} →</a><a href="{% url 'accounts:member_directory' %}">{% trans "All members" %} →</a><a href="{% url 'recognition:public_badges' %}">{% trans "Badge definitions" %} →</a><a href="{% url 'recognition:public_policy' %}">{% trans "Scoring policy" %} →</a></div>
+    </div>
+  </div>
+</section>
+<section class="section" aria-labelledby="writing-heading">
+  <div class="container">
+    <header class="dn-home-section-heading"><div><span class="dn-section-kicker">{% trans "06 · Tech blogs" %}</span><h2 id="writing-heading">{% trans "Writing from the community" %}</h2></div><a href="{% url 'blogs:list' %}">{% trans "All posts" %} →</a></header>
+    <div class="dn-blog-card-grid">
+      {% for post in featured_posts %}
+      <article class="blueprint">
+        <div class="dn-labels"><span class="Label Label--secondary">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span><span class="Label">{{ post.get_language_display }}</span></div>
+        <h3><a href="{% url 'blogs:detail' post.pk %}">{{ post.title }}</a></h3>
+        <p>{{ post.excerpt }}</p>
+        <footer>{{ post.author.get_full_name|default:post.author.username }} · {% blocktrans with minutes=post.reading_time_minutes %}{{ minutes }} min read{% endblocktrans %}</footer>
+      </article>
+      {% empty %}<p role="status">{% trans "No public posts have been published yet." %}</p>{% endfor %}
     </div>
   </div>
 </section>
@@ -164,70 +233,25 @@
   </div>
 </section>
 {% endif %}
-<section class="section" aria-labelledby="directory-heading">
+<section class="section dn-get-started" aria-labelledby="get-started-heading">
   <div class="container">
-    <header>
-      <h2 id="directory-heading">{% trans "Everywhere on DevNepal" %}</h2>
-      <p>{% trans "Every destination on the platform, one click from home." %}</p>
-    </header>
-    <div class="dn-source-grid dn-home-directory">
-      <div class="dn-source">
-        <h3>{% trans "Discover" %}</h3>
-        <ul>
-          {% url 'projects:list' as d_all %}{% if d_all %}<li><a href="{{ d_all }}">{% trans "All projects" %}</a></li>{% endif %}
-          {% url 'projects:government' as d_gov %}{% if d_gov %}<li><a href="{{ d_gov }}">{% trans "Government projects" %}</a></li>{% endif %}
-          {% url 'projects:community' as d_comm %}{% if d_comm %}<li><a href="{{ d_comm }}">{% trans "Community projects" %}</a></li>{% endif %}
-          {% url 'blogs:list' as d_blogs %}{% if d_blogs %}<li><a href="{{ d_blogs }}">{% trans "Tech blogs" %}</a></li>{% endif %}
-          {% url 'accounts:member_directory' as d_members %}{% if d_members %}<li><a href="{{ d_members }}">{% trans "Member directory" %}</a></li>{% endif %}
-          {% url 'recognition:leaderboard' as d_board %}{% if d_board %}<li><a href="{{ d_board }}">{% trans "Leaderboard" %}</a></li>{% endif %}
-        </ul>
-      </div>
-      {% if user.is_authenticated %}
-      <div class="dn-source">
-        <h3>{% trans "Your workspace" %}</h3>
-        <ul>
-          {% url 'accounts:dashboard' as w_dash %}{% if w_dash %}<li><a href="{{ w_dash }}">{% trans "Dashboard" %}</a></li>{% endif %}
-          {% url 'accounts:profile_edit' as w_profile %}{% if w_profile %}<li><a href="{{ w_profile }}">{% trans "Profile settings" %}</a></li>{% endif %}
-          {% url 'projects:application_list' as w_apps %}{% if w_apps %}<li><a href="{{ w_apps }}">{% trans "My applications" %}</a></li>{% endif %}
-          {% url 'notifications:list' as w_notifs %}{% if w_notifs %}<li><a href="{{ w_notifs }}">{% trans "Notifications" %}</a></li>{% endif %}
-          {% url 'recognition:my_profile' as w_recog %}{% if w_recog %}<li><a href="{{ w_recog }}">{% trans "My recognition" %}</a></li>{% endif %}
-          {% url 'taxonomy:skill_suggestion_create' as w_skill %}{% if w_skill %}<li><a href="{{ w_skill }}">{% trans "Suggest a skill" %}</a></li>{% endif %}
-          {% url 'projects:community_create' as w_create %}{% if w_create %}<li><a href="{{ w_create }}">{% trans "List a community project" %}</a></li>{% endif %}
-          {% url 'accounts:session_list' as w_sessions %}{% if w_sessions %}<li><a href="{{ w_sessions }}">{% trans "Sessions and devices" %}</a></li>{% endif %}
-        </ul>
-      </div>
-      {% else %}
-      <div class="dn-source">
-        <h3>{% trans "Get started" %}</h3>
-        <ul>
-          {% url 'accounts:login' as s_login %}{% if s_login %}<li><a href="{{ s_login }}">{% trans "Sign in" %}</a></li>{% endif %}
-          {% url 'accounts:signup' as s_signup %}{% if s_signup %}<li><a href="{{ s_signup }}">{% trans "Create an account" %}</a></li>{% endif %}
-        </ul>
-      </div>
-      {% endif %}
-      {% if user.is_superuser %}
-      <div class="dn-source">
-        <h3>{% trans "Administration" %}</h3>
-        <ul>
-          {% url 'ministries:organization_list' as a_min %}{% if a_min %}<li><a href="{{ a_min }}">{% trans "Ministries and publishers" %}</a></li>{% endif %}
-          {% url 'projects:authoring_dashboard' as a_author %}{% if a_author %}<li><a href="{{ a_author }}">{% trans "Project authoring" %}</a></li>{% endif %}
-          {% url 'moderation:case_queue' as a_mod %}{% if a_mod %}<li><a href="{{ a_mod }}">{% trans "Moderation queue" %}</a></li>{% endif %}
-          {% url 'recognition:policy_create' as a_policy %}{% if a_policy %}<li><a href="{{ a_policy }}">{% trans "Recognition policies" %}</a></li>{% endif %}
-          {% url 'recognition:badge_list' as a_badges %}{% if a_badges %}<li><a href="{{ a_badges }}">{% trans "Badges" %}</a></li>{% endif %}
-          {% url 'recognition:anomaly_review' as a_anom %}{% if a_anom %}<li><a href="{{ a_anom }}">{% trans "Anomaly review" %}</a></li>{% endif %}
-          {% url 'audit:audit_log' as a_audit %}{% if a_audit %}<li><a href="{{ a_audit }}">{% trans "Audit log" %}</a></li>{% endif %}
-          {% url 'audit:ops_dashboard' as a_ops %}{% if a_ops %}<li><a href="{{ a_ops }}">{% trans "Operations dashboard" %}</a></li>{% endif %}
-        </ul>
-      </div>
-      {% endif %}
-      <div class="dn-source">
-        <h3>{% trans "Trust and safety" %}</h3>
-        <ul>
-          {% url 'moderation:report_create' as t_report %}{% if t_report %}<li><a href="{{ t_report }}">{% trans "Report content" %}</a></li>{% endif %}
-          {% url 'accounts:privacy_export' as t_export %}{% if t_export %}<li><a href="{{ t_export }}">{% trans "Export your data" %}</a></li>{% endif %}
-          {% if user.is_authenticated %}{% url 'accounts:dashboard' as t_dash %}{% if t_dash %}<li><a href="{{ t_dash }}">{% trans "Privacy controls" %}</a></li>{% endif %}{% endif %}
-        </ul>
-      </div>
+    <header class="dn-home-section-heading"><div><span class="dn-section-kicker">{% trans "07 · Get started" %}</span><h2 id="get-started-heading">{% trans "Choose your way in" %}</h2></div></header>
+    <div class="dn-get-started-grid">
+      <article class="blueprint">
+        <span class="dn-section-kicker">{% trans "For contributors" %}</span>
+        <h3>{% trans "Give your skills to public-interest technology" %}</h3>
+        <p>{% trans "Browse suitable work first. Create an account when you are ready to apply, submit evidence, or make your work publicly verifiable." %}</p>
+        <div class="hero__actions">
+          {% if github_oauth_enabled %}<form method="post" action="{% url 'accounts:github_connect' %}">{% csrf_token %}<button class="btn btn--primary" type="submit">{% trans "Join with GitHub" %}</button></form>{% else %}<a class="btn btn--primary" href="{% url 'accounts:signup' %}">{% trans "Create an account" %}</a>{% endif %}
+          <a class="btn" href="{% url 'projects:government' %}">{% trans "Browse projects" %}</a>
+        </div>
+      </article>
+      <article class="blueprint">
+        <span class="dn-section-kicker">{% trans "For ministries" %}</span>
+        <h3>{% trans "Open suitable government work, accountably" %}</h3>
+        <p>{% trans "Named officers prepare listings, publish contribution safeguards, and send suitable projects to PMO review before they carry the Official label." %}</p>
+        <div class="hero__actions"><a class="btn btn--primary" href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a><a class="btn" href="{% url 'projects:ministry_onboarding' %}">{% trans "Nominate a publisher" %}</a></div>
+      </article>
     </div>
   </div>
 </section>

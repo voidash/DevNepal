@@ -1,66 +1,66 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Projects" %} | DevNepal{% endblock %}
+{% block title %}{% if project_type == "government" %}{% trans "Government projects" %}{% elif project_type == "personal" %}{% trans "Community projects" %}{% else %}{% trans "All projects" %}{% endif %} | DevNepal{% endblock %}
 {% block content %}
-<section class="section" aria-labelledby="projects-heading">
+<section class="dn-catalog" aria-labelledby="projects-heading">
   <div class="container">
-    <header class="section__header">
-      <p class="dn-section-kicker">{% trans "Public project registry" %}</p>
-      <h1 id="projects-heading">{% if project_type == "government" %}{% trans "Government Projects" %}{% elif project_type == "personal" %}{% trans "Community Projects" %}{% else %}{% trans "All Projects" %}{% endif %}</h1>
-      {% if project_type == "government" %}<p>{% trans "Approved ministry opportunities for public contribution. Official listings identify their ministry, response commitment, and contribution route." %}</p>{% elif project_type == "personal" %}<p>{% trans "Member-owned collaboration opportunities. Community listings are clearly distinct from Government of Nepal projects." %}</p>{% else %}<p>{% trans "Find a contribution opportunity with a clear owner, maintained tasks, and a visible public outcome." %}</p>{% endif %}
+    <header class="dn-catalog-heading">
+      <div>
+        <p class="dn-section-kicker">{% trans "Public project registry" %}</p>
+        <h1 id="projects-heading">{% if project_type == "government" %}{% trans "Government projects" %}{% elif project_type == "personal" %}{% trans "Community projects" %}{% else %}{% trans "All projects" %}{% endif %}</h1>
+        {% if project_type == "government" %}<p>{% trans "Approved ministry opportunities that need public contribution. Only projects cleared for public participation are listed; each one names its maintainers, its licence and how quickly it responds." %}</p>{% elif project_type == "personal" %}<p>{% trans "Member-owned collaboration opportunities. Community listings are clearly distinct from Government of Nepal projects and do not carry government endorsement." %}</p>{% else %}<p>{% trans "Find public and community contribution opportunities with a clear owner, maintained tasks, and a visible public outcome." %}</p>{% endif %}
+      </div>
+      <dl class="dn-catalog-status-counts" aria-label="{% trans 'Project status counts' %}">
+        {% for label, count in status_summary %}<div><dt>{{ label }}</dt><dd>{{ count }}</dd></div>{% endfor %}
+      </dl>
     </header>
+
     <form class="blueprint dn-sheet catalog-filter" method="get" role="search">
-      <div class="dn-sheet__header"><span>{% trans "Project catalog" %}</span><span>{% trans "Filters" %}</span></div>
-      <div class="filterbar">
-        <div class="filterbar__query"><label for="project-search">{% trans "Search projects" %}</label><input id="project-search" name="q" type="search" value="{{ query }}" placeholder="{% trans "Search in English or नेपाली" %}"></div>
-        {% if project_type %}
-        <input name="type" type="hidden" value="{{ project_type }}">
-        {% else %}
-        <div class="filterbar__query"><label for="project-type">{% trans "Project type" %}</label><select id="project-type" name="type"><option value="">{% trans "All project types" %}</option>{% for value, label in project_types.choices %}<option value="{{ value }}"{% if filters.type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        {% endif %}
-        <div class="filterbar__query"><label for="ministry">{% trans "Ministry" %}</label><select id="ministry" name="ministry"><option value="">{% trans "All ministries" %}</option>{% for ministry in ministries %}<option value="{{ ministry.slug }}"{% if filters.ministry == ministry.slug %} selected{% endif %}>{{ ministry.localized_name }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="technology">{% trans "Technology" %}</label><select id="technology" name="technology"><option value="">{% trans "All technologies" %}</option>{% for technology in technologies %}<option value="{{ technology.slug }}"{% if filters.technology == technology.slug %} selected{% endif %}>{{ technology.label }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="skill">{% trans "Skill" %}</label><select id="skill" name="skill"><option value="">{% trans "All skills" %}</option>{% for skill in skills %}<option value="{{ skill.slug }}"{% if filters.skill == skill.slug %} selected{% endif %}>{{ skill.name }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="contribution-type">{% trans "Contribution type" %}</label><select id="contribution-type" name="contribution_type"><option value="">{% trans "All contribution types" %}</option>{% for contribution_type in contribution_types %}<option value="{{ contribution_type.slug }}"{% if filters.contribution_type == contribution_type.slug %} selected{% endif %}>{{ contribution_type.label }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="status">{% trans "Status" %}</label><select id="status" name="status"><option value="">{% trans "All statuses" %}</option>{% for value, label in public_status_choices %}<option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="difficulty">{% trans "Difficulty" %}</label><select id="difficulty" name="difficulty"><option value="">{% trans "All difficulty levels" %}</option>{% for value, label in difficulties.choices %}<option value="{{ value }}"{% if filters.difficulty == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="effort">{% trans "Effort" %}</label><select id="effort" name="effort"><option value="">{% trans "All effort levels" %}</option>{% for value, label in effort_bands.choices %}<option value="{{ value }}"{% if filters.effort == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <div class="filterbar__query"><label for="deadline-from">{% trans "Deadline from" %}</label><input id="deadline-from" name="deadline_from" type="date" value="{{ filters.deadline_from }}"></div>
-        <div class="filterbar__query"><label for="deadline-to">{% trans "Deadline to" %}</label><input id="deadline-to" name="deadline_to" type="date" value="{{ filters.deadline_to }}"></div>
-        <div class="filterbar__query"><label for="language">{% trans "Language" %}</label><select id="language" name="language"><option value="">{% trans "All languages" %}</option>{% for value, label in languages.choices %}<option value="{{ value }}"{% if filters.language == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-        <button class="btn btn--primary filterbar__submit" type="submit">{% trans "Search" %}</button>
+      <div class="dn-sheet__header"><span>{% trans "Project catalog" %}</span><span>{% trans "Search and filters" %}</span></div>
+      {% if project_type %}<input name="type" type="hidden" value="{{ project_type }}">{% endif %}
+      <div class="dn-catalog-toolbar">
+        <div class="dn-catalog-search"><label for="project-search">{% trans "Search projects" %}</label><input id="project-search" name="q" type="search" value="{{ query }}" placeholder="{% trans 'Search title, ministry, technology or skill — नेपालीमा पनि खोज्नुहोस्' %}"></div>
+        <div class="dn-catalog-sort"><label for="catalog-sort">{% trans "Sort" %}</label><select id="catalog-sort" name="sort">{% for value, label in sort_choices %}<option value="{{ value }}"{% if sort == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <fieldset class="dn-catalog-layout"><legend>{% trans "View" %}</legend><div class="dn-catalog-segmented"><label><input type="radio" name="layout" value="grid"{% if layout == "grid" %} checked{% endif %}><span>{% trans "Grid" %}</span></label><label><input type="radio" name="layout" value="list"{% if layout == "list" %} checked{% endif %}><span>{% trans "List" %}</span></label></div></fieldset>
+        <button class="btn btn--primary" type="submit">{% trans "Search" %}</button>
+      </div>
+
+      <div class="dn-catalog-body">
+        <details class="dn-catalog-filters" open>
+          <summary>{% trans "Filters" %}{% if active_filters %} <span class="Counter">{{ active_filters|length }}</span>{% endif %}</summary>
+          <div class="dn-catalog-filter-head"><strong>{% trans "Filters" %}</strong><a href="{{ request.path }}">{% trans "Clear all" %}</a></div>
+          {% if not project_type %}<fieldset><legend>{% trans "Project type" %}</legend><label class="sr-only" for="project-type">{% trans "Project type" %}</label><select id="project-type" name="type"><option value="">{% trans "All project types" %}</option>{% for value, label in project_types.choices %}<option value="{{ value }}"{% if filters.type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></fieldset>{% endif %}
+          {% if project_type != "personal" %}<fieldset><legend>{% trans "Ministry" %}</legend><label class="sr-only" for="ministry">{% trans "Ministry" %}</label><select id="ministry" name="ministry"><option value="">{% trans "All ministries" %}</option>{% for ministry in ministries %}<option value="{{ ministry.slug }}"{% if filters.ministry == ministry.slug %} selected{% endif %}>{{ ministry.localized_name }}</option>{% endfor %}</select></fieldset>{% endif %}
+          <fieldset><legend>{% trans "Contribution type" %}</legend><div class="dn-catalog-chips"><label><input type="radio" name="contribution_type" value=""{% if not filters.contribution_type %} checked{% endif %}><span>{% trans "Any" %}</span></label>{% for contribution_type in contribution_types %}<label><input type="radio" name="contribution_type" value="{{ contribution_type.slug }}"{% if filters.contribution_type == contribution_type.slug %} checked{% endif %}><span>{{ contribution_type.label }}</span></label>{% endfor %}</div></fieldset>
+          <fieldset><legend>{% trans "Technology" %}</legend><label class="sr-only" for="technology">{% trans "Technology" %}</label><select id="technology" name="technology"><option value="">{% trans "All technologies" %}</option>{% for technology in technologies %}<option value="{{ technology.slug }}"{% if filters.technology == technology.slug %} selected{% endif %}>{{ technology.label }}</option>{% endfor %}</select></fieldset>
+          <fieldset><legend>{% trans "Skill" %}</legend><label class="sr-only" for="skill">{% trans "Skill" %}</label><select id="skill" name="skill"><option value="">{% trans "All skills" %}</option>{% for skill in skills %}<option value="{{ skill.slug }}"{% if filters.skill == skill.slug %} selected{% endif %}>{{ skill.name }}</option>{% endfor %}</select></fieldset>
+          <fieldset><legend>{% trans "Difficulty" %}</legend><div class="dn-catalog-options"><label><input type="radio" name="difficulty" value=""{% if not filters.difficulty %} checked{% endif %}> {% trans "Any" %}</label>{% for value, label in difficulties.choices %}<label><input type="radio" name="difficulty" value="{{ value }}"{% if filters.difficulty == value %} checked{% endif %}> {{ label }}</label>{% endfor %}</div></fieldset>
+          <fieldset><legend>{% trans "Effort" %}</legend><div class="dn-catalog-options"><label><input type="radio" name="effort" value=""{% if not filters.effort %} checked{% endif %}> {% trans "Any" %}</label>{% for value, label in effort_bands.choices %}<label><input type="radio" name="effort" value="{{ value }}"{% if filters.effort == value %} checked{% endif %}> {{ label }}</label>{% endfor %}</div></fieldset>
+          <fieldset><legend>{% trans "Deadline" %}</legend><label for="deadline-from">{% trans "From" %}</label><input id="deadline-from" name="deadline_from" type="date" value="{{ filters.deadline_from }}"><label for="deadline-to">{% trans "To" %}</label><input id="deadline-to" name="deadline_to" type="date" value="{{ filters.deadline_to }}"></fieldset>
+          <fieldset><legend>{% trans "Status" %}</legend><label class="sr-only" for="status">{% trans "Status" %}</label><select id="status" name="status"><option value="">{% trans "All statuses" %}</option>{% for value, label in public_status_choices %}<option value="{{ value }}"{% if filters.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></fieldset>
+          <fieldset><legend>{% trans "Documentation language" %}</legend><label class="sr-only" for="language">{% trans "Documentation language" %}</label><select id="language" name="language"><option value="">{% trans "Any" %}</option>{% for value, label in languages.choices %}<option value="{{ value }}"{% if filters.language == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></fieldset>
+          <button class="btn btn--secondary" type="submit">{% trans "Apply filters" %}</button>
+        </details>
+
+        <div class="dn-catalog-main">
+          <div class="dn-catalog-result-summary" role="status"><span>{% blocktrans count shown=projects|length with total=projects.paginator.count %}Showing {{ shown }} of {{ total }} project{% plural %}Showing {{ shown }} of {{ total }} projects{% endblocktrans %}</span>{% if project_type == "government" %}<span class="dn-catalog-trust">{% trans "All listings approved by PMO" %}</span>{% elif project_type == "personal" %}<span>{% trans "No government endorsement" %}</span>{% endif %}</div>
+          {% if active_filters %}<div class="dn-catalog-active"><strong>{% trans "Active filters" %}</strong>{% for filter in active_filters %}<span class="Label Label--secondary">{{ filter.label }}: {{ filter.value }}</span>{% endfor %}<a href="{{ request.path }}">{% trans "Clear all" %}</a></div>{% endif %}
+          <div class="dn-catalog-results dn-catalog-results--{{ layout }}">
+            {% for project in projects %}
+            <article class="card blueprint">
+              <div class="dn-catalog-card__head">{% if project.is_official %}<span class="tag tag-accent">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.localized_name }}{% endif %}</span>{% elif project.project_type == "government" %}<span class="tag tag-outline">{% trans "Government project" %}</span>{% else %}<span class="tag tag-neutral">{% trans "Community project" %}</span>{% endif %}<span class="Label{% if project.status == 'open_for_contribution' %} Label--success{% elif project.status == 'paused' %} Label--attention{% else %} Label--secondary{% endif %}">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span></div>
+              <div class="dn-catalog-card__identity"><h2><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h2>{% if project.title_ne %}<p lang="ne">{{ project.title_ne }}{% if project.ministry %} · {{ project.ministry.localized_name }}{% endif %}</p>{% elif project.ministry %}<p>{{ project.ministry.localized_name }}</p>{% endif %}</div>
+              <p class="dn-catalog-card__summary">{{ project.localized_summary }}</p>
+              {% if project.contribution_types.all or project.technologies.all %}<div class="dn-catalog-card__tags">{% for contribution_type in project.contribution_types.all %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}{% for technology in project.technologies.all %}<span class="tag tag-outline">{{ technology.label }}</span>{% endfor %}</div>{% endif %}
+              <dl class="dn-catalog-card__facts"><div><dt>{% trans "Mode" %}</dt><dd>{{ project.get_contribution_mode_display|default:"—" }}</dd></div><div><dt>{% trans "Difficulty" %}</dt><dd>{{ project.get_difficulty_display|default:"—" }}</dd></div><div><dt>{% trans "Effort" %}</dt><dd>{{ project.get_estimated_effort_display|default:"—" }}</dd></div><div><dt>{% trans "First response" %}</dt><dd>{{ project.get_response_sla_display|default:"—" }}</dd></div></dl>
+              <div class="dn-catalog-card__foot"><span>{% blocktrans count count=project.open_task_count %}{{ count }} open task{% plural %}{{ count }} open tasks{% endblocktrans %}</span><span>{% trans "Updated" %} <time datetime="{{ project.updated_at|date:'c' }}">{{ project.updated_at|date:"DATE_FORMAT" }}</time></span></div>
+            </article>
+            {% empty %}<div class="dn-state-banner" role="status"><strong>{% trans "No public projects match these filters." %}</strong><p><a href="{{ request.path }}">{% trans "Clear all filters" %}</a></p></div>{% endfor %}
+          </div>
+          {% if projects.paginator.num_pages > 1 %}<nav class="pagination dn-catalog-pagination" aria-label="{% trans 'Project pages' %}">{% if projects.has_previous %}<a class="btn btn--secondary" href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ projects.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}<span>{% blocktrans with current=projects.number total=projects.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>{% if projects.has_next %}<a class="btn btn--secondary" href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ projects.next_page_number }}">{% trans "Next" %}</a>{% endif %}</nav>{% endif %}
+        </div>
       </div>
     </form>
-    <p class="filterbar__count" role="status">{% blocktrans count count=projects.paginator.count %}{{ count }} project{% plural %}{{ count }} projects{% endblocktrans %}</p>
-    <div class="card-grid">
-      {% for project in projects %}
-      <article class="card blueprint">
-        <div class="card__head">
-          <span>{% if project.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}</span>
-          <span class="Label">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
-        </div>
-        <div><h2 class="card__title"><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h2>{% if project.ministry %}<p class="color-fg-muted">{{ project.ministry.localized_name }}</p>{% endif %}</div>
-        <p>{{ project.localized_summary }}</p>
-        {% if project.contribution_types.all or project.technologies.all %}<p class="dn-labels">{% for contribution_type in project.contribution_types.all %}<span class="Label">{{ contribution_type.label }}</span>{% endfor %}{% for technology in project.technologies.all %}<span class="Label Label--secondary">{{ technology.label }}</span>{% endfor %}</p>{% endif %}
-        <dl class="card__meta">
-          {% if project.contribution_mode %}<div><dt>{% trans "Contribution mode" %}</dt><dd>{{ project.get_contribution_mode_display }}</dd></div>{% endif %}
-          {% if project.difficulty %}<div><dt>{% trans "Difficulty" %}</dt><dd>{{ project.get_difficulty_display }}</dd></div>{% endif %}
-          {% if project.estimated_effort %}<div><dt>{% trans "Effort" %}</dt><dd>{{ project.get_estimated_effort_display }}</dd></div>{% endif %}
-          {% if project.response_sla %}<div><dt>{% trans "First response" %}</dt><dd>{{ project.get_response_sla_display }}</dd></div>{% endif %}
-          <div><dt>{% trans "Deadline" %}</dt><dd>{% if project.deadline %}<time datetime="{{ project.deadline|date:"Y-m-d" }}">{{ project.deadline|date:"DATE_FORMAT" }}</time>{% else %}{% trans "No deadline" %}{% endif %}</dd></div>
-        </dl>
-      </article>
-      {% empty %}
-      <p role="status">{% trans "No public projects match these filters." %}</p>
-      {% endfor %}
-    </div>
-    {% if projects.paginator.num_pages > 1 %}
-    <nav class="pagination" aria-label="{% trans 'Project pages' %}">
-      {% if projects.has_previous %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ projects.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
-      <span>{% blocktrans with current=projects.number total=projects.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>
-      {% if projects.has_next %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ projects.next_page_number }}">{% trans "Next" %}</a>{% endif %}
-    </nav>
-    {% endif %}
   </div>
 </section>
 {% endblock %}

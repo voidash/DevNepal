@@ -124,8 +124,8 @@ def test_status_and_form_contracts_preserve_textual_state_and_error_association(
     login = (root / "apps/accounts/templates/accounts/login.html").read_text()
     profile_edit = (root / "apps/accounts/templates/accounts/profile_edit.html").read_text()
 
-    assert 'class="card-grid"' in catalog
-    assert 'class="card blueprint"' in catalog
+    assert 'class="dn-catalog-results' in catalog
+    assert '<article class="card blueprint">' in catalog
     assert '{% include "components/status_octicon.html"' in catalog
     assert "{{ project.get_status_display }}" in catalog
     assert "dn-state-banner is-danger" in login
@@ -152,20 +152,18 @@ def test_status_and_form_contracts_preserve_textual_state_and_error_association(
 
 
 @pytest.mark.unit
-def test_official_provenance_uses_the_neutral_outlined_label():
-    """A8/NFR-A11Y-01/GOV-011: official provenance is a short outlined neutral Label.
-
-    The design authority (prompt:76-78) requires the compact outlined Label reading
-    "Official" without color-only signaling; community projects stay semantically
-    distinct with their own labeled provenance.
-    """
+def test_official_provenance_uses_textual_prototype_labels():
+    """A8/NFR-A11Y-01/GOV-011: provenance is explicit text, never color alone."""
     root = Path(settings.BASE_DIR)
     catalog = (root / "apps/projects/templates/projects/project_list.html").read_text()
     detail = (root / "apps/projects/templates/projects/project_detail.html").read_text()
 
+    assert 'class="tag tag-accent">{% trans "Official" %}' in catalog
+    assert 'class="tag tag-neutral">{% trans "Community project" %}' in catalog
+    assert 'class="Label Label--outline">{% trans "Official" %}' in detail
+    assert 'class="Label Label--secondary">{% trans "Community" %}' in detail
+
     for template in (catalog, detail):
-        assert 'class="Label Label--outline">{% trans "Official" %}' in template
-        assert 'class="Label Label--secondary">{% trans "Community" %}' in template
         assert "badge--official" not in template
         assert "badge--community" not in template
         assert "status__glyph" not in template

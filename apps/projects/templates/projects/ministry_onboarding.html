@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Become a ministry publisher" %} | DevNepal{% endblock %}
+{% block content %}
+<section class="section" aria-labelledby="ministry-onboarding-heading">
+  <div class="dn-container dn-doc-layout">
+    <article class="dn-doc-main">
+      <p class="dn-section-kicker">{% trans "C1 · Ministry publishing" %}</p>
+      <h1 id="ministry-onboarding-heading">{% trans "Become a ministry publisher" %}</h1>
+      <p class="dn-lede">{% trans "DevNepal publishes suitable public-interest technology work through named, accountable ministry officers." %}</p>
+      <div class="blueprint dn-sheet">
+        <div class="dn-sheet__header"><span>{% trans "Before a listing is public" %}</span><span>{% trans "Verified publishing path" %}</span></div>
+        <div class="dn-readme-body">
+          <ol>
+            <li>{% trans "An authorized ministry contact is provisioned and confirms their official contact route." %}</li>
+            <li>{% trans "The officer enrols multi-factor authentication and accepts the publisher terms." %}</li>
+            <li>{% trans "A named publisher prepares a project with contribution guidance, maintainers, safeguards, and readiness evidence." %}</li>
+            <li>{% trans "A Super Admin reviews suitability before any government listing is published." %}</li>
+          </ol>
+        </div>
+      </div>
+      <p>{% trans "This is an explanation of the publishing process. It does not create an access request or publish a project." %}</p>
+      <p class="BtnGroup"><a class="btn btn--primary" href="{% url 'projects:about' %}">{% trans "Read the contribution guide" %}</a><a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a></p>
+    </article>
+  </div>
+</section>
+{% endblock %}

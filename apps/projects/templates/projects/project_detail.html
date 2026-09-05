@@ -4,12 +4,40 @@
 {% block content %}
 <div class="dn-page-header">
   <div class="dn-container">
-    <div class="dn-repo-title">
-      <span>{% if project.ministry %}{{ project.ministry.localized_name }}{% else %}{% trans "Community" %}{% endif %}</span>
-      <span class="dn-repo-title-separator" aria-hidden="true">/</span>
-      <h1>{{ project.localized_title }}</h1>
-      {% if project.is_official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}
-      <span class="Label">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+    <nav class="dn-breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+      <a href="{% if project.is_official %}{% url 'projects:government' %}{% else %}{% url 'projects:community' %}{% endif %}">{% if project.is_official %}{% trans "Government projects" %}{% else %}{% trans "Community projects" %}{% endif %}</a>
+      <span aria-hidden="true">/</span>
+      <span>{% if project.ministry %}{{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% else %}{{ project.owner.get_full_name|default:project.owner.username }}{% endif %}</span>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ project.localized_title }}</span>
+    </nav>
+    <div class="dn-project-hero">
+      <div>
+        <div class="dn-project-hero__labels">
+          {% if project.is_official %}<span class="Label Label--outline">{% trans "Official" %} · {% trans "Government of Nepal" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}
+          <span class="Label">{% include "components/status_octicon.html" with project_status=project.status %} {{ project.get_status_display }}</span>
+          {% if project.difficulty %}<span class="Label">{{ project.get_difficulty_display }}</span>{% endif %}
+        </div>
+        <div class="dn-repo-title">
+          <h1>{{ project.localized_title }}</h1>
+          <span class="dn-repo-title-separator" aria-hidden="true">/</span>
+          <span class="dn-project-record">{% blocktrans with id=project.pk %}Project {{ id }}{% endblocktrans %}</span>
+        </div>
+        {% if project.title_ne %}<p class="dn-project-title-ne" lang="ne">{{ project.title_ne }}</p>{% endif %}
+        <p class="dn-project-byline">
+          {% if project.ministry %}{% blocktrans with ministry=project.ministry.localized_name %}Ministry · {{ ministry }}{% endblocktrans %}{% else %}{% blocktrans with owner=project.owner.get_full_name|default:project.owner.username %}Listed by · {{ owner }}{% endblocktrans %}{% endif %}
+          · {% trans "Maintainers" %}: {% for maintainer in project.maintainer_assignments.all %}{{ maintainer.user.get_full_name|default:maintainer.user.username }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "No maintainer assigned yet" %}{% endfor %}
+        </p>
+      </div>
+      <div class="dn-project-hero__actions">
+        {% if requires_application %}
+          {% if user.is_authenticated %}<a class="btn btn--primary" href="#apply-heading">{% trans "Apply to contribute" %}</a>{% else %}<a class="btn btn--primary" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}">{% trans "Sign in to apply" %}</a>{% endif %}
+        {% elif supports_direct_contributions %}
+          <a class="btn btn--primary" href="#open-tasks-heading">{% trans "View starter tasks" %}</a>
+        {% endif %}
+        {% if project.repository_url %}<a class="btn btn--secondary" href="{{ project.repository_url }}" rel="noopener noreferrer">{% trans "Repository" %}</a>{% endif %}
+        {% if requires_application %}<p>{% trans "Applying shares your public profile and application answers with the named maintainers. Nothing else." %}</p>{% endif %}
+      </div>
     </div>
     <nav class="dn-tabs" aria-label="{% trans 'Project sections' %}">
       <a class="dn-tab" aria-current="page" href="{% url 'projects:detail' project.slug %}">{% trans "Overview" %}</a>
@@ -29,6 +57,9 @@
       <div class="dn-accountability-item"><strong>{% trans "Contribution mode" %}</strong><span>{% if project.contribution_mode %}{{ project.get_contribution_mode_display }}{% else %}{% trans "Contribution route not yet published" %}{% endif %}</span></div>
       <div class="dn-accountability-item"><strong>{% trans "Expected effort" %}</strong><span>{% if project.estimated_effort %}{{ project.get_estimated_effort_display }}{% else %}{% trans "Effort not yet published" %}{% endif %}</span></div>
       <div class="dn-accountability-item"><strong>{% trans "First response" %}</strong><span>{% if project.response_sla %}{{ project.get_response_sla_display }}{% else %}{% trans "First-response commitment not yet published" %}{% endif %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Deadline" %}</strong><span>{% if project.deadline %}<time datetime="{{ project.deadline|date:'Y-m-d' }}">{{ project.deadline|date:"DATE_FORMAT" }}</time>{% else %}{% trans "No deadline" %}{% endif %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Repository" %}</strong><span>{% if project.repository_url %}<a href="{{ project.repository_url }}" rel="noopener noreferrer">{{ project.repository_url }}</a> · {{ project.default_branch|default:"main" }}{% else %}{% trans "No public repository" %}{% endif %}</span></div>
+      <div class="dn-accountability-item"><strong>{% trans "Prerequisites" %}</strong><span>{% if project.prerequisites %}{{ project.prerequisites }}{% else %}{% trans "None published" %}{% endif %}</span></div>
     </div>
   </section>
   {% if response_overdue or maintainer_stale %}
@@ -73,6 +104,41 @@
         <p>{{ project.description_md|default:project.localized_summary }}</p>
         {% if project.problem_statement %}<h2>{% trans "Public value" %}</h2><p>{{ project.problem_statement }}</p>{% endif %}
       </section>
+      <section aria-labelledby="workstreams-heading">
+        <div class="dn-section-heading-row">
+          <h2 id="workstreams-heading">{% trans "Workstreams" %}</h2>
+          <span>{% trans "Code and non-code work count equally" %}</span>
+        </div>
+        <div class="dn-workstream-grid">
+          {% for contribution_type in project.contribution_types.all %}
+          <article>
+            <h3>{{ contribution_type.label }}</h3>
+            <p>{% trans "Verified after a named maintainer accepts the submitted work or evidence." %}</p>
+          </article>
+          {% empty %}
+          <p role="status">{% trans "Workstreams have not been published yet." %}</p>
+          {% endfor %}
+        </div>
+      </section>
+      {% if github_repositories %}
+      <section aria-labelledby="github-starter-tasks-heading">
+        <div class="dn-section-heading-row">
+          <h2 id="github-starter-tasks-heading">{% trans "Starter tasks from GitHub" %}</h2>
+          {% for repository in github_repositories %}<span>{% trans "Issue snapshot" %} · {{ repository.full_name }} · {% if repository.task_snapshot_at %}{% trans "updated" %} <time datetime="{{ repository.task_snapshot_at|date:'c' }}">{{ repository.task_snapshot_at|date:'DATE_FORMAT' }}</time>{% else %}{% trans "awaiting first sync" %}{% endif %}</span>{% endfor %}
+        </div>
+        <div class="dn-starter-task-list">
+          {% for task in github_starter_tasks %}
+          <article>
+            <div>{% for label in task.labels %}<span class="Label">{{ label }}</span>{% if not forloop.last %} {% endif %}{% endfor %}</div>
+            <h3><a href="{{ task.url }}" rel="noopener noreferrer">{{ task.repository.full_name }} #{{ task.number }} · {{ task.title }}</a></h3>
+            <p>{% trans "Issue details and discussion remain on GitHub." %}</p>
+          </article>
+          {% empty %}
+          <p role="status">{% trans "No labelled starter tasks are currently available." %}</p>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
       <section aria-labelledby="project-resources-heading">
         <h2 id="project-resources-heading">{% trans "Project resources" %}</h2>
         <ul>

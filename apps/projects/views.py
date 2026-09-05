@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Count, F, Prefetch, Q, Sum
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -14,11 +14,14 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
+from apps.accounts import github as github_oauth
 from apps.accounts.models import MemberProfile
 from apps.accounts.permissions import privileged_mfa_required
 from apps.accounts.services import mfa_verified
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
+from apps.blogs.enums import BlogModerationState, BlogStatus
+from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.services import starter_tasks_for_project
@@ -159,12 +162,49 @@ def home(request: HttpRequest) -> HttpResponse:
         )
         .order_by("-published_at", "-id")[:3]
     )
+    featured_community_projects = (
+        public_projects()
+        .filter(
+            project_type=ProjectType.PERSONAL,
+            status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        )
+        .select_related("owner")
+        .order_by("-published_at", "-id")[:4]
+    )
+    featured_members = (
+        MemberProfile.objects.filter(directory_discoverable=True, leaderboard_opt_out=False)
+        .select_related("user")
+        .prefetch_related("user__skills__skill", "user__badge_awards__badge")
+        .annotate(
+            verified_count=Count(
+                "user__contributions",
+                filter=Q(user__contributions__status=VerificationStatus.ACCEPTED),
+                distinct=True,
+            ),
+            total_score=Sum(
+                "user__contributions__score__points",
+                filter=Q(user__contributions__score__reversed_at__isnull=True),
+            ),
+        )
+        .order_by("-total_score", "user__username")[:5]
+    )
+    featured_posts = (
+        BlogPost.objects.filter(status=BlogStatus.PUBLISHED)
+        .exclude(moderation_state=BlogModerationState.RESTRICTED)
+        .select_related("author", "official_published_by")
+        .prefetch_related("tags")
+        .order_by("-published_at", "-id")[:3]
+    )
     return render(
         request,
         "projects/home.html",
         {
             "featured_projects": featured_projects,
+            "featured_community_projects": featured_community_projects,
+            "featured_members": featured_members,
+            "featured_posts": featured_posts,
             "recommendations": recommendations,
+            "github_oauth_enabled": github_oauth.oauth_config().enabled,
             "platform_metrics": {
                 "ministries": MinistryOrganization.objects.filter(status=OrgStatus.ACTIVE).count(),
                 "open_projects": public_projects()
@@ -174,6 +214,9 @@ def home(request: HttpRequest) -> HttpResponse:
                     status=VerificationStatus.ACCEPTED
                 ).count(),
                 "public_members": MemberProfile.objects.filter(directory_discoverable=True).count(),
+                "community_projects": public_projects()
+                .filter(project_type=ProjectType.PERSONAL)
+                .count(),
             },
         },
     )
@@ -184,15 +227,145 @@ def about(request: HttpRequest) -> HttpResponse:
     return render(request, "projects/about.html")
 
 
+def code_of_conduct(request: HttpRequest) -> HttpResponse:
+    """A1.1/B6: publish the behavioral contract linked by the prototype shell."""
+    return render(
+        request,
+        "projects/public_trust_page.html",
+        {
+            "kicker": _("Trust and safety"),
+            "title": _("Code of conduct"),
+            "lede": _(
+                "DevNepal is a public-service collaboration space. Participation must remain "
+                "respectful, specific, and safe for contributors and government staff."
+            ),
+            "sections": (
+                (
+                    _("Expected conduct"),
+                    _(
+                        "Discuss the work, not the person. Respect privacy, accessibility needs, "
+                        "language choice, and the published contribution process."
+                    ),
+                ),
+                (
+                    _("Unacceptable conduct"),
+                    _(
+                        "Harassment, discrimination, threats, doxxing, credential sharing, and "
+                        "publishing personal or restricted government data are prohibited."
+                    ),
+                ),
+                (
+                    _("Reporting"),
+                    _(
+                        "Reports are handled privately, recorded as cases, and reviewed with a "
+                        "reasoned, appealable decision."
+                    ),
+                ),
+            ),
+        },
+    )
+
+
+def privacy_policy(request: HttpRequest) -> HttpResponse:
+    """A1.1/B5: explain the public platform privacy boundary without requiring sign-in."""
+    return render(
+        request,
+        "projects/public_trust_page.html",
+        {
+            "kicker": _("Privacy"),
+            "title": _("Your data stays under your control"),
+            "lede": _(
+                "Public profiles, leaderboard participation, and connected GitHub access are "
+                "separate choices. DevNepal does not make private profile fields public."
+            ),
+            "sections": (
+                (
+                    _("Public by choice"),
+                    _("Members choose whether their profile and recognition appear publicly."),
+                ),
+                (
+                    _("GitHub boundary"),
+                    _(
+                        "Repository access is limited to the permissions shown during connection "
+                        "and can be disconnected."
+                    ),
+                ),
+                (
+                    _("Access and deletion"),
+                    _(
+                        "Signed-in members can export their data and request deletion from privacy "
+                        "settings."
+                    ),
+                ),
+            ),
+        },
+    )
+
+
+def security_policy(request: HttpRequest) -> HttpResponse:
+    """A1.1/B6: publish a safe disclosure path instead of exposing operational secrets."""
+    return render(
+        request,
+        "projects/public_trust_page.html",
+        {
+            "kicker": _("Security"),
+            "title": _("Report vulnerabilities responsibly"),
+            "lede": _(
+                "Do not post security findings, credentials, personal data, or production data "
+                "in public issues, project applications, or contribution evidence."
+            ),
+            "sections": (
+                (
+                    _("Project findings"),
+                    _(
+                        "Use the security contact and disclosure policy published on the relevant "
+                        "project sheet."
+                    ),
+                ),
+                (
+                    _("Platform findings"),
+                    _(
+                        "Use the confidential report form and include only the minimum evidence "
+                        "needed to reproduce the issue."
+                    ),
+                ),
+                (
+                    _("What happens next"),
+                    _(
+                        "A case is acknowledged, triaged privately, and retained in the audited "
+                        "moderation workflow."
+                    ),
+                ),
+            ),
+        },
+    )
+
+
+def ministry_onboarding(request: HttpRequest) -> HttpResponse:
+    """C1.1/C1.3/GOV-001: explain the verified ministry publishing path publicly."""
+    return render(request, "projects/ministry_onboarding.html")
+
+
 def project_list(request: HttpRequest, project_type: str | None = None) -> HttpResponse:
     """DSC-001/DSC-002: public project browse and explicit catalog filtering."""
     catalog = public_projects()
     projects = catalog
     selected_type = project_type or normalize_nfc(request.GET.get("type", ""))
     if selected_type in ProjectType.values:
-        projects = projects.filter(project_type=selected_type)
+        catalog = catalog.filter(project_type=selected_type)
+        projects = catalog
     else:
         selected_type = ""
+
+    status_counts = {
+        ProjectStatus.OPEN_FOR_CONTRIBUTION: 0,
+        ProjectStatus.PAUSED: 0,
+        ProjectStatus.COMPLETED: 0,
+    }
+    for row in (
+        catalog.filter(status__in=status_counts).values("status").annotate(total=Count("pk"))
+    ):
+        status_counts[row["status"]] = row["total"]
 
     query = normalize_nfc(request.GET.get("q", ""))
     if query:
@@ -259,6 +432,28 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
     except ValueError:
         deadline_to = ""
 
+    projects = projects.annotate(
+        open_task_count=Count(
+            "tasks",
+            filter=Q(tasks__status=TaskStatus.OPEN),
+            distinct=True,
+        )
+    )
+
+    sort = normalize_nfc(request.GET.get("sort", "updated"))
+    ordering = {
+        "updated": ("-updated_at", "-pk"),
+        "deadline": (F("deadline").asc(nulls_last=True), "title_en", "pk"),
+        "title": ("title_en", "pk"),
+    }
+    if sort not in ordering:
+        sort = "updated"
+    projects = projects.order_by(*ordering[sort])
+
+    layout = normalize_nfc(request.GET.get("layout", "grid"))
+    if layout not in {"grid", "list"}:
+        layout = "grid"
+
     filters = {
         "q": query,
         "type": selected_type,
@@ -272,8 +467,67 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
         "deadline_from": deadline_from,
         "deadline_to": deadline_to,
         "language": language,
+        "sort": sort,
+        "layout": layout,
     }
     query_string = urlencode({key: value for key, value in filters.items() if value})
+
+    ministries = list(
+        MinistryOrganization.objects.filter(projects__status__in=PUBLIC_PROJECT_STATUSES)
+        .order_by("name_en")
+        .distinct()
+    )
+    technologies = list(
+        TaxonomyTerm.objects.filter(
+            vocabulary=TermVocabulary.TECHNOLOGY,
+            is_active=True,
+            technology_projects__status__in=PUBLIC_PROJECT_STATUSES,
+        ).distinct()
+    )
+    contribution_types = list(
+        TaxonomyTerm.objects.filter(
+            vocabulary=TermVocabulary.CONTRIBUTION_TYPE,
+            is_active=True,
+            projects__status__in=PUBLIC_PROJECT_STATUSES,
+        ).distinct()
+    )
+    skills = list(
+        Skill.objects.filter(
+            is_active=True,
+            projects__status__in=PUBLIC_PROJECT_STATUSES,
+        ).distinct()
+    )
+    filter_value_labels = {
+        "ministry": {item.slug: item.localized_name for item in ministries},
+        "technology": {item.slug: item.label for item in technologies},
+        "contribution_type": {item.slug: item.label for item in contribution_types},
+        "skill": {item.slug: item.name for item in skills},
+        "status": dict(ProjectStatus.choices),
+        "difficulty": dict(DifficultyLevel.choices),
+        "effort": dict(EffortBand.choices),
+        "language": dict(ContentLanguage.choices),
+    }
+
+    active_filters = [
+        {
+            "label": label,
+            "value": filter_value_labels.get(key, {}).get(filters[key], filters[key]),
+        }
+        for key, label in (
+            ("q", _("Search")),
+            ("ministry", _("Ministry")),
+            ("technology", _("Technology")),
+            ("contribution_type", _("Contribution type")),
+            ("skill", _("Skill")),
+            ("status", _("Status")),
+            ("difficulty", _("Difficulty")),
+            ("effort", _("Effort")),
+            ("deadline_from", _("Deadline from")),
+            ("deadline_to", _("Deadline to")),
+            ("language", _("Language")),
+        )
+        if filters[key]
+    ]
 
     page = Paginator(projects.distinct(), 24).get_page(request.GET.get("page"))
     return render(
@@ -285,6 +539,20 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
             "query": query,
             "filters": filters,
             "query_string": query_string,
+            "active_filters": active_filters,
+            "sort": sort,
+            "layout": layout,
+            "sort_choices": (
+                ("updated", _("Recently updated")),
+                ("deadline", _("Deadline soonest")),
+                ("title", _("Title A to Z")),
+            ),
+            "status_counts": status_counts,
+            "status_summary": (
+                (_("open"), status_counts[ProjectStatus.OPEN_FOR_CONTRIBUTION]),
+                (_("paused"), status_counts[ProjectStatus.PAUSED]),
+                (_("completed"), status_counts[ProjectStatus.COMPLETED]),
+            ),
             "public_statuses": PUBLIC_PROJECT_STATUSES,
             "public_status_choices": [
                 (status, ProjectStatus(status).label) for status in PUBLIC_PROJECT_STATUSES
@@ -293,25 +561,10 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
             "difficulties": DifficultyLevel,
             "effort_bands": EffortBand,
             "languages": ContentLanguage,
-            "ministries": MinistryOrganization.objects.filter(
-                projects__status__in=PUBLIC_PROJECT_STATUSES
-            )
-            .order_by("name_en")
-            .distinct(),
-            "technologies": TaxonomyTerm.objects.filter(
-                vocabulary=TermVocabulary.TECHNOLOGY,
-                is_active=True,
-                technology_projects__status__in=PUBLIC_PROJECT_STATUSES,
-            ).distinct(),
-            "contribution_types": TaxonomyTerm.objects.filter(
-                vocabulary=TermVocabulary.CONTRIBUTION_TYPE,
-                is_active=True,
-                projects__status__in=PUBLIC_PROJECT_STATUSES,
-            ).distinct(),
-            "skills": Skill.objects.filter(
-                is_active=True,
-                projects__status__in=PUBLIC_PROJECT_STATUSES,
-            ).distinct(),
+            "ministries": ministries,
+            "technologies": technologies,
+            "contribution_types": contribution_types,
+            "skills": skills,
         },
     )
 

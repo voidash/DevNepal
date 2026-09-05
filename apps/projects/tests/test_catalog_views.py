@@ -8,6 +8,8 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.github_sync.models import GithubStarterTask
+from apps.github_sync.tests.factories import RepositoryConnectionFactory
 from apps.projects.enums import (
     ContributionMode,
     DifficultyLevel,
@@ -72,7 +74,8 @@ def test_home_features_recent_open_government_opportunities_only(client):
     assert response.status_code == 200
     assert list(response.context["featured_projects"]) == [featured]
     assert featured.title_en.encode() in response.content
-    assert community.title_en.encode() not in response.content
+    assert community not in response.context["featured_projects"]
+    assert community in response.context["featured_community_projects"]
     assert paused.title_en.encode() not in response.content
 
 
@@ -349,8 +352,59 @@ def test_catalog_uses_the_a2_1_blueprint_filter_and_project_sheet(client):
     assert community.title_en in content
     assert "Official" in content
     assert "Community" in content
-    assert "Contribution mode" in content
+    assert ">Mode<" in content
     assert "First response" in content
+
+
+@pytest.mark.unit
+def test_catalog_matches_a2_1_status_sort_layout_and_active_filter_controls(client):
+    """A2.1/DSC-002: real counts, sorting, layout, and reset state follow the catalog sheet."""
+    older = make_public_project(
+        title_en="Alpha service",
+        difficulty=DifficultyLevel.BEGINNER,
+        updated_at=timezone.now() - timedelta(days=2),
+    )
+    newer = make_public_project(
+        title_en="Zulu service",
+        difficulty=DifficultyLevel.INTERMEDIATE,
+        updated_at=timezone.now(),
+    )
+    ProjectFactory(status=ProjectStatus.PAUSED)
+    ProjectFactory(status=ProjectStatus.COMPLETED)
+
+    response = client.get(
+        reverse("projects:government"),
+        {"sort": "title", "layout": "list", "difficulty": DifficultyLevel.BEGINNER},
+    )
+
+    assert response.status_code == 200
+    assert list(response.context["projects"]) == [older]
+    assert response.context["status_counts"] == {
+        ProjectStatus.OPEN_FOR_CONTRIBUTION: 2,
+        ProjectStatus.PAUSED: 1,
+        ProjectStatus.COMPLETED: 1,
+    }
+    assert response.context["sort"] == "title"
+    assert response.context["layout"] == "list"
+    assert "difficulty=beginner" in response.context["query_string"]
+    assert "sort=title" in response.context["query_string"]
+    assert "layout=list" in response.context["query_string"]
+    content = response.content.decode()
+    assert 'class="dn-catalog-results dn-catalog-results--list"' in content
+    assert "Recently updated" in content
+    assert "Grid" in content and "List" in content
+    assert "Active filters" in content
+    assert "Difficulty: Beginner" in content
+    assert "Clear all" in content
+    assert newer.title_en not in content
+
+    sorted_response = client.get(
+        reverse("projects:government"),
+        {"q": "service", "sort": "title"},
+    )
+    sorted_projects = list(sorted_response.context["projects"])
+    assert sorted_projects[0] == older
+    assert sorted_projects[-1] == newer
 
 
 @pytest.mark.unit
@@ -583,3 +637,32 @@ def test_bookmark_toggle_requires_authentication_and_persists_member_preference(
 
     assert removed_response.status_code == 302
     assert not ProjectBookmark.objects.filter(user=member, project=project).exists()
+
+
+@pytest.mark.unit
+def test_public_project_displays_only_persisted_github_starter_task_snapshot(client):
+    """DSC-009/GIT-010: public task hand-off is DB-only, labelled, and freshness-labelled."""
+    project = make_public_project(contribution_mode=ContributionMode.APPLICATION)
+    repository = RepositoryConnectionFactory(
+        project=project,
+        full_name="doit-np/sewa-portal",
+        is_public=True,
+        task_snapshot_at=timezone.now(),
+    )
+    GithubStarterTask.objects.create(
+        repository=repository,
+        github_issue_id=131,
+        number=131,
+        title='Add lang="ne" to error strings',
+        url="https://github.com/doit-np/sewa-portal/issues/131",
+        labels=["good first issue"],
+    )
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Starter tasks from GitHub" in content
+    assert "doit-np/sewa-portal #131 · Add lang=&quot;ne&quot; to error strings" in content
+    assert "good first issue" in content
+    assert "Issue snapshot" in content

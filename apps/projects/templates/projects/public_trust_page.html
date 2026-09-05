@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ title }} | DevNepal{% endblock %}
+{% block content %}
+<section class="section" aria-labelledby="trust-page-heading">
+  <div class="dn-container dn-doc-layout">
+    <article class="dn-doc-main">
+      <p class="dn-section-kicker">{{ kicker }}</p>
+      <h1 id="trust-page-heading">{{ title }}</h1>
+      <p class="dn-lede">{{ lede }}</p>
+      <div class="blueprint dn-sheet">
+        <div class="dn-sheet__header"><span>{{ title }}</span><span>{% trans "Public policy" %}</span></div>
+        <div class="dn-readme-body">
+          {% for heading, body in sections %}<section><h2>{{ heading }}</h2><p>{{ body }}</p></section>{% endfor %}
+        </div>
+      </div>
+      <p><a href="{% url 'moderation:report_create' %}">{% trans "Make a confidential report" %}</a></p>
+    </article>
+  </div>
+</section>
+{% endblock %}
