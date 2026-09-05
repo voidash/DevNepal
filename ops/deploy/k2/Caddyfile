@@ -1,5 +1,7 @@
 {
 	email admin@zapper.cloud
+	http_port 8080
+	https_port 8444
 }
 
 zapper.cloud {
