@@ -1,21 +1,22 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}{% trans "Profile and visibility" %} | DevNepal{% endblock %}
+{% comment %} Every control here decides what a stranger can see, so the page
+   is arranged by audience rather than by database table: who you are, what is
+   public, and how recognition is displayed. The privacy boundary is stated
+   once at the top and repeated beside the form, never buried in help text.
+{% endcomment %}
 {% block content %}
-<section class="section" aria-labelledby="profile-visibility-heading">
+<section class="section dn-profile-edit" aria-labelledby="profile-visibility-heading">
   <div class="container">
-    <header>
+    <header class="dn-profile-edit__head">
       <p class="dn-section-kicker">{% trans "Edit profile" %}</p>
       <h1 id="profile-visibility-heading">{% trans "Profile & visibility" %}</h1>
-      <p>{% trans "Add what helps people understand how you contribute, then choose visibility field by field." %}</p>
+      <p class="dn-lede">{% trans "Add what helps people understand how you contribute, then choose visibility field by field." %}</p>
     </header>
 
-    <div class="dn-state-banner" role="note">
-      <h2>{% trans "Private · always" %}</h2>
-      <p>{% trans "Email and sign-in provider stay private. Nothing on this form changes that boundary." %}</p>
-    </div>
-
-    <form method="post" enctype="multipart/form-data" class="field-group">
+    <div class="dn-profile-edit__layout">
+    <form method="post" enctype="multipart/form-data" class="field-group dn-profile-form">
       {% csrf_token %}
       {% if form.non_field_errors %}
       <div class="dn-state-banner is-danger error-summary" role="alert">
@@ -75,18 +76,31 @@
         {% endfor %}
       </fieldset>
 
-      <div class="button-group">
+      <div class="button-group dn-profile-form__actions">
         <button class="btn btn--primary" type="submit">{% trans "Save profile" %}</button>
         <button class="btn btn--secondary" type="submit" formaction="{% url 'accounts:profile_preview' %}">{% trans "Preview as a visitor" %}</button>
       </div>
     </form>
 
-    <nav aria-label="{% trans 'Related account settings' %}">
-      <div class="button-group">
-        <a class="btn btn--secondary" href="{% url 'notifications:email_preferences' %}">{% trans "Email preferences" %}</a>
-        <a class="btn btn--secondary" href="{% url 'accounts:dashboard' %}">{% trans "Connections & data" %}</a>
+    <aside class="dn-profile-aside" aria-label="{% trans 'Privacy and related settings' %}">
+      <div class="dn-state-banner" role="note">
+        <h2>{% trans "Private · always" %}</h2>
+        <p>{% trans "Email and sign-in provider stay private. Nothing on this form changes that boundary." %}</p>
       </div>
-    </nav>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Who sees this" %}</h2>
+        <p>{% trans "Fields marked public appear on your profile page to anyone, signed in or not. Everything else stays with DevNepal." %}</p>
+        <a class="dn-arrow-link" href="{% url 'accounts:public_profile' user.username %}">{% trans "View your public profile" %} →</a>
+      </section>
+      <section class="dn-sidebar-section">
+        <h2>{% trans "Related settings" %}</h2>
+        <div class="button-group">
+          <a class="btn" href="{% url 'notifications:email_preferences' %}">{% trans "Email preferences" %}</a>
+          <a class="btn" href="{% url 'accounts:dashboard' %}">{% trans "Connections & data" %}</a>
+        </div>
+      </section>
+    </aside>
+    </div>
   </div>
 </section>
 {% endblock %}

@@ -24,7 +24,7 @@
   </div>
 </div>
 {% if not user.is_superuser %}
-<main class="dn-container dn-publisher-project">
+<div class="dn-container dn-publisher-project">
   {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
   <header class="dn-publisher-project__summary">
     <div>
@@ -70,7 +70,7 @@
     <a class="btn btn--secondary" href="{% url 'contributions:verification_queue' %}">{% trans "Review verified contributions" %}</a>
     <a href="{% url 'projects:authoring_dashboard' %}">{% trans "Back to ministry projects" %}</a>
   </div>
-</main>
+</div>
 {% else %}
 <div class="dn-container">
   {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}

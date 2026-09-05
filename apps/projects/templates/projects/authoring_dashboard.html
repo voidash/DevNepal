@@ -20,7 +20,7 @@
   </div>
 </div>
 
-<main class="dn-container dn-workspace">
+<div class="dn-container dn-workspace">
   {% for assignment in user.publisher_assignments.all %}{% if forloop.first %}
   <section class="blueprint dn-workspace-identity" aria-labelledby="ministry-heading">
     <div>
@@ -90,5 +90,5 @@
       {% endfor %}
     </div>
   </section>
-</main>
+</div>
 {% endblock %}

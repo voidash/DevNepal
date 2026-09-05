@@ -7040,3 +7040,72 @@ msgstr "तपाईंका लागि"
 
 msgid "Open to"
 msgstr "उपलब्ध"
+
+msgid "All nine contribution types"
+msgstr "योगदानका नौ वटै प्रकार"
+
+msgid "GitHub ownership verified"
+msgstr "GitHub स्वामित्व प्रमाणित"
+
+msgid "Listed by a member"
+msgstr "सदस्यले सूचीकृत"
+
+msgid "No repository published"
+msgstr "रिपोजिटरी प्रकाशित छैन"
+
+msgid "No community listings are open yet."
+msgstr "अहिले कुनै सामुदायिक सूची खुला छैन।"
+
+msgid "Member-owned projects appear here once their owner publishes them. They stay separate from Government of Nepal opportunities."
+msgstr "सदस्यका परियोजना मालिकले प्रकाशित गरेपछि यहाँ देखिन्छन्। ती नेपाल सरकारका अवसरबाट छुट्टै रहन्छन्।"
+
+msgid "Public directory"
+msgstr "सार्वजनिक निर्देशिका"
+
+msgid "Discoverable members"
+msgstr "खोज्न मिल्ने सदस्यहरू"
+
+msgid "These profiles appear only because the member chose to be found. Email, sign-in provider and private contact details are not shown."
+msgstr "यी प्रोफाइल सदस्यले खोजिने अनुमति दिएकाले मात्र देखिन्छन्। इमेल, साइन-इन प्रदायक र निजी सम्पर्क विवरण देखाइँदैन।"
+
+msgid "Browse members"
+msgstr "सदस्य हेर्नुहोस्"
+
+msgid "Public learning"
+msgstr "सार्वजनिक सिकाइ"
+
+msgid "Technical writing"
+msgstr "प्राविधिक लेखन"
+
+msgid "Notes from members and maintainers on listed work, in Nepali and English."
+msgstr "सूचीकृत कामबारे सदस्य र मर्मतकर्ताका टिपोट, नेपाली र अङ्ग्रेजीमा।"
+
+msgid "Browse technical blogs"
+msgstr "प्राविधिक ब्लग हेर्नुहोस्"
+
+msgid "Before you start"
+msgstr "सुरु गर्नुअघि"
+
+msgid "What listing means"
+msgstr "सूचीकरणको अर्थ"
+
+msgid "DevNepal is the public register and collaboration layer. Code, issues and pull requests stay on GitHub."
+msgstr "DevNepal सार्वजनिक दर्ता र सहकार्य तह हो। कोड, इशु र पुल रिक्वेस्ट GitHub मै रहन्छन्।"
+
+msgid "Frequently asked"
+msgstr "बारम्बार सोधिने"
+
+msgid "Do I need a DevNepal account to contribute?"
+msgstr "योगदान गर्न DevNepal खाता चाहिन्छ?"
+
+msgid "No. Work happens on the project's public GitHub repository. Only ministry officers sign in here to publish and maintain listings."
+msgstr "पर्दैन। काम परियोजनाको सार्वजनिक GitHub रिपोजिटरीमा हुन्छ। सूची प्रकाशित र मर्मत गर्न यहाँ मन्त्रालयका अधिकृतले मात्र साइन इन गर्छन्।"
+
+msgid "Start with a listed project"
+msgstr "सूचीकृत परियोजनाबाट सुरु गर्नुहोस्"
+
+msgid "Read the contribution route, pick an issue, and work on GitHub. Recognition follows verified, accepted work."
+msgstr "योगदान मार्ग पढ्नुहोस्, इशु छान्नुहोस् र GitHub मा काम गर्नुहोस्। प्रमाणित र स्वीकृत कामपछि मान्यता आउँछ।"
+
+msgid "Community support"
+msgstr "सामुदायिक सहयोग"

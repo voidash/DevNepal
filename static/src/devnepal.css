@@ -805,3 +805,31 @@ ol.dn-journey .dn-journey-step { list-style: none; padding: var(--space-6); }
 .dn-publisher-repository li a:hover { color: var(--color-accent-700); text-decoration: underline; }
 .dn-publisher-project__summary h2 { margin: 0; }
 .dn-publisher-project__summary > div > p { margin: var(--space-2) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); }
+
+/* ── profile and visibility ──────────────────────────────────────────────── */
+.dn-profile-edit__head { max-width: 70ch; margin-bottom: var(--space-8); }
+.dn-profile-edit__head h1 { margin: 0 0 var(--space-3); }
+.dn-profile-edit__head .dn-lede { margin: 0; }
+.dn-profile-edit__layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-10); align-items: start; }
+.dn-profile-form { padding: 0; border: 0; background: transparent; }
+.dn-profile-form > fieldset { margin-bottom: var(--space-5); }
+.dn-profile-form > fieldset > .field:last-of-type { margin-bottom: 0; }
+.dn-profile-form .field__help { margin: 0 0 var(--space-4); font-size: var(--fs-sm); }
+.dn-profile-form__actions { position: sticky; bottom: 0; margin: 0; padding: var(--space-4) 0; border-top: 1px solid var(--color-divider); background: var(--color-bg); }
+.dn-profile-aside { display: grid; gap: var(--space-4); position: sticky; top: var(--space-24); }
+.dn-profile-aside .dn-state-banner h2 { font-size: var(--fs-base); }
+@media (max-width: 1000px) {
+  .dn-profile-edit__layout { grid-template-columns: 1fr; gap: var(--space-6); }
+  .dn-profile-aside { position: static; }
+}
+
+/* ── account settings ────────────────────────────────────────────────────── */
+.dn-account { padding-block: var(--space-8) var(--space-16); }
+.dn-account-lede { max-width: 72ch; margin: 0; padding-bottom: var(--space-6); color: var(--color-neutral-700); }
+.dn-account .dn-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--space-5); }
+.dn-account .card h2 { margin: 0; font-family: var(--font-body); font-size: var(--fs-md); font-weight: 700; letter-spacing: 0; }
+.dn-account .card p { margin: 0; }
+.dn-account .card .button-group, .dn-account .card form { margin-top: auto; }
+.dn-account .card form p { margin-bottom: var(--space-3); color: var(--color-neutral-600); font-size: var(--fs-sm); }
+.dn-account-state { display: flex; gap: var(--space-2); align-items: center; font-size: var(--fs-sm); }
+.dn-account-danger { border-color: var(--color-divider-strong); }
