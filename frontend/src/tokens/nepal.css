@@ -1,0 +1,381 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEPAL TOKENS — ported from the Gov design-system repo (app/globals.css),
+   which implements the Nepal Government Digital Design Guidelines (NPGDDG
+   0.2.0-dev, "Civic Calm"), Annex B primitives and semantic roles.
+
+   Layer A — primitives: raw values, named by what they ARE.
+   Layer B — semantics: named by ROLE. Components reference only these.
+   industry-aliases.css then points the canvas's own token names at Layer B,
+   so every extracted board re-skins without being edited.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── LAYER A ─────────────────────────────────────────────────────────────── */
+:root {
+  --gov-neutral-0:   #ffffff;
+  --gov-neutral-50:  #f7f7f5;
+  --gov-neutral-100: #f1f1ef;
+  --gov-neutral-200: #e8e8e4;
+  --gov-neutral-300: #deded8;
+  --gov-neutral-400: #c6c6bf;
+  --gov-neutral-500: #8f8f88;
+  --gov-neutral-600: #6b6b66;
+  --gov-neutral-700: #52524d;
+  --gov-neutral-800: #3a3a36;
+  --gov-neutral-850: #2b2b28;
+  --gov-neutral-900: #1f1f1f;
+  --gov-neutral-950: #171715;
+
+  /* National Blue. Primary action, links, focus, selection. */
+  --gov-blue-50:  #e8eef9;
+  --gov-blue-100: #d4e0f4;
+  --gov-blue-200: #afc6ea;
+  --gov-blue-300: #88abdf;
+  --gov-blue-400: #4273c4;
+  --gov-blue-500: #3567b4;
+  --gov-blue-600: #24549e;
+  --gov-blue-700: #003893;
+  --gov-blue-800: #002d76;
+  --gov-blue-900: #001f52;
+  --gov-blue-950: #111d33;
+
+  /* Simrik (सिम्रिक) — the state. Identity ONLY: the rule at the top of a
+     public page. Never status, never destructive, never decoration.
+     Constitution Art. 9. */
+  --gov-simrik-50:  #fbe9ea;
+  --gov-simrik-300: #e98f96;
+  --gov-simrik-400: #dc5a63;
+  --gov-simrik-600: #c1121f;
+  --gov-simrik-700: #a00f1a;
+  --gov-simrik-800: #7e0c14;
+  --gov-simrik-950: #2e1113;
+
+  /* Functional red — errors and destruction. A different red from Simrik on
+     purpose: the national colour is never failure. */
+  --gov-red-50:  #fef6f5;
+  --gov-red-400: #f07b60;
+  --gov-red-500: #e1552f;
+  --gov-red-600: #d4351c;
+  --gov-red-700: #aa2a16;
+  --gov-red-800: #7f1f10;
+  --gov-red-950: #331410;
+
+  --gov-green-50:  #e7f4ec;
+  --gov-green-400: #57b182;
+  --gov-green-700: #00703c;
+  --gov-green-800: #00552e;
+  --gov-green-950: #122619;
+
+  --gov-amber-50:  #fdf3e1;
+  --gov-amber-300: #e8b54b;
+  --gov-amber-400: #dba032;
+  --gov-amber-600: #b25e09;
+  --gov-amber-800: #7a4d05;
+  --gov-amber-900: #5c3a00;
+  --gov-amber-950: #2e2410;
+
+  /* Teal — colour-blind-safe success, hue-separated from error red. */
+  --gov-teal-50:  #e3f4f1;
+  --gov-teal-400: #4baf9f;
+  --gov-teal-700: #00695f;
+
+  --gov-gold-300: #e6c46e;
+  --gov-gold-500: #d6a329;
+  --gov-gold-700: #79601c;
+  --gov-purple-300: #c0a8e8;
+  --gov-purple-700: #5b3a8e;
+
+  --gov-alpha-tint-hover:           #1f1f1f14;
+  --gov-alpha-tint-pressed:         #1f1f1f29;
+  --gov-alpha-scrim:                #171715b3;
+  --gov-alpha-inverse-tint-hover:   #ffffff1f;
+  --gov-alpha-inverse-tint-pressed: #ffffff33;
+
+  --gov-space-1: 4px;   --gov-space-2: 8px;   --gov-space-3: 12px;
+  --gov-space-4: 16px;  --gov-space-6: 24px;  --gov-space-8: 32px;
+  --gov-space-12: 48px; --gov-space-16: 64px;
+
+  --gov-radius-sm: 6px;
+  --gov-radius-md: 10px;
+  --gov-radius-lg: 14px;
+  --gov-radius-full: 999px;
+
+  --gov-card-padding: 24px;
+  --gov-badge-height: 28px;
+  --gov-badge-px: 12px;
+
+  --gov-border-width-sm: 1px;  /* dividers, table rules */
+  --gov-border-width-md: 2px;  /* form controls, focus ring, selected */
+  --gov-border-width-lg: 4px;  /* identity rule, alert edge */
+
+  --gov-icon-sm: 16px; --gov-icon-md: 20px; --gov-icon-lg: 24px;
+
+  --gov-elevation-1: 0 1px 2px rgb(31 31 31 / 0.08);
+  --gov-elevation-2: 0 2px 8px rgb(31 31 31 / 0.10);
+  --gov-elevation-3: 0 8px 24px rgb(31 31 31 / 0.14);
+
+  --gov-z-sticky: 100; --gov-z-dropdown: 400; --gov-z-overlay: 800;
+  --gov-z-modal: 900;  --gov-z-toast: 1000;
+
+  --gov-duration-instant:    0ms;
+  --gov-duration-fast:     120ms;
+  --gov-duration-base:     200ms;
+  --gov-duration-slow:     320ms;
+  --gov-duration-deliberate: 480ms;
+  --gov-easing-standard:   cubic-bezier(0.2, 0, 0, 1);
+  --gov-easing-decelerate: cubic-bezier(0, 0, 0, 1);
+  --gov-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
+
+  /* Density (§5.1.3): spacing and control heights only, never type. */
+  --gov-density: 1;
+
+  /* §4.1.3.1 — touch targets 44×44 minimum, 8px between adjacent targets. */
+  --gov-control-h-sm: 36px;  /* compact, pointer contexts only */
+  --gov-control-h-md: 44px;  /* default — meets the minimum */
+  --gov-control-h-lg: 48px;  /* citizen mobile / kiosk primary actions */
+  --gov-target-min: 44px;
+  --gov-target-gap: 8px;
+
+  /* Pointer-relaxed heights: 44 is a TOUCH minimum. On a fine pointer a nav
+     rail and a toolbar button sit at 40; coarse pointers get 44 (below). */
+  --gov-nav-item-height: 40px;
+  --gov-ui-control: 40px;
+
+  --gov-grid-gutter: 24px;
+  --gov-page-max: none;       /* §5.1.4 caps at 1200; uncapped for officer screens */
+  --gov-page-margin: 16px;
+
+  /* Focus ring width. §4.1.3.3 — 2px, offset 2px, never removed. */
+  --gov-focus-width: 2px;
+}
+@media (pointer: coarse) {
+  :root { --gov-nav-item-height: 44px; --gov-ui-control: 44px; }
+}
+@media (min-width: 768px)  { :root { --gov-page-margin: 24px; } }
+@media (min-width: 1024px) { :root { --gov-page-margin: 32px; } }
+
+/* ── LAYER B — light ──────────────────────────────────────────────────────── */
+:root {
+  --gov-background-default:   var(--gov-neutral-50);
+  --gov-background-surface:   var(--gov-neutral-0);
+  --gov-background-secondary: var(--gov-neutral-100);
+  --gov-background-inverse:   var(--gov-neutral-900);
+
+  --gov-text-primary:     var(--gov-neutral-900);
+  --gov-text-secondary:   var(--gov-neutral-600);
+  --gov-text-placeholder: var(--gov-neutral-500);  /* examples only, never labels */
+  --gov-text-disabled:    var(--gov-neutral-400);
+  --gov-text-inverse:     var(--gov-neutral-0);
+  --gov-text-on-action:   var(--gov-neutral-0);
+
+  --gov-border-default: var(--gov-neutral-300);
+  --gov-border-input:   var(--gov-neutral-500);  /* holds 3:1 — WCAG 1.4.11 */
+  --gov-border-strong:  var(--gov-neutral-600);
+
+  --gov-action-primary-default:             var(--gov-blue-700);
+  --gov-action-primary-hover:               var(--gov-blue-800);
+  --gov-action-primary-active:              var(--gov-blue-900);
+  --gov-action-primary-disabled-background: var(--gov-neutral-200);
+  --gov-action-primary-disabled-text:       var(--gov-neutral-500);
+  --gov-action-secondary-text:              var(--gov-blue-700);
+  --gov-action-secondary-hover-background:  var(--gov-blue-50);
+  --gov-action-destructive-default:         var(--gov-red-600);
+  --gov-action-destructive-hover:           var(--gov-red-700);
+  --gov-action-destructive-active:          var(--gov-red-800);
+
+  --gov-link-default: var(--gov-blue-700);
+  --gov-link-hover:   var(--gov-blue-800);
+  --gov-link-visited: var(--gov-purple-700);
+
+  --gov-focus-ring:   var(--gov-blue-700);
+  --gov-focus-offset: var(--gov-neutral-0);
+
+  --gov-control-sm: calc(var(--gov-control-h-sm) * var(--gov-density));
+  --gov-control-md: calc(var(--gov-control-h-md) * var(--gov-density));
+  --gov-control-lg: calc(var(--gov-control-h-lg) * var(--gov-density));
+
+  --gov-identity-crimson:        var(--gov-simrik-600);
+  --gov-identity-crimson-subtle: var(--gov-simrik-50);
+  --gov-identity-blue:           var(--gov-blue-700);
+  --gov-identity-gold:           var(--gov-gold-500);
+
+  --gov-selection-background:            var(--gov-blue-100);
+  --gov-interactive-hover-surface:       var(--gov-neutral-100);
+  --gov-interactive-pressed-surface:     var(--gov-neutral-200);
+  --gov-interactive-selected-background: var(--gov-blue-100);
+  --gov-interactive-selected-indicator:  var(--gov-blue-700);
+
+  --gov-control-track:     var(--gov-neutral-200);
+  --gov-control-indicator: var(--gov-blue-700);
+  --gov-control-handle:    var(--gov-neutral-0);
+
+  --gov-overlay-scrim:   var(--gov-alpha-scrim);
+  --gov-overlay-hover:   var(--gov-alpha-tint-hover);
+  --gov-overlay-pressed: var(--gov-alpha-tint-pressed);
+
+  /* §5.2.6 status triples — text / background / border, always together. */
+  --gov-status-success-text:       var(--gov-green-700);
+  --gov-status-success-background: var(--gov-green-50);
+  --gov-status-success-border:     var(--gov-green-700);
+  --gov-status-warning-text:       var(--gov-amber-800);
+  --gov-status-warning-background: var(--gov-amber-50);
+  --gov-status-warning-border:     var(--gov-amber-600);
+  --gov-status-info-text:          var(--gov-blue-700);
+  --gov-status-info-background:    var(--gov-blue-50);
+  --gov-status-info-border:        var(--gov-blue-700);
+  --gov-status-error-text:         var(--gov-red-600);
+  --gov-status-error-background:   var(--gov-red-50);
+  --gov-status-error-border:       var(--gov-red-600);
+  --gov-status-neutral-text:       var(--gov-neutral-600);
+  --gov-status-neutral-background: var(--gov-neutral-100);
+  --gov-status-neutral-border:     var(--gov-neutral-600);
+}
+
+/* ── LAYER B — dark ───────────────────────────────────────────────────────── */
+.dark {
+  color-scheme: dark;
+  --gov-background-default:   var(--gov-neutral-950);
+  --gov-background-surface:   var(--gov-neutral-900);
+  --gov-background-secondary: var(--gov-neutral-850);
+  --gov-background-inverse:   var(--gov-neutral-0);
+
+  --gov-text-primary:     var(--gov-neutral-50);
+  --gov-text-secondary:   var(--gov-neutral-400);
+  --gov-text-placeholder: var(--gov-neutral-500);
+  --gov-text-disabled:    var(--gov-neutral-700);
+  --gov-text-inverse:     var(--gov-neutral-900);
+
+  --gov-border-default: var(--gov-neutral-800);
+  --gov-border-input:   var(--gov-neutral-600);
+  --gov-border-strong:  var(--gov-neutral-500);
+
+  --gov-action-primary-default: var(--gov-blue-500);
+  --gov-action-primary-hover:   var(--gov-blue-400);
+  --gov-action-primary-active:  var(--gov-blue-600);
+  --gov-action-secondary-text:  var(--gov-blue-300);
+  --gov-action-secondary-hover-background: var(--gov-blue-950);
+  --gov-action-destructive-hover: var(--gov-red-500);
+
+  --gov-link-default: var(--gov-blue-300);
+  --gov-link-hover:   var(--gov-blue-200);
+  --gov-link-visited: var(--gov-purple-300);
+
+  --gov-focus-ring:   var(--gov-blue-300);
+  --gov-focus-offset: var(--gov-neutral-950);
+
+  --gov-identity-crimson:        var(--gov-simrik-300);
+  --gov-identity-crimson-subtle: var(--gov-simrik-950);
+  --gov-identity-gold:           var(--gov-gold-300);
+
+  --gov-selection-background:            var(--gov-blue-900);
+  --gov-interactive-hover-surface:       var(--gov-neutral-850);
+  --gov-interactive-pressed-surface:     var(--gov-neutral-800);
+  --gov-interactive-selected-background: var(--gov-blue-900);
+  --gov-interactive-selected-indicator:  var(--gov-blue-300);
+
+  --gov-status-success-text:       var(--gov-green-400);
+  --gov-status-success-background: var(--gov-green-950);
+  --gov-status-success-border:     var(--gov-green-400);
+  --gov-status-warning-text:       var(--gov-amber-300);
+  --gov-status-warning-background: var(--gov-amber-950);
+  --gov-status-warning-border:     var(--gov-amber-400);
+  --gov-status-info-text:          var(--gov-blue-300);
+  --gov-status-info-background:    var(--gov-blue-950);
+  --gov-status-info-border:        var(--gov-blue-300);
+  --gov-status-error-text:         var(--gov-red-400);
+  --gov-status-error-background:   var(--gov-red-950);
+  --gov-status-error-border:       var(--gov-red-400);
+  --gov-status-neutral-text:       var(--gov-neutral-400);
+  --gov-status-neutral-background: var(--gov-neutral-850);
+  --gov-status-neutral-border:     var(--gov-neutral-400);
+}
+
+/* ── high contrast (§5.2.5) — defined for BOTH grounds, or it half-applies ── */
+:root:not(.dark)[data-contrast="high"] {
+  --gov-background-default:   var(--gov-neutral-0);
+  --gov-background-surface:   var(--gov-neutral-0);
+  --gov-background-secondary: var(--gov-neutral-100);
+  --gov-text-primary:   #000000;
+  --gov-text-secondary: var(--gov-neutral-900);
+  --gov-text-disabled:  var(--gov-neutral-600);
+  --gov-border-default: var(--gov-neutral-600);
+  --gov-border-input:   var(--gov-neutral-900);
+  --gov-border-strong:  #000000;
+  --gov-action-primary-default: var(--gov-blue-900);
+  --gov-action-primary-hover:   var(--gov-blue-800);
+  --gov-link-default:           var(--gov-blue-900);
+  --gov-focus-ring:  var(--gov-blue-900);
+  --gov-focus-width: 3px;
+  --gov-status-warning-text: var(--gov-amber-900);
+  --gov-status-success-text: var(--gov-green-800);
+  --gov-status-error-text:   var(--gov-red-800);
+}
+.dark[data-contrast="high"] {
+  --gov-background-default:   #000000;
+  --gov-background-surface:   #000000;
+  --gov-background-secondary: var(--gov-neutral-900);
+  --gov-text-primary:   #ffffff;
+  --gov-text-secondary: var(--gov-neutral-100);
+  --gov-text-disabled:  var(--gov-neutral-400);
+  --gov-text-on-action: #000000;
+  --gov-border-default: var(--gov-neutral-400);
+  --gov-border-input:   var(--gov-neutral-200);
+  --gov-border-strong:  #ffffff;
+  --gov-action-primary-default: var(--gov-blue-300);
+  --gov-action-primary-hover:   var(--gov-blue-200);
+  --gov-action-primary-active:  var(--gov-blue-400);
+  --gov-link-default:           var(--gov-blue-200);
+  --gov-link-hover:             var(--gov-blue-100);
+  --gov-link-visited:           var(--gov-purple-300);
+  --gov-focus-ring:   var(--gov-blue-200);
+  --gov-focus-offset: #000000;
+  --gov-focus-width:  3px;
+  --gov-interactive-selected-background: var(--gov-blue-950);
+  --gov-interactive-selected-indicator:  var(--gov-blue-200);
+  --gov-interactive-hover-surface:       var(--gov-neutral-850);
+  --gov-status-success-text: var(--gov-green-400);  --gov-status-success-border: var(--gov-green-400);
+  --gov-status-warning-text: var(--gov-amber-300);  --gov-status-warning-border: var(--gov-amber-300);
+  --gov-status-info-text:    var(--gov-blue-200);   --gov-status-info-border:    var(--gov-blue-200);
+  --gov-status-error-text:   var(--gov-red-400);    --gov-status-error-border:   var(--gov-red-400);
+  --gov-status-neutral-text: var(--gov-neutral-100); --gov-status-neutral-border: var(--gov-neutral-100);
+  --gov-identity-crimson: var(--gov-simrik-300);
+}
+
+/* ── colour-blind-safe (§5.2.5): success moves to teal ───────────────────── */
+[data-vision="color-blind-safe"] {
+  --gov-status-success-text:       var(--gov-teal-700);
+  --gov-status-success-background: var(--gov-teal-50);
+  --gov-status-success-border:     var(--gov-teal-700);
+}
+.dark[data-vision="color-blind-safe"] {
+  --gov-status-success-text:   var(--gov-teal-400);
+  --gov-status-success-border: var(--gov-teal-400);
+}
+
+/* ── large text: the ONE mode allowed to change type sizes (§5.1.3) ──────── */
+[data-text-size="large"] { font-size: 125%; }
+
+/* ── images off (§14.3): a labelled placeholder, never a collapsed hole ───── */
+[data-images="off"] :is(img, video) {
+  background: var(--gov-background-secondary);
+  border: 1px dashed var(--gov-border-default);
+  border-radius: var(--gov-radius-sm);
+  filter: opacity(0);
+}
+
+/* ── reduced motion as an explicit choice (§5.5.5); OS preference below ──── */
+[data-motion="reduced"],
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: var(--gov-duration-instant) !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: var(--gov-duration-instant) !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: var(--gov-duration-instant) !important;
+    transition-duration: var(--gov-duration-instant) !important;
+    scroll-behavior: auto !important;
+  }
+}

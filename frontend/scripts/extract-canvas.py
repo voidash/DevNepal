@@ -127,7 +127,15 @@ def main() -> None:
         story = story_text(story_m.group(1)) if story_m else ""
 
         main_el = re.search(r"<main\b.*?</main>", board, re.S)
-        fragment = main_el.group(0) if main_el else board
+        if main_el:
+            fragment = main_el.group(0)
+        else:
+            # Public pages have no <main>: their own top nav and footer are
+            # inside the board. Those are chrome the app shell provides, so
+            # strip them; <aside> stays — on these boards it is content (the
+            # catalog's filter column, a project's sidebar), not a rail.
+            fragment = re.sub(r'<nav class="nav".*?</nav>', "", board, count=1, flags=re.S)
+            fragment = re.sub(r"<footer\b.*?</footer>", "", fragment, flags=re.S)
         (OUT_REF / f"{m.group(1)}.html").write_text(clean(fragment), encoding="utf-8")
 
         sid, label = m.group(1), m.group(2)

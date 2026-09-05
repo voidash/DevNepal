@@ -2,7 +2,11 @@ import { LitElement, html } from "lit"
 import { customElement, state } from "lit/decorators.js"
 import { repeat } from "lit/directives/repeat.js"
 
+/* Order matters. Nepal tokens first (Layer A/B), then the canvas's own
+   design system, then the aliases that re-point its names at Layer B. */
+import "./tokens/nepal.css"
 import "./tokens/industry.css"
+import "./tokens/industry-aliases.css"
 import "./app.css"
 import "./components/dn-ref-screen"
 import routes from "./routes.json"

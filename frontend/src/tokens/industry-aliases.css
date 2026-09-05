@@ -1,0 +1,165 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   INDUSTRY → NEPAL ALIASES
+
+   The canvas was drawn against its own design system ("Industry": steel-blue
+   #5980a6, Barlow, 2/4/7px radii). Its 115 boards address that system by
+   token name — var(--color-accent), var(--radius-md) — and by class —
+   .btn, .card, .tag. This file loads AFTER industry.css and re-points every
+   one of those names at Layer B, so all 115 boards take the Nepal palette,
+   radii, focus ring and control heights without a single board being edited.
+
+   Rule of the hybrid: colour, radius, focus, spacing, status and touch
+   targets come from the Nepal system; the typefaces stay Industry's.
+   Where the two disagree on a measurement, the guideline wins — it is the
+   one with a clause number.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ground and ink */
+  --color-bg:      var(--gov-background-default);
+  --color-surface: var(--gov-background-surface);   /* NOTE: Industry's surface sank below
+                                                        the ground; Nepal's lifts above it. */
+  --color-text:    var(--gov-text-primary);
+  --color-divider: var(--gov-border-default);
+
+  /* accent → National Blue. 4.1:1 became 11.3:1 on white. */
+  --color-accent:   var(--gov-action-primary-default);
+  --color-accent-2: var(--gov-blue-500);
+
+  /* Industry's neutral ramp, step for step. */
+  --color-neutral-100: var(--gov-neutral-100);
+  --color-neutral-200: var(--gov-neutral-200);
+  --color-neutral-300: var(--gov-neutral-300);
+  --color-neutral-400: var(--gov-neutral-400);
+  --color-neutral-500: var(--gov-neutral-500);
+  --color-neutral-600: var(--gov-neutral-600);
+  --color-neutral-700: var(--gov-neutral-700);
+  --color-neutral-800: var(--gov-neutral-800);
+  --color-neutral-900: var(--gov-neutral-900);
+
+  /* Industry's accent ramp. The boards use -100/-200 as tints, -600/-700 as
+     button hover/active, -700/-800 as text on a tint. */
+  --color-accent-100: var(--gov-blue-50);
+  --color-accent-200: var(--gov-blue-100);
+  --color-accent-300: var(--gov-blue-200);
+  --color-accent-400: var(--gov-blue-300);
+  --color-accent-500: var(--gov-blue-500);
+  --color-accent-600: var(--gov-action-primary-hover);
+  --color-accent-700: var(--gov-action-primary-active);
+  --color-accent-800: var(--gov-blue-900);
+  --color-accent-900: var(--gov-blue-950);
+
+  /* Second accent stays in the blue family — §5.2.8 hue exclusivity; never Simrik. */
+  --color-accent-2-100: var(--gov-blue-50);
+  --color-accent-2-200: var(--gov-blue-100);
+  --color-accent-2-300: var(--gov-blue-200);
+  --color-accent-2-400: var(--gov-blue-300);
+  --color-accent-2-500: var(--gov-blue-400);
+  --color-accent-2-600: var(--gov-blue-600);
+  --color-accent-2-700: var(--gov-blue-700);
+  --color-accent-2-800: var(--gov-blue-800);
+  --color-accent-2-900: var(--gov-blue-900);
+
+  /* type: Industry faces, Devanagari in the stack so fallback is per glyph */
+  --font-heading: "Barlow Condensed", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-body:    "Barlow", "Noto Sans Devanagari", system-ui, sans-serif;
+
+  /* geometry */
+  --radius-sm: var(--gov-radius-sm);   /* 2 → 6 */
+  --radius-md: var(--gov-radius-md);   /* 4 → 10 */
+  --radius-lg: var(--gov-radius-lg);   /* 7 → 14 */
+  --shadow-sm: var(--gov-elevation-1);
+  --shadow-md: var(--gov-elevation-2);
+  --shadow-lg: var(--gov-elevation-3);
+  /* --space-* deliberately NOT aliased: Reference boards keep their 3.4px
+     grid; Live components use --gov-space-*. */
+}
+
+/* Dark ground for the boards' hard-coded tints. Layer B already flips the
+   named tokens; these are the few places Industry used a literal. */
+.dark {
+  --color-bg-elevated: var(--gov-neutral-850);
+}
+
+/* ── component overrides — same selectors as industry.css, loaded later ──── */
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 16px;                 /* §5.3.3.3 body floor; Industry set 15 */
+  line-height: 1.6;
+}
+
+/* Type scale: the Gov roles, in Industry's condensed face. Industry shipped
+   42/32/25/20 — the "headings too big" that was flagged twice this week. */
+h1 { font-size: 32px; line-height: 1.15; }
+h2 { font-size: 24px; line-height: 1.2; }
+h3 { font-size: 20px; line-height: 1.25; }
+h4 { font-size: 16px; line-height: 1.3; }
+h5 { font-size: 14px; }
+h6 { font-size: 12px; letter-spacing: .08em; }
+
+a { color: var(--gov-link-default); }
+a:hover { color: var(--gov-link-hover); }
+::selection { background: var(--gov-selection-background); }
+
+/* §5.2.9 double focus ring: a painted gap, then the ring. Outline cannot
+   draw a gap in a colour, so it is two box-shadows. */
+:focus { outline: none; }
+:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--gov-focus-width) var(--gov-focus-offset),
+    0 0 0 calc(var(--gov-focus-width) * 2) var(--gov-focus-ring);
+}
+.input:focus-visible {
+  border-color: var(--gov-focus-ring);
+  box-shadow:
+    0 0 0 var(--gov-focus-width) var(--gov-focus-offset),
+    0 0 0 calc(var(--gov-focus-width) * 2) var(--gov-focus-ring);
+}
+
+/* §4.1.3.1 — controls at 40 on a fine pointer, 44 on a coarse one. Industry's
+   .btn was ~32 by padding and .input 36. */
+.btn {
+  min-height: var(--gov-ui-control);
+  padding-inline: 16px;
+  font-size: 14px;                 /* §5.3.3.3 interactive floor */
+  border-radius: var(--gov-radius-md);
+}
+.btn-icon { width: var(--gov-ui-control); height: var(--gov-ui-control); padding: 0; }
+.btn-primary { background: var(--gov-action-primary-default); color: var(--gov-text-on-action); }
+.btn-primary:hover  { background: var(--gov-action-primary-hover); }
+.btn-primary:active { background: var(--gov-action-primary-active); }
+.btn-ghost { color: var(--gov-action-secondary-text); }
+.btn-ghost:hover { background: var(--gov-action-secondary-hover-background); }
+.input {
+  min-height: var(--gov-ui-control);
+  font-size: 16px;                 /* prevents iOS zoom and meets the body floor */
+  border-color: var(--gov-border-input);
+  background: var(--gov-background-surface);
+  border-radius: var(--gov-radius-md);
+}
+.seg { border-radius: var(--gov-radius-md); }
+.seg-opt { min-height: calc(var(--gov-ui-control) - 2px); }
+
+/* §5.2.6 status triples. Industry had no status colours at all — only
+   tag-accent and tag-neutral — so these are additions, not remaps. Status is
+   never colour alone: the boards already pair each tag with a word. */
+.tag-success { background: var(--gov-status-success-background); color: var(--gov-status-success-text); border: 1px solid var(--gov-status-success-border); }
+.tag-warning { background: var(--gov-status-warning-background); color: var(--gov-status-warning-text); border: 1px solid var(--gov-status-warning-border); }
+.tag-error   { background: var(--gov-status-error-background);   color: var(--gov-status-error-text);   border: 1px solid var(--gov-status-error-border); }
+.tag-info    { background: var(--gov-status-info-background);    color: var(--gov-status-info-text);    border: 1px solid var(--gov-status-info-border); }
+.tag-neutral { background: var(--gov-status-neutral-background); color: var(--gov-status-neutral-text); }
+
+/* Devanagari (§5.3.3.2, §5.3.4.2): taller line, never letter-spaced, never
+   synthesised. Inherits from <html lang="ne"> down. */
+:lang(ne) {
+  line-height: 1.75;
+  letter-spacing: normal;
+  font-synthesis-weight: none;
+  font-synthesis-style: none;
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
