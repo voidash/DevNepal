@@ -9,12 +9,56 @@ from apps.accounts.rate_limits import (
     LOGIN_ATTEMPT_LIMIT,
     MFA_VERIFICATION_LIMIT,
     rate_limit_key,
+    request_subjects,
 )
 from apps.accounts.tests.factories import UserFactory
 from apps.audit.models import AuditEvent
 from apps.ministries.tests.factories import MinistryPublisherFactory
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.mark.unit
+def test_local_tunnel_uses_valid_cloudflare_client_ip_for_rate_limit_subject(rf):
+    """SEC-006: tunnel visitors do not share the loopback authentication bucket."""
+    request = rf.get(
+        "/en/accounts/login/",
+        REMOTE_ADDR="127.0.0.1",
+        HTTP_CF_CONNECTING_IP="198.51.100.90",
+    )
+    request.session = type("Session", (), {"session_key": None})()
+
+    assert request_subjects(request, "member") == (
+        "ip:198.51.100.90",
+        "principal:member",
+    )
+
+
+@pytest.mark.unit
+def test_remote_request_cannot_spoof_cloudflare_client_ip(rf):
+    """SEC-006: forwarded client identity is accepted only from the local tunnel."""
+    request = rf.get(
+        "/en/accounts/login/",
+        REMOTE_ADDR="203.0.113.12",
+        HTTP_CF_CONNECTING_IP="198.51.100.90",
+    )
+    request.session = type("Session", (), {"session_key": None})()
+
+    assert request_subjects(request, "member")[0] == "ip:203.0.113.12"
+
+
+@pytest.mark.unit
+def test_malformed_cloudflare_client_ip_falls_back_to_loopback(rf, caplog):
+    """SEC-006: malformed tunnel metadata cannot create arbitrary cache subjects."""
+    request = rf.get(
+        "/en/accounts/login/",
+        REMOTE_ADDR="127.0.0.1",
+        HTTP_CF_CONNECTING_IP="not-an-ip",
+    )
+    request.session = type("Session", (), {"session_key": None})()
+
+    assert request_subjects(request, "member")[0] == "ip:127.0.0.1"
+    assert "Ignored malformed CF-Connecting-IP" in caplog.text
 
 
 @pytest.mark.unit
