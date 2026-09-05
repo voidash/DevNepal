@@ -304,6 +304,7 @@ def test_about_page_lays_out_a_grounded_contribution_flow_in_both_languages(clie
     assert reverse("projects:community").encode() not in english.content
     assert reverse("accounts:member_directory").encode() not in english.content
     assert b'aria-labelledby="about-heading"' in english.content
+    assert b'class="dn-doc-main dn-doc-main--centered"' in english.content
     assert nepali.status_code == 200
     assert "कसरी योगदान गर्ने" in nepali.content.decode()
 

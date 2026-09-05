@@ -87,6 +87,16 @@ def test_dsc_005_project_header_sits_close_under_the_product_nav():
     assert f"{header} .dn-breadcrumbs {{ padding: var(--space-2) 0 var(--space-3); }}" in css
 
 
+def test_dsc_005_github_issue_lists_keep_a_logical_gutter_at_every_depth():
+    """DSC-005/GIT-010/NFR-A11Y-01: synced issue lists retain readable LTR and RTL gutters."""
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+
+    assert ".dn-github-issue__body :is(ul, ol) { padding-inline-start: var(--space-6); }" in css
+    assert (
+        ".dn-github-issue__body :is(ul, ol) :is(ul, ol) { padding-inline-start: var(--space-5); }"
+    ) in css
+
+
 def test_dsc_005_project_people_show_github_avatars_not_initials(client):
     """DSC-005/GIT-010: repository people use the public GitHub avatar image."""
     project, repository = public_project()

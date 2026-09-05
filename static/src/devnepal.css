@@ -574,6 +574,9 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-github-issue__body { min-height: 160px; font-size: var(--fs-md); line-height: 1.7; }
 .dn-github-issue__body h2 { margin: var(--space-6) 0 var(--space-2); font-size: var(--fs-lg); }
 .dn-github-issue__body > :first-child { margin-top: 0; }
+.dn-github-issue__body :is(ul, ol) { padding-inline-start: var(--space-6); }
+.dn-github-issue__body :is(ul, ol) :is(ul, ol) { padding-inline-start: var(--space-5); }
+.dn-github-issue__body li + li { margin-block-start: var(--space-1); }
 .dn-github-issue__body code { padding: 1px 5px; border-radius: var(--radius-sm); background: var(--color-neutral-100); font-size: .92em; }
 .dn-github-issue__card > footer p { margin: var(--space-3) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); }
 .dn-github-profile { max-width: 780px; padding-block: 64px 80px; }
@@ -906,6 +909,7 @@ ol.dn-journey .dn-journey-step > span:not(.Counter) { grid-column: 2; }
 .dn-sheet > .dn-journey { border: 0; border-radius: 0; }
 .dn-doc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-8); padding-block: var(--space-10) var(--space-16); }
 .dn-doc-main { max-width: 78ch; }
+.dn-doc-main--centered { justify-self: center; width: min(100%, 78ch); }
 .dn-doc-main > section { margin-bottom: var(--space-12); }
 .dn-doc-main > section:last-child { margin-bottom: 0; }
 .dn-doc-main h1 { margin-bottom: var(--space-4); }
