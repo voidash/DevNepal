@@ -58,7 +58,11 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-pill: 999px;
-  --container-max: 1248px;
+  /* Full width. The cap was 1248px, which left a third of a 2000px screen empty while
+     card facts wrapped inside crowded columns. Content now runs to the viewport with
+     page gutters, and grids gain columns as the width allows. */
+  --container-max: none;
+  --page-gutter: 40px;
   --target-min: 44px;
   --focus-outline: 2px solid var(--color-accent);
   --focus-offset: 2px;
