@@ -7398,3 +7398,9 @@ msgstr "अनुमोदनलाई यसको कानुनी सन्
 
 msgid "%(spdx)s approved."
 msgstr "%(spdx)s अनुमोदित।"
+
+msgid "Administration console"
+msgstr "प्रशासन कन्सोल"
+
+msgid "Approved licences"
+msgstr "अनुमोदित इजाजतपत्रहरू"

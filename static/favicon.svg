@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="DevNepal">
+  <rect width="32" height="32" fill="#003893"/>
+  <path d="M7 5h13l-4 6 7 5-7 11H7z" fill="#dc143c" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="12.5" cy="11" r="2.25" fill="#fff"/>
+  <path d="M10 21h7" stroke="#fff" stroke-width="2" stroke-linecap="square"/>
+</svg>
