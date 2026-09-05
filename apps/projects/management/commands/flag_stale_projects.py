@@ -1,8 +1,8 @@
 import logging
 
-from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from apps.observability.commands import InstrumentedCommand
 from apps.projects.enums import ProjectStatus
 from apps.projects.models import Project
 from apps.projects.services import flag_expired, flag_stale
@@ -10,7 +10,7 @@ from apps.projects.services import flag_expired, flag_stale
 logger = logging.getLogger(__name__)
 
 
-class Command(BaseCommand):
+class Command(InstrumentedCommand):
     help = (
         "GOV-010/GOV-012/D5: flag expired deadlines and stale maintainer response on live "
         "projects without changing any project status."

@@ -1,0 +1,126 @@
+{
+  "uid": "devnepal-availability",
+  "title": "DevNepal / Availability (NFR-AVL-01)",
+  "tags": ["devnepal", "nfr-avl-01", "nfr-avl-02"],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-30d", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Django process up",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" } } },
+            { "type": "value", "options": { "1": { "text": "UP", "color": "green" } } }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [{ "expr": "up{job=\"django\"}", "legendFormat": "up", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Success ratio (30d) vs 99.5% target",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": { "thresholdsStyle": { "mode": "line" } },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0.995 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "1 - ((sum(rate(http_user_requests_total{status=~\"5..\"}[1d])) or vector(0)) / sum(rate(http_user_requests_total[1d])))",
+          "legendFormat": "daily success ratio",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Recent audit failures/denials (24h)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "queue_depth{queue=\"audit_failures_24h\"}",
+          "legendFormat": "failures/denials",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Stale open projects",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "targets": [
+        {
+          "expr": "queue_depth{queue=\"projects_stale\"}",
+          "legendFormat": "stale projects",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Notification delivery backlog",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "targets": [
+        {
+          "expr": "queue_depth{queue=\"notifications_pending\"}",
+          "legendFormat": "pending/failed",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "GitHub sync pending events",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "devnepal-prometheus" },
+      "targets": [
+        {
+          "expr": "queue_depth{queue=\"github_sync_pending_events\"}",
+          "legendFormat": "pending events",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

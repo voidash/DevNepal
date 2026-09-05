@@ -2,13 +2,14 @@ import importlib
 import logging
 
 from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.db.models import Q
 from django.utils import timezone
 
 from apps.github_sync import services
 from apps.github_sync.enums import SyncState
 from apps.github_sync.models import RepositoryConnection
+from apps.observability.commands import InstrumentedCommand
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ def load_fetcher(dotted_path: str):
     return getattr(importlib.import_module(module_name), attribute)
 
 
-class Command(BaseCommand):
+class Command(InstrumentedCommand):
     help = (
         "GIT-006: sweep every active repository connection through the configured "
         "fetcher to recover missed webhook events. Uses the production GitHub "

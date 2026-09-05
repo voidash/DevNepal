@@ -49,6 +49,7 @@ If your change breaks an existing test, that is a bug in YOUR change unless a co
 | moderation / reports | `apps/moderation/**`, `tests/acceptance/test_a07*.py` | everything else |
 | audit | `apps/audit/**` | everything else |
 | taxonomy | `apps/taxonomy/**` | everything else |
+| observability | `apps/observability/**`, `ops/observability/**` | everything else |
 | UI shell / design system / i18n | `templates/**`, `static/src/**`, `config/urls.py` (template-level only) | app logic |
 | docs | `docs/**` per assigned file | other docs files |
 

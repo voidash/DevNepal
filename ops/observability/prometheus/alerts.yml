@@ -1,0 +1,83 @@
+groups:
+  - name: devnepal-availability
+    rules:
+      - alert: DjangoMetricsEndpointDown
+        expr: up{job="django"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "The DevNepal /metrics scrape is failing (NFR-AVL-01/NFR-AVL-02)."
+          description: "Prometheus has not been able to scrape the Django process for 2 minutes."
+
+      - alert: HighHttpErrorRate
+        expr: |
+          sum(rate(http_user_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(http_user_requests_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "More than 5% of HTTP responses are 5xx (NFR-AVL-01 error budget)."
+
+  - name: devnepal-jobs
+    rules:
+      - alert: BackgroundJobRunFailed
+        expr: increase(background_job_runs_total{status="failed"}[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Background job {{ $labels.command }} failed in the last 15 minutes."
+
+      - alert: BackgroundJobStale
+        expr: background_job_seconds_since_last_success > 86400
+        labels:
+          severity: warning
+        annotations:
+          summary: "Background job {{ $labels.command }} has not succeeded in over 24 hours."
+          description: >-
+            Generic 24h default threshold. Tune per command once its operational
+            cron cadence is approved (see docs/adr/0010-observability.md).
+
+  - name: devnepal-database
+    rules:
+      - alert: HighDatabaseQueryErrorRate
+        expr: |
+          (sum(rate(db_queries_total{outcome="error"}[5m])) or vector(0))
+          /
+          sum(rate(db_queries_total[5m]))
+          > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "More than 1% of database queries are failing."
+
+      - alert: PendingDatabaseMigrations
+        expr: db_pending_migrations > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unapplied database migrations detected on a running process."
+          description: "Run `uv run manage.py migrate` on the affected environment."
+
+  - name: devnepal-queues
+    rules:
+      - alert: RepositorySyncBacklogGrowing
+        expr: queue_depth{queue="github_sync_pending_events"} > 50
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GitHub sync pending-event backlog exceeds 50 for 15 minutes."
+
+      - alert: ModerationQueueAging
+        expr: queue_depth{queue="moderation_aging_cases"} > 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Moderation cases have been open for more than five days."

@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import re
-import uuid
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -16,6 +15,7 @@ from apps.accounts.enums import Visibility
 from apps.accounts.github import GitHubConnectError, GitHubProfileError
 from apps.audit.services import record_audit
 from apps.github_sync.models import GithubConnection
+from apps.observability.context import get_correlation_id
 from apps.projects.enums import ApplicationStatus, ProjectStatus
 from apps.taxonomy.fields import normalize_nfc
 
@@ -564,7 +564,7 @@ def export_profile_data(user):
         action="account.data_export",
         obj=user,
         after={"contribution_count": len(data["contributions"])},
-        correlation_id=uuid.uuid4().hex,
+        correlation_id=get_correlation_id(),
     )
     return data
 
@@ -575,7 +575,7 @@ def request_account_deletion(user):
     from apps.contributions.models import ContributionRecord
     from apps.github_sync.models import GithubConnection
 
-    correlation_id = uuid.uuid4().hex
+    correlation_id = get_correlation_id()
     connection = GithubConnection.objects.filter(user=user, revoked_at__isnull=True).first()
 
     try:
