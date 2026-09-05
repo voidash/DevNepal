@@ -3,6 +3,12 @@ from django.urls import reverse
 from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
+from apps.audit.models import AuditEvent
+from apps.audit.publisher_audit import (
+    PUBLISHER_EXPORT_LIMIT,
+    PublisherAuditExportAuthorizationError,
+    export_publisher_audit,
+)
 from apps.audit.services import record_audit
 from apps.audit.tests.factories import AuditEventFactory, UserFactory
 from apps.ministries.enums import PublisherStatus
@@ -171,3 +177,81 @@ def test_organization_filters_are_allowlisted_and_keep_the_scope_boundary(client
         "category": "all",
         "result": "",
     }
+
+
+@pytest.mark.integration
+def test_publisher_exports_the_scoped_ledger_with_purpose_and_csv_injection_protection(client):
+    """GOV-005/ADM-005: C6.2 CSV is bounded, purpose-audited, and spreadsheet-safe."""
+    assignment = MinistryPublisherFactory()
+    event = AuditEventFactory(
+        actor=assignment.user,
+        action="project.updated",
+        after={"reason": '=HYPERLINK("https://attacker.invalid")'},
+    )
+    verify_mfa(client, assignment.user)
+
+    response = client.post(
+        reverse("audit:export_my_actions"),
+        {
+            "scope": "mine",
+            "category": "all",
+            "result": "",
+            "purpose": "Quarterly ministry accountability review",
+        },
+    )
+
+    body = response.content.decode("utf-8-sig")
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("text/csv")
+    assert "project.updated" in body
+    assert "'=HYPERLINK" in body
+    export_event = AuditEvent.objects.get(action="audit.publisher_export")
+    assert export_event.after == {
+        "purpose": "Quarterly ministry accountability review",
+        "count": 1,
+        "scope": "mine",
+        "ministry_id": None,
+        "category": "all",
+        "result": "",
+    }
+    assert str(event.after) not in str(export_event.after)
+
+
+@pytest.mark.integration
+def test_publisher_export_requires_a_meaningful_purpose_and_is_rate_limited(client):
+    """ADM-005/SEC-006: empty-purpose and excessive C6.2 exports fail and are audited."""
+    assignment = MinistryPublisherFactory()
+    verify_mfa(client, assignment.user)
+
+    purposeless = client.post(
+        reverse("audit:export_my_actions"),
+        {"scope": "mine", "purpose": "short"},
+    )
+    for _ in range(PUBLISHER_EXPORT_LIMIT):
+        AuditEventFactory(actor=assignment.user, action="audit.publisher_export")
+    limited = client.post(
+        reverse("audit:export_my_actions"),
+        {"scope": "mine", "purpose": "Quarterly ministry accountability review"},
+    )
+
+    assert purposeless.status_code == 400
+    assert limited.status_code == 429
+    assert limited["Retry-After"] == "3600"
+    assert AuditEvent.objects.filter(action="audit.publisher_export.denied").count() == 2
+
+
+@pytest.mark.integration
+def test_export_service_rejects_a_ministry_outside_the_publishers_active_scope():
+    """GOV-005/SEC-005: direct service callers cannot export another ministry's ledger."""
+    assignment = MinistryPublisherFactory()
+    foreign_ministry = MinistryOrganizationFactory()
+
+    with pytest.raises(PublisherAuditExportAuthorizationError):
+        export_publisher_audit(
+            user=assignment.user,
+            ministry=foreign_ministry,
+            scope="organization",
+            category="all",
+            result="",
+            purpose="Quarterly ministry accountability review",
+        )

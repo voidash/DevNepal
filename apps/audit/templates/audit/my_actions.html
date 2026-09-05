@@ -68,6 +68,19 @@
       </tbody>
     </table>
   </div>
+  <form method="post" action="{% url 'audit:export_my_actions' %}" class="dn-form-stack" aria-label="{% trans 'Export audit log' %}">
+    {% csrf_token %}
+    <input type="hidden" name="scope" value="{{ filters.scope }}">
+    <input type="hidden" name="ministry" value="{{ filters.ministry }}">
+    <input type="hidden" name="category" value="{{ filters.category }}">
+    <input type="hidden" name="result" value="{{ filters.result }}">
+    <div class="dn-field">
+      <label for="audit-export-purpose">{% trans "Export purpose" %}</label>
+      <input id="audit-export-purpose" name="purpose" minlength="20" maxlength="500" required>
+      <p class="dn-field-help">{% trans "Exports are purpose-limited and the purpose, filters, and row count are added to the audit trail." %}</p>
+    </div>
+    <button class="btn btn--secondary" type="submit">{% trans "Export · CSV" %}</button>
+  </form>
   {% if events.paginator.num_pages > 1 %}
   <nav aria-label="{% trans 'Audit log pages' %}">
     {% if events.has_previous %}<a href="?{{ query_string }}{% if query_string %}&amp;{% endif %}page={{ events.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}

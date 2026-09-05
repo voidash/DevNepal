@@ -1,8 +1,11 @@
 from collections.abc import Iterable
+from datetime import timedelta
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 
+from apps.audit.services import record_audit
 from apps.ministries.enums import OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.models import (
@@ -32,6 +35,28 @@ PUBLISHER_AUDIT_CATEGORIES = (
     OFFICERS_CATEGORY,
     PROJECTS_CATEGORY,
 )
+PUBLISHER_AUDIT_RESULTS = ("success", "failure", "denied")
+PUBLISHER_EXPORT_LIMIT = 10
+PUBLISHER_EXPORT_MAX_ROWS = 5000
+PUBLISHER_EXPORT_MIN_PURPOSE_LENGTH = 20
+PUBLISHER_EXPORT_WINDOW = timedelta(hours=1)
+
+
+class PublisherAuditExportError(Exception):
+    """Base failure for the purpose-limited C6.2 audit export."""
+
+
+class PublisherAuditExportAuthorizationError(PublisherAuditExportError):
+    """The actor cannot export the requested publisher or ministry ledger."""
+
+
+class PublisherAuditExportPurposeError(PublisherAuditExportError):
+    """The export lacks a meaningful declared purpose."""
+
+
+class PublisherAuditExportRateLimitError(PublisherAuditExportError):
+    """The publisher exceeded the bounded hourly export allowance."""
+
 
 PROJECT_RESOURCE_MODELS = (
     (Project, "ministry"),
@@ -76,6 +101,77 @@ def add_event_presentation(events: Iterable) -> None:
     for event in events:
         event.basis_reason = _event_basis_reason(event)
         event.target_reference = _event_target_reference(event)
+
+
+def export_publisher_audit(
+    *, user, ministry=None, scope: str, category: str, result: str, purpose: str
+) -> list:
+    """GOV-005/ADM-005: export a bounded, re-authorized ledger and audit only metadata."""
+    active_ministries = active_publisher_ministries(user)
+    if not active_ministries.exists():
+        raise PublisherAuditExportAuthorizationError("an active publisher role is required")
+    if scope not in {"mine", "organization"}:
+        raise PublisherAuditExportAuthorizationError("invalid audit scope")
+    if category not in PUBLISHER_AUDIT_CATEGORIES or result not in {
+        "",
+        *PUBLISHER_AUDIT_RESULTS,
+    }:
+        raise PublisherAuditExportAuthorizationError("invalid audit filter")
+    if scope == "organization":
+        if ministry is None or not active_ministries.filter(pk=ministry.pk).exists():
+            raise PublisherAuditExportAuthorizationError("organization is outside publisher scope")
+    else:
+        ministry = None
+        category = ALL_CATEGORIES
+
+    cleaned_purpose = " ".join((purpose or "").split())
+    if len(cleaned_purpose) < PUBLISHER_EXPORT_MIN_PURPOSE_LENGTH:
+        record_audit(
+            actor=user,
+            action="audit.publisher_export.denied",
+            obj=ministry or user,
+            after={"reason": "purpose_required"},
+            result="failure",
+        )
+        raise PublisherAuditExportPurposeError("a specific export purpose is required")
+    recent_exports = user.audit_events.filter(
+        action="audit.publisher_export",
+        created_at__gte=timezone.now() - PUBLISHER_EXPORT_WINDOW,
+    ).count()
+    if recent_exports >= PUBLISHER_EXPORT_LIMIT:
+        record_audit(
+            actor=user,
+            action="audit.publisher_export.denied",
+            obj=ministry or user,
+            after={"reason": "rate_limited"},
+            result="failure",
+        )
+        raise PublisherAuditExportRateLimitError("hourly publisher export limit reached")
+
+    events = publisher_audit_events(
+        user=user,
+        ministry=ministry,
+        scope=scope,
+        category=category,
+    )
+    if result:
+        events = events.filter(result=result)
+    rows = list(events[:PUBLISHER_EXPORT_MAX_ROWS])
+    add_event_presentation(rows)
+    record_audit(
+        actor=user,
+        action="audit.publisher_export",
+        obj=ministry or user,
+        after={
+            "purpose": cleaned_purpose,
+            "count": len(rows),
+            "scope": scope,
+            "ministry_id": ministry.pk if ministry else None,
+            "category": category,
+            "result": result,
+        },
+    )
+    return rows
 
 
 def _ministry_resource_filter(ministry, category: str) -> Q:
