@@ -8,6 +8,9 @@ from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.accounts.tests.factories import MemberProfileFactory
+from apps.blogs.enums import BlogModerationState, BlogStatus
+from apps.blogs.tests.factories import BlogPostFactory
 from apps.github_sync.models import GithubStarterTask
 from apps.github_sync.tests.factories import RepositoryConnectionFactory
 from apps.projects.enums import (
@@ -120,6 +123,110 @@ def test_home_community_sheet_puts_the_catalog_exit_in_the_header(client):
     assert section.count("Browse community projects") == 1
     assert "never imply government endorsement" in section
     assert "not reviewed by PMO" not in section
+    assert "Community work that is not official" in section
+
+
+@pytest.mark.unit
+def test_home_community_sheet_names_the_owner_not_a_ministry(client):
+    """DSC-001/GOV-011: community rows identify the member owner and keep endorsement off."""
+    community = make_public_project(
+        project_type=ProjectType.PERSONAL,
+        ministry=None,
+        title_en="Valley bus timetable",
+        published_at=timezone.now(),
+    )
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="community-heading"', 1)[1]
+        .split(b'aria-labelledby="ministry-cta-heading"', 1)[0]
+        .decode()
+    )
+
+    assert community.title_en in section
+    assert f"@{community.owner.username}" in section
+    assert "Official" not in section
+    assert reverse("projects:detail", args=[community.slug]) in section
+
+
+@pytest.mark.unit
+def test_home_people_sheet_lists_discoverable_members_without_scores(client):
+    """MEM-003/REC-001: home shows opted-in members and never publishes a score there."""
+    visible = MemberProfileFactory(
+        headline="Civic accessibility reviewer",
+        directory_discoverable=True,
+        leaderboard_opt_out=False,
+    )
+    hidden = MemberProfileFactory(
+        headline="Private operator",
+        directory_discoverable=False,
+        leaderboard_opt_out=False,
+    )
+    opted_out = MemberProfileFactory(
+        headline="Leaderboard opted out",
+        directory_discoverable=True,
+        leaderboard_opt_out=True,
+    )
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="people-heading"', 1)[1]
+        .split(b'aria-labelledby="safeguards-heading"', 1)[0]
+        .decode()
+    )
+
+    assert visible.user.username in section
+    assert visible.headline in section
+    assert reverse("accounts:public_profile", args=[visible.user.username]) in section
+    assert hidden.user.username not in section
+    assert opted_out.headline not in section
+    assert "points" not in section.lower()
+    assert "leaderboard" not in section.lower()
+
+
+@pytest.mark.unit
+def test_home_writing_sheet_lists_published_posts_only(client):
+    """BLG-005/DSC-001: home writing is published public learning, never drafts."""
+    published = BlogPostFactory(
+        title="Shipping Nepali issue templates",
+        excerpt="A maintainer note on bilingual contribution guidance.",
+        status=BlogStatus.PUBLISHED,
+        published_at=timezone.now(),
+    )
+    BlogPostFactory(title="Draft that must stay private", status=BlogStatus.DRAFT)
+    BlogPostFactory(
+        title="Restricted post",
+        status=BlogStatus.PUBLISHED,
+        published_at=timezone.now(),
+        moderation_state=BlogModerationState.RESTRICTED,
+    )
+
+    response = client.get(reverse("projects:home"))
+    section = (
+        response.content.split(b'aria-labelledby="writing-heading"', 1)[1]
+        .split(b'aria-labelledby="safeguards-heading"', 1)[0]
+        .decode()
+    )
+
+    assert published.title in section
+    assert published.excerpt in section
+    assert reverse("blogs:detail", args=[published.pk]) in section
+    assert "Draft that must stay private" not in section
+    assert "Restricted post" not in section
+
+
+@pytest.mark.unit
+def test_home_states_publication_safeguards_before_the_ministry_cta(client):
+    """DSC-001/GOV-007: an empty catalogue still explains what listing does and does not mean."""
+    response = client.get(reverse("projects:home"))
+    content = response.content.decode()
+
+    assert "What DevNepal verifies" in content
+    assert "What DevNepal does not promise" in content
+    assert "A listing is not an employment offer" in content
+    assert "How are contributions verified?" in content
+    assert 'aria-labelledby="safeguards-heading"' in content
+    assert 'aria-labelledby="ministry-cta-heading"' in content
 
 
 @pytest.mark.unit

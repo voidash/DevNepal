@@ -15,7 +15,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.accounts import github as github_oauth
-from apps.accounts.models import MemberProfile
+from apps.accounts.models import MemberProfile, MemberSkill
 from apps.accounts.permissions import privileged_mfa_required
 from apps.accounts.services import mfa_verified
 from apps.analytics.enums import EventName
@@ -182,15 +182,22 @@ def home(request: HttpRequest) -> HttpResponse:
         .order_by("-published_at", "-id")[:4]
     )
     featured_members = (
-        MemberProfile.objects.filter(directory_discoverable=True, leaderboard_opt_out=False)
+        MemberProfile.objects.filter(
+            directory_discoverable=True,
+            leaderboard_opt_out=False,
+            user__is_active=True,
+        )
         .select_related("user")
-        .prefetch_related("user__skills__skill", "user__badge_awards__badge")
+        .prefetch_related(
+            Prefetch(
+                "user__skills",
+                queryset=MemberSkill.objects.filter(skill__is_active=True)
+                .select_related("skill")
+                .order_by("skill__name"),
+                to_attr="directory_skills",
+            )
+        )
         .annotate(
-            verified_count=Count(
-                "user__contributions",
-                filter=Q(user__contributions__status=VerificationStatus.ACCEPTED),
-                distinct=True,
-            ),
             total_score=Sum(
                 "user__contributions__score__points",
                 filter=Q(user__contributions__score__reversed_at__isnull=True),

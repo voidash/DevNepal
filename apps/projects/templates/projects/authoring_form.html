@@ -2,17 +2,24 @@
 {% load i18n static %}
 {% block title %}{% if is_create %}{% trans "Create project draft" %}{% else %}{% trans "Edit project draft" %}{% endif %} | DevNepal{% endblock %}
 {% block content %}
+{% comment %} Listing a project is one short form: name it, point at the public
+   repository, and say how people join. Everything a ministry may add later
+   sits behind one disclosure so the required path stays eleven fields long.
+{% endcomment %}
 <div class="dn-container">
   <div class="dn-authoring-simple">
     <div class="dn-form-layout">
     <section aria-labelledby="authoring-form-heading">
-      <p class="dn-section-kicker">{% trans "Ministry publishing" %}</p>
-      <h1 id="authoring-form-heading">{% if is_create %}{% trans "Create a government project" %}{% else %}{% trans "Edit government project" %}{% endif %}</h1>
-      <p>{% trans "Connect a public GitHub repository. DevNepal will show its open issues, pull requests, and contributors." %}</p>
-      <p class="dn-field-help">{% trans "Only the ministry, bilingual title and summary, repository, licence, and contribution route are needed to begin." %}</p>
+      <header class="dn-authoring-head">
+        <p class="dn-section-kicker">{% trans "Ministry publishing" %}</p>
+        <h1 id="authoring-form-heading">{% if is_create %}{% trans "Create a government project" %}{% else %}{% trans "Edit government project" %}{% endif %}</h1>
+        <p class="dn-lede">{% trans "Connect a public GitHub repository. DevNepal will show its open issues, pull requests, and contributors." %}</p>
+        <p class="dn-field-help">{% trans "Only the ministry, bilingual title and summary, repository, licence, and contribution route are needed to begin." %}</p>
+      </header>
       {% if error %}<div class="error-summary" role="alert">{{ error }}</div>{% endif %}
       {% if editable|default:is_create %}
-      <form method="post" class="dn-form-stack">
+      <form method="post" class="dn-form-stack" novalidate>
+        <div class="blueprint dn-authoring-form">
         {% csrf_token %}
         {% if is_create %}
         {% trans "Civic Help Directory" as demo_title_en %}
@@ -26,25 +33,40 @@
         {% trans "Review the data format, choose a good first issue, then fork, branch, and open a pull request." as demo_prerequisites %}
         {% trans "Fill demo details" as fill_demo_details %}
         {% trans "Demo details added. Review every field before saving." as demo_details_added %}
-        <div class="dn-field">
-          <button class="btn btn--secondary" id="fill-demo-details" type="button">{{ fill_demo_details }}</button>
+        <div class="dn-authoring-demo">
+          <div class="dn-field">
+            <button class="btn btn--secondary btn-sm" id="fill-demo-details" type="button">{{ fill_demo_details }}</button>
+          </div>
           <p id="demo-fill-status" role="status" hidden data-filled-message="{{ demo_details_added }}"></p>
         </div>
         <script id="authoring-demo-details" type="application/json">{"fields":{"title_en":"{{ demo_title_en|escapejs }}","title_ne":"{{ demo_title_ne|escapejs }}","summary_en":"{{ demo_summary_en|escapejs }}","summary_ne":"{{ demo_summary_ne|escapejs }}","description_md":"{{ demo_summary_en|escapejs }}","problem_statement":"{{ demo_problem_statement|escapejs }}","target_users":"{{ demo_target_users|escapejs }}","expected_outcome":"{{ demo_expected_outcome|escapejs }}","success_indicators":"{{ demo_success_indicators|escapejs }}","difficulty":"beginner","estimated_effort":"small","contribution_mode":"open_direct","prerequisites":"{{ demo_prerequisites|escapejs }}","repository_url":"https://github.com/voidash/civic-help-directory","default_branch":"main","issue_tracker_url":"https://github.com/voidash/civic-help-directory/issues","documentation_url":"https://github.com/voidash/civic-help-directory#readme","data_classification":"public"},"choice_labels":{"contribution_types":["Data","Documentation"],"skills":["Data Analysis","Documentation"],"license":["MIT (MIT License)"]}}</script>
         <script type="module" src="{% static 'src/authoring-demo-fill.js' %}"></script>
         {% endif %}
         {{ form.non_field_errors }}
-        {% include "projects/_authoring_field.html" with field=form.ministry %}
-        {% include "projects/_authoring_field.html" with field=form.title_en %}
-        {% include "projects/_authoring_field.html" with field=form.title_ne %}
-        {% include "projects/_authoring_field.html" with field=form.summary_en %}
-        {% include "projects/_authoring_field.html" with field=form.summary_ne %}
-        {% include "projects/_authoring_field.html" with field=form.repository_url %}
-        {% include "projects/_authoring_field.html" with field=form.default_branch %}
-        {% include "projects/_authoring_field.html" with field=form.issue_tracker_url %}
-        {% include "projects/_authoring_field.html" with field=form.documentation_url %}
-        {% include "projects/_authoring_field.html" with field=form.license %}
-        {% include "projects/_authoring_field.html" with field=form.contribution_mode %}
+        <fieldset class="dn-authoring-group">
+          <legend>{% trans "What the public sees" %}</legend>
+          {% include "projects/_authoring_field.html" with field=form.ministry %}
+          <div class="dn-field-group">
+            {% include "projects/_authoring_field.html" with field=form.title_en %}
+            {% include "projects/_authoring_field.html" with field=form.title_ne %}
+          </div>
+          {% include "projects/_authoring_field.html" with field=form.summary_en %}
+          {% include "projects/_authoring_field.html" with field=form.summary_ne %}
+        </fieldset>
+        <fieldset class="dn-authoring-group">
+          <legend>{% trans "Where the work happens" %}</legend>
+          {% include "projects/_authoring_field.html" with field=form.repository_url %}
+          <div class="dn-field-group">
+            {% include "projects/_authoring_field.html" with field=form.default_branch %}
+            {% include "projects/_authoring_field.html" with field=form.license %}
+          </div>
+          {% include "projects/_authoring_field.html" with field=form.issue_tracker_url %}
+          {% include "projects/_authoring_field.html" with field=form.documentation_url %}
+        </fieldset>
+        <fieldset class="dn-authoring-group">
+          <legend>{% trans "How people join" %}</legend>
+          {% include "projects/_authoring_field.html" with field=form.contribution_mode %}
+        </fieldset>
         <details class="dn-authoring-more">
           <summary>{% trans "More project details" %}</summary>
           {% include "projects/_authoring_field.html" with field=form.description_md %}
@@ -67,7 +89,11 @@
           {% include "projects/_authoring_field.html" with field=form.security_contact %}
           {% include "projects/_authoring_field.html" with field=form.vulnerability_disclosure_url %}
         </details>
-        <button class="btn btn--primary" type="submit">{% if is_create %}{% trans "Create project" %}{% else %}{% trans "Save changes" %}{% endif %}</button>
+        <div class="dn-authoring-actions">
+          <button class="btn btn--primary" type="submit">{% if is_create %}{% trans "Create project" %}{% else %}{% trans "Save changes" %}{% endif %}</button>
+          <a class="btn" href="{% url 'projects:authoring_dashboard' %}">{% trans "Cancel" %}</a>
+        </div>
+        </div>
       </form>
       {% else %}
       <div class="dn-state-banner is-attention" role="status">{% trans "This project is read-only in its current lifecycle state." %}</div>
