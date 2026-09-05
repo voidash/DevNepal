@@ -215,6 +215,24 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
 
 
 @pytest.mark.unit
+def test_public_demo_layouts_avoid_empty_rails_and_keep_mobile_actions_tappable():
+    """DSC-001/NFR-A11Y-01: core public layouts use space intentionally at every width."""
+    shell_css = _read("static/src/devnepal.css")
+    components_css = _read("static/src/components.css")
+
+    assert ".dn-home-hero { max-width: 1040px; margin-inline: auto;" in components_css
+    assert "grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));" in shell_css
+    assert ".dn-provider-profile { max-width: 1200px;" in shell_css
+    assert (
+        ".dn-project-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto;" in shell_css
+    )
+    assert (
+        ".dn-github-project .dn-issue-row > a:last-child { display: inline-flex; "
+        "min-height: var(--target-min);"
+    ) in shell_css
+
+
+@pytest.mark.unit
 def test_mechanical_design_gate_matches_the_authority_rule_set():
     """A8/NFR-A11Y-01: the template corpus is gated by the design-system check rules.
 

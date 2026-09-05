@@ -276,9 +276,12 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-catalog-segmented span { display: flex; min-height: 38px; align-items: center; padding: 0 12px; }
 .dn-catalog-segmented input:checked + span { color: var(--color-paper); background: var(--color-accent); }
 .dn-catalog-segmented input:focus-visible + span, .dn-catalog-chips input:focus-visible + span { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.dn-catalog-body { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 40px; padding: 0 24px 24px; border-top: 1px solid var(--color-divider); }
-.dn-catalog-filters { padding-top: 22px; font-size: 14px; }
-.dn-catalog-filters > summary { display: none; min-height: 44px; align-items: center; justify-content: space-between; cursor: pointer; font-family: var(--font-heading); font-weight: 600; }
+.dn-catalog-body { display: block; padding: 0 24px 24px; border-top: 1px solid var(--color-divider); }
+.dn-catalog-filters { display: block; padding: 10px 0; border-bottom: 1px solid var(--color-divider); font-size: 14px; }
+.dn-catalog-filters > summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; cursor: pointer; font-family: var(--font-heading); font-weight: 600; }
+.dn-catalog-filters > summary::after { content: "+"; margin-left: 12px; font-size: 20px; font-weight: 400; line-height: 1; }
+.dn-catalog-filters[open] > summary { margin-bottom: 20px; }
+.dn-catalog-filters[open] > summary::after { content: "−"; }
 .dn-catalog-filter-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; }
 .dn-catalog-filter-head strong { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
 .dn-catalog-filter-head a { font-size: 12px; }
@@ -298,7 +301,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-catalog-active { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 16px; font-size: 12px; }
 .dn-catalog-active strong { margin-right: 4px; }
 .dn-catalog-active a { margin-left: auto; }
-.dn-catalog-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+.dn-catalog-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
 .dn-catalog-results--list { grid-template-columns: 1fr; }
 .dn-catalog-results > .card { width: 100%; min-width: 0; gap: 12px; padding: 24px; }
 /* Card heads wrap: an Official tag carrying a full ministry name beside a status badge overflowed the card at two-up widths. */
@@ -323,7 +326,6 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
   .dn-catalog-heading { align-items: start; }
   .dn-catalog-toolbar { grid-template-columns: 1fr 1fr; }
   .dn-catalog-search { grid-column: 1 / -1; }
-  .dn-catalog-body { grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
   .dn-catalog-results { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
@@ -333,9 +335,6 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
   .dn-catalog-toolbar { grid-template-columns: 1fr; padding-inline: 13.6px; }
   .dn-catalog-search { grid-column: auto; }
   .dn-catalog-body { display: block; padding-inline: 13.6px; }
-  .dn-catalog-filters { padding-top: 0; border-bottom: 1px solid var(--color-divider); }
-  .dn-catalog-filters > summary { display: flex; }
-  .dn-catalog-filters[open] > summary { margin-bottom: 20px; border-bottom: 1px solid var(--color-divider); }
   .dn-catalog-result-summary, .dn-catalog-card__foot { flex-direction: column; }
   .dn-catalog-card__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 }
@@ -343,7 +342,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 /* Prototype A2.2 — public project sheet. */
 .dn-breadcrumbs { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 0; color: var(--color-neutral-700); font-size: 13px; }
 .dn-breadcrumbs a { color: var(--color-accent-700); text-decoration: none; }
-.dn-project-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 40px; align-items: end; padding: 26px 0 32px; }
+.dn-project-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: end; padding: 26px 0 32px; }
 .dn-project-hero__labels { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .dn-project-hero .dn-repo-title { align-items: baseline; margin: 0; }
 .dn-project-hero .dn-repo-title h1 { font-size: clamp(38px, 5vw, 64px); line-height: .98; }
@@ -492,7 +491,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-github-project .dn-issue-list { border: 1px solid var(--color-divider); }
 .dn-github-project .dn-issue-row .dn-labels { margin: 0 0 var(--space-2); }
 .dn-github-project .dn-issue-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-.dn-github-project .dn-issue-row > a:last-child { color: var(--color-accent-700); font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; text-decoration: none; }
+.dn-github-project .dn-issue-row > a:last-child { display: inline-flex; min-height: var(--target-min); align-items: center; color: var(--color-accent-700); font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; text-decoration: none; }
 .dn-github-project .dn-issue-row:hover > a:last-child { text-decoration: underline; }
 .dn-github-project .dn-issue-row h3 { margin: 0 0 var(--space-1); font-size: var(--fs-md); }
 .dn-github-project .dn-issue-row h3 a { color: var(--color-text); text-decoration: none; }
@@ -537,7 +536,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-github-profile__facts dd { margin: 6px 0 0; font-family: var(--font-heading); font-size: 18px; font-weight: 600; }
 .dn-github-profile__actions { padding: 24px 30px; }
 .dn-github-profile__actions p, .dn-github-profile__report { color: var(--color-neutral-700); font-size: 13px; }
-.dn-provider-profile { padding-block: 40px 64px; }
+.dn-provider-profile { max-width: 1200px; padding-block: 40px 64px; }
 .dn-provider-profile__identity { display: grid; grid-template-columns: 128px minmax(0, 1fr) auto; gap: 28px; align-items: start; }
 .dn-provider-profile__avatar { width: 128px; height: 128px; display: grid; place-items: center; background: var(--color-accent-200); color: var(--color-accent-900); font-family: var(--font-heading); font-size: 44px; font-weight: 600; }
 .dn-provider-profile__avatar img { width: 100%; height: 100%; object-fit: cover; }

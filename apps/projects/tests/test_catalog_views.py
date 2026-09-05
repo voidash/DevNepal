@@ -484,6 +484,22 @@ def test_catalog_defers_secondary_controls_until_a_visitor_asks_for_them(client)
 
 
 @pytest.mark.unit
+def test_catalog_results_use_full_width_with_collapsed_advanced_filters(client):
+    """DSC-001/DSC-002: the catalog has no empty filter rail and retains optional filters."""
+    response = client.get(reverse("projects:government"))
+    content = response.content.decode()
+    stylesheet = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+
+    assert response.status_code == 200
+    assert '<details class="dn-catalog-filters">' in content
+    assert '<details class="dn-catalog-filters" open>' not in content
+    assert ".dn-catalog-body { display: block;" in stylesheet
+    assert ".dn-catalog-filters { display: block;" in stylesheet
+    assert ".dn-catalog-filters > summary { display: flex;" in stylesheet
+    assert ".dn-catalog-filters { display: none;" not in stylesheet
+
+
+@pytest.mark.unit
 def test_project_slug_is_generated_on_any_save_path_when_blank():
     """DSC-003/DSC-001: a project saved without a slug always gets a stable unique slug."""
     first = Project.objects.create(

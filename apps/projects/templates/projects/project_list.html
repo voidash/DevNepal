@@ -16,7 +16,7 @@
     </header>
 
     <form class="blueprint dn-sheet catalog-filter" method="get" role="search">
-      <div class="dn-sheet__header"><span>{% trans "Project catalog" %}</span><span>{% trans "Search and filters" %}</span></div>
+      <div class="dn-sheet__header"><span>{% trans "Project catalog" %}</span><span>{% trans "Search projects" %}</span></div>
       {% if project_type %}<input name="type" type="hidden" value="{{ project_type }}">{% endif %}
       <div class="dn-catalog-toolbar">
         <div class="dn-catalog-search"><label for="project-search">{% trans "Search projects" %}</label><input id="project-search" name="q" type="search" value="{{ query }}" placeholder="{% trans 'Search title, ministry, technology or skill — नेपालीमा पनि खोज्नुहोस्' %}"></div>
