@@ -376,10 +376,10 @@ def test_derived_usernames_are_sanitized_and_collision_safe():
 
 
 @pytest.mark.unit
-def test_dashboard_and_login_expose_connect_when_enabled(client, oauth):
-    """AUTH-002: the connect control appears on sign-in and dashboard settings when enabled."""
+def test_member_connect_stays_in_settings_and_off_ministry_login(client, oauth):
+    """AUTH-002: legacy GitHub connection stays behind member settings, not ministry login."""
     login_page = client.get(reverse("accounts:login"))
-    assert reverse("accounts:github_connect").encode() in login_page.content
+    assert reverse("accounts:github_connect").encode() not in login_page.content
 
     member = UserFactory()
     client.force_login(member)

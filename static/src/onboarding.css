@@ -1,31 +1,31 @@
 .dn-onboarding { padding: 40px 20px 72px; }
 .dn-onboarding__shell { width: min(100%, 820px); margin: 0 auto; }
 .dn-onboarding__heading { margin-bottom: 20px; }
-.dn-onboarding__heading > p:first-child { margin: 0 0 8px; color: var(--color-neutral-700); font: 500 13px/1.4 var(--font-body); letter-spacing: 0; text-transform: none; }
+.dn-onboarding__heading > p:first-child { margin: 0 0 8px; color: var(--color-accent-700); font: 600 12px/1.2 var(--font-body, sans-serif); letter-spacing: .08em; }
 .dn-onboarding__heading h1, .dn-onboarding__sheet h2, .dn-onboarding__sheet h3 { font-family: var(--font-heading, sans-serif); }
-.dn-onboarding__lede { max-width: 62ch; color: var(--color-neutral-800); }
-.dn-onboarding__sheet { display: flex; flex-direction: column; gap: 18px; padding: 20px; border: 1px solid var(--color-divider); background: var(--color-bg); }
+.dn-onboarding__lede { max-width: 62ch; color: color-mix(in srgb, var(--color-text) 78%, transparent); }
+.dn-onboarding__sheet { display: flex; flex-direction: column; gap: 18px; padding: 20px; border: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent); background: var(--color-bg); }
 .dn-onboarding__field { display: grid; gap: 5px; }
 .dn-onboarding__field > label, .dn-onboarding__visibility-table th { font-size: 13px; font-weight: 600; }
-.dn-onboarding__field > p { margin: 0; color: var(--color-neutral-700); font-size: 12px; }
-.dn-onboarding__field input, .dn-onboarding__field select, .dn-onboarding__field textarea { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid var(--color-divider); border-radius: 0; color: var(--color-text); background: var(--color-surface); }
+.dn-onboarding__field > p { margin: 0; font-size: 12px; color: color-mix(in srgb, var(--color-text) 62%, transparent); }
+.dn-onboarding__field input, .dn-onboarding__field select, .dn-onboarding__field textarea { width: 100%; min-height: 38px; border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent); border-radius: var(--radius-md); background: var(--color-surface); padding: 7px 9px; color: var(--color-text); }
 .dn-onboarding__field textarea { min-height: 74px; }
 .dn-onboarding__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.dn-onboarding__actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--color-divider); }
+.dn-onboarding__actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent); }
 .dn-onboarding__actions form { margin: 0; }
 .dn-onboarding__visibility-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.dn-onboarding__visibility-table th, .dn-onboarding__visibility-table td { padding: 10px 8px; border-bottom: 1px solid var(--color-divider); text-align: left; }
+.dn-onboarding__visibility-table th, .dn-onboarding__visibility-table td { padding: 10px 8px; border-bottom: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); text-align: left; }
 .dn-onboarding__visibility-table td { text-align: right; }
-.dn-onboarding__visibility-table select { max-width: 150px; padding: 5px; border: 1px solid var(--color-divider); border-radius: 0; background: var(--color-surface); }
+.dn-onboarding__visibility-table select { max-width: 150px; border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent); border-radius: var(--radius-md); background: var(--color-surface); padding: 5px; }
 .dn-onboarding__choices { display: flex; gap: 8px; align-items: start; font-size: 13px; }
-.dn-onboarding__locked { color: var(--color-neutral-700); }
-.dn-onboarding__note, .dn-onboarding__disclosure { padding: 12px 14px; border: 1px solid var(--color-divider); font-size: 13px; }
+.dn-onboarding__locked { color: color-mix(in srgb, var(--color-text) 58%, transparent); }
+.dn-onboarding__note, .dn-onboarding__disclosure { padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent); font-size: 13px; }
 .dn-onboarding__note p, .dn-onboarding__disclosure p { margin: 5px 0 0; }
-.dn-onboarding__disclosure h3 { margin: 0; color: var(--color-accent-700); font-size: 16px; }
-.dn-onboarding__status { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--color-divider); }
-.dn-onboarding__public-preview { display: grid; gap: 7px; padding: 16px; border: 1px solid var(--color-divider); }
+.dn-onboarding__disclosure h3 { margin: 0; font-size: 16px; color: var(--color-accent-700); }
+.dn-onboarding__status { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent); }
+.dn-onboarding__public-preview { display: grid; gap: 7px; padding: 16px; border: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent); }
 .dn-onboarding__public-preview h2, .dn-onboarding__public-preview p { margin: 0; }
-.dn-onboarding__username { color: var(--color-neutral-700); }
+.dn-onboarding__username { color: color-mix(in srgb, var(--color-text) 58%, transparent); }
 .dn-onboarding__public-preview ul { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 4px 0 0; list-style: none; }
-.dn-onboarding__public-preview li { padding: 3px 8px; border: 1px solid var(--color-divider); font-size: 12px; }
+.dn-onboarding__public-preview li { padding: 3px 8px; border: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent); font-size: 12px; }
 @media (max-width: 640px) { .dn-onboarding { padding: 24px 14px 48px; } .dn-onboarding__sheet { padding: 14px; } .dn-onboarding__grid { grid-template-columns: 1fr; } .dn-onboarding__visibility-table, .dn-onboarding__visibility-table tbody, .dn-onboarding__visibility-table tr, .dn-onboarding__visibility-table th, .dn-onboarding__visibility-table td { display: block; } .dn-onboarding__visibility-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .dn-onboarding__visibility-table td { padding-top: 0; text-align: left; } .dn-onboarding__actions { align-items: stretch; flex-direction: column-reverse; } .dn-onboarding__actions .btn, .dn-onboarding__actions form { width: 100%; } }

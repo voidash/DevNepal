@@ -211,7 +211,6 @@ def test_dashboard_exposes_authenticated_member_tasks_with_mounted_routes(client
         reverse("accounts:public_profile", kwargs={"username": user.username}),
         reverse("accounts:session_list"),
         reverse("projects:application_list"),
-        reverse("projects:community"),
         reverse("projects:list"),
         reverse("accounts:privacy_export"),
         reverse("accounts:privacy_delete"),

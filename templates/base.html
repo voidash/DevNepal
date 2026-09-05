@@ -81,7 +81,15 @@
   <main id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
+  {% block footer %}
   <footer class="dn-footer">
+    <div class="dn-container dn-footer-brand">
+      <span class="dn-brand-copy">
+        <strong>DevNepal</strong>
+        <small>{% trans "नेपाल सरकार · Government of Nepal" %}</small>
+      </span>
+      <p>{% trans "DevNepal helps visitors discover public government work. Code, issues and pull requests stay on GitHub." %}</p>
+    </div>
     <div class="dn-container dn-footer-grid">
       <nav aria-label="{% trans 'Platform' %}">
         <h2>{% trans "Platform" %}</h2>
@@ -96,7 +104,7 @@
           {% url 'projects:code_of_conduct' as conduct_url %}{% if conduct_url %}<li><a href="{{ conduct_url }}">{% trans "Code of conduct" %}</a></li>{% endif %}
           {% url 'projects:privacy_policy' as privacy_url %}{% if privacy_url %}<li><a href="{{ privacy_url }}">{% trans "Privacy" %}</a></li>{% endif %}
           {% url 'projects:security_policy' as security_url %}{% if security_url %}<li><a href="{{ security_url }}">{% trans "Security contact" %}</a></li>{% endif %}
-                  </ul>
+        </ul>
       </nav>
       <nav aria-label="{% trans 'Help' %}">
         <h2>{% trans "Help" %}</h2>
@@ -112,5 +120,6 @@
     </div>
     <p class="dn-container dn-footer-legal">© {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
   </footer>
+  {% endblock %}
 </body>
 </html>

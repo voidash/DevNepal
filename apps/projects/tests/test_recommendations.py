@@ -180,7 +180,7 @@ def test_projects_home_hides_legacy_recommendations_for_signed_in_member(client)
     assert "Recommended for you" not in content
     assert "Open candidate" in content
     assert "Matches your Django skill" not in content
-    assert 'class="Label' in content
+    assert 'class="tag' in content
     assert 'aria-labelledby="recommended-heading"' not in content
 
 

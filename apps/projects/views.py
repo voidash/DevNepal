@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, F, Prefetch, Q, Sum
+from django.db.models import Count, F, Prefetch, Q
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -14,17 +14,11 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
-from apps.accounts import github as github_oauth
-from apps.accounts.models import MemberProfile
 from apps.accounts.permissions import privileged_mfa_required
 from apps.accounts.services import mfa_verified
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
-from apps.blogs.enums import BlogModerationState, BlogStatus
 from apps.blogs.markdown import MarkdownValidationError, render_markdown
-from apps.blogs.models import BlogPost
-from apps.contributions.enums import VerificationStatus
-from apps.contributions.models import ContributionRecord
 from apps.github_sync.models import GithubIssueSnapshot, RepositoryConnection
 from apps.github_sync.services import starter_tasks_for_project
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
@@ -108,7 +102,6 @@ from apps.projects.services import (
     provide_info,
     publish,
     publish_by_publisher,
-    recommended_projects,
     reject_submission,
     remove_screening_question,
     request_changes,
@@ -162,8 +155,7 @@ def public_projects():
 
 
 def home(request: HttpRequest) -> HttpResponse:
-    """DSC-001/DSC-010: public trust sheet and personalized project recommendations."""
-    recommendations = recommended_projects(request.user) if request.user.is_authenticated else []
+    """DSC-001/GOV-008: focused public entry point for government GitHub work."""
     featured_projects = (
         public_projects()
         .filter(
@@ -172,62 +164,11 @@ def home(request: HttpRequest) -> HttpResponse:
         )
         .order_by("-published_at", "-id")[:3]
     )
-    featured_community_projects = (
-        public_projects()
-        .filter(
-            project_type=ProjectType.PERSONAL,
-            status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
-        )
-        .select_related("owner")
-        .order_by("-published_at", "-id")[:4]
-    )
-    featured_members = (
-        MemberProfile.objects.filter(directory_discoverable=True, leaderboard_opt_out=False)
-        .select_related("user")
-        .prefetch_related("user__skills__skill", "user__badge_awards__badge")
-        .annotate(
-            verified_count=Count(
-                "user__contributions",
-                filter=Q(user__contributions__status=VerificationStatus.ACCEPTED),
-                distinct=True,
-            ),
-            total_score=Sum(
-                "user__contributions__score__points",
-                filter=Q(user__contributions__score__reversed_at__isnull=True),
-            ),
-        )
-        .order_by("-total_score", "user__username")[:5]
-    )
-    featured_posts = (
-        BlogPost.objects.filter(status=BlogStatus.PUBLISHED)
-        .exclude(moderation_state=BlogModerationState.RESTRICTED)
-        .select_related("author", "official_published_by")
-        .prefetch_related("tags")
-        .order_by("-published_at", "-id")[:3]
-    )
     return render(
         request,
         "projects/home.html",
         {
             "featured_projects": featured_projects,
-            "featured_community_projects": featured_community_projects,
-            "featured_members": featured_members,
-            "featured_posts": featured_posts,
-            "recommendations": recommendations,
-            "github_oauth_enabled": github_oauth.oauth_config().enabled,
-            "platform_metrics": {
-                "ministries": MinistryOrganization.objects.filter(status=OrgStatus.ACTIVE).count(),
-                "open_projects": public_projects()
-                .filter(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
-                .count(),
-                "verified_contributions": ContributionRecord.objects.filter(
-                    status=VerificationStatus.ACCEPTED
-                ).count(),
-                "public_members": MemberProfile.objects.filter(directory_discoverable=True).count(),
-                "community_projects": public_projects()
-                .filter(project_type=ProjectType.PERSONAL)
-                .count(),
-            },
         },
     )
 

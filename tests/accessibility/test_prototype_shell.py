@@ -16,7 +16,7 @@ def test_shared_shell_uses_the_verified_light_blueprint_system():
     assert "--color-bg: #f2f2f3;" in tokens
     assert "--color-surface: #e9e9ea;" in tokens
     assert "--color-text: #1d1f20;" in tokens
-    assert "--color-accent: #5980a6;" in tokens
+    assert "--color-accent: #3b6fd4;" in tokens
     assert 'font-family: "Barlow"' in tokens
     assert 'font-family: "Barlow Condensed"' in tokens
     assert '"Noto Sans Devanagari"' in tokens

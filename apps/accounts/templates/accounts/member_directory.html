@@ -30,7 +30,7 @@
         <div class="public-discovery__member-footer"><span>{% trans "Discoverable profile" %}</span><a href="{% url 'accounts:public_profile' profile.user.username %}">{% trans "View profile" %}</a></div>
       </article>
       {% empty %}
-      <div class="dn-state-banner" role="status"><strong>{% trans "No members match these filters." %}</strong><p>{% trans "Try another public skill, name, or interest. Members appear here only after they opt in to public discovery." %}</p></div>
+      {% include "components/dn_empty.html" with title=_("No members match these filters.") body=_("Try another public skill, name, or interest. Members appear here only after they opt in to public discovery.") action_url=request.path action_label=_("Clear all filters") %}
       {% endfor %}
     </div>
     {% if members.paginator.num_pages > 1 %}

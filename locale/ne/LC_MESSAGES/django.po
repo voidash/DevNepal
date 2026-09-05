@@ -2351,7 +2351,19 @@ msgstr "यो योगदान रद्द गर्न सकिँदै�
 #: apps/github_sync/services.py:403
 #| msgid "GitHub connect could not be completed."
 msgid "GitHub starter-task snapshot could not be refreshed."
-msgstr "GitHub जडान पूरा हुन सकेन।"
+msgstr "GitHub का प्रारम्भिक कार्यहरूको प्रतिलिपि ताजा गर्न सकिएन।"
+
+#: apps/projects/templates/projects/home.html
+msgid "Discover government technology projects that need public help. See the work, read live GitHub issues, and choose where you can contribute."
+msgstr "सार्वजनिक सहयोग आवश्यक भएका सरकारी प्रविधि परियोजनाहरू खोज्नुहोस्। काम हेर्नुहोस्, प्रत्यक्ष GitHub मुद्दाहरू पढ्नुहोस् र आफूले योगदान दिन सक्ने ठाउँ रोज्नुहोस्।"
+
+#: apps/projects/templates/projects/home.html
+msgid "Code stays on GitHub: issues, discussions and pull requests remain in the project's public repository."
+msgstr "कोड GitHub मै रहन्छ: मुद्दा, छलफल र पुल अनुरोधहरू परियोजनाको सार्वजनिक रिपोजिटरीमै रहन्छन्।"
+
+#: templates/base.html
+msgid "DevNepal helps visitors discover public government work. Code, issues and pull requests stay on GitHub."
+msgstr "DevNepal ले आगन्तुकलाई सार्वजनिक सरकारी काम खोज्न मद्दत गर्छ। कोड, मुद्दा र पुल अनुरोधहरू GitHub मै रहन्छन्।"
 
 #: apps/github_sync/templates/github_sync/calendar.html:22
 msgid "DevNepal verified record"

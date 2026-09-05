@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "Home" %} — DevNepal{% endblock %}
 {% block content %}
 <section class="hero" aria-labelledby="hero-heading">
@@ -7,56 +7,61 @@
     <div class="dn-home-hero">
       <div class="hero__panel">
         <div class="dn-trust-tags">
-          <span class="tag tag-accent">{% trans "Government of Nepal · Office of the Prime Minister" %}</span>
-          <span class="tag tag-outline">{% trans "Public collaboration initiative" %}</span>
+          <span class="tag tag-accent">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            {% trans "Government of Nepal · Office of the Prime Minister" %}
+          </span>
         </div>
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
-        <p class="hero__lead">{% trans "Browse approved government work with a named owner, a clear contribution route and a public response commitment. Where a project publishes a repository, code stays on GitHub; DevNepal records participation and verification." %}</p>
+        <p class="hero__lead">{% trans "Discover government technology projects that need public help. See the work, read live GitHub issues, and choose where you can contribute." %}</p>
+        <p class="hero__boundary">{% trans "Code stays on GitHub: issues, discussions and pull requests remain in the project's public repository." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary blueprint" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
           <a class="btn btn--ghost" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
         </div>
-        <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a></p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" aria-labelledby="opportunities-heading">
+<section class="section dn-home" aria-labelledby="opportunities-heading">
   <div class="container">
-    <header class="dn-home-section-heading">
+    <header class="dn-home-section-heading dn-home-section-heading--flush">
       <div>
-        <span class="dn-section-kicker">{% trans "Open public work" %}</span>
         <h2 id="opportunities-heading">{% trans "Featured government projects" %}</h2>
-        <p>{% trans "Only PMO-approved ministry projects are listed here. Open each project to see its owner, contribution route, response commitment and published repository, where available." %}</p>
+        <p>{% trans "Open work is listed only after a named owner, contribution guidance, and suitability review." %}</p>
       </div>
-      <a href="{% url 'projects:government' %}">{% trans "See all government projects" %}</a>
+      <a href="{% url 'projects:government' %}">{% trans "See all government projects" %} →</a>
     </header>
     {% if featured_projects %}
-    <div class="dn-issue-list">
+    <div class="dn-card-grid">
       {% for project in featured_projects %}
-      <article class="dn-issue-row">
-        {% include "components/status_octicon.html" with project_status=project.status %}
-        <div>
-          <a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a>
-          <div class="dn-issue-meta">{{ project.localized_summary }}</div>
-          <div class="dn-labels">
-            <span class="Label Label--outline">{% trans "Official" %}</span>
-            {% if project.contribution_mode %}<span class="Label">{{ project.get_contribution_mode_display }}</span>{% endif %}
-            {% if project.repository_url %}<span class="Label Label--secondary">{% trans "Repository published" %}</span>{% endif %}
-          </div>
-        </div>
-        <div class="dn-issue-aside">{% if project.response_sla %}{% blocktrans with response=project.get_response_sla_display %}Responds {{ response }}{% endblocktrans %}{% endif %}</div>
+      <article class="card dn-featured-card">
+        <p class="dn-featured-card__source">{% trans "Official" %}{% if project.ministry %} · {{ project.ministry.abbreviation|default:project.ministry.localized_name }}{% endif %}</p>
+        <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.title_en|default:project.localized_title }}</a></h3>
+        {% if project.title_ne %}<p lang="ne">{{ project.title_ne }}</p>{% endif %}
+        <p class="dn-featured-card__summary">{{ project.localized_summary }}</p>
+        {% if project.contribution_types.all %}<div class="dn-featured-card__tags">{% for contribution_type in project.contribution_types.all %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}</div>{% endif %}
+        <p class="dn-featured-card__meta">{{ project.get_difficulty_display|default:"—" }} · {{ project.get_estimated_effort_display|default:"—" }} · {{ project.get_response_sla_display|default:"—" }}</p>
       </article>
       {% endfor %}
     </div>
     {% else %}
-    <div class="dn-state-banner" role="status"><strong>{% trans "Government opportunities are being prepared." %}</strong><p>{% trans "They appear only after a named owner, contribution guidance, and suitability review are complete." %}</p><a href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a></div>
+    <div class="dn-empty-opportunity">
+      {% url 'projects:government' as government_url %}{% include "components/dn_empty.html" with title=_("Government opportunities are being prepared.") body=_("They appear only after a named owner, contribution guidance, and suitability review are complete.") action_url=government_url action_label=_("Browse government projects") %}
+      <figure class="dn-public-work-illustration">
+        <picture>
+          <source type="image/webp" srcset="{% static 'images/devnepal-public-work-illustrations-v1.webp' %}">
+          <img src="{% static 'images/devnepal-public-work-illustrations-v1.png' %}" alt="{% trans 'Eight grayscale public-service scenes for citizen services, education, disaster readiness, maps, health, Nepali-language access, digital identity, and open data.' %}" width="1774" height="887" loading="lazy" decoding="async">
+        </picture>
+        <figcaption>{% trans "Illustrated public-interest work areas, not a list of open projects." %}</figcaption>
+      </figure>
+    </div>
     {% endif %}
   </div>
 </section>
 
-<section class="section" aria-labelledby="contribution-path-heading">
+<section class="section dn-home" aria-labelledby="contribution-path-heading">
   <div class="container">
     <div class="dn-contribution-model">
       <header>

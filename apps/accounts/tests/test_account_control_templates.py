@@ -21,6 +21,27 @@ def test_auth001_login_is_explicitly_for_ministry_publishers(client):
 
 
 @pytest.mark.unit
+def test_auth001_login_leads_with_the_form_not_policy_chrome(client):
+    """AUTH-001/AUTH-002: the ministry sign-in card is the page, not member onboarding."""
+    response = client.get(reverse("accounts:login"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "dn-auth-page--signin" in content
+    assert content.index("Ministry Publisher sign in") < content.index("dn-auth-form")
+    assert content.index("dn-auth-form") < content.index(
+        "Visitors and contributors do not need an account"
+    )
+    assert "Member account" not in content
+    assert "safe return address" not in content
+    assert reverse("accounts:signup") not in content
+    assert reverse("accounts:github_connect") not in content
+    assert "dn-primary-nav" not in content
+    assert "dn-footer--auth" in content
+    assert "dn-footer-grid" not in content
+
+
+@pytest.mark.unit
 def test_auth001_signup_explains_public_and_private_account_fields(client):
     """AUTH-001/AUTH-008/MEM-001: account creation labels public username and private email."""
     response = client.get(reverse("accounts:signup"))
