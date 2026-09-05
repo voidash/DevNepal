@@ -149,6 +149,8 @@ a.dn-issue-title:hover { color: var(--color-accent-700); }
 
 /* ── fact grids ─────────────────────────────────────────────────────────── */
 .dn-accountability, .dn-source-grid, .dn-journey, .dn-flow-summary, .dn-contract-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-paper); overflow: hidden; }
+/* A four-step journey must not wrap one orphan onto a second row. */
+.dn-journey { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
 .dn-accountability-item, .dn-source, .dn-journey-step, .dn-flow-summary > div, .dn-contract-list > div { min-width: 0; padding: var(--space-5); }
 .dn-accountability-item + .dn-accountability-item, .dn-source + .dn-source, .dn-journey-step + .dn-journey-step, .dn-flow-summary > div + div, .dn-contract-list > div + div { border-left: 1px solid var(--color-divider); }
 .dn-accountability-item strong { display: block; margin-bottom: var(--space-2); color: var(--color-neutral-600); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }

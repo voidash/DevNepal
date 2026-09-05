@@ -41,7 +41,7 @@
         </form>
         {% if user.is_authenticated %}
         {% if viewer_is_ministry_publisher %}<a class="dn-greeting" href="{% url 'projects:authoring_dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
-        <a class="btn btn-sm" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>
+        <a class="btn btn-sm dn-header-pub" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>
         {% else %}<a class="dn-greeting" href="{% url 'accounts:dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>{% endif %}
         <form action="{% url 'accounts:logout' %}" method="post">
           {% csrf_token %}

@@ -838,3 +838,31 @@ ol.dn-journey .dn-journey-step { list-style: none; padding: var(--space-6); }
 .dn-queue-facts div { display: flex; gap: var(--space-2); align-items: baseline; }
 .dn-queue-facts dt { color: var(--color-neutral-600); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .dn-queue-facts dd { margin: 0; color: var(--color-neutral-800); font-size: var(--fs-sm); }
+
+/* A sheet carries no padding of its own, so prose laid straight into one needs
+   its own gutter or it runs to the hairline. */
+.dn-sheet > .dn-contribution-grid, .dn-sheet > .dn-journey { padding: var(--space-6); }
+.dn-sheet > .dn-journey { border: 0; border-radius: 0; }
+.dn-doc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-8); padding-block: var(--space-10) var(--space-16); }
+.dn-doc-main { max-width: 78ch; }
+.dn-doc-main > section { margin-bottom: var(--space-12); }
+.dn-doc-main > section:last-child { margin-bottom: 0; }
+.dn-doc-main h1 { margin-bottom: var(--space-4); }
+.dn-doc-main h2 { margin-bottom: var(--space-3); }
+.dn-doc-main dl dt { margin-top: var(--space-5); }
+.dn-doc-main dd { margin: var(--space-1) 0 0; color: var(--color-neutral-700); }
+.dn-doc-main .dn-contribution-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); }
+.dn-doc-main .dn-contribution-grid ul { margin: 0; padding-left: 1.1em; }
+.dn-doc-main .dn-contribution-grid li { margin-bottom: var(--space-2); color: var(--color-neutral-800); }
+.dn-doc-main .dn-journey-step .Counter { margin-bottom: var(--space-1); }
+@media (max-width: 720px) { .dn-doc-main .dn-contribution-grid { grid-template-columns: 1fr; } }
+
+/* Below the tablet breakpoint the header keeps the brand, the language switch
+   and one action; the greeting and the workspace link live in the menu, which
+   is where a narrow screen looks for them. */
+@media (max-width: 700px) {
+  .dn-greeting, .dn-header-pub { display: none; }
+  .dn-header-inner { gap: var(--space-2); }
+  .dn-brand-copy strong { font-size: 20px; }
+  .dn-brand-copy small { font-size: 9px; }
+}
