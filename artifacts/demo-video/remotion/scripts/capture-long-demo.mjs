@@ -3,108 +3,211 @@ import path from 'node:path';
 
 import {chromium} from 'playwright-core';
 
-const BASE_URL = process.env.DEVNEPAL_DEMO_URL || 'http://127.0.0.1:9997';
+import {authenticatePublisher} from './publisher-auth.mjs';
+
+const requireEnvironment = (name) => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} is required; captures must identify the deployed demo explicitly`);
+  }
+  return value;
+};
+
+const BASE_URL = requireEnvironment('DEVNEPAL_DEMO_URL').replace(/\/$/, '');
+const ISSUE_NUMBER = process.env.DEMO_ISSUE_NUMBER?.trim() || '7';
+const PROJECT_SLUG = 'sewa-portal-accessibility-remediation';
+const REPOSITORY = 'voidash/civic-help-directory';
 const BRAVE_PATH =
   process.env.BRAVE_PATH ||
   '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser';
 const outputDirectory = path.resolve('public/long');
 const desktop = {width: 1440, height: 900};
 
-await mkdir(outputDirectory, {recursive: true});
-const browser = await chromium.launch({executablePath: BRAVE_PATH, headless: true});
+const gotoChecked = async (page, url, readyLocator, label) => {
+  const response = await page.goto(url, {waitUntil: 'domcontentloaded'});
+  if (!response || !response.ok()) {
+    throw new Error(`${label} returned ${response?.status() ?? 'no response'} at ${url}`);
+  }
+  await readyLocator.waitFor({state: 'visible'});
+};
+
+const assertNoHorizontalOverflow = async (page, label) => {
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  if (dimensions.scrollWidth > dimensions.clientWidth + 1) {
+    throw new Error(
+      `${label} overflows horizontally: ${dimensions.scrollWidth}px > ${dimensions.clientWidth}px`,
+    );
+  }
+};
 
 const save = async (page, filename) => {
   await page.screenshot({path: path.join(outputDirectory, filename)});
 };
 
-const publicContext = await browser.newContext({viewport: desktop});
-const publicPage = await publicContext.newPage();
-await publicPage.goto(`${BASE_URL}/ne/`, {waitUntil: 'networkidle'});
-await save(publicPage, '01-home-ne.png');
-await publicPage.goto(`${BASE_URL}/ne/projects/gov/`, {waitUntil: 'networkidle'});
-await save(publicPage, '02-project-list-ne.png');
-await publicPage.goto(
-  `${BASE_URL}/ne/projects/sewa-portal-accessibility-remediation/`,
-  {waitUntil: 'networkidle'},
-);
-await save(publicPage, '03-project-top-ne.png');
-await publicPage.getByRole('heading', {name: /GitHub का खुला/}).scrollIntoViewIfNeeded();
-await save(publicPage, '03-project-issues-ne.png');
-await publicPage.getByRole('heading', {name: /यस रिपोजिटरीमा/}).scrollIntoViewIfNeeded();
-await save(publicPage, '03-project-contributors-ne.png');
-await publicPage.goto(
-  `${BASE_URL}/ne/projects/sewa-portal-accessibility-remediation/issues/11/`,
-  {waitUntil: 'networkidle'},
-);
-await save(publicPage, '04-issue-devnepal-ne.png');
-await publicPage.goto(`${BASE_URL}/ne/github/people/voidash/`, {waitUntil: 'networkidle'});
-await save(publicPage, '05-profile-ne.png');
-await publicContext.close();
+await mkdir(outputDirectory, {recursive: true});
+const browser = await chromium.launch({executablePath: BRAVE_PATH, headless: true});
 
-const githubContext = await browser.newContext({viewport: desktop});
-const githubPage = await githubContext.newPage();
-await githubPage.goto('https://github.com/voidash/civic-help-directory/issues/11', {
-  waitUntil: 'domcontentloaded',
-});
-await githubPage.waitForTimeout(3000);
-await save(githubPage, '04-issue-github.png');
-await githubPage.goto('https://github.com/voidash/civic-help-directory/issues', {
-  waitUntil: 'domcontentloaded',
-});
-await githubPage.waitForTimeout(2500);
-await save(githubPage, '08-github-issues.png');
-await githubPage.goto('https://github.com/voidash/civic-help-directory/pulls', {
-  waitUntil: 'domcontentloaded',
-});
-await githubPage.waitForTimeout(2500);
-await save(githubPage, '08-github-prs.png');
-await githubContext.close();
+try {
+  const publicContext = await browser.newContext({viewport: desktop});
+  const publicPage = await publicContext.newPage();
 
-const loginContext = await browser.newContext({viewport: desktop});
-const loginPage = await loginContext.newPage();
-await loginPage.goto(`${BASE_URL}/en/accounts/login/`, {waitUntil: 'networkidle'});
-await loginPage.locator('input[name="username"]').fill('demo-doit-publisher');
-await loginPage.locator('input[name="password"]').fill('DevNepal!2026');
-await Promise.all([
-  loginPage.waitForURL('**/en/authoring/'),
-  loginPage.getByRole('button', {name: 'Sign in'}).click(),
-]);
-const publisherState = await loginContext.storageState();
-await loginContext.close();
+  await gotoChecked(
+    publicPage,
+    `${BASE_URL}/ne/`,
+    publicPage.locator('#hero-heading'),
+    'Nepali home',
+  );
+  await publicPage.getByRole('link', {name: /सरकारी परियोजना/}).first().waitFor();
+  if (await publicPage.getByText(/GitHub मा सामेल/).count()) {
+    throw new Error('The stripped public home unexpectedly promotes member GitHub OAuth');
+  }
+  await save(publicPage, '01-home-ne.png');
 
-const publisherContext = await browser.newContext({viewport: desktop, storageState: publisherState});
-const publisherPage = await publisherContext.newPage();
-await publisherPage.goto(`${BASE_URL}/en/authoring/`, {waitUntil: 'networkidle'});
-await save(publisherPage, '06-authoring-dashboard.png');
-await publisherPage.goto(`${BASE_URL}/en/authoring/create/`, {waitUntil: 'networkidle'});
-await publisherPage.getByRole('button', {name: 'Fill demo details'}).click();
-await save(publisherPage, '06-create-filled-top.png');
-await publisherPage.locator('input[name="repository_url"]').scrollIntoViewIfNeeded();
-await save(publisherPage, '06-create-filled-repository.png');
-await publisherPage.goto(
-  `${BASE_URL}/en/authoring/sewa-portal-accessibility-remediation/`,
-  {waitUntil: 'networkidle'},
-);
-await save(publisherPage, '07-workspace-refreshed.png');
-await publisherPage.getByRole('heading', {name: 'Repository contributors'}).scrollIntoViewIfNeeded();
-await save(publisherPage, '07-workspace-contributors.png');
-await publisherContext.close();
+  await gotoChecked(
+    publicPage,
+    `${BASE_URL}/ne/projects/gov/`,
+    publicPage.locator('main h1'),
+    'Government project catalogue',
+  );
+  await publicPage.getByRole('link', {name: /Civic Help Directory/i}).first().waitFor();
+  await save(publicPage, '02-project-list-ne.png');
 
-const mobileContext = await browser.newContext({
-  viewport: {width: 390, height: 844},
-  deviceScaleFactor: 1,
-  isMobile: true,
-});
-const mobilePage = await mobileContext.newPage();
-await mobilePage.goto(`${BASE_URL}/ne/`, {waitUntil: 'networkidle'});
-await save(mobilePage, '09-mobile-home.png');
-await mobilePage.goto(
-  `${BASE_URL}/ne/projects/sewa-portal-accessibility-remediation/`,
-  {waitUntil: 'networkidle'},
-);
-await save(mobilePage, '09-mobile-project.png');
-await mobilePage.getByRole('heading', {name: /GitHub का खुला/}).scrollIntoViewIfNeeded();
-await save(mobilePage, '09-mobile-issues.png');
-await mobileContext.close();
+  const projectUrl = `${BASE_URL}/ne/projects/${PROJECT_SLUG}/`;
+  await gotoChecked(
+    publicPage,
+    projectUrl,
+    publicPage.locator('#github-issues-heading'),
+    'Public project detail',
+  );
+  const selectedIssue = publicPage.locator(`a[href$="/issues/${ISSUE_NUMBER}/"]`).first();
+  await selectedIssue.waitFor({state: 'visible'});
+  await publicPage.getByRole('link', {name: /#10/}).first().waitFor();
+  await save(publicPage, '03-project-top-ne.png');
+  await publicPage.locator('#github-issues-heading').scrollIntoViewIfNeeded();
+  await save(publicPage, '03-project-issues-ne.png');
+  await publicPage.locator('#contributors-heading').scrollIntoViewIfNeeded();
+  await save(publicPage, '03-project-contributors-ne.png');
 
-await browser.close();
+  const issueUrl = `${BASE_URL}/ne/projects/${PROJECT_SLUG}/issues/${ISSUE_NUMBER}/`;
+  await gotoChecked(
+    publicPage,
+    issueUrl,
+    publicPage.getByRole('link', {name: /GitHub मा योगदान सुरु/}),
+    `DevNepal issue #${ISSUE_NUMBER}`,
+  );
+  await publicPage.getByText(new RegExp(`#${ISSUE_NUMBER}(?:\\D|$)`)).first().waitFor();
+  await save(publicPage, '04-issue-devnepal-ne.png');
+
+  await gotoChecked(
+    publicPage,
+    `${BASE_URL}/ne/github/people/voidash/`,
+    publicPage.locator('#profile-heading'),
+    'Public GitHub profile',
+  );
+  await publicPage.locator('#tracked-work-heading').waitFor();
+  await save(publicPage, '05-profile-ne.png');
+  await publicContext.close();
+
+  const githubContext = await browser.newContext({viewport: desktop});
+  const githubPage = await githubContext.newPage();
+  const githubIssueUrl = `https://github.com/${REPOSITORY}/issues/${ISSUE_NUMBER}`;
+  await gotoChecked(githubPage, githubIssueUrl, githubPage.locator('main'), 'Canonical GitHub issue');
+  await githubPage.waitForFunction(
+    (issueNumber) => document.title.includes(`#${issueNumber}`),
+    ISSUE_NUMBER,
+  );
+  await save(githubPage, '04-issue-github.png');
+
+  await gotoChecked(
+    githubPage,
+    `https://github.com/${REPOSITORY}/issues`,
+    githubPage.locator(`a[href="/${REPOSITORY}/issues/${ISSUE_NUMBER}"]`).first(),
+    'GitHub issue list',
+  );
+  await save(githubPage, '08-github-issues.png');
+
+  await gotoChecked(
+    githubPage,
+    `https://github.com/${REPOSITORY}/pulls`,
+    githubPage.locator(`a[href="/${REPOSITORY}/pull/10"]`).first(),
+    'GitHub pull request list',
+  );
+  await save(githubPage, '08-github-prs.png');
+  await githubContext.close();
+
+  const publisherState = await authenticatePublisher(browser, BASE_URL, desktop);
+
+  const publisherContext = await browser.newContext({viewport: desktop, storageState: publisherState});
+  const publisherPage = await publisherContext.newPage();
+  await gotoChecked(
+    publisherPage,
+    `${BASE_URL}/en/authoring/`,
+    publisherPage.getByRole('link', {name: 'Create project'}),
+    'Publisher dashboard',
+  );
+  await save(publisherPage, '06-authoring-dashboard.png');
+
+  await gotoChecked(
+    publisherPage,
+    `${BASE_URL}/en/authoring/create/`,
+    publisherPage.locator('#fill-demo-details'),
+    'Project creation form',
+  );
+  await publisherPage.locator('#fill-demo-details').click();
+  await publisherPage.locator('#demo-fill-status').waitFor({state: 'visible'});
+  const repositoryField = publisherPage.locator('input[name="repository_url"]');
+  if ((await repositoryField.inputValue()) !== `https://github.com/${REPOSITORY}`) {
+    throw new Error('Demo fill did not select the verified civic-help-directory repository');
+  }
+  await save(publisherPage, '06-create-filled-top.png');
+  await repositoryField.scrollIntoViewIfNeeded();
+  await save(publisherPage, '06-create-filled-repository.png');
+
+  await gotoChecked(
+    publisherPage,
+    `${BASE_URL}/en/authoring/${PROJECT_SLUG}/`,
+    publisherPage.getByRole('button', {name: 'Refresh GitHub activity'}),
+    'Publisher project workspace',
+  );
+  await publisherPage.locator(`a[href$="/issues/${ISSUE_NUMBER}/"]`).first().waitFor();
+  await save(publisherPage, '07-workspace-refreshed.png');
+  await publisherPage.locator('[id^="repo-contributors-"]').first().scrollIntoViewIfNeeded();
+  await save(publisherPage, '07-workspace-contributors.png');
+  await publisherContext.close();
+
+  const mobileContext = await browser.newContext({
+    viewport: {width: 390, height: 844},
+    deviceScaleFactor: 1,
+    isMobile: true,
+  });
+  const mobilePage = await mobileContext.newPage();
+  await gotoChecked(
+    mobilePage,
+    `${BASE_URL}/ne/`,
+    mobilePage.locator('#hero-heading'),
+    'Mobile Nepali home',
+  );
+  await assertNoHorizontalOverflow(mobilePage, 'Mobile Nepali home');
+  await save(mobilePage, '09-mobile-home.png');
+
+  await gotoChecked(
+    mobilePage,
+    projectUrl,
+    mobilePage.locator('#github-issues-heading'),
+    'Mobile Nepali project',
+  );
+  await assertNoHorizontalOverflow(mobilePage, 'Mobile Nepali project');
+  await save(mobilePage, '09-mobile-project.png');
+  await mobilePage.locator('#github-issues-heading').scrollIntoViewIfNeeded();
+  await mobilePage.mouse.wheel(0, 120);
+  await mobilePage.waitForTimeout(250);
+  await mobilePage.locator(`a[href$="/issues/${ISSUE_NUMBER}/"]`).first().waitFor();
+  await assertNoHorizontalOverflow(mobilePage, 'Mobile Nepali issue list');
+  await save(mobilePage, '09-mobile-issues.png');
+  await mobileContext.close();
+} finally {
+  await browser.close();
+}

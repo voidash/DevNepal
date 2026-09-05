@@ -3,7 +3,19 @@ import path from 'node:path';
 
 import {chromium} from 'playwright-core';
 
-const BASE_URL = process.env.DEVNEPAL_DEMO_URL || 'http://127.0.0.1:9997';
+import {authenticatePublisher} from './publisher-auth.mjs';
+
+const requireEnvironment = (name) => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} is required; live refresh recordings cannot use implicit credentials`);
+  }
+  return value;
+};
+
+const BASE_URL = requireEnvironment('DEVNEPAL_DEMO_URL').replace(/\/$/, '');
+const EXPECTED_ISSUE_NUMBER = process.env.EXPECTED_SYNCED_ISSUE_NUMBER?.trim() || '11';
+const PROJECT_SLUG = 'sewa-portal-accessibility-remediation';
 const BRAVE_PATH =
   process.env.BRAVE_PATH ||
   '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser';
@@ -19,52 +31,65 @@ await rm(rawDirectory, {recursive: true, force: true});
 await mkdir(rawDirectory, {recursive: true});
 
 const browser = await chromium.launch({executablePath: BRAVE_PATH, headless: true});
-const loginContext = await browser.newContext({viewport: VIDEO_SIZE});
-const loginPage = await loginContext.newPage();
-await loginPage.goto(`${BASE_URL}/en/accounts/login/`, {waitUntil: 'networkidle'});
-await loginPage.locator('input[name="username"]').fill('demo-doit-publisher');
-await loginPage.locator('input[name="password"]').fill('DevNepal!2026');
-await Promise.all([
-  loginPage.waitForURL('**/en/authoring/'),
-  loginPage.getByRole('button', {name: 'Sign in'}).click(),
-]);
-const publisherState = await loginContext.storageState();
-await loginContext.close();
-
-const context = await browser.newContext({
-  viewport: VIDEO_SIZE,
-  storageState: publisherState,
-  recordVideo: {dir: rawDirectory, size: VIDEO_SIZE},
-});
-const page = await context.newPage();
-const video = page.video();
 
 try {
-  await page.goto(
-    `${BASE_URL}/en/authoring/sewa-portal-accessibility-remediation/`,
-    {waitUntil: 'networkidle'},
-  );
-  const refresh = page.getByRole('button', {name: 'Refresh GitHub activity'});
-  await refresh.scrollIntoViewIfNeeded();
-  await pause(5000);
-  await Promise.all([
-    page.waitForURL('**/en/authoring/sewa-portal-accessibility-remediation/'),
-    refresh.click(),
-  ]);
-  await page.waitForLoadState('networkidle');
-  await page.getByText(/GitHub activity refreshed:/).waitFor();
-  await pause(9000);
-} catch (error) {
-  throw new Error('Failed to record the publisher GitHub refresh', {cause: error});
-} finally {
-  await context.close();
-}
+  const publisherState = await authenticatePublisher(browser, BASE_URL, VIDEO_SIZE);
 
-if (!video) {
-  throw new Error('Brave did not create a video stream for the live refresh');
+  const context = await browser.newContext({
+    viewport: VIDEO_SIZE,
+    storageState: publisherState,
+    recordVideo: {dir: rawDirectory, size: VIDEO_SIZE},
+  });
+  const page = await context.newPage();
+  const video = page.video();
+
+  try {
+    const workspaceUrl = `${BASE_URL}/en/authoring/${PROJECT_SLUG}/`;
+    const workspaceResponse = await page.goto(workspaceUrl, {waitUntil: 'domcontentloaded'});
+    if (!workspaceResponse?.ok()) {
+      throw new Error(`Publisher workspace returned ${workspaceResponse?.status() ?? 'no response'}`);
+    }
+    const refresh = page.getByRole('button', {name: 'Refresh GitHub activity'});
+    await refresh.scrollIntoViewIfNeeded();
+    const synchronizedBefore = await page.getByText(/^Last synchronized /).first().textContent();
+    await pause(3500);
+
+    const refreshResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        response.url().includes(`/github/projects/${PROJECT_SLUG}/repositories/`),
+    );
+    await refresh.click();
+    const refreshResponse = await refreshResponsePromise;
+    if (refreshResponse.status() === 429) {
+      throw new Error('Live GitHub refresh is cooling down; retry after its Retry-After interval');
+    }
+    if (refreshResponse.status() < 200 || refreshResponse.status() >= 400) {
+      throw new Error(`Live GitHub refresh returned ${refreshResponse.status()}`);
+    }
+    await page.waitForURL(`**/en/authoring/${PROJECT_SLUG}/`);
+    await page.getByText(/GitHub activity refreshed:/).waitFor({state: 'visible'});
+    await page.locator(`a[href$="/issues/${EXPECTED_ISSUE_NUMBER}/"]`).first().waitFor();
+    const synchronizedAfter = await page.getByText(/^Last synchronized /).first().textContent();
+    if (!synchronizedAfter || synchronizedAfter === synchronizedBefore) {
+      throw new Error('Refresh completed without a visibly updated synchronization timestamp');
+    }
+    await pause(6500);
+  } catch (error) {
+    throw new Error('Failed to record and verify the deployed publisher GitHub refresh', {
+      cause: error,
+    });
+  } finally {
+    await context.close();
+  }
+
+  if (!video) {
+    throw new Error('Brave did not create a video stream for the live refresh');
+  }
+  const sourcePath = path.join(outputDirectory, '06-live-github-refresh.webm');
+  await video.saveAs(sourcePath);
+  await copyFile(sourcePath, path.join(publicVideoDirectory, '06-live-github-refresh.webm'));
+} finally {
+  await browser.close();
+  await rm(rawDirectory, {recursive: true, force: true});
 }
-const sourcePath = path.join(outputDirectory, '06-live-github-refresh.webm');
-await video.saveAs(sourcePath);
-await copyFile(sourcePath, path.join(publicVideoDirectory, '06-live-github-refresh.webm'));
-await browser.close();
-await rm(rawDirectory, {recursive: true, force: true});

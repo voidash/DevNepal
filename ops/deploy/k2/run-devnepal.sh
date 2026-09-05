@@ -2,6 +2,10 @@
 set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# Gunicorn forks workers on macOS. Outbound TLS/DNS may initialize Objective-C
+# runtime state, so the standard macOS fork-safety override must be present
+# before the master process starts rather than added during a worker reload.
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 runtime_env="${HOME}/.config/devnepal/runtime.env"
 if [[ ! -r "${runtime_env}" ]]; then
