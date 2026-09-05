@@ -355,6 +355,13 @@ def ministry_onboarding(request: HttpRequest) -> HttpResponse:
 
 def project_list(request: HttpRequest, project_type: str | None = None) -> HttpResponse:
     """DSC-001/DSC-002: public project browse and explicit catalog filtering."""
+    recommendations = recommended_projects(request.user) if request.user.is_authenticated else []
+    if project_type:
+        recommendations = [
+            recommendation
+            for recommendation in recommendations
+            if recommendation.project.project_type == project_type
+        ]
     catalog = public_projects()
     projects = catalog
     selected_type = project_type or normalize_nfc(request.GET.get("type", ""))
@@ -572,6 +579,7 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
             "technologies": technologies,
             "contribution_types": contribution_types,
             "skills": skills,
+            "recommendations": recommendations,
         },
     )
 

@@ -11,8 +11,8 @@ from apps.contributions.models import ContributionRecord
 from apps.github_sync.models import GithubStarterTask
 from apps.ministries.enums import OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
-from apps.projects.enums import ProjectStatus
-from apps.projects.models import Project, ProjectTask
+from apps.projects.enums import ApplicationStatus, ProjectStatus
+from apps.projects.models import Application, Project, ProjectTask
 from apps.recognition.enums import AwardStatus
 from apps.recognition.models import Badge, BadgeAward, ScoringPolicy
 
@@ -103,6 +103,17 @@ def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials():
         post_type=BlogPostType.EXTERNAL, status=BlogStatus.PUBLISHED
     ).exists()
     assert ContributionRecord.objects.filter(status=VerificationStatus.ACCEPTED).count() >= 2
+    assert Application.objects.filter(
+        project__slug="sewa-portal-accessibility-remediation",
+        applicant__username="aarati-shrestha",
+        status=ApplicationStatus.ACCEPTED,
+    ).exists()
+    assert ContributionRecord.objects.filter(
+        project__slug="sewa-portal-accessibility-remediation",
+        contributor__username="aarati-shrestha",
+        title="Keyboard test-script evidence",
+        status=VerificationStatus.CANDIDATE,
+    ).exists()
     assert ScoringPolicy.objects.filter(is_active=True).exists()
     assert Badge.objects.filter(is_active=True).exists()
     assert BadgeAward.objects.filter(status=AwardStatus.ACTIVE).exists()

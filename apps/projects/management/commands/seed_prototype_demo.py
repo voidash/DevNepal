@@ -15,6 +15,7 @@ from apps.github_sync.models import GithubStarterTask, RepositoryConnection
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import (
+    ApplicationStatus,
     ContributionMode,
     DifficultyLevel,
     EffortBand,
@@ -26,7 +27,13 @@ from apps.projects.enums import (
     SignoffModel,
     TaskStatus,
 )
-from apps.projects.models import Project, ProjectMaintainer, ProjectTask, ProjectVersion
+from apps.projects.models import (
+    Application,
+    Project,
+    ProjectMaintainer,
+    ProjectTask,
+    ProjectVersion,
+)
 from apps.recognition.enums import AwardStatus, BadgeKind
 from apps.recognition.models import Badge, BadgeAward, ContributionScore, ScoringPolicy
 from apps.taxonomy.enums import ContentLanguage, TermVocabulary
@@ -494,6 +501,8 @@ def seed_prototype_demo() -> dict[str, int]:
         "Verified engineering work for keyboard operation across high-traffic forms.",
         "https://github.com/doit-np/sewa-portal/pull/128",
     )
+    _accepted_application(sewa, aarati)
+    _candidate_contribution(sewa, aarati, documentation)
 
     _blogs(aarati, rohan)
     policy = _policy(admin)
@@ -784,6 +793,33 @@ def _contribution(
             "verified_by": verifier,
             "verified_at": timezone.now(),
             "verification_note": "Accepted prototype demonstration contribution.",
+        },
+    )[0]
+
+
+def _accepted_application(project, applicant):
+    return Application.objects.get_or_create(
+        project=project,
+        applicant=applicant,
+        defaults={
+            "motivation": "I can validate keyboard navigation and Nepali error recovery.",
+            "status": ApplicationStatus.ACCEPTED,
+            "decision_note": "The maintainer approved this accessibility workstream.",
+        },
+    )[0]
+
+
+def _candidate_contribution(project, contributor, contribution_type):
+    return ContributionRecord.objects.get_or_create(
+        project=project,
+        contributor=contributor,
+        title="Keyboard test-script evidence",
+        defaults={
+            "contribution_type": contribution_type,
+            "description": "Evidence for the passport renewal keyboard-navigation script.",
+            "evidence_url": "https://github.com/doit-np/sewa-portal/pull/119",
+            "source": ContributionSource.MEMBER_SUBMISSION,
+            "status": VerificationStatus.CANDIDATE,
         },
     )[0]
 
