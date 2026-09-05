@@ -374,3 +374,8 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-work .card p { margin: 0; color: var(--color-neutral-700); font-size: 14px; }
 .dn-work .card .btn, .dn-work .card .hero__actions, .dn-work .card form { margin-top: auto; }
 .dn-work .card { gap: 10px; }
+
+/* The signed-in footer is the legal line alone — enough to carry the
+   contentinfo landmark every page needs, without the citizen footer. */
+.dn-app-foot { grid-column: 1 / -1; padding: 16px var(--page-gutter); border-top: 1px solid var(--color-divider); }
+.dn-app-foot p { margin: 0; color: var(--color-neutral-600); font-size: 12px; }

@@ -89,6 +89,7 @@
   <main id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
+  {% block footer %}
   <footer class="dn-footer">
     <div class="dn-container dn-footer-grid">
       <nav aria-label="{% trans 'Platform' %}">
@@ -128,5 +129,6 @@
     </div>
     <p class="dn-container dn-footer-legal">© {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
   </footer>
+  {% endblock %}
 </body>
 </html>
