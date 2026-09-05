@@ -34,13 +34,34 @@ repository root:
 ```bash
 uv sync
 uv run python manage.py migrate
-uv run python manage.py runserver
+uv run python manage.py seed_prototype_demo
+uv run python manage.py runserver 0.0.0.0:9999
 ```
 
-Open <http://127.0.0.1:8000/en/>. The default development configuration uses
+Open <http://127.0.0.1:9999/en/>. `seed_prototype_demo` is idempotent: rerunning
+it updates the source-of-truth prototype records without duplicating them. The
+default development configuration uses
 SQLite; setting `POSTGRES_HOST` switches to PostgreSQL and reads the standard
 `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_PORT`
 variables.
+
+GitHub sign-in and repository integration are enabled only when their credentials
+are supplied through the process environment. Keep these values in local or
+managed secret storage; never commit them or the development SQLite database.
+
+```bash
+export GITHUB_CLIENT_ID=...
+export GITHUB_CLIENT_SECRET=...
+export GITHUB_APP_ID=...
+export GITHUB_APP_PRIVATE_KEY=...
+export GITHUB_WEBHOOK_SECRET=...
+uv run python manage.py runserver 0.0.0.0:9999
+```
+
+The OAuth App authorization callback URL must target
+`http://127.0.0.1:9999/en/accounts/github/login/callback/` for local development,
+or the same path on the deployed HTTPS origin. GitHub login remains unavailable
+when the OAuth credentials are absent.
 
 Run the complete verification suite with:
 
