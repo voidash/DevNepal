@@ -1,4 +1,5 @@
 import hashlib
+import ipaddress
 import logging
 import math
 import time
@@ -31,10 +32,33 @@ def rate_limit_key(surface: str, subject: str) -> str:
 
 
 def request_subjects(request, principal: str) -> tuple[str, str]:
-    remote_addr = str(request.META.get("REMOTE_ADDR") or "").strip()
+    remote_addr = _client_ip(request)
     session_key = str(request.session.session_key or "").strip()
     client_subject = f"ip:{remote_addr}" if remote_addr else f"session:{session_key or 'anonymous'}"
     return client_subject, f"principal:{principal.strip().casefold() or 'anonymous'}"
+
+
+def _client_ip(request) -> str:
+    """SEC-006: trust Cloudflare's client address only through the local tunnel.
+
+    The development tunnel connects to Django from loopback, so using only
+    ``REMOTE_ADDR`` would put every public visitor in one shared rate-limit
+    bucket. A direct remote request cannot opt into the forwarded address path.
+    """
+    remote_addr = str(request.META.get("REMOTE_ADDR") or "").strip()
+    try:
+        remote_ip = ipaddress.ip_address(remote_addr)
+    except ValueError:
+        return remote_addr
+    if not remote_ip.is_loopback:
+        return remote_addr
+
+    forwarded = str(request.META.get("HTTP_CF_CONNECTING_IP") or "").strip()
+    try:
+        return str(ipaddress.ip_address(forwarded)) if forwarded else remote_addr
+    except ValueError:
+        logger.warning("Ignored malformed CF-Connecting-IP from the local tunnel")
+        return remote_addr
 
 
 def check_rate_limit(

@@ -87,8 +87,14 @@ const componentsCss = await readFile(join(root, 'static', 'src/components.css'),
 if (/\.dn-state-dot\s*\{[^}]*width:\s*10px;[^}]*height:\s*10px/s.test(componentsCss)) {
   cssViolations.push('src/components.css: decorative state dot')
 }
-if (/\.dn-section-kicker\s*\{[^}]*text-transform:\s*uppercase/s.test(componentsCss)) {
+if (/[^{}]*\.dn-section-kicker[^{}]*\{[^}]*text-transform:\s*uppercase/s.test(componentsCss)) {
   cssViolations.push('src/components.css: repeated uppercase section eyebrow')
+}
+if (/[^{}]*\.section__header[^{}]*\{[^}]*text-transform:\s*uppercase/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: inherited uppercase page header')
+}
+if (!/\.section__header\s*\{[^}]*display:\s*flex/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: missing responsive page-header layout')
 }
 
 const onboardingCss = await readFile(join(root, 'static', 'src/onboarding.css'), 'utf8')
@@ -100,14 +106,27 @@ const baseCss = await readFile(join(root, 'static', 'src/base.css'), 'utf8')
 for (const required of ['h1 {\n  font-size: clamp(', 'main :where(p, li, dd) a:not(.btn)']) {
   if (!baseCss.includes(required)) cssViolations.push(`src/base.css: missing ${required}`)
 }
+if (!/a\s*\{[^}]*color:\s*var\(--color-accent-700\)/s.test(baseCss)) {
+  cssViolations.push('src/base.css: default links use low-contrast accent')
+}
 
 const shellCss = await readFile(join(root, 'static', 'src/devnepal.css'), 'utf8')
-for (const required of [
-  '.dn-primary-nav a[aria-current="page"] {',
-  '.mobile-nav a[aria-current="page"] {',
-  '.dn-admin-nav a[aria-current="page"] {',
+const navigationCues = [
+  [/\.dn-primary-nav a\[aria-current="page"\]\s*\{[^}]*text-decoration:\s*underline/s, 'primary navigation'],
+  [/\.mobile-nav a\[aria-current="page"\]\s*\{[^}]*border-left:/s, 'mobile navigation'],
+  [/\.dn-admin-nav a\[aria-current="page"\]\s*\{[^}]*text-decoration:\s*underline/s, 'admin navigation'],
+]
+for (const [pattern, name] of navigationCues) {
+  if (!pattern.test(shellCss)) cssViolations.push(`src/devnepal.css: missing ${name} cue`)
+}
+
+for (const [css, name] of [
+  [componentsCss, 'src/components.css'],
+  [shellCss, 'src/devnepal.css'],
 ]) {
-  if (!shellCss.includes(required)) cssViolations.push(`src/devnepal.css: missing ${required}`)
+  if (/color:\s*var\(--color-bg\);[^}]*background:\s*var\(--color-accent(?:-600)?\)/s.test(css)) {
+    cssViolations.push(`${name}: low-contrast text-bearing accent`)
+  }
 }
 
 if (cssViolations.length > 0) {

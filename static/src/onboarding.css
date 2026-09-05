@@ -21,7 +21,7 @@
 .dn-onboarding__locked { color: var(--color-neutral-700); }
 .dn-onboarding__note, .dn-onboarding__disclosure { padding: 12px 14px; border: 1px solid var(--color-divider); font-size: 13px; }
 .dn-onboarding__note p, .dn-onboarding__disclosure p { margin: 5px 0 0; }
-.dn-onboarding__disclosure h3 { margin: 0; color: var(--color-accent); font-size: 16px; }
+.dn-onboarding__disclosure h3 { margin: 0; color: var(--color-accent-700); font-size: 16px; }
 .dn-onboarding__status { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--color-divider); }
 .dn-onboarding__public-preview { display: grid; gap: 7px; padding: 16px; border: 1px solid var(--color-divider); }
 .dn-onboarding__public-preview h2, .dn-onboarding__public-preview p { margin: 0; }
