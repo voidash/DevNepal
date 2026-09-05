@@ -255,7 +255,8 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
     assert response.status_code == 200
     assert b"Public technology," in response.content
     assert b"built in public." in response.content
-    assert b"code stays on GitHub" in response.content
+    assert b"public repository on GitHub" in response.content
+    assert b"anyone can contribute" in response.content
     assert b"Browse government projects" in response.content
     assert b"Government of Nepal" in response.content
     assert b"Collaborate on Nepal's digital future" not in response.content
@@ -268,12 +269,13 @@ def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "What is published here" in content
+    assert "On DevNepal today" in content
     assert "ministries publishing, each through a named officer" in content
-    assert "projects open for contribution right now" in content
+    assert "projects open for contribution" in content
     assert "contributions accepted by a named maintainer" in content
     assert "Public member profiles" not in content
-    assert "Code is one of nine ways in" in content
+    assert "Nine ways to contribute" in content
+    assert "Writing code is one of them" in content
     assert "Community projects" in content
     assert "Browse community projects" in content
     assert "A named maintainer verifies accepted work" in content

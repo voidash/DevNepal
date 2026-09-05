@@ -549,7 +549,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-github-contributor:hover { border-color: var(--color-accent-300); background: var(--color-accent-100); }
 .dn-github-contributor strong { font-size: var(--fs-base); }
 .dn-github-avatar { display: grid; flex: none; place-items: center; width: 40px; height: 40px; border-radius: var(--radius-pill); background: var(--color-accent-100); color: var(--color-accent-800); font: 600 14px var(--font-heading); }
-.dn-github-contributor img { border-radius: 50%; }
+.dn-github-contributor img { flex: none; width: 40px; height: 40px; object-fit: cover; border-radius: 50%; background: var(--color-accent-100); }
 .dn-github-contributor span, .dn-github-contributor small { display: block; }
 .dn-github-contributor small { margin-top: 1px; color: var(--color-neutral-600); font-size: var(--fs-sm); }
 .dn-github-project details.dn-sheet[open] { padding-bottom: var(--space-5); }

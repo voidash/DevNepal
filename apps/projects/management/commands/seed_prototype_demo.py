@@ -11,7 +11,11 @@ from apps.blogs.services import render_safe_markdown
 from apps.contributions.enums import ContributionSource, ImpactTier, VerificationStatus
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.enums import Provider, SyncState
-from apps.github_sync.models import GithubStarterTask, RepositoryConnection
+from apps.github_sync.models import (
+    GithubRepositoryContributor,
+    GithubStarterTask,
+    RepositoryConnection,
+)
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import (
@@ -342,6 +346,16 @@ def seed_prototype_demo() -> dict[str, int]:
         9,
         "Document keyboard-first contribution workflow",
         ["good first issue"],
+    )
+    _github_people(
+        repository,
+        (
+            (1, "voidash", 41),
+            (42, "aarati-shrestha", 9),
+            (43, "kritika-poudel", 6),
+            (44, "bibek-gurung", 4),
+            (45, "sujata-tamang", 2),
+        ),
     )
 
     address_schema = _government_project(
@@ -784,6 +798,31 @@ def _starter_task(repository, number, title, labels):
             "source_updated_at": timezone.now(),
         },
     )[0]
+
+
+def _github_avatar_url(login):
+    return f"https://avatars.githubusercontent.com/{login}?s=80&v=4"
+
+
+def _github_people(repository, people):
+    existing = list(repository.contributor_snapshots.all())
+    if existing:
+        for contributor in existing:
+            avatar_url = _github_avatar_url(contributor.login)
+            if contributor.avatar_url == avatar_url:
+                continue
+            contributor.avatar_url = avatar_url
+            contributor.save(update_fields=["avatar_url"])
+        return
+    for github_user_id, login, contributions in people:
+        GithubRepositoryContributor.objects.create(
+            repository=repository,
+            github_user_id=github_user_id,
+            login=login,
+            avatar_url=_github_avatar_url(login),
+            profile_url=f"https://github.com/{login}",
+            contributions=contributions,
+        )
 
 
 def _contribution(

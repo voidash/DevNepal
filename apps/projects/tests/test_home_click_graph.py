@@ -219,9 +219,9 @@ def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
     content = response.content.decode()
 
     assert "Featured government projects" in content
-    assert "Code is one of nine ways in" in content
-    assert "What is published here" in content
-    assert "From listing to public record" in content
+    assert "Nine ways to contribute" in content
+    assert "On DevNepal today" in content
+    assert "How a contribution works" in content
     assert 'id="path-heading"' in content
     assert "dn-way-chips" not in content
     assert "Choose your way in" not in content

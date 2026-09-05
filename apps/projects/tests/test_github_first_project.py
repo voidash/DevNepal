@@ -75,6 +75,39 @@ def test_dsc_005_project_shows_synced_github_issues_prs_and_contributors(client)
     assert reverse("github_sync:public_profile", args=["voidash"]) in content
 
 
+def test_dsc_005_project_people_show_github_avatars_not_initials(client):
+    """DSC-005/GIT-010: repository people use the public GitHub avatar image."""
+    project, repository = public_project()
+    GithubRepositoryContributor.objects.create(
+        repository=repository,
+        github_user_id=700000,
+        login="voidash",
+        avatar_url="https://avatars.githubusercontent.com/u/700000?v=4",
+        profile_url="https://github.com/voidash",
+        contributions=41,
+    )
+    GithubRepositoryContributor.objects.create(
+        repository=repository,
+        github_user_id=42,
+        login="aarati-shrestha",
+        profile_url="https://github.com/aarati-shrestha",
+        contributions=9,
+    )
+
+    response = client.get(reverse("projects:detail", kwargs={"slug": project.slug}))
+    section = (
+        response.content.split(b'aria-labelledby="contributors-heading"', 1)[1]
+        .split(b"</section>", 1)[0]
+        .decode()
+    )
+
+    assert response.status_code == 200
+    assert 'src="https://avatars.githubusercontent.com/voidash?s=80&v=4"' in section
+    assert 'src="https://avatars.githubusercontent.com/aarati-shrestha?s=80&v=4"' in section
+    assert "avatars.githubusercontent.com/u/700000" not in section
+    assert 'class="dn-github-avatar"' not in section
+
+
 def test_dsc_005_visitor_reads_full_synced_issue_before_starting_on_github(client):
     """DSC-005/GIT-010: visitors can read a public issue snapshot before leaving for GitHub."""
     project, repository = public_project()
