@@ -1,19 +1,27 @@
 import pytest
+from django.db import IntegrityError, transaction
 from django.test import override_settings
 
 from apps.audit.models import AuditEvent
 from apps.contributions.enums import ContributionSource, VerificationStatus
 from apps.contributions.services import (
     Evidence,
+    HoldResponseAlreadyRecordedError,
+    InputTooLongError,
     InvalidDecisionError,
     InvalidSecondApproverError,
     InvalidStatusTransitionError,
     MissingReasonError,
     SelfApprovalError,
+    UnauthorizedHoldManagerError,
+    UnauthorizedHoldResponderError,
     UnauthorizedRevokerError,
     UnauthorizedVerifierError,
     accepted_contributions,
     link_profile_credit,
+    place_on_hold,
+    release_hold,
+    respond_to_hold,
     revoke,
     submit_evidence,
     verify,
@@ -203,6 +211,191 @@ def test_non_decision_statuses_are_refused(maintainer, candidate):
         verify(maintainer, candidate, VerificationStatus.CANDIDATE, "not a decision")
     with pytest.raises(InvalidDecisionError):
         verify(maintainer, candidate, VerificationStatus.REVOKED, "not a decision")
+
+
+@pytest.mark.unit
+def test_pmo_can_hold_and_release_unscored_evidence_with_auditable_reasons(candidate):
+    """D4.1/D4.3/REC-006: PMO holds and releases a candidate without deleting it."""
+    pmo = SuperAdminFactory()
+
+    held = place_on_hold(pmo, candidate, "Burst activity needs an anomaly review.")
+
+    assert held.status == VerificationStatus.CANDIDATE
+    assert held.hold_active is True
+    assert held.held_from_status == VerificationStatus.CANDIDATE
+    assert held.held_by == pmo
+    assert held.hold_reason == "Burst activity needs an anomaly review."
+    hold_audit = audits_for(candidate).get(action="contribution.held")
+    assert hold_audit.before == {"status": VerificationStatus.CANDIDATE, "hold_active": False}
+    assert hold_audit.after["reason"] == "Burst activity needs an anomaly review."
+
+    released = release_hold(pmo, candidate, "Maintainer confirmed the records are distinct.")
+
+    assert released.status == VerificationStatus.CANDIDATE
+    assert released.hold_released_by == pmo
+    assert released.hold_released_at is not None
+    assert released.hold_release_reason == "Maintainer confirmed the records are distinct."
+    release_audit = audits_for(candidate).get(action="contribution.hold_released")
+    assert release_audit.before == {"status": VerificationStatus.CANDIDATE, "hold_active": True}
+    assert release_audit.after["status"] == VerificationStatus.CANDIDATE
+    assert release_audit.after["hold_active"] is False
+
+
+@pytest.mark.unit
+def test_hold_requires_pmo_authority_mfa_and_a_reason(candidate, maintainer):
+    """D4.1/AUTH-005/REC-006: a publisher cannot silently suppress a contribution outcome."""
+    with pytest.raises(UnauthorizedHoldManagerError):
+        place_on_hold(maintainer, candidate, "Not authorized")
+    with pytest.raises(MissingReasonError):
+        place_on_hold(SuperAdminFactory(), candidate, " ")
+
+    candidate.refresh_from_db()
+    assert candidate.status == VerificationStatus.CANDIDATE
+    assert (
+        audits_for(candidate).filter(action="contribution.hold.denied", result="failure").exists()
+    )
+
+
+@pytest.mark.unit
+def test_accepted_contribution_uses_rec005_revocation_not_reversible_hold(candidate, maintainer):
+    """D4.3/REC-005: credited work cannot enter a hold without score-restoration semantics."""
+    verify(maintainer, candidate, VerificationStatus.ACCEPTED, "Accepted before review")
+
+    with pytest.raises(InvalidStatusTransitionError):
+        place_on_hold(SuperAdminFactory(), candidate, "Investigating credited work")
+
+    candidate.refresh_from_db()
+    assert candidate.status == VerificationStatus.ACCEPTED
+
+
+@pytest.mark.unit
+def test_on_hold_rows_require_durable_governance_metadata_at_the_database_boundary(candidate):
+    """D4.1/REC-006: direct writes cannot create an unauditable hold state."""
+    candidate.hold_active = True
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        candidate.save(update_fields=["hold_active", "updated_at"])
+
+    candidate.refresh_from_db()
+    assert candidate.status == VerificationStatus.CANDIDATE
+    assert candidate.hold_active is False
+
+
+@pytest.mark.unit
+def test_repeated_hold_release_cycles_keep_every_reason_in_the_audit_history(candidate):
+    """D4.1/D4.3/REC-006: latest columns may change, but audit evidence is append-only."""
+    pmo = SuperAdminFactory()
+    place_on_hold(pmo, candidate, "First anomaly review")
+    release_hold(pmo, candidate, "First review cleared")
+    place_on_hold(pmo, candidate, "Second anomaly review")
+    release_hold(pmo, candidate, "Second review cleared")
+
+    history = list(
+        audits_for(candidate)
+        .filter(action__in=("contribution.held", "contribution.hold_released"))
+        .order_by("created_at", "pk")
+    )
+    assert [event.action for event in history] == [
+        "contribution.held",
+        "contribution.hold_released",
+        "contribution.held",
+        "contribution.hold_released",
+    ]
+    assert [event.after["reason"] for event in history] == [
+        "First anomaly review",
+        "First review cleared",
+        "Second anomaly review",
+        "Second review cleared",
+    ]
+
+
+@pytest.mark.unit
+def test_new_hold_cycle_clears_the_previous_response_without_erasing_its_audit_event(candidate):
+    """D4.2/D4.3: a new hold gets a fresh response while the prior response remains audited."""
+    pmo = SuperAdminFactory()
+    place_on_hold(pmo, candidate, "First review")
+    respond_to_hold(candidate.contributor, candidate, "First contributor response")
+    release_hold(pmo, candidate, "First review cleared")
+
+    place_on_hold(pmo, candidate, "Second review")
+    candidate.refresh_from_db()
+    assert candidate.hold_response == ""
+    assert candidate.hold_responded_at is None
+
+    respond_to_hold(candidate.contributor, candidate, "Second contributor response")
+    responses = list(
+        audits_for(candidate)
+        .filter(action="contribution.hold_responded")
+        .order_by("created_at", "pk")
+    )
+    assert [event.after["response"] for event in responses] == [
+        "First contributor response",
+        "Second contributor response",
+    ]
+
+
+@pytest.mark.unit
+def test_affected_contributor_can_answer_one_active_hold_and_pmo_audit_keeps_it(candidate):
+    """D4.2/REC-006: the member, not a maintainer, provides one retained hold response."""
+    pmo = SuperAdminFactory()
+    place_on_hold(pmo, candidate, "Please explain this rapid batch.")
+
+    responded = respond_to_hold(
+        candidate.contributor,
+        candidate,
+        "The tasks were pre-agreed accessibility fixes with separate test evidence.",
+    )
+
+    assert responded.hold_response.startswith("The tasks were pre-agreed")
+    assert responded.hold_responded_at is not None
+    audit = audits_for(candidate).get(action="contribution.hold_responded")
+    assert audit.actor == candidate.contributor
+    assert audit.after["response"] == responded.hold_response
+    with pytest.raises(HoldResponseAlreadyRecordedError):
+        respond_to_hold(
+            candidate.contributor, candidate, "A second response must not overwrite the first."
+        )
+
+
+@pytest.mark.unit
+def test_other_members_cannot_answer_a_hold(candidate):
+    """D4.2/AUTH-006: PMO receives a response only from the affected contributor."""
+    place_on_hold(SuperAdminFactory(), candidate, "Please explain this activity.")
+
+    with pytest.raises(UnauthorizedHoldResponderError):
+        respond_to_hold(UserFactory(), candidate, "Forged response")
+
+    candidate.refresh_from_db()
+    assert candidate.hold_response == ""
+    assert (
+        audits_for(candidate)
+        .filter(action="contribution.hold_response.denied", result="failure")
+        .exists()
+    )
+
+
+@pytest.mark.unit
+def test_hold_response_timestamp_cannot_be_persisted_without_text(candidate):
+    """D4.2: the database prevents a false indication that the contributor responded."""
+    from django.utils import timezone
+
+    candidate.hold_responded_at = timezone.now()
+    with pytest.raises(IntegrityError), transaction.atomic():
+        candidate.save(update_fields=["hold_responded_at", "updated_at"])
+
+
+@pytest.mark.unit
+def test_hold_response_is_nfc_normalized_and_bounded(candidate):
+    """D4.2/DSC-003: PMO receives one normalized response within the documented limit."""
+    place_on_hold(SuperAdminFactory(), candidate, "Please explain this activity.")
+
+    recorded = respond_to_hold(candidate.contributor, candidate, "  Re\u0301ponse  ")
+    assert recorded.hold_response == "Réponse"
+
+    second = ContributionRecordFactory()
+    place_on_hold(SuperAdminFactory(), second, "Please explain this activity.")
+    with pytest.raises(InputTooLongError):
+        respond_to_hold(second.contributor, second, "x" * 4001)
 
 
 @pytest.mark.unit

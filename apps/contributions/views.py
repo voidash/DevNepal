@@ -16,12 +16,19 @@ from apps.contributions.enums import VerificationStatus
 from apps.contributions.forms import EvidenceForm
 from apps.contributions.models import ContributionRecord
 from apps.contributions.services import (
+    MAX_CONTRIBUTION_REASON_LENGTH,
+    MAX_HOLD_RESPONSE_LENGTH,
     ContributionServiceError,
     Evidence,
     SubmissionNotEligibleError,
+    UnauthorizedHoldManagerError,
+    UnauthorizedHoldResponderError,
     UnauthorizedRevokerError,
     UnauthorizedVerifierError,
     can_submit_evidence,
+    place_on_hold,
+    release_hold,
+    respond_to_hold,
     revoke,
     submit_evidence,
     verify,
@@ -38,6 +45,8 @@ def _contribution_queryset():
         "contribution_type",
         "verified_by",
         "secondary_approval_by",
+        "held_by",
+        "hold_released_by",
         "revoked_by",
     )
 
@@ -78,6 +87,30 @@ def _can_revoke(user, contribution: ContributionRecord) -> bool:
     )
 
 
+def _can_manage_hold(user, contribution: ContributionRecord) -> bool:
+    """D4.1/D4.3: holds are a PMO-only, MFA-gated anomaly control."""
+    return (
+        user.is_active
+        and user.is_superuser
+        and mfa_verified(user)
+        and contribution.status
+        in {
+            VerificationStatus.CANDIDATE,
+            VerificationStatus.PENDING_INFO,
+        }
+    )
+
+
+def _can_respond_to_hold(user, contribution: ContributionRecord) -> bool:
+    """D4.2: only the affected contributor may respond while the PMO hold is active."""
+    return (
+        user.is_active
+        and contribution.hold_active
+        and contribution.contributor_id == user.pk
+        and contribution.hold_responded_at is None
+    )
+
+
 def _second_approvers(contribution: ContributionRecord, verifier):
     return (
         get_user_model()
@@ -107,8 +140,10 @@ def _history(contribution: ContributionRecord):
 def _verification_queue(user):
     if not user.is_active:
         raise PermissionDenied
-    records = _contribution_queryset().filter(
-        status__in=(VerificationStatus.CANDIDATE, VerificationStatus.PENDING_INFO)
+    records = (
+        _contribution_queryset()
+        .filter(status__in=(VerificationStatus.CANDIDATE, VerificationStatus.PENDING_INFO))
+        .filter(hold_active=False)
     )
     if user.is_superuser:
         if not mfa_verified(user):
@@ -124,10 +159,16 @@ def _verification_queue(user):
 @require_GET
 def verification_queue(request: HttpRequest) -> HttpResponse:
     """C4.1/BR-006: list candidate evidence for authorized reviewers only."""
+    held_contributions = ContributionRecord.objects.none()
+    if request.user.is_superuser and mfa_verified(request.user):
+        held_contributions = _contribution_queryset().filter(hold_active=True)
     return render(
         request,
         "contributions/verification_queue.html",
-        {"contributions": _verification_queue(request.user)},
+        {
+            "contributions": _verification_queue(request.user),
+            "held_contributions": held_contributions,
+        },
     )
 
 
@@ -201,8 +242,14 @@ def detail(request: HttpRequest, contribution_id: int) -> HttpResponse:
         "contributions/detail.html",
         {
             "contribution": contribution,
-            "can_verify": can_verify and contribution.status != VerificationStatus.REVOKED,
+            "can_verify": can_verify
+            and contribution.status != VerificationStatus.REVOKED
+            and not contribution.hold_active,
             "can_revoke": _can_revoke(request.user, contribution),
+            "can_manage_hold": _can_manage_hold(request.user, contribution),
+            "can_respond_to_hold": _can_respond_to_hold(request.user, contribution),
+            "contribution_reason_max_length": MAX_CONTRIBUTION_REASON_LENGTH,
+            "hold_response_max_length": MAX_HOLD_RESPONSE_LENGTH,
             "decision_choices": [
                 (status, VerificationStatus(status).label)
                 for status in (
@@ -269,6 +316,55 @@ def revoke_contribution(request: HttpRequest, contribution_id: int) -> HttpRespo
     return redirect("contributions:detail", contribution_id=contribution.pk)
 
 
+@login_required(login_url=reverse_lazy("accounts:login"))
+@csrf_protect
+@require_POST
+def hold_contribution(request: HttpRequest, contribution_id: int) -> HttpResponse:
+    """D4.1/REC-006: PMO temporarily quarantines an unscored contribution outcome."""
+    contribution = get_object_or_404(_contribution_queryset(), pk=contribution_id)
+    try:
+        place_on_hold(request.user, contribution, request.POST.get("reason", ""))
+    except (UnauthorizedHoldManagerError, PermissionDenied) as error:
+        raise PermissionDenied from error
+    except ContributionServiceError:
+        return _detail_error(
+            request, contribution, _("This contribution cannot be placed on hold.")
+        )
+    return redirect("contributions:detail", contribution_id=contribution.pk)
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@csrf_protect
+@require_POST
+def release_contribution_hold(request: HttpRequest, contribution_id: int) -> HttpResponse:
+    """D4.3/REC-006: PMO releases an outcome to its original unscored review state."""
+    contribution = get_object_or_404(_contribution_queryset(), pk=contribution_id)
+    try:
+        release_hold(request.user, contribution, request.POST.get("reason", ""))
+    except (UnauthorizedHoldManagerError, PermissionDenied) as error:
+        raise PermissionDenied from error
+    except ContributionServiceError:
+        return _detail_error(request, contribution, _("This contribution hold cannot be released."))
+    return redirect("contributions:detail", contribution_id=contribution.pk)
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@csrf_protect
+@require_POST
+def respond_to_contribution_hold(request: HttpRequest, contribution_id: int) -> HttpResponse:
+    """D4.2/REC-006: record one contributor response for an active PMO anomaly hold."""
+    contribution = get_object_or_404(_contribution_queryset(), pk=contribution_id)
+    try:
+        respond_to_hold(request.user, contribution, request.POST.get("response", ""))
+    except (UnauthorizedHoldResponderError, PermissionDenied) as error:
+        raise PermissionDenied from error
+    except ContributionServiceError:
+        return _detail_error(
+            request, contribution, _("This response cannot be recorded for the PMO hold.")
+        )
+    return redirect("contributions:detail", contribution_id=contribution.pk)
+
+
 def _detail_error(
     request: HttpRequest, contribution: ContributionRecord, error: str
 ) -> HttpResponse:
@@ -277,8 +373,14 @@ def _detail_error(
         "contributions/detail.html",
         {
             "contribution": contribution,
-            "can_verify": _can_verify(request.user, contribution),
+            "can_verify": _can_verify(request.user, contribution)
+            and contribution.status != VerificationStatus.REVOKED
+            and not contribution.hold_active,
             "can_revoke": _can_revoke(request.user, contribution),
+            "can_manage_hold": _can_manage_hold(request.user, contribution),
+            "can_respond_to_hold": _can_respond_to_hold(request.user, contribution),
+            "contribution_reason_max_length": MAX_CONTRIBUTION_REASON_LENGTH,
+            "hold_response_max_length": MAX_HOLD_RESPONSE_LENGTH,
             "decision_choices": [
                 (status, VerificationStatus(status).label)
                 for status in (

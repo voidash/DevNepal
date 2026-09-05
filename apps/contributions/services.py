@@ -30,6 +30,7 @@ from apps.projects.enums import (
 )
 from apps.projects.models import Application, ProjectMaintainer
 from apps.taxonomy.enums import TermVocabulary
+from apps.taxonomy.fields import normalize_nfc
 from apps.taxonomy.models import TaxonomyTerm
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,8 @@ DECISION_STATUSES: frozenset[str] = frozenset(
 )
 PROVIDER_REF_PREFIX = "github"
 DEFAULT_GITHUB_CONTRIBUTION_SLUG = "engineering"
+MAX_CONTRIBUTION_REASON_LENGTH = 2000
+MAX_HOLD_RESPONSE_LENGTH = 4000
 
 
 class ContributionServiceError(Exception):
@@ -55,6 +58,22 @@ class UnauthorizedVerifierError(ContributionServiceError):
 
 class UnauthorizedRevokerError(ContributionServiceError):
     """Actor is not a Super Admin (REC-005)."""
+
+
+class UnauthorizedHoldManagerError(ContributionServiceError):
+    """Actor is not an OTP-verified Super Admin permitted to manage a PMO hold."""
+
+
+class UnauthorizedHoldResponderError(ContributionServiceError):
+    """Actor is not the affected active contributor permitted to answer a PMO hold."""
+
+
+class HoldResponseAlreadyRecordedError(ContributionServiceError):
+    """A bounded contributor response is already recorded for this hold."""
+
+
+class InputTooLongError(ContributionServiceError):
+    """A governance reason or contributor response exceeds its documented boundary."""
 
 
 class SelfApprovalError(ContributionServiceError):
@@ -201,6 +220,11 @@ def verify(
         )
     if record.status == VerificationStatus.REVOKED:
         raise InvalidStatusTransitionError("revoked records cannot be re-verified (REC-005)")
+    if record.hold_active:
+        raise InvalidStatusTransitionError(
+            "PMO-held records must be released before a verification decision can be recorded "
+            "(D4.1)"
+        )
 
     before = {"status": record.status}
     if record.status == VerificationStatus.ACCEPTED:
@@ -304,6 +328,173 @@ def revoke(super_admin, record: ContributionRecord, reason: str) -> Contribution
     return record
 
 
+def place_on_hold(pmo, record: ContributionRecord, reason: str) -> ContributionRecord:
+    """D4.1/REC-006: PMO temporarily holds an unscored outcome for anomaly review.
+
+    This transition deliberately applies only before acceptance.  Accepted work has
+    score and badge side effects and must use the REC-005 revocation flow until a
+    separately designed restoration workflow exists.
+    """
+    reason = _require_reason(reason)
+    _require_hold_manager(pmo, record, action="contribution.hold")
+    with transaction.atomic():
+        locked = ContributionRecord.objects.select_for_update().get(pk=record.pk)
+        if locked.hold_active or locked.status not in {
+            VerificationStatus.CANDIDATE,
+            VerificationStatus.PENDING_INFO,
+        }:
+            _audit_decision(
+                pmo,
+                locked,
+                "contribution.hold.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise InvalidStatusTransitionError(
+                "only unscored candidate or clarification outcomes can be placed on hold (D4.1)"
+            )
+        before = {"status": locked.status, "hold_active": False}
+        locked.held_from_status = locked.status
+        locked.hold_active = True
+        locked.hold_reason = reason
+        locked.held_by = pmo
+        locked.held_at = timezone.now()
+        locked.hold_released_by = None
+        locked.hold_released_at = None
+        locked.hold_release_reason = ""
+        locked.hold_response = ""
+        locked.hold_responded_at = None
+        locked.save(
+            update_fields=[
+                "held_from_status",
+                "hold_active",
+                "hold_reason",
+                "held_by",
+                "held_at",
+                "hold_released_by",
+                "hold_released_at",
+                "hold_release_reason",
+                "hold_response",
+                "hold_responded_at",
+                "updated_at",
+            ]
+        )
+        _audit_decision(
+            pmo,
+            locked,
+            "contribution.held",
+            before,
+            {
+                "status": locked.status,
+                "hold_active": True,
+                "held_from_status": locked.held_from_status,
+                "reason": reason,
+            },
+        )
+    return locked
+
+
+def release_hold(pmo, record: ContributionRecord, reason: str) -> ContributionRecord:
+    """D4.3/REC-006: restore the exact pre-hold unscored outcome with an audit reason."""
+    reason = _require_reason(reason)
+    _require_hold_manager(pmo, record, action="contribution.release_hold")
+    with transaction.atomic():
+        locked = ContributionRecord.objects.select_for_update().get(pk=record.pk)
+        if not locked.hold_active or locked.held_from_status not in {
+            VerificationStatus.CANDIDATE,
+            VerificationStatus.PENDING_INFO,
+        }:
+            _audit_decision(
+                pmo,
+                locked,
+                "contribution.release_hold.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise InvalidStatusTransitionError("only an active PMO hold can be released (D4.3)")
+        before = {"status": locked.status, "hold_active": True}
+        locked.hold_active = False
+        locked.hold_released_by = pmo
+        locked.hold_released_at = timezone.now()
+        locked.hold_release_reason = reason
+        locked.save(
+            update_fields=[
+                "hold_active",
+                "hold_released_by",
+                "hold_released_at",
+                "hold_release_reason",
+                "updated_at",
+            ]
+        )
+        _audit_decision(
+            pmo,
+            locked,
+            "contribution.hold_released",
+            before,
+            {"status": locked.status, "hold_active": False, "reason": reason},
+        )
+    return locked
+
+
+def respond_to_hold(contributor, record: ContributionRecord, response: str) -> ContributionRecord:
+    """D4.2/REC-006: the affected contributor gives one reasoned response while held.
+
+    The response is intentionally bounded to one immutable-in-practice record.  A
+    correction or consolidation decision belongs to the later D4.3 workflow, not
+    to a contributor-controlled edit path.
+    """
+    response = _require_hold_response(response)
+    if (
+        contributor is None
+        or not contributor.is_active
+        or record.contributor_id is None
+        or record.contributor_id != contributor.pk
+    ):
+        _audit_decision(
+            contributor,
+            record,
+            "contribution.hold_response.denied",
+            {"status": record.status},
+            {},
+        )
+        raise UnauthorizedHoldResponderError(
+            "only the affected active contributor can respond to a PMO hold (D4.2)"
+        )
+    with transaction.atomic():
+        locked = ContributionRecord.objects.select_for_update().get(pk=record.pk)
+        if not locked.hold_active:
+            _audit_decision(
+                contributor,
+                locked,
+                "contribution.hold_response.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise InvalidStatusTransitionError("a response can be recorded only while held (D4.2)")
+        if locked.hold_responded_at is not None or locked.hold_response:
+            _audit_decision(
+                contributor,
+                locked,
+                "contribution.hold_response.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise HoldResponseAlreadyRecordedError(
+                "a contributor response is already recorded for this PMO hold (D4.2)"
+            )
+        locked.hold_response = response
+        locked.hold_responded_at = timezone.now()
+        locked.save(update_fields=["hold_response", "hold_responded_at", "updated_at"])
+        _audit_decision(
+            contributor,
+            locked,
+            "contribution.hold_responded",
+            {"status": locked.status},
+            {"status": locked.status, "response": response},
+        )
+    return locked
+
+
 def accepted_contributions(member):
     """REC-001: the recognition and verified-portfolio basis is ACCEPTED records only."""
     return member.contributions.filter(status=VerificationStatus.ACCEPTED).select_related(
@@ -326,9 +517,25 @@ def link_profile_credit(record: ContributionRecord) -> ContributionRecord:
 
 
 def _require_reason(reason: str) -> str:
-    stripped = (reason or "").strip()
+    stripped = normalize_nfc(reason or "")
     if not stripped:
         raise MissingReasonError("a reason is required for every contribution decision (GOV-005)")
+    if len(stripped) > MAX_CONTRIBUTION_REASON_LENGTH:
+        raise InputTooLongError(
+            "a contribution decision reason cannot exceed "
+            f"{MAX_CONTRIBUTION_REASON_LENGTH} characters"
+        )
+    return stripped
+
+
+def _require_hold_response(response: str) -> str:
+    stripped = normalize_nfc(response or "")
+    if not stripped:
+        raise MissingReasonError("a contributor response is required for a PMO hold (D4.2)")
+    if len(stripped) > MAX_HOLD_RESPONSE_LENGTH:
+        raise InputTooLongError(
+            f"a PMO hold response cannot exceed {MAX_HOLD_RESPONSE_LENGTH} characters"
+        )
     return stripped
 
 
@@ -346,6 +553,18 @@ def _is_authorized_verifier(verifier, record: ContributionRecord) -> bool:
     return ProjectMaintainer.objects.filter(
         project_id=record.project_id, user_id=verifier.pk
     ).exists()
+
+
+def _require_hold_manager(actor, record: ContributionRecord, *, action: str) -> None:
+    if actor is None or not actor.is_active or not actor.is_superuser:
+        _audit_decision(actor, record, f"{action}.denied", {"status": record.status}, {})
+        raise UnauthorizedHoldManagerError("PMO outcome holds require a Super Admin (D4.1)")
+    require_privileged_mfa(
+        actor,
+        action=action,
+        obj=record,
+        error_type=UnauthorizedHoldManagerError,
+    )
 
 
 def _is_valid_second_approver(approver, verifier, record: ContributionRecord) -> bool:

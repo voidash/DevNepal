@@ -15,7 +15,13 @@
         <div>
           <h2 class="dn-issue-title"><a href="{% url 'contributions:detail' contribution.pk %}">{{ contribution.title }}</a></h2>
           <p class="dn-issue-meta">{{ contribution.project.localized_title }} · {{ contribution.contributor.username }}</p>
-          <p class="dn-issue-meta">{{ contribution.contribution_type.label }} · {{ contribution.get_status_display }}</p>
+          <p class="dn-issue-meta">{{ contribution.contribution_type.label }} · {{ contribution.get_status_display }} · {% trans "Evidence source:" %} {{ contribution.get_source_display }}</p>
+          <p class="dn-issue-meta">
+            {% if contribution.has_recorded_automated_check %}{% trans "Automated check: provider event reference recorded" %}{% else %}{% trans "Automated check: no provider check recorded" %}{% endif %}
+            · {% trans "Age:" %} {{ contribution.created_at|timesince }}
+            · {% trans "Review SLA:" %} {{ contribution.project.get_response_sla_display }}
+          </p>
+          <p class="dn-issue-meta">{% trans "Escalation:" %} {% if contribution.project.escalation_path %}{{ contribution.project.escalation_path }}{% else %}{% trans "No escalation path has been recorded for this project." %}{% endif %}</p>
         </div>
         <div class="dn-issue-aside"><a class="btn btn--secondary" href="{% url 'contributions:detail' contribution.pk %}">{% trans "Review evidence" %}</a></div>
       </article>
@@ -23,6 +29,25 @@
       <p role="status">{% trans "No candidate evidence needs your review." %}</p>
       {% endfor %}
     </div>
+    {% if held_contributions %}
+    <section class="section" aria-labelledby="pmo-held-heading">
+      <h2 id="pmo-held-heading">{% trans "PMO anomaly holds" %}</h2>
+      <p>{% trans "Held outcomes are unavailable for publisher decisions until PMO records a reasoned release. Hold reasons remain in the decision history." %}</p>
+      <div class="dn-issue-list">
+        {% for contribution in held_contributions %}
+        <article class="dn-issue-row">
+          {% include "components/status_octicon.html" with project_status=contribution.status %}
+          <div>
+            <h3 class="dn-issue-title"><a href="{% url 'contributions:detail' contribution.pk %}">{{ contribution.title }}</a></h3>
+            <p class="dn-issue-meta">{{ contribution.project.localized_title }} · {% trans "Held from" %} {{ contribution.get_held_from_status_display }}</p>
+            <p class="dn-issue-meta">{% trans "Reason:" %} {{ contribution.hold_reason }}</p>
+          </div>
+          <div class="dn-issue-aside"><a class="btn btn--secondary" href="{% url 'contributions:detail' contribution.pk %}">{% trans "Review hold" %}</a></div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
   </div>
 </section>
 {% endblock %}
