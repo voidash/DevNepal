@@ -15,6 +15,29 @@
       </dl>
     </header>
 
+    {% if recommendations %}
+    <section class="dn-recommendations" aria-labelledby="recommended-heading">
+      <div class="dn-section-heading-row">
+        <div>
+          <p class="dn-section-kicker">{% trans "Member matches" %}</p>
+          <h2 id="recommended-heading">{% trans "Recommended for you" %}</h2>
+        </div>
+      </div>
+      <p>{% trans "These suggestions use only the skills and contribution preferences you have chosen to add to your member profile." %}</p>
+      <div class="dn-catalog-results dn-catalog-results--grid">
+        {% for recommendation in recommendations %}
+        <article class="card blueprint">
+          <h3><a href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a></h3>
+          <p>{{ recommendation.project.localized_summary }}</p>
+          <div class="dn-catalog-card__tags">
+            {% for reason in recommendation.reasons %}<span class="Label Label--secondary">{{ reason }}</span>{% endfor %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
     <form class="blueprint dn-sheet catalog-filter" method="get" role="search">
       <div class="dn-sheet__header"><span>{% trans "Project catalog" %}</span><span>{% trans "Search and filters" %}</span></div>
       {% if project_type %}<input name="type" type="hidden" value="{{ project_type }}">{% endif %}
