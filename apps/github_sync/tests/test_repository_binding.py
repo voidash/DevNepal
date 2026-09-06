@@ -1,5 +1,6 @@
 import sys
 import types
+from types import SimpleNamespace
 
 import pytest
 from django.urls import reverse
@@ -21,6 +22,7 @@ from apps.ministries.tests.factories import (
     SuperAdminFactory,
     UserFactory,
 )
+from apps.projects.enums import ProjectStatus
 from apps.projects.tests.factories import PersonalProjectFactory, ProjectFactory
 from apps.taxonomy.tests.factories import ApprovedLicenseFactory
 
@@ -152,16 +154,29 @@ def test_configured_demo_publisher_can_move_exact_repository_to_own_new_project(
     assert repository.project.title_en == "Accessible Research Workspace"
 
 
-def test_publisher_project_filter_lists_exact_org_repository(client, settings):
+def test_publisher_project_filter_lists_exact_org_repository(client, settings, monkeypatch):
     """GIT-003/AUTH-006: ministry App binding needs no personal GitHub OAuth link."""
     publisher = MinistryPublisherFactory()
     project = ProjectFactory(
+        ready=True,
         ministry=publisher.ministry,
         repository_url="https://github.com/dhm-np/flood-alert-gateway",
     )
+    project.license = ApprovedLicenseFactory(is_approved=True)
+    project.save(update_fields=["license"])
     settings.GITHUB_APP_ID = "987654"
     settings.GITHUB_APP_PRIVATE_KEY = TEST_APP_KEY_PEM
     settings.PRIVILEGED_MFA_BYPASS = True
+    settings.DEMO_ONE_CLICK_PUBLISH_USERNAMES = [publisher.user.username]
+    refreshed = []
+
+    def refresh_snapshot(repository, _client):
+        refreshed.append(repository.pk)
+        return SimpleNamespace(issues=4, pull_requests=2, contributors=3)
+
+    monkeypatch.setattr(
+        "apps.github_sync.views.refresh_public_repository_snapshot", refresh_snapshot
+    )
 
     def transport(request):
         url = request["url"]
@@ -228,10 +243,13 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     )
 
     assert response.status_code == 302
-    assert response.url == reverse("projects:authoring_detail", args=[project.slug])
+    assert response.url == reverse("projects:detail", args=[project.slug])
     repository = RepositoryConnection.objects.get(repository_id=1001)
     assert repository.project == project
     assert repository.activated_by == publisher.user
+    project.refresh_from_db()
+    assert project.status == ProjectStatus.OPEN_FOR_CONTRIBUTION
+    assert refreshed == [repository.pk]
 
     project.ministry = MinistryOrganizationFactory()
     project.save(update_fields=["ministry", "updated_at"])
@@ -242,7 +260,6 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     )
     duplicate.license = ApprovedLicenseFactory(is_approved=True)
     duplicate.save(update_fields=["license"])
-    settings.DEMO_ONE_CLICK_PUBLISH_USERNAMES = [publisher.user.username]
     reused = client.post(
         reverse("github_sync:connect_repository"),
         {"project_id": str(duplicate.pk)},
@@ -255,6 +272,7 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     assert repository.project == duplicate
     assert repository.project.ministry == publisher.ministry
     assert duplicate.status == "open_for_contribution"
+    assert refreshed == [repository.pk, repository.pk]
 
 
 def test_cross_ministry_project_filter_is_not_found(client, settings):

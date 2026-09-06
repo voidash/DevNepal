@@ -367,6 +367,49 @@ def _render_connect_repository(request, client, connection, project=None) -> Htt
     )
 
 
+def _finish_demo_repository_connection(request, client, repository, project) -> HttpResponse:
+    """GIT-003/GIT-010: snapshot GitHub before exposing a connected demo project."""
+    try:
+        snapshot = refresh_public_repository_snapshot(repository, client)
+        publish_by_publisher(request.user, project)
+    except GithubAppError:
+        logger.exception(
+            "Initial GitHub snapshot failed during demo connection "
+            "(member=%s project=%s repository=%s)",
+            request.user.pk,
+            project.pk,
+            repository.pk,
+        )
+        messages.error(
+            request,
+            _("Repository connected, but GitHub activity could not be loaded. Try again."),
+        )
+        return redirect("projects:authoring_detail", slug=project.slug)
+    except ProjectLifecycleError as error:
+        logger.exception(
+            "Demo project publication failed after repository snapshot "
+            "(member=%s project=%s repository=%s)",
+            request.user.pk,
+            project.pk,
+            repository.pk,
+        )
+        messages.error(request, str(error))
+        return redirect("projects:authoring_detail", slug=project.slug)
+    messages.success(
+        request,
+        _(
+            "Repository connected and project published with %(issues)s issues, "
+            "%(pull_requests)s pull requests, and %(contributors)s contributors."
+        )
+        % {
+            "issues": snapshot.issues,
+            "pull_requests": snapshot.pull_requests,
+            "contributors": snapshot.contributors,
+        },
+    )
+    return redirect("projects:detail", slug=project.slug)
+
+
 def _enroll_repository(request, client, connection, project=None) -> HttpResponse:
     installation_id = request.POST.get("installation_id")
     repository_id = request.POST.get("repository_id")
@@ -415,9 +458,9 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             demo_publishers = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
             if request.user.username in demo_publishers:
                 try:
-                    with transaction.atomic():
-                        rebind_repository_for_demo(request.user, existing_connection, project)
-                        publish_by_publisher(request.user, project)
+                    outcome = rebind_repository_for_demo(
+                        request.user, existing_connection, project
+                    )
                 except (RepositoryBindingError, ProjectLifecycleError):
                     logger.exception(
                         "Demo repository rebind or publication failed "
@@ -431,8 +474,9 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
                         _("The repository connected, but the project is not ready to publish."),
                     )
                     return redirect("projects:authoring_detail", slug=project.slug)
-                messages.success(request, _("Repository connected and project published."))
-                return redirect("projects:detail", slug=project.slug)
+                return _finish_demo_repository_connection(
+                    request, client, outcome.connection, project
+                )
             messages.info(
                 request,
                 _("This repository is already connected. The existing project has been opened."),
@@ -474,6 +518,11 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             status=400,
         )
     if binding_outcome is not None and binding_outcome.bound:
+        demo_publishers = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
+        if project is not None and request.user.username in demo_publishers:
+            return _finish_demo_repository_connection(
+                request, client, binding_outcome.connection, project
+            )
         messages.success(request, _("Repository connected to the project."))
     elif outcome.created:
         messages.success(
