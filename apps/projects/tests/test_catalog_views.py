@@ -230,13 +230,13 @@ def test_home_keeps_technical_writing_off_the_minimal_visitor_entry(client):
 
 
 @pytest.mark.unit
-def test_home_sends_policy_detail_to_guidance_instead_of_repeating_it(client):
-    """DSC-001/GOV-007: the stripped home links to guidance and keeps the ministry CTA."""
+def test_home_states_listing_boundaries_and_links_to_full_guidance(client):
+    """DSC-001/GOV-007: the compact home states its boundary and links to details."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
 
-    assert "What DevNepal verifies" not in content
-    assert 'aria-labelledby="safeguards-heading"' not in content
+    assert "What DevNepal verifies" in content
+    assert 'aria-labelledby="safeguards-heading"' in content
     assert reverse("projects:about") in content
     assert 'aria-labelledby="ministry-cta-heading"' in content
 
@@ -282,7 +282,7 @@ def test_home_exposes_compact_live_metrics_and_the_github_contribution_path(clie
     assert "A named officer publishes" in content
     assert "You pick an issue" in content
     assert "You contribute on GitHub" in content
-    assert "Nine ways to contribute" not in content
+    assert "Nine ways to contribute" in content
     assert "Community projects" not in content
     assert "People in the directory" not in content
     assert "Technical writing" not in content

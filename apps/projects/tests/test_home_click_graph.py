@@ -79,14 +79,14 @@ def test_home_exposes_only_the_validated_catalog_and_issue_destinations(client):
 
 
 @pytest.mark.unit
-def test_home_uses_one_four_step_journey_instead_of_a_filter_wall(client):
-    """DSC-001/GOV-008: the first visit explains the GitHub flow without category overload."""
+def test_home_names_nine_contribution_routes_then_shows_one_four_step_journey(client):
+    """DSC-001/GOV-008: the first visit names every route before the GitHub flow."""
     response = client.get(reverse("projects:home"))
     content = response.content.decode()
     assert "From public project to GitHub contribution" in content
     assert content.count('class="dn-journey-step"') == 4
-    assert 'class="dn-way-line"' not in content
-    assert "Nine ways to contribute" not in content
+    assert 'class="dn-way-line"' in content
+    assert "Nine ways to contribute" in content
 
 
 @pytest.mark.unit
@@ -130,7 +130,7 @@ def test_home_chapters_use_one_work_band_without_secondary_product_sections():
     assert 'aria-labelledby="community-heading"' not in home
     assert 'aria-labelledby="people-heading"' not in home
     assert 'aria-labelledby="writing-heading"' not in home
-    assert 'aria-labelledby="safeguards-heading"' not in home
+    assert 'aria-labelledby="safeguards-heading"' in home
     assert "dn-home--mute" not in home
     assert 'id="path-heading"' in mechanism
     assert "dn-journey" in mechanism
@@ -147,8 +147,10 @@ def test_home_tells_one_story_from_hero_to_the_ministry_cta(client):
     content = response.content.decode()
     ordered = (
         'id="hero-heading"',
+        'id="contribution-path-heading"',
         'id="path-heading"',
         'id="opportunities-heading"',
+        'id="safeguards-heading"',
         'id="ministry-cta-heading"',
     )
     positions = [content.index(marker) for marker in ordered]

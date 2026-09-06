@@ -3,9 +3,10 @@
 {% block title %}DevNepal — {% trans "public technology projects from the Government of Nepal" %}{% endblock %}
 {% block meta_description %}{% trans "Browse Government of Nepal technology projects open to public contribution. Work happens on GitHub, and contributing needs no DevNepal account." %}{% endblock %}
 {% block content %}
-{% comment %} One short visitor story: what this is, how contribution works,
-   what government work is open, and how a ministry publishes. Secondary
-   products stay implemented but do not compete with this demo path. {% endcomment %}
+{% comment %} One short visitor story: what this is, the nine contribution
+   routes, how the GitHub flow works, what government work is open, what a
+   listing guarantees, and how a ministry publishes. Secondary products stay
+   implemented but do not compete with this demo path. {% endcomment %}
 <section class="hero" aria-labelledby="hero-heading">
   <div class="container">
     <div class="dn-home-hero">
@@ -67,6 +68,31 @@
 
 <section class="section dn-home" aria-labelledby="path-heading">
   <div class="container">
+    <div class="dn-contribution-model">
+      <header>
+        <span class="dn-section-kicker">{% trans "Who can contribute" %}</span>
+        <h2 id="contribution-path-heading">{% trans "Nine ways to contribute" %}</h2>
+        <p>{% trans "Writing code is one of them. Design, testing, security, data, documentation, Nepali translation, research and community support all count. A named maintainer verifies accepted work of every kind." %}</p>
+        <ul class="dn-way-line" aria-label="{% trans 'All nine contribution types' %}">
+          <li>{% trans "Engineering" %}</li>
+          <li>{% trans "UI/UX" %}</li>
+          <li>{% trans "QA" %}</li>
+          <li>{% trans "Security" %}</li>
+          <li>{% trans "Data" %}</li>
+          <li>{% trans "Documentation" %}</li>
+          <li>{% trans "Localization" %}</li>
+          <li>{% trans "Research" %}</li>
+          <li>{% trans "Community support" %}</li>
+        </ul>
+        <a class="dn-arrow-link" href="{% url 'projects:about' %}">{% trans "How to contribute" %} →</a>
+      </header>
+      <div class="dn-contribution-grid">
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=engineering">{% trans "Code and data" %}</a></h3><p>{% trans "Repository work, including tasks a project has marked for a first contribution." %}</p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=uiux">{% trans "Design and research" %}</a></h3><p>{% trans "Interface work, user research and accessibility audits." %}</p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=documentation">{% trans "Documentation and Nepali" %}</a></h3><p>{% trans "Guides, readme files and translation into Nepali." %}</p></article>
+        <article class="blueprint"><h3><a href="{% url 'projects:government' %}?contribution_type=qa">{% trans "Testing and security" %}</a></h3><p>{% trans "Test plans, bug reproductions and responsible disclosure." %}</p></article>
+      </div>
+    </div>
     <div class="dn-path">
       <p class="dn-section-kicker">{% trans "How it works" %}</p>
       <h2 id="path-heading">{% trans "From public project to GitHub contribution" %}</h2>
@@ -117,6 +143,35 @@
     {% else %}
     <div class="dn-empty" role="status"><strong>{% trans "Government opportunities are being prepared." %}</strong><p>{% trans "They appear only after a named owner, contribution guidance, and suitability review are complete." %}</p><a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a></div>
     {% endif %}
+  </div>
+</section>
+
+<section class="section dn-home dn-home--band" aria-labelledby="safeguards-heading">
+  <div class="container">
+    <header class="dn-home-section-heading">
+      <div>
+        <span class="dn-section-kicker">{% trans "What to expect" %}</span>
+        <h2 id="safeguards-heading">{% trans "What a listing means" %}</h2>
+        <p>{% trans "DevNepal is the public register of this work. Issues, pull requests and review stay on GitHub." %}</p>
+      </div>
+      <a class="dn-arrow-link" href="{% url 'projects:about' %}">{% trans "How to contribute" %} →</a>
+    </header>
+    <div class="dn-safeguards">
+      <article class="blueprint">
+        <h3>{% trans "What DevNepal verifies" %}</h3>
+        <ul>
+          <li>{% trans "A government project names its officer and its maintainer, and passes a suitability review, before it is published." %}</li>
+          <li>{% trans "An accepted contribution keeps a public record of its evidence and the decision. Activity on its own is not counted." %}</li>
+        </ul>
+      </article>
+      <article class="blueprint">
+        <h3>{% trans "What DevNepal does not promise" %}</h3>
+        <ul>
+          <li>{% trans "A listing is not an employment offer, a procurement commitment, or a guarantee that your work will be accepted." %}</li>
+          <li>{% trans "DevNepal does not host code. Branches, issues, pull requests and CI stay with the project’s repository." %}</li>
+        </ul>
+      </article>
+    </div>
   </div>
 </section>
 
