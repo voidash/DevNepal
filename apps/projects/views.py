@@ -83,6 +83,7 @@ from apps.projects.services import (
     archive,
     assign_maintainer,
     assign_reviewer,
+    can_delete_live_demo_project,
     can_view_timeline,
     cancel,
     check_publish_readiness,
@@ -96,6 +97,7 @@ from apps.projects.services import (
     current_community_terms_version,
     decide_application,
     delete_draft,
+    delete_live_demo_project,
     extend_deadline,
     has_accepted_community_terms,
     latest_public_update,
@@ -902,6 +904,7 @@ def _authoring_context(
         "suitability": suitability,
         "publish_readiness_violations": check_publish_readiness(project),
         "github_app_configured": github_app_client().is_configured,
+        "can_delete_live_demo_project": can_delete_live_demo_project(user, project),
         "can_confirm_suitability": user.is_superuser and suitability is not None,
         "system_label": _("System"),
     }
@@ -1453,16 +1456,25 @@ def completion_summary(request: HttpRequest, slug: str) -> HttpResponse:
 @privileged_mfa_required
 @require_POST
 def authoring_delete(request: HttpRequest, slug: str) -> HttpResponse:
-    """GOV-001/SEC-008: delete an authorized, unconnected ministry draft."""
+    """GOV-001/SEC-008: delete a draft or an explicitly confirmed demo-owned live project."""
     project = _manageable_project_or_404(request.user, slug)
     try:
-        delete_draft(request.user, project)
+        if project.status == ProjectStatus.DRAFT:
+            delete_draft(request.user, project)
+            success_message = _("Draft deleted.")
+        else:
+            if request.POST.get("confirm_slug") != project.slug:
+                raise ProjectLifecycleError(
+                    _("Confirm the exact project before deleting this live demo listing.")
+                )
+            delete_live_demo_project(request.user, project)
+            success_message = _("Demo project deleted. Its repository can be connected again.")
     except ProjectAuthorizationError as error:
         raise PermissionDenied from error
     except ProjectLifecycleError as error:
         messages.error(request, str(error))
         return redirect("projects:authoring_detail", slug=project.slug)
-    messages.success(request, _("Draft deleted."))
+    messages.success(request, success_message)
     return redirect("projects:authoring_dashboard")
 
 

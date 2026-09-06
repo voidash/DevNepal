@@ -192,6 +192,16 @@
       <button class="btn btn--danger" type="submit">{% trans "Delete draft permanently" %}</button>
     </form>
   </details>
+  {% elif can_delete_live_demo_project %}
+  <details class="dn-danger-zone">
+    <summary>{% trans "Delete this demo project" %}</summary>
+    <p>{% trans "This permanently removes the live demo listing and its generated activity. The GitHub repository stays available to connect to another project." %}</p>
+    <form action="{% url 'projects:authoring_delete' project.slug %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="confirm_slug" value="{{ project.slug }}">
+      <button class="btn btn--danger" type="submit">{% trans "Delete live demo project permanently" %}</button>
+    </form>
+  </details>
   {% endif %}
 </div>
 {% else %}

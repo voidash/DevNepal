@@ -18,6 +18,7 @@ from urllib.request import urlopen
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext
@@ -554,6 +555,100 @@ def delete_draft(publisher, project: Project) -> None:
             correlation_id=uuid.uuid4().hex,
         )
         locked.delete()
+
+
+def can_delete_live_demo_project(actor, project: Project) -> bool:
+    """GOV-001/SEC-008: expose destructive cleanup only to its configured demo owner."""
+    allowed = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
+    return bool(
+        actor
+        and actor.is_active
+        and actor.is_authenticated
+        and actor.username in allowed
+        and project.project_type == ProjectType.GOVERNMENT
+        and project.owner_id == actor.pk
+        and is_publisher_active(actor, project.ministry)
+    )
+
+
+def _delete_stored_project_files(attachments, evidence_files) -> None:
+    for stored_file in (*attachments, *evidence_files):
+        if not stored_file.name:
+            continue
+        try:
+            stored_file.storage.delete(stored_file.name)
+        except Exception:
+            logger.exception("Demo project file cleanup failed for %s", stored_file.name)
+
+
+def delete_live_demo_project(publisher, project: Project) -> None:
+    """GOV-001/SEC-008: transactionally remove one owned live project in demo mode.
+
+    Normal project records remain append-only. This escape hatch is disabled unless
+    the actor is explicitly configured for one-click demo publishing.
+    """
+    if not can_delete_live_demo_project(publisher, project):
+        record_audit(
+            actor=publisher,
+            action="project.demo_live_delete.denied",
+            obj=project,
+            result="failure",
+        )
+        raise ProjectAuthorizationError("live project deletion is limited to its demo owner")
+    if project.status == ProjectStatus.DRAFT:
+        raise ProjectLifecycleError("use draft deletion for an unpublished project")
+    if project.official_blog_posts.exists():
+        raise ProjectLifecycleError("remove official articles before deleting this demo project")
+
+    attachments = [item.file for item in project.attachments.exclude(file="")]
+    evidence_files = [
+        item.evidence_file for item in project.contributions.exclude(evidence_file="")
+    ]
+    try:
+        with transaction.atomic():
+            locked = Project.objects.select_for_update().get(pk=project.pk)
+            if not can_delete_live_demo_project(publisher, locked):
+                raise ProjectAuthorizationError(
+                    "live project deletion is limited to its demo owner"
+                )
+            if locked.status == ProjectStatus.DRAFT:
+                raise ProjectLifecycleError("use draft deletion for an unpublished project")
+            if locked.official_blog_posts.exists():
+                raise ProjectLifecycleError(
+                    "remove official articles before deleting this demo project"
+                )
+
+            snapshot = {
+                **_status_payload(locked),
+                "title_en": locked.title_en,
+                "slug": locked.slug,
+                "repository_names": list(
+                    locked.repository_connections.values_list("full_name", flat=True)
+                ),
+            }
+            record_audit(
+                actor=publisher,
+                action="project.demo_live_deleted",
+                obj=locked,
+                before=snapshot,
+                after={"deleted": True},
+                correlation_id=uuid.uuid4().hex,
+            )
+            locked.reviews.all().delete()
+            ProjectReviewAssignment.objects.filter(project=locked).delete()
+            locked.versions.all().delete()
+            locked.applications.all().delete()
+            locked.contributions.all().delete()
+            locked.analytics_events.all().delete()
+            locked.delete()
+            transaction.on_commit(
+                lambda: _delete_stored_project_files(attachments, evidence_files)
+            )
+    except ProtectedError as error:
+        logger.exception("Unexpected protected record blocked demo project deletion")
+        raise ProjectLifecycleError(
+            "this project still has protected records and could not be deleted"
+        ) from error
 
 
 def projects_for_publisher(user):
