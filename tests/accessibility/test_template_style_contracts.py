@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260905\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906b\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -76,10 +76,10 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert 'class="dn-header-search" role="search"' not in base
     assert 'class="lang-switch"' in base
     assert "dn-state-banner" in base and "is-success" in base and "is-danger" in base
-    assert "--color-bg: #f2f2f3;" in tokens_css
-    assert "--color-surface: #e9e9ea;" in tokens_css
-    assert "--color-text: #1d1f20;" in tokens_css
-    assert "--color-accent: #3b6fd4;" in tokens_css
+    assert "--color-bg: #f2f5f7;" in tokens_css
+    assert "--color-surface: #e5e9ee;" in tokens_css
+    assert "--color-text: #181c20;" in tokens_css
+    assert "--color-accent: #5395fc;" in tokens_css
     assert 'font-family: "Barlow Condensed"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css

@@ -32,20 +32,20 @@
 .dn-section-kicker { display: block; margin-bottom: var(--space-2); color: var(--color-accent-700); font-size: var(--fs-sm); font-weight: 600; letter-spacing: 0; text-transform: none; }
 
 /* ── buttons ────────────────────────────────────────────────────────────── */
-.btn { display: inline-flex; min-height: var(--target-min); align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-paper); font-family: var(--font-body); font-size: 14px; font-weight: 600; line-height: 1.2; letter-spacing: 0; text-decoration: none; text-transform: none; cursor: pointer; transition: background-color .12s ease, border-color .12s ease, color .12s ease; }
+.btn { display: inline-flex; min-height: var(--control-lg); align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-paper); font-family: var(--font-body); font-size: var(--fs-sm); font-weight: 600; line-height: 1.2; letter-spacing: 0; text-decoration: none; text-transform: none; cursor: pointer; transition: background-color .12s ease, border-color .12s ease, color .12s ease; }
 .btn:hover { border-color: var(--color-text); background: var(--color-neutral-100); color: var(--color-text); }
 .btn:active { background: var(--color-neutral-200); }
-.btn--primary, .btn-primary { border-color: var(--color-accent-700); color: var(--color-paper); background: var(--color-accent-700); }
-.btn--primary:hover, .btn-primary:hover { border-color: var(--color-accent-800); color: var(--color-paper); background: var(--color-accent-800); }
+.btn--primary, .btn-primary { border-color: var(--color-action); color: var(--color-action-fg); background: var(--color-action); }
+.btn--primary:hover, .btn-primary:hover { border-color: var(--color-action-hover); color: var(--color-action-fg); background: var(--color-action-hover); }
 .btn--secondary { border-color: var(--color-divider-strong); background: var(--color-paper); }
 .btn--ghost { border-color: transparent; background: transparent; }
 .btn--ghost:hover { border-color: var(--color-divider-strong); background: var(--color-paper); }
 .btn--danger { border-color: var(--color-error); color: var(--color-paper); background: var(--color-error); }
-.btn-sm { min-height: 34px; padding: var(--space-1) var(--space-3); font-size: var(--fs-sm); }
+.btn-sm { min-height: var(--control-sm); padding: var(--space-1) var(--space-3); font-size: var(--fs-sm); }
 .button-group, .hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 
 /* ── labels and counters ────────────────────────────────────────────────── */
-.Label, .badge, .tag { display: inline-flex; align-items: center; gap: 5px; width: fit-content; padding: 2px var(--space-2); border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--color-neutral-800); background: var(--color-neutral-100); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; line-height: 1.55; white-space: nowrap; }
+.Label, .badge, .tag { display: inline-flex; min-height: var(--badge-h); align-items: center; gap: var(--space-1); width: fit-content; padding: 0 var(--space-2); border: 1px solid transparent; border-radius: var(--radius-md); color: var(--color-neutral-800); background: var(--color-neutral-100); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; line-height: var(--lh-tight); white-space: nowrap; }
 .Label svg, .tag svg { flex: none; }
 .Label--accent, .tag-accent { color: var(--color-accent-800); background: var(--color-accent-100); }
 .Label--outline, .tag-outline { border-color: var(--color-accent-300); color: var(--color-accent-800); background: var(--color-accent-100); }
@@ -53,7 +53,7 @@
 .Label--attention, .tag-warning { color: var(--color-attention); background: var(--color-attention-subtle); }
 .Label--danger, .tag-error { color: var(--color-error); background: var(--color-error-subtle); }
 .Label--secondary, .Label--severe, .tag-neutral { color: var(--color-neutral-700); background: var(--color-neutral-100); }
-.Counter { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; padding: 0 6px; border: 1px solid var(--color-divider); border-radius: var(--radius-pill); color: var(--color-neutral-700); font-size: var(--fs-xs); font-weight: 600; line-height: 18px; font-variant-numeric: tabular-nums; }
+.Counter { display: inline-flex; min-height: var(--badge-h); align-items: center; justify-content: center; min-width: var(--badge-h); padding: 0 var(--space-2); border: 1px solid var(--color-divider); border-radius: var(--radius-pill); color: var(--color-neutral-700); font-size: var(--fs-xs); font-weight: 600; line-height: var(--lh-tight); font-variant-numeric: tabular-nums; }
 
 /* A queue row states its condition in three pixels of ink beside the text it
    qualifies; it is a rule, not a decorative dot. */
@@ -66,14 +66,31 @@
 .dn-empty p, .dn-empty-state p { max-width: 62ch; margin: 0; color: var(--color-neutral-700); }
 .dn-empty .btn, .dn-empty-state .btn { margin-top: var(--space-2); }
 
-.dn-notice { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: baseline; padding: var(--space-3) var(--space-4); margin: 0 0 var(--space-5); border: 1px solid var(--color-accent-300); border-radius: var(--radius-md); background: var(--color-accent-100); color: var(--color-accent-800); font-size: 14px; }
+.dn-notice { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: baseline; padding: var(--space-3) var(--space-4); margin: 0 0 var(--space-5); border: 1px solid var(--color-accent-300); border-radius: var(--radius-md); background: var(--color-accent-100); color: var(--color-accent-800); font-size: var(--fs-sm); }
 .dn-notice strong { font-weight: 600; }
 
 /* ── forms ──────────────────────────────────────────────────────────────── */
 .field, .dn-field { display: grid; gap: var(--space-1); margin-bottom: var(--space-4); }
 .field label, .field legend, .dn-field label, .dn-field legend { color: var(--color-neutral-800); font-size: var(--fs-sm); font-weight: 600; }
-.field input, .field select, .field textarea, .dn-field input, .dn-field select, .dn-field textarea, .form-control, .filterbar input, .filterbar select { width: 100%; min-height: 40px; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-paper); font: inherit; font-size: 14px; }
+.field input, .field select, .field textarea, .dn-field input, .dn-field select, .dn-field textarea, .form-control, .filterbar input, .filterbar select { width: 100%; min-height: var(--control-md); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-paper); font: inherit; font-size: var(--fs-sm); }
 .field textarea, .dn-field textarea { min-height: 96px; resize: vertical; }
+
+/* One dropdown across the platform. The native control put its chevron hard
+   against the right edge in the operating system's own grey, at a different
+   weight from every other mark on the page; this draws the arrow from the token
+   set, sets it one space in from the edge, and reserves room so a long option
+   can never run under it. */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  padding-right: var(--space-8);
+  background-image: var(--icon-chevron);
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 16px 16px;
+  text-overflow: ellipsis;
+}
+select:not([multiple]):not([size]):hover { background-image: var(--icon-chevron-accent); }
+select::-ms-expand { display: none; }
 .field input:hover, .field select:hover, .field textarea:hover, .dn-field input:hover, .dn-field select:hover, .dn-field textarea:hover, .form-control:hover { border-color: var(--color-neutral-600); }
 .field input:focus, .dn-field input:focus, .field textarea:focus, .dn-field textarea:focus, .field select:focus, .dn-field select:focus { border-color: var(--color-accent); }
 .dn-field select[multiple] { min-height: 140px; }
@@ -88,7 +105,7 @@
 
 /* ── tables ─────────────────────────────────────────────────────────────── */
 .table-scroll { overflow-x: auto; }
-.data-table, .dn-data-table, .dn-metrics-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table, .dn-data-table, .dn-metrics-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .data-table th, .dn-data-table th, .dn-metrics-table th { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-divider); color: var(--color-neutral-600); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
 .data-table td, .dn-data-table td, .dn-metrics-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-divider); vertical-align: middle; }
 .data-table tbody tr:last-child td, .dn-data-table tbody tr:last-child td { border-bottom: 0; }
@@ -105,7 +122,7 @@
 
 /* ── tabs and pagination ────────────────────────────────────────────────── */
 .pagination, .pagination__list, .dn-tabs, .dn-steps { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
-.pagination a, .pagination__current { display: inline-flex; min-height: 36px; align-items: center; padding: 0 var(--space-3); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); text-decoration: none; }
+.pagination a, .pagination__current { display: inline-flex; min-height: var(--control-md); align-items: center; padding: 0 var(--space-3); border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); color: var(--color-text); text-decoration: none; }
 .pagination__current { border-color: var(--color-accent-700); color: var(--color-paper); background: var(--color-accent-700); }
 
 /* ── rows: the list grammar shared by queues, catalogues and feeds ──────── */
