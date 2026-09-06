@@ -14,7 +14,6 @@ from apps.ministries.forms import (
     ContactConfirmationForm,
     MinistryActionForm,
     MinistryOnboardingRequestForm,
-    MinistryOrganizationForm,
     OnboardingRequestDeclineForm,
     PublisherActionForm,
     PublisherCreateForm,
@@ -35,7 +34,6 @@ from apps.ministries.services import (
     create_publisher,
     decline_onboarding_request,
     log_onboarding_request,
-    provision_ministry,
     provision_onboarding_request,
     reissue_official_contact_challenge,
     revoke_organization,
@@ -186,22 +184,9 @@ def onboarding_request_decline(request, reference):
 @privileged_mfa_required
 @require_http_methods(["GET", "POST"])
 def organization_create(request):
-    """AUTH-004/ADM-001: create a ministry through the audited provisioning service."""
+    """D1.1: retain the legacy route only as an entry point to accountable onboarding."""
     _require_super_admin(request.user)
-    form = MinistryOrganizationForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        try:
-            ministry = provision_ministry(request.user, **form.cleaned_data)
-        except MinistryProvisioningError as exc:
-            form.add_error(None, str(exc))
-        else:
-            return redirect("ministries:organization_detail", slug=ministry.slug)
-    return render(
-        request,
-        "ministries/organization_form.html",
-        {"form": form},
-        status=400 if form.errors else 200,
-    )
+    return redirect("ministries:onboarding_request_create")
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))
@@ -210,15 +195,25 @@ def organization_create(request):
 def organization_detail(request, slug):
     """AUTH-004: show one organization and its named publisher history to a Super Admin."""
     _require_super_admin(request.user)
-    ministry = get_object_or_404(MinistryOrganization, slug=slug)
+    ministry = get_object_or_404(
+        MinistryOrganization.objects.select_related("onboarding_request"), slug=slug
+    )
     publishers = ministry.publishers.select_related("user").all()
+    onboarding_request = getattr(ministry, "onboarding_request", None)
+    publisher_initial = {}
+    if onboarding_request is not None:
+        publisher_initial = {
+            "title": onboarding_request.nominated_officer_title,
+            "official_email": onboarding_request.official_email,
+        }
     return render(
         request,
         "ministries/organization_detail.html",
         {
             "ministry": ministry,
             "publishers": publishers,
-            "publisher_form": PublisherCreateForm(),
+            "publisher_form": PublisherCreateForm(initial=publisher_initial),
+            "onboarding_request": onboarding_request,
             "ministry_action_form": MinistryActionForm(),
             "publisher_action_form": PublisherActionForm(),
         },

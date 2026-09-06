@@ -6,7 +6,11 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.audit.models import AuditEvent
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus
-from apps.ministries.models import MinistryOrganization, MinistryPublisher
+from apps.ministries.models import (
+    MinistryOnboardingRequest,
+    MinistryOrganization,
+    MinistryPublisher,
+)
 from apps.ministries.services import create_publisher
 from apps.ministries.tests.factories import (
     MinistryOrganizationFactory,
@@ -39,6 +43,18 @@ def verify_mfa(client, user):
 
 
 @pytest.mark.integration
+def test_legacy_organization_create_route_funnels_to_onboarding_request(client):
+    """AUTH-004/D1.1: direct ministry creation uses the accountable request flow."""
+    super_admin = SuperAdminFactory()
+    verify_mfa(client, super_admin)
+
+    response = client.get(reverse("ministries:organization_create"))
+
+    assert response.status_code == 302
+    assert response.url == reverse("ministries:onboarding_request_create")
+
+
+@pytest.mark.integration
 def test_verified_super_admin_manages_ministries_and_named_publishers(client, mailoutbox):
     """AUTH-004/AUTH-005/ADM-001: Super Admin provisions, activates, and grants named officers."""
     super_admin = SuperAdminFactory()
@@ -46,16 +62,29 @@ def test_verified_super_admin_manages_ministries_and_named_publishers(client, ma
     verify_mfa(client, super_admin)
 
     created = client.post(
-        reverse("ministries:organization_create"),
+        reverse("ministries:onboarding_request_create"),
         {
             "name_en": "Ministry of Health",
             "name_ne": "स्वास्थ्य मन्त्रालय",
-            "slug": "mohp",
-            "contact_email": "info@mohp.gov.np",
             "website_url": "https://mohp.gov.np",
+            "official_email": "officer@mohp.gov.np",
+            "nominated_officer_name": "Health Officer",
+            "nominated_officer_title": "Information Officer",
+            "purpose": "Health technology coordination",
+            "focal_contact": "Health Secretary",
+            "nomination_reference": "MOHP-2026-001",
+            "signatory_name": "Health Secretary",
+            "signatory_verified": True,
         },
     )
-    ministry = MinistryOrganization.objects.get(slug="mohp")
+    onboarding_request = MinistryOnboardingRequest.objects.get()
+    provisioned = client.post(
+        reverse(
+            "ministries:onboarding_request_provision",
+            kwargs={"reference": onboarding_request.reference},
+        )
+    )
+    ministry = MinistryOrganization.objects.get(name_en="Ministry of Health")
     activated = client.post(
         reverse("ministries:organization_action", kwargs={"slug": ministry.slug}),
         {"action": "activate"},
@@ -71,11 +100,15 @@ def test_verified_super_admin_manages_ministries_and_named_publishers(client, ma
 
     ministry.refresh_from_db()
     publisher = MinistryPublisher.objects.get(ministry=ministry, user=officer)
+    detail = client.get(reverse("ministries:organization_detail", kwargs={"slug": ministry.slug}))
     assert created.status_code == 302
+    assert provisioned.status_code == 302
     assert activated.status_code == 302
     assert granted.status_code == 302
     assert ministry.status == OrgStatus.ACTIVE
     assert publisher.contact_verification_status == ContactVerificationStatus.PENDING
+    assert "Health Officer" in detail.content.decode()
+    assert "officer@mohp.gov.np" in detail.content.decode()
     assert len(mailoutbox) == 1
     assert AuditEvent.objects.filter(action="ministry.created", actor=super_admin).exists()
     assert AuditEvent.objects.filter(action="publisher.granted", actor=super_admin).exists()

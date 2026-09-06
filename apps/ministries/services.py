@@ -158,8 +158,9 @@ def log_onboarding_request(
     signatory_name: str,
     signatory_verified: bool,
 ) -> MinistryOnboardingRequest:
-    """AUTH-004/D1.1: log a verified ministry request before organization provisioning."""
+    """AUTH-004/D1.1: log a PMO-attested request before organization provisioning."""
     _require_super_admin(super_admin, action="ministry.onboarding_request.log")
+    official_domain = _website_domain(website_url)
     domain_verified, named_person_verified = _verify_onboarding_request(
         website_url=website_url,
         official_email=official_email,
@@ -168,24 +169,44 @@ def log_onboarding_request(
         signatory_verified=signatory_verified,
     )
     with transaction.atomic():
-        request = MinistryOnboardingRequest.objects.create(
-            reference=f"pending-{secrets.token_hex(12)}",
-            name_en=name_en,
-            name_ne=name_ne,
-            abbreviation=abbreviation,
-            website_url=website_url,
-            official_email=official_email,
-            nominated_officer_name=nominated_officer_name,
-            nominated_officer_title=nominated_officer_title,
-            purpose=purpose,
-            focal_contact=focal_contact,
-            nomination_reference=nomination_reference,
-            signatory_name=signatory_name,
-            domain_verified=domain_verified,
-            named_person_verified=named_person_verified,
-            signatory_verified=signatory_verified,
-            logged_by=super_admin,
-        )
+        if MinistryOnboardingRequest.objects.filter(
+            official_domain=official_domain,
+            status=OnboardingRequestStatus.NEW,
+        ).exists():
+            raise MinistryOnboardingRequestError(
+                _("an onboarding request for this official domain is already open")
+            )
+        try:
+            with transaction.atomic():
+                request = MinistryOnboardingRequest.objects.create(
+                    reference=f"pending-{secrets.token_hex(12)}",
+                    name_en=name_en,
+                    name_ne=name_ne,
+                    abbreviation=abbreviation,
+                    website_url=website_url,
+                    official_domain=official_domain,
+                    official_email=official_email,
+                    nominated_officer_name=nominated_officer_name,
+                    nominated_officer_title=nominated_officer_title,
+                    purpose=purpose,
+                    focal_contact=focal_contact,
+                    nomination_reference=nomination_reference,
+                    nomination_evidence={
+                        "reference": nomination_reference,
+                        "signatory_name": signatory_name,
+                        "focal_contact": focal_contact,
+                    },
+                    signatory_name=signatory_name,
+                    domain_verified=domain_verified,
+                    named_person_verified=named_person_verified,
+                    signatory_verified=signatory_verified,
+                    pmo_attested_at=timezone.now(),
+                    logged_by=super_admin,
+                )
+        except IntegrityError as exc:
+            raise MinistryOnboardingRequestError(
+                _("an onboarding request for this official domain is already open")
+            ) from exc
         request.reference = _onboarding_reference(request)
         request.save(update_fields=["reference", "updated_at"])
         record_audit(
@@ -195,10 +216,11 @@ def log_onboarding_request(
             after={
                 "reference": request.reference,
                 "name_en": request.name_en,
-                "official_domain": _website_domain(request.website_url),
-                "domain_verified": request.domain_verified,
-                "named_person_verified": request.named_person_verified,
-                "signatory_verified": request.signatory_verified,
+                "official_domain": request.official_domain,
+                "automated_domain_match": request.domain_verified,
+                "named_mailbox_attested": request.named_person_verified,
+                "pmo_attested_at": request.pmo_attested_at.isoformat(),
+                "nomination_evidence": request.nomination_evidence,
             },
         )
     return request
