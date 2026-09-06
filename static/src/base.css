@@ -78,16 +78,24 @@ h1 {
   font-size: clamp(30px, 4vw, 38px);
 }
 
+/* One size per level, taken straight from the scale. Fluid clamps are for page
+   titles only; below h1 a section heading that resizes with the viewport just
+   makes the ramp impossible to reason about across components. */
 h2 {
-  font-size: clamp(23px, 3vw, 27px);
+  font-size: var(--fs-xl);
 }
 
 h3 {
-  font-size: clamp(18px, 2.2vw, 20px);
+  font-size: var(--fs-lg);
 }
 
 h4 {
   font-size: var(--fs-md);
+}
+
+h5,
+h6 {
+  font-size: var(--fs-base);
 }
 
 p,

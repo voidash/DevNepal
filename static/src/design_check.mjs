@@ -106,6 +106,45 @@ for (const cssFile of cssFiles.filter((cssFile) => cssFile !== 'src/tokens.css')
   })
 }
 
+// One size per heading level. A component may set a heading smaller for a
+// compact context, but never larger than its level allows, because that is how a
+// card heading ends up the same size as the section heading above it. h1 is
+// exempt: page titles have deliberate display variants. Uppercase headings are
+// exempt too: those are labels wearing a heading tag.
+{
+  const tokens = await readFile(join(root, 'static', 'src/tokens.css'), 'utf8')
+  const step = Object.fromEntries(
+    [...tokens.matchAll(/(--fs-[a-z\d]+):\s*(\d+)px/g)].map((m) => [m[1], Number(m[2])]),
+  )
+  const ceiling = { h2: step['--fs-xl'], h3: step['--fs-lg'], h4: step['--fs-md'], h5: step['--fs-base'], h6: step['--fs-base'] }
+  const resolve = (value) => {
+    const token = value.match(/var\((--fs-[a-z\d]+)\)/)
+    if (token) return step[token[1]]
+    const clamped = value.match(/clamp\([^,]+,[^,]+,\s*(\d+)px/)
+    if (clamped) return Number(clamped[1])
+    const flat = value.match(/^\s*(\d+)px/)
+    return flat ? Number(flat[1]) : null
+  }
+  for (const cssFile of cssFiles.filter((f) => f !== 'src/tokens.css' && f !== 'src/base.css')) {
+    const css = await readFile(join(root, 'static', cssFile), 'utf8')
+    css.split('\n').forEach((line, index) => {
+      for (const rule of line.matchAll(/([^{};]*\bh([2-6])\b[^{]*)\{([^}]*)\}/g)) {
+        const level = `h${rule[2]}`
+        const body = rule[3]
+        if (body.includes('text-transform: uppercase')) continue
+        const declared = body.match(/font-size:\s*([^;]+)/)
+        if (!declared) continue
+        const px = resolve(declared[1])
+        if (px !== null && px > ceiling[level]) {
+          cssViolations.push(
+            `${cssFile}:${index + 1}: ${rule[1].trim()} sets ${level} to ${px}px, above the ${ceiling[level]}px its level allows`,
+          )
+        }
+      }
+    })
+  }
+}
+
 // #5395fc measures 2.97:1 against white. The primary action reads two tokens, so
 // the pairing has to be checked at the token level — the selector-level contrast
 // rule below cannot see through the indirection.
