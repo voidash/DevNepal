@@ -411,7 +411,7 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             .first()
         )
         existing_project = existing_connection.project if existing_connection else None
-        if existing_project is not None and existing_project.ministry_id == project.ministry_id:
+        if existing_project is not None:
             demo_publishers = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
             if request.user.username in demo_publishers:
                 try:

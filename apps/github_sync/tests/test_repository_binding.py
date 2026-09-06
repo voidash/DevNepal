@@ -8,7 +8,7 @@ from apps.audit.models import AuditEvent
 from apps.github_sync.enums import ProcessingState
 from apps.github_sync.errors import RepositoryBindingError
 from apps.github_sync.models import RepositoryConnection
-from apps.github_sync.services import bind_repository, process_pending
+from apps.github_sync.services import bind_repository, process_pending, rebind_repository_for_demo
 from apps.github_sync.tests.data import TEST_APP_KEY_PEM
 from apps.github_sync.tests.factories import (
     GithubConnectionFactory,
@@ -124,6 +124,34 @@ def test_repository_cannot_be_rebound_or_bound_to_a_mismatched_url():
         bind_repository(admin, other, mismatch)
 
 
+def test_configured_demo_publisher_can_move_exact_repository_to_own_new_project(settings):
+    """GOV-004/GIT-003: the rehearsal repository follows the newly named demo project."""
+    publisher = MinistryPublisherFactory()
+    previous = ProjectFactory(
+        ministry=MinistryOrganizationFactory(),
+        repository_url="https://github.com/voidash/nepali-sign-language-research",
+    )
+    created = ProjectFactory(
+        owner=publisher.user,
+        ministry=publisher.ministry,
+        title_en="Accessible Research Workspace",
+        repository_url="https://github.com/voidash/nepali-sign-language-research",
+    )
+    repository = RepositoryConnectionFactory(
+        project=previous,
+        full_name="voidash/nepali-sign-language-research",
+        activated_by=publisher.user,
+    )
+    settings.DEMO_ONE_CLICK_PUBLISH_USERNAMES = [publisher.user.username]
+
+    outcome = rebind_repository_for_demo(publisher.user, repository, created)
+
+    repository.refresh_from_db()
+    assert outcome.bound is True
+    assert repository.project == created
+    assert repository.project.title_en == "Accessible Research Workspace"
+
+
 def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     """GIT-003/AUTH-006: ministry App binding needs no personal GitHub OAuth link."""
     publisher = MinistryPublisherFactory()
@@ -205,6 +233,8 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     assert repository.project == project
     assert repository.activated_by == publisher.user
 
+    project.ministry = MinistryOrganizationFactory()
+    project.save(update_fields=["ministry", "updated_at"])
     duplicate = ProjectFactory(
         ready=True,
         ministry=publisher.ministry,
@@ -223,6 +253,7 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings):
     repository.refresh_from_db()
     duplicate.refresh_from_db()
     assert repository.project == duplicate
+    assert repository.project.ministry == publisher.ministry
     assert duplicate.status == "open_for_contribution"
 
 

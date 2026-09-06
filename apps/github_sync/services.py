@@ -298,7 +298,7 @@ def bind_repository(actor, repository: RepositoryConnection, project) -> BindOut
 
 
 def rebind_repository_for_demo(actor, repository: RepositoryConnection, project) -> BindOutcome:
-    """GOV-004/GIT-003: move the single demo repository to a new same-ministry draft.
+    """GOV-004/GIT-003: move the configured demo repository to a new demo draft.
 
     This exception is disabled by default and limited to usernames explicitly
     configured for the disposable demo environment. Normal repository bindings
@@ -319,8 +319,8 @@ def rebind_repository_for_demo(actor, repository: RepositoryConnection, project)
             .get(pk=repository.pk)
         )
         previous_project = locked.project
-        if previous_project is None or previous_project.ministry_id != project.ministry_id:
-            raise RepositoryBindingError("demo repository may move only within one ministry")
+        if previous_project is None:
+            raise RepositoryBindingError("demo repository is not currently bound")
         if locked.project_id == project.pk:
             return BindOutcome(connection=locked, bound=False)
         before_project_id = locked.project_id

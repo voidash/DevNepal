@@ -33,7 +33,7 @@ def _verify_mfa(client, user):
 
 
 @pytest.mark.integration
-def test_demo_fill_control_is_create_only_and_carries_civic_help_directory_data(client):
+def test_demo_fill_control_is_create_only_and_carries_sign_language_repository_data(client):
     """GOV-001/GOV-002: an authorized publisher can opt into unsaved real-repository demo data."""
     assignment = MinistryPublisherFactory()
     _verify_mfa(client, assignment.user)
@@ -49,8 +49,8 @@ def test_demo_fill_control_is_create_only_and_carries_civic_help_directory_data(
     assert 'type="button"' in create_content
     assert 'id="authoring-demo-details"' in create_content
     assert 'name="demo_fill" value=""' in create_content
-    assert "Civic Help Directory" in create_content
-    assert "voidash/civic-help-directory" in create_content
+    assert "Nepali Sign Language Research Portal" in create_content
+    assert "voidash/nepali-sign-language-research" in create_content
     assert 'src="/static/src/authoring-demo-fill.js"' in create_content
     assert 'id="fill-demo-details"' not in edit_content
     assert 'id="authoring-demo-details"' not in edit_content
@@ -68,7 +68,7 @@ def test_demo_fill_script_only_mutates_existing_controls_without_submitting_or_f
     assert "dispatchEvent" in script
     assert "option.selected = labels.includes" in script
     assert 'namedItem("demo_fill")' in script
-    assert 'demoIntent.value = "civic-help-directory"' in script
+    assert 'demoIntent.value = "nepali-sign-language-research"' in script
 
 
 @pytest.mark.integration
@@ -79,13 +79,13 @@ def test_marked_demo_fill_creates_a_new_draft_instead_of_redirecting_to_an_old_p
     prepared = ProjectFactory(
         owner=assignment.user,
         ministry=assignment.ministry,
-        title_en="Civic Help Directory",
-        repository_url="https://github.com/voidash/civic-help-directory",
+        title_en="Nepali Sign Language Research Portal",
+        repository_url="https://github.com/voidash/nepali-sign-language-research",
         default_branch="main",
     )
     connection = RepositoryConnectionFactory(
         project=prepared,
-        full_name="voidash/civic-help-directory",
+        full_name="voidash/nepali-sign-language-research",
         is_public=True,
     )
     project_count = Project.objects.count()
@@ -93,13 +93,13 @@ def test_marked_demo_fill_creates_a_new_draft_instead_of_redirecting_to_an_old_p
     response = client.post(
         reverse("projects:authoring_create"),
         {
-            "demo_fill": "civic-help-directory",
+            "demo_fill": "nepali-sign-language-research",
             "ministry": assignment.ministry.pk,
-            "title_en": "Civic Help Directory",
-            "title_ne": "नागरिक सहायता निर्देशिका",
-            "summary_en": "A directory for public services.",
-            "summary_ne": "सार्वजनिक सेवाहरूको निर्देशिका।",
-            "repository_url": "https://github.com/voidash/civic-help-directory",
+            "title_en": "Nepali Sign Language Research Portal",
+            "title_ne": "नेपाली साङ्केतिक भाषा अनुसन्धान पोर्टल",
+            "summary_en": "A public catalogue for sign-language research.",
+            "summary_ne": "साङ्केतिक भाषा अनुसन्धानको सार्वजनिक सूची।",
+            "repository_url": "https://github.com/voidash/nepali-sign-language-research",
             "default_branch": "main",
             "data_classification": "public",
         },
@@ -107,7 +107,9 @@ def test_marked_demo_fill_creates_a_new_draft_instead_of_redirecting_to_an_old_p
 
     assert response.status_code == 302
     assert Project.objects.count() == project_count + 1
-    created = Project.objects.exclude(pk=prepared.pk).get(title_en="Civic Help Directory")
+    created = Project.objects.exclude(pk=prepared.pk).get(
+        title_en="Nepali Sign Language Research Portal"
+    )
     assert response.url == reverse("projects:authoring_detail", kwargs={"slug": created.slug})
     assert created.status == "draft"
     connection.refresh_from_db()
