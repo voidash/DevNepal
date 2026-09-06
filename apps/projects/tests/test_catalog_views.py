@@ -1,12 +1,14 @@
+import re
 import unicodedata
 from datetime import date, timedelta
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from apps.accounts.tests.factories import MemberProfileFactory
 from apps.blogs.enums import BlogModerationState, BlogStatus
@@ -315,21 +317,124 @@ def test_about_page_lays_out_a_grounded_contribution_flow_in_both_languages(clie
 
 
 @pytest.mark.unit
-def test_about_page_uses_the_a1_2_process_and_policy_sheets(client):
+def test_about_page_keeps_the_numbered_process_and_the_policy_sheet(client):
     """A1.2/DSC-001/GOV-007: public guidance makes process and reporting scannable."""
     response = client.get(reverse("projects:about"))
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert "blueprint dn-sheet" in content
+    safety = content.split('id="safety"', 1)[1].split("</section>", 1)[0]
+
+    assert "blueprint dn-sheet" in safety
     assert "01 · The process" in content
     assert "A ministry lists a project" in content
-    assert "PMO approves" in content
     assert "You contribute" in content
     assert "Work is verified and recognised" in content
     assert "What DevNepal is — and is not" in content
     assert "Security and reporting" in content
     assert "Report content confidentially" in content
+
+
+@pytest.mark.unit
+def test_about_page_walks_three_numbered_steps_without_the_pmo_gate(client):
+    """A1.2/DSC-001: the published contribution path is an ordered list of three steps."""
+    english = client.get(reverse("projects:about"))
+    nepali = client.get("/ne/about/")
+
+    content = english.content.decode()
+    process = content.split('<ol class="dn-journey">', 1)[1].split("</ol>", 1)[0]
+
+    assert english.status_code == 200
+    assert nepali.status_code == 200
+    assert process.count('class="dn-journey-step"') == 3
+    assert re.findall(r'<span class="Counter">(\d+)</span>', process) == ["1", "2", "3"]
+    assert "PMO approves" not in content
+    assert "PMO approves" not in nepali.content.decode()
+    assert "{% trans" not in content
+
+
+@pytest.mark.unit
+def test_about_page_routes_and_labels_point_at_destinations_that_exist(client):
+    """A1.2/NFR-A11Y-01: route cards and section labels reference real targets."""
+    response = client.get(reverse("projects:about"))
+    content = response.content.decode()
+    article = content.split("dn-doc-layout--wide", 1)[1].split("</main>", 1)[0]
+    routes = re.findall(r'<a class="dn-route" href="([^"]+)"', article)
+    headings = [int(level) for level in re.findall(r"<h([1-6])[ >]", article)]
+    identifiers = re.findall(r'\sid="([^"]+)"', content)
+
+    assert response.status_code == 200
+    assert routes == [
+        reverse("projects:government"),
+        reverse("projects:community"),
+        reverse("accounts:member_directory"),
+    ]
+    for route in routes:
+        assert client.get(route).status_code == 200, route
+    assert f'href="{reverse("moderation:report_create")}"' in article
+    assert len(identifiers) == len(set(identifiers))
+    referenced = {
+        idref
+        for attribute in re.findall(r'aria-labelledby="([^"]+)"', content)
+        for idref in attribute.split()
+    }
+    assert referenced <= set(identifiers)
+    assert headings[0] == 1
+    assert all(later - earlier <= 1 for earlier, later in pairwise(headings))
+
+
+@pytest.mark.unit
+def test_about_page_serves_the_redesigned_guidance_in_nepali(client):
+    """NFR-I18N-01: the rebuilt about sections reach Nepali readers translated."""
+    response = client.get("/ne/about/")
+
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert '<html lang="ne"' in content
+    assert "तीन चरण, प्रत्येकका लागि एक नामित पक्ष उत्तरदायी हुन्छ।" in content
+    assert "देवनेपाल के हो — र के होइन" in content
+    assert "०५ · कहाँबाट सुरु गर्ने" in content
+    assert "Three steps, each with a named party" not in content
+    assert "Where to start" not in content
+
+
+@pytest.mark.unit
+def test_about_page_strings_are_all_present_in_the_compiled_nepali_catalog():
+    """NFR-I18N-01: the shipped django.mo covers every string the about page renders.
+
+    A .po edited without recompiling leaves the Nepali page silently English, and a
+    msgid that drifts from the template by one character does the same.
+    """
+    template = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/about.html").read_text()
+    strings = [
+        double or single
+        for double, single in re.findall(
+            r"{%\s*(?:trans|translate)\s+(?:\"(.*?)\"|'(.*?)')", template
+        )
+    ]
+
+    assert strings
+    with translation.override("ne"):
+        untranslated = [source for source in strings if translation.gettext(source) == source]
+    assert untranslated == []
+
+
+@pytest.mark.unit
+def test_journey_track_follows_its_step_count_instead_of_a_fixed_four_columns():
+    """DSC-001: the shared journey component fits three steps and four alike."""
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    home = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/home.html").read_text()
+    about = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/about.html").read_text()
+    track = css.split("\n.dn-journey { ", 1)[1].split("}", 1)[0]
+
+    assert "grid-auto-flow: column;" in track
+    assert "grid-auto-columns: minmax(0, 1fr);" in track
+    assert "grid-template-columns: none;" in track
+    assert "repeat(4," not in track
+    assert css.count(".dn-journey { grid-auto-flow: row;") == 2
+    assert home.count('class="dn-journey-step"') == 4
+    assert about.count('class="dn-journey-step"') == 3
 
 
 @pytest.mark.unit

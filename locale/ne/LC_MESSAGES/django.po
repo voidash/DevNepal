@@ -3994,11 +3994,6 @@ msgstr ""
 msgid "01 · The process"
 msgstr "०१ · प्रक्रिया"
 
-#: apps/projects/templates/projects/about.html:17
-#: apps/projects/templates/projects/about.html:18
-msgid "Contribution steps"
-msgstr "योगदानका चरणहरू"
-
 #: apps/projects/templates/projects/about.html:19
 msgid "A ministry lists a project"
 msgstr "मन्त्रालयले परियोजना सूचीबद्ध गर्छ"
@@ -4010,10 +4005,6 @@ msgid ""
 msgstr ""
 "प्रकाशनअघि नामित प्रकाशकले योगदान मार्ग, सार्वजनिक सुरक्षा उपाय र मर्मतकर्ताको "
 "जिम्मेवारी दस्तावेज गर्छ।"
-
-#: apps/projects/templates/projects/about.html:20
-msgid "PMO approves"
-msgstr "PMO ले स्वीकृत गर्छ"
 
 #: apps/projects/templates/projects/about.html:20
 msgid ""
@@ -4046,10 +4037,6 @@ msgid ""
 msgstr ""
 "मेन्टेनर वा अधिकृत समीक्षकले प्रमाण जाँचेर कारणसहित निर्णय अभिलेख गर्छ। आफैं बुझाएको दाबी "
 "मात्र आधिकारिक सम्मान हुँदैन।"
-
-#: apps/projects/templates/projects/about.html:28
-msgid "02 · What DevNepal is — and is not"
-msgstr "०२ · DevNepal के हो — र के होइन"
 
 #: apps/projects/templates/projects/about.html:32
 msgid "What DevNepal verifies"
@@ -7158,3 +7145,50 @@ msgstr "यो मन्त्रालय कार्यधारा आवे
 msgid "You can already contribute on GitHub without a DevNepal account. Use this form only for screened workstreams."
 msgstr "तपाईं GitHub मा DevNepal खाता बिना नै योगदान गर्न सक्नुहुन्छ। यो फारम जाँच गरिएका कार्यधाराका लागि मात्र हो।"
 
+#: apps/projects/templates/projects/about.html
+msgid "From a published listing to a recognised contribution"
+msgstr "प्रकाशित सूचीबाट मान्यता प्राप्त योगदानसम्म"
+
+#: apps/projects/templates/projects/about.html
+msgid "Three steps, each with a named party answerable for it. Nothing on this platform is published, opened or recognised without one."
+msgstr "तीन चरण, प्रत्येकका लागि एक नामित पक्ष उत्तरदायी हुन्छ। यस मञ्चमा कुनै पनि कुरा त्यस्तो पक्षविना प्रकाशित, खुला वा मान्यता प्राप्त हुँदैन।"
+
+#: apps/projects/templates/projects/about.html
+msgid "02 · Scope and limits"
+msgstr "०२ · दायरा र सीमा"
+
+#: apps/projects/templates/projects/about.html
+msgid "What DevNepal is — and is not"
+msgstr "देवनेपाल के हो — र के होइन"
+
+#: apps/projects/templates/projects/about.html
+msgid "Read both columns before you invest time in a listing. The left column is what the platform checks; the right is what it deliberately leaves to the project."
+msgstr "कुनै सूचीमा समय लगाउनुअघि दुवै स्तम्भ पढ्नुहोस्। बायाँ स्तम्भ मञ्चले जाँच्ने कुरा हो; दायाँ स्तम्भ मञ्चले जानाजान परियोजनालाई छाड्ने कुरा हो।"
+
+#: apps/projects/templates/projects/about.html
+msgid "Reports reach the moderation queue, not the project’s public page. Filing one needs a signed-in account."
+msgstr "प्रतिवेदन परियोजनाको सार्वजनिक पृष्ठमा होइन, मध्यस्थता सूचीमा पुग्छ। प्रतिवेदन दर्ता गर्न साइन इन गरिएको खाता चाहिन्छ।"
+
+#: apps/projects/templates/projects/about.html
+msgid "No. Contributions are made and reviewed on the project’s own repository; only ministry publishers sign in here."
+msgstr "पर्दैन। योगदान परियोजनाकै रिपोजिटोरीमा गरिन्छ र त्यहीँ पुनरावलोकन हुन्छ; यहाँ मन्त्रालयका प्रकाशकमात्र साइन इन गर्छन्।"
+
+#: apps/projects/templates/projects/about.html
+msgid "05 · Where to start"
+msgstr "०५ · कहाँबाट सुरु गर्ने"
+
+#: apps/projects/templates/projects/about.html
+msgid "Ministry-published work with a named publisher, an approved listing, and a stated response expectation."
+msgstr "नामित प्रकाशक, स्वीकृत सूची र उल्लिखित प्रतिक्रिया अपेक्षासहितको मन्त्रालयद्वारा प्रकाशित काम।"
+
+#: apps/projects/templates/projects/about.html
+msgid "Independently owned public-interest work, listed under its own terms rather than a government endorsement."
+msgstr "स्वतन्त्र स्वामित्वको सार्वजनिक हितको काम, सरकारी समर्थनअन्तर्गत होइन आफ्नै सर्तअन्तर्गत सूचीबद्ध।"
+
+#: apps/projects/templates/projects/about.html
+msgid "Contributor profiles built from synced GitHub activity and the decisions maintainers recorded against it."
+msgstr "सिन्क गरिएको GitHub गतिविधि र त्यसमाथि मर्मतकर्ताले अभिलेख गरेका निर्णयबाट बनेका योगदानकर्ता प्रोफाइल।"
+
+#: apps/projects/templates/projects/about.html
+msgid "06 · Support"
+msgstr "०६ · सहयोग"

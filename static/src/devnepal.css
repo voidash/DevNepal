@@ -712,7 +712,9 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 
 .dn-path { margin: 0; }
 .dn-path h2 { margin: 0 0 var(--space-6); font-family: var(--font-heading); font-size: var(--fs-2xl); line-height: 1.12; }
-.dn-journey { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; }
+/* One row, one column per step, however many steps a page lists — a fixed
+   four-column track left an empty cell the moment a step was dropped. */
+.dn-journey { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); grid-template-columns: none; margin: 0; }
 .dn-journey .dn-journey-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--space-2) var(--space-5); align-items: start; list-style: none; padding: var(--space-6); }
 .dn-journey .dn-journey-step:hover { background: transparent; }
 .dn-journey .dn-journey-step .Counter { grid-row: 1 / span 2; justify-self: start; align-self: start; box-sizing: border-box; width: 28px; min-width: 28px; height: 28px; padding: 0; border-color: var(--color-accent-300); color: var(--color-accent-800); background: var(--color-accent-100); font-size: var(--fs-xs); }
@@ -746,9 +748,10 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-home-hero { grid-template-columns: 1fr; gap: var(--space-8); padding-block: var(--space-10) var(--space-12); }
   .dn-home-hero h1 { max-width: none; }
   .dn-hero-illo { max-width: 460px; }
-  .dn-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dn-journey { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
   .dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
+  .dn-journey .dn-journey-step:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .dn-home-faq dl { grid-template-columns: 1fr; gap: var(--space-5); }
 }
 @media (max-width: 640px) {
@@ -757,7 +760,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-hero-illo { display: none; }
   .section.dn-home { padding-block: var(--space-12); }
   .section.dn-home--follow { padding-top: 0; }
-  .dn-journey { grid-template-columns: 1fr; }
+  .dn-journey { grid-auto-flow: row; grid-template-columns: 1fr; }
   .dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
   .dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   .dn-journey .dn-journey-step + .dn-journey-step { border-top: 1px solid var(--color-divider); border-left: 0; }
@@ -903,10 +906,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-queue-facts dt { color: var(--color-neutral-600); font-size: var(--fs-2xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 .dn-queue-facts dd { margin: 0; color: var(--color-neutral-800); font-size: var(--fs-sm); }
 
-/* A sheet carries no padding of its own, so prose laid straight into one needs
-   its own gutter or it runs to the hairline. */
-.dn-sheet > .dn-contribution-grid, .dn-sheet > .dn-journey { padding: var(--space-6); }
-.dn-sheet > .dn-journey { border: 0; border-radius: 0; }
 .dn-doc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-8); padding-block: var(--space-10) var(--space-16); }
 .dn-doc-main { max-width: 78ch; }
 .dn-doc-main > section { margin-bottom: var(--space-16); }
@@ -915,32 +914,19 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-doc-main h2 { margin-bottom: var(--space-3); }
 .dn-doc-main dl dt { margin-top: var(--space-5); }
 .dn-doc-main dd { margin: var(--space-1) 0 0; color: var(--color-neutral-700); }
-.dn-doc-main .dn-contribution-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); }
-.dn-doc-main .dn-contribution-grid ul { margin: 0; padding-left: 1.1em; }
-.dn-doc-main .dn-contribution-grid li { margin-bottom: var(--space-2); color: var(--color-neutral-800); }
-@media (max-width: 720px) { .dn-doc-main .dn-contribution-grid { grid-template-columns: 1fr; } }
 
-/* A document longer than three sections earns a contents rail. It fills the
-   column a 78ch measure would otherwise leave blank and gives a reader who
-   skipped a section a way back to it, so the main column drops its own cap:
-   base.css already holds prose to a measure, and the panels inside want the
-   width. Below the desktop breakpoint the rail becomes a row of pills above
-   the article rather than a footer nobody scrolls to. */
-.dn-doc-layout--indexed { grid-template-columns: minmax(0, 1fr) 220px; gap: var(--space-16) var(--space-16); align-items: start; }
-.dn-doc-layout--indexed .dn-doc-main { max-width: none; }
-.dn-doc-index { position: sticky; top: calc(var(--header-h) + var(--space-4)); }
-.dn-doc-index__title { margin: 0 0 var(--space-3); color: var(--color-neutral-600); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-.dn-doc-index ol { display: grid; margin: 0; padding: 0; list-style: none; }
-.dn-doc-index a:not(.btn) { display: block; padding: var(--space-2) var(--space-3); border-left: 1px solid var(--color-divider); color: var(--color-neutral-700); font-size: var(--fs-sm); text-decoration: none; }
-.dn-doc-index a:not(.btn):hover { border-left-color: var(--color-accent); background: var(--color-neutral-100); color: var(--color-accent-700); }
+/* A page whose sections are panels rather than paragraphs runs the full
+   container: base.css caps paragraphs at 78ch, so running prose keeps its
+   measure and only the panels take the extra width. The prose-in-a-sheet
+   documents keep the 78ch column. */
+.dn-doc-layout--wide .dn-doc-main { max-width: none; }
+.dn-doc-layout--wide > .dn-doc-head { margin-bottom: 0; }
 
 /* The page head owns everything above the first numbered section, so it closes
    on a rule instead of letting the lede run straight into step one. */
 .dn-doc-head { margin-bottom: var(--space-16); padding-bottom: var(--space-8); border-bottom: 1px solid var(--color-divider); }
-.dn-doc-layout--indexed > .dn-doc-head { grid-column: 1 / -1; margin-bottom: 0; }
 .dn-doc-head .dn-lede { margin: 0 0 var(--space-4); }
 .dn-doc-head__path { margin: 0; color: var(--color-neutral-600); font-size: var(--fs-sm); }
-.dn-doc-subhead { margin: var(--space-10) 0 var(--space-3); font-size: var(--fs-lg); }
 
 /* Two claims that have to be read against each other: same panel, same rhythm,
    the limits laid on the ground colour so the difference is carried by the
@@ -948,7 +934,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-scope-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); margin-top: var(--space-6); }
 .dn-scope-panel { padding: var(--space-6); border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-paper); }
 .dn-scope-panel--limits { border-color: var(--color-neutral-300); background: var(--color-neutral-100); }
-.dn-scope-panel__title { margin: 0 0 var(--space-4); font-size: var(--fs-md); }
+.dn-scope-panel__title { margin: 0 0 var(--space-4); font-size: var(--fs-lg); }
 .dn-scope-list { display: grid; margin: 0; padding: 0; list-style: none; }
 .dn-scope-list li { padding: var(--space-4) 0; border-top: 1px solid var(--color-divider); color: var(--color-neutral-800); font-size: var(--fs-sm); line-height: var(--lh-normal); }
 .dn-scope-list li:last-child { padding-bottom: 0; }
@@ -961,7 +947,7 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-doc-faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8) var(--space-10); margin: var(--space-6) 0 0; }
 .dn-doc-faq > div { min-width: 0; }
 .dn-doc-main .dn-doc-faq dt { margin: 0 0 var(--space-2); font-weight: 700; }
-.dn-doc-main .dn-doc-faq dd { margin: 0; max-width: none; }
+.dn-doc-main .dn-doc-faq dd { margin: 0; max-width: 62ch; }
 
 .dn-route-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); margin: var(--space-6) 0 0; padding: 0; list-style: none; }
 .dn-route:not(.btn) { display: grid; gap: var(--space-2); align-content: start; height: 100%; padding: var(--space-5); border: 1px solid var(--color-divider); border-radius: var(--radius-md); background: var(--color-paper); color: inherit; text-decoration: none; }
@@ -971,12 +957,8 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-route:hover strong { text-decoration: underline; }
 
 @media (max-width: 1080px) {
-  .dn-doc-layout--indexed { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
-  .dn-doc-layout--indexed > .dn-doc-head { order: -2; }
-  .dn-doc-index { position: static; order: -1; padding-bottom: var(--space-5); border-bottom: 1px solid var(--color-divider); }
-  .dn-doc-index ol { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .dn-doc-index a:not(.btn) { border: 1px solid var(--color-divider); border-radius: var(--radius-pill); }
   .dn-route-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dn-route-grid > li:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 @media (max-width: 720px) {
   .dn-scope-split, .dn-doc-faq, .dn-route-grid { grid-template-columns: 1fr; }
