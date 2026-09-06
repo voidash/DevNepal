@@ -83,7 +83,7 @@ def test_home_features_recent_open_government_opportunities_only(client):
     assert featured.title_en.encode() in response.content
     assert community not in response.context["featured_projects"]
     assert "featured_community_projects" not in response.context
-    assert response.context["platform_metrics"]["open_projects"] == 1
+    assert "platform_metrics" not in response.context
     assert community.title_en.encode() not in response.content
     assert paused.title_en.encode() not in response.content
 
@@ -277,11 +277,9 @@ def test_home_exposes_compact_live_metrics_and_the_github_contribution_path(clie
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "On DevNepal today" in content
-    assert "ministries publishing, each through a named officer" in content
-    assert "projects open for contribution" in content
-    assert "contributions accepted by a named maintainer" in content
+    assert "On DevNepal today" not in content
     assert "From public project to GitHub contribution" in content
+    assert "A named officer publishes" in content
     assert "You pick an issue" in content
     assert "You contribute on GitHub" in content
     assert "Nine ways to contribute" not in content

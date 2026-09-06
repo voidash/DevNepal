@@ -17,7 +17,6 @@ def test_public_visitor_can_follow_compact_home_catalog_detail_and_github_issue(
     home_content = home.content.decode()
 
     ordered_sections = (
-        'id="hero-proof-heading"',
         'id="path-heading"',
         'id="opportunities-heading"',
         'id="ministry-cta-heading"',

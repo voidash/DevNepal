@@ -20,9 +20,17 @@ def test_shared_shell_uses_the_verified_light_blueprint_system():
     assert 'font-family: "Barlow"' in tokens
     assert 'font-family: "Barlow Condensed"' in tokens
     assert '"Noto Sans Devanagari"' in tokens
-    assert 'class="dn-gov-strip"' not in base
+    # The shell used to forbid a second bar outright. It now carries one, and the
+    # rules that kept the old ban worth having are asserted instead: the band lives
+    # inside the header landmark, states the authority exactly once, links out so a
+    # visitor can verify it, and stays a neutral surface rather than a second brand
+    # colour competing with the accent.
+    assert 'class="dn-gov-strip"' in base
+    assert base.index('class="dn-product-header"') < base.index('class="dn-gov-strip"')
+    assert base.count("नेपाल सरकार · Government of Nepal") == 1
+    assert 'href="https://nepal.gov.np"' in base
+    assert ".dn-gov-strip { background: var(--color-state);" in shell
     assert 'class="dn-product-header"' in base
-    assert "नेपाल सरकार · Government of Nepal" in base
     assert "background: var(--color-bg);" in shell
     assert "border-radius: 0;" in shell
     assert "--devnepal-header-bg" not in shell

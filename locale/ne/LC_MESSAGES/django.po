@@ -9539,15 +9539,22 @@ msgstr "मुख्य सामग्रीमा जानुहोस्"
 msgid "नेपाल सरकार · Government of Nepal"
 msgstr "नेपाल सरकार"
 
+#: templates/base.html:25 templates/base.html:147
+msgid "Emblem of Nepal"
+msgstr "नेपालको राष्ट्रिय प्रतीक"
+
+#: templates/base.html:28
+msgid "(opens the national portal)"
+msgstr "(राष्ट्रिय पोर्टल नयाँ ट्याबमा खुल्छ)"
+
 #: templates/base.html:28 templates/base.html:55
 msgid "Primary"
 msgstr "प्राथमिक"
 
 #: templates/base.html:44 templates/base.html:65
-#, fuzzy, python-format
-#| msgid "Ministry management"
+#, python-format
 msgid "Ministry: %(name)s"
-msgstr "मन्त्रालय व्यवस्थापन"
+msgstr "मन्त्रालय: %(name)s"
 
 #: templates/base.html:47 templates/base.html:68
 msgid "Sign out"
@@ -9566,6 +9573,14 @@ msgstr "मेनु"
 msgid "Platform"
 msgstr "मञ्च"
 
+#: templates/base.html:120
+msgid "The public register of Government of Nepal technology work that is open to contribution."
+msgstr "योगदानका लागि खुला नेपाल सरकारका प्रविधि कार्यहरूको सार्वजनिक अभिलेख।"
+
+#: templates/base.html:123
+msgid "Source on GitHub"
+msgstr "GitHub मा स्रोत"
+
 #: templates/base.html:93
 msgid "Government Projects"
 msgstr "सरकारी परियोजनाहरू"
@@ -9581,6 +9596,14 @@ msgstr "प्रकाशन गर्ने मन्त्रालय बन
 #: templates/base.html:113
 msgid "Official platform"
 msgstr "आधिकारिक मञ्च"
+
+#: templates/base.html:151
+msgid "Office of the Prime Minister"
+msgstr "प्रधानमन्त्री तथा मन्त्रिपरिषद्को कार्यालय"
+
+#: templates/base.html:157
+msgid "Legal"
+msgstr "कानुनी"
 
 #: templates/base.html:115
 msgid "नेपाल सरकारको सार्वजनिक सहयोग मञ्च।"

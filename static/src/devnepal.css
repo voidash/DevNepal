@@ -2,10 +2,35 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-skip-link { position: absolute; top: 8px; left: -9999px; z-index: 100; }
 .dn-skip-link:focus { left: var(--space-2); }
 
-.dn-product-header { position: sticky; top: 0; z-index: 40; border-bottom: 1px solid var(--color-divider); background: var(--color-paper); color: var(--color-text); }
+/* The header carries two rows: the state band, then the product bar. It sticks at
+   minus the band's height, so the band scrolls out of the way and only the bar
+   stays pinned — the alternative, a permanently pinned 122px header, spends too
+   much of a laptop screen on chrome. */
+.dn-product-header { position: sticky; top: calc(var(--gov-strip-h) * -1); z-index: 40; border-bottom: 1px solid var(--color-divider); background: var(--color-paper); color: var(--color-text); }
+
+/* The state band. It is the deepest step of the platform blue, so it belongs to
+   the same family as the product without repeating the -700 the primary button
+   uses. White on it measures 8.0:1. */
+.dn-gov-strip { background: var(--color-state); color: var(--color-paper); font-size: var(--fs-xs); }
+.dn-gov-strip__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); width: calc(100% - var(--page-gutter) * 2); max-width: var(--container-max); min-height: var(--gov-strip-h); margin: 0 auto; }
+.dn-gov-strip__origin { display: inline-flex; align-items: center; gap: var(--space-2); color: inherit; font-weight: 600; letter-spacing: .01em; text-decoration: none; }
+.dn-gov-strip__origin:hover { color: var(--color-paper); text-decoration: underline; text-underline-offset: 3px; }
+.dn-gov-strip__out { flex: none; opacity: .8; }
+/* Unbacked. A paper chip behind it read as a sticker pasted on the bar; the
+   emblem's red wreath and white map carry themselves against the deep blue, and
+   only the mountain's own blue softens, which is interior detail at this size. */
+.dn-gov-strip__emblem { flex: none; width: auto; height: 26px; }
+.dn-gov-strip__tools { display: flex; align-items: center; gap: var(--space-3); }
+
+.dn-gov-strip .lang-switch { overflow: visible; gap: var(--space-3); border: 0; border-radius: 0; background: transparent; }
+.dn-gov-strip .lang-switch button { min-width: 0; min-height: 0; padding: 0; border: 0; color: var(--color-paper); font-size: var(--fs-xs); font-weight: 600; opacity: .72; }
+.dn-gov-strip .lang-switch button:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+.dn-gov-strip .lang-switch button + .lang-switch__divider + button { border-left: 0; }
+.dn-gov-strip .lang-switch button[aria-current="true"] { background: transparent; opacity: 1; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
 .dn-header-inner { display: flex; align-items: center; gap: var(--space-4); width: calc(100% - var(--page-gutter) * 2); max-width: var(--container-max); min-height: 64px; margin: 0 auto; padding: var(--space-3) 0; }
 .dn-brand { display: inline-flex; flex: none; align-items: center; min-height: var(--control-lg); color: var(--color-text); text-decoration: none; }
-.dn-brand-copy { display: flex; flex-direction: column; gap: var(--space-1); line-height: 1; }
+.dn-brand-copy { display: flex; align-items: center; line-height: 1; }
 .dn-brand-copy strong { font-family: var(--font-heading); font-size: var(--fs-lg); font-weight: 600; }
 .dn-brand-copy small { color: var(--color-neutral-600); font-size: var(--fs-2xs); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
 .dn-brand-mark { display: none; }
@@ -259,7 +284,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .ops-panel { padding: var(--space-6); border: 1px solid var(--color-divider); background: transparent; }
 .text-semibold { font-weight: 500; }
 
-.dn-footer { margin-top: var(--space-10); padding: var(--space-8) 0 var(--space-5); border-top: 1px solid var(--color-divider); background: var(--color-paper); color: var(--color-neutral-700); font-size: var(--fs-sm); }
+.dn-footer { margin-top: var(--space-10); padding: var(--space-10) 0 0; border-top: 1px solid var(--color-divider); background: var(--color-paper); color: var(--color-neutral-700); font-size: var(--fs-sm); }
 .dn-footer--auth { margin-top: auto; padding: var(--space-3) 0; }
 .dn-footer--auth .dn-container { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-6); align-items: center; justify-content: space-between; }
 .dn-footer--auth p { margin: 0; max-width: 52ch; }
@@ -275,10 +300,32 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-footer-note p { max-width: 28ch; margin: 0; line-height: 1.45; }
 .dn-footer-note p + p { margin-top: var(--space-2); }
 .dn-footer-note p[lang="ne"] { color: var(--color-accent-800); }
-.dn-footer-legal { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-divider); color: var(--color-neutral-600); font-size: var(--fs-xs); }
+
+/* The footer reads as three blocks on one baseline: who this is, where to go,
+   and who publishes it. The identity column is wider than the link columns so
+   the wordmark and its one sentence are not squeezed to the same measure as a
+   list of links. */
+.dn-footer-identity { display: grid; gap: var(--space-3); align-content: start; }
+.dn-footer-mark { font-family: var(--font-heading); font-size: var(--fs-lg); font-weight: 600; color: var(--color-text); line-height: 1; }
+.dn-footer-identity p { max-width: 34ch; margin: 0; line-height: 1.5; }
+.dn-footer-repo { gap: var(--space-2); align-self: start; min-height: 0 !important; font-weight: 600; }
+.dn-footer-repo:hover { color: var(--color-accent-700); }
+.dn-footer-note { display: grid; gap: var(--space-2); align-content: start; justify-items: start; }
+.dn-footer-emblem { width: auto; height: 48px; }
+.dn-footer-note__office { color: var(--color-neutral-600); font-size: var(--fs-xs); }
+
+/* The legal bar closes the page in the state colour, so the shell opens and
+   closes on the same surface. */
+.dn-footer-legal { margin-top: var(--space-10); padding: var(--space-4) 0; background: var(--color-state); color: var(--color-paper); font-size: var(--fs-xs); }
+.dn-footer-legal__inner { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); align-items: center; justify-content: space-between; }
+.dn-footer-legal__inner > p { margin-right: auto; }
+.dn-footer-legal p { margin: 0; }
+.dn-footer-legal nav { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
+.dn-footer-legal a { min-height: 0; color: inherit; text-decoration: none; }
+.dn-footer-legal a:hover { color: var(--color-paper); text-decoration: underline; text-underline-offset: 3px; }
 
 @media (min-width: 640px) { .dn-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .dn-footer-grid { grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) 1.1fr; } }
 @media (min-width: 1180px) { .dn-primary-nav { display: block; } }
 @media (max-width: 1179px) {
   .dn-primary-nav { display: none; }
@@ -533,9 +580,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
    the point where the desktop nav appears and the point where all of that fits,
    the nav used to run underneath the buttons, so the greeting steps out and the
    links close up until there is room for both. */
-@media (max-width: 1399px) {
-  .dn-greeting { display: none; }
-}
 @media (min-width: 1180px) and (max-width: 1399px) {
   .dn-primary-nav ul { gap: var(--space-1); }
   .dn-primary-nav a { padding: 0 var(--space-2); }
@@ -689,14 +733,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 
 /* The counts substantiate the hero's claim, so they sit directly beneath it as
    a measure rather than in a box that competes with the headline. */
-.dn-measure { background: var(--color-paper); }
-.dn-measure > .container { padding-block: var(--space-8) var(--space-10); border-top: 1px solid var(--color-divider); }
-.dn-measure h2 { margin: 0 0 var(--space-6); color: var(--color-neutral-600); font-family: var(--font-body); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.dn-measure__figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin: 0; }
-.dn-measure__figures > div + div { padding-left: var(--space-8); border-left: 1px solid var(--color-divider); }
-.dn-measure__figures dt { color: var(--color-accent-700); font-family: var(--font-heading); font-size: var(--fs-3xl); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
-.dn-measure__figures dd { max-width: 30ch; margin: var(--space-2) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); line-height: 1.45; }
-.dn-measure__note { margin: var(--space-6) 0 0; color: var(--color-neutral-600); font-size: var(--fs-xs); }
 
 .dn-featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: var(--space-5); }
 .dn-featured-card { gap: var(--space-4); padding: var(--space-6); }
@@ -767,9 +803,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
   .dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   .dn-journey .dn-journey-step + .dn-journey-step { border-top: 1px solid var(--color-divider); border-left: 0; }
-  .dn-measure__figures { grid-template-columns: 1fr; gap: var(--space-5); }
-  .dn-measure__figures > div + div { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--color-divider); }
-  .dn-measure__figures dt { font-size: var(--fs-2xl); }
   .dn-closing-band { padding: var(--space-6); }
 }
 

@@ -52,7 +52,10 @@ def test_home_hero_offers_exactly_two_visitor_actions(client):
     hero = response.content.split(b'<section class="hero"', 1)[1].split(b"</section>", 1)[0]
 
     assert response.status_code == 200
-    assert b"Government of Nepal" in hero
+    # The authority is named once, in the state band, so the hero carries only the
+    # office that publishes here.
+    assert b"Office of the Prime Minister" in hero
+    assert b"Government of Nepal" not in hero
     assert b"Digital Collaboration Initiative" not in hero
     assert b"Browse open issues" in hero
     assert b"Browse government projects" in hero
@@ -208,7 +211,7 @@ def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
 
     assert "Featured government projects" in content
     assert "From public project to GitHub contribution" in content
-    assert "On DevNepal today" in content
+    assert "On DevNepal today" not in content
     assert "You pick an issue" in content
     assert 'id="path-heading"' in content
     assert "dn-way-chips" not in content

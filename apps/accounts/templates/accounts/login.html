@@ -5,13 +5,6 @@
 {% block meta_description %}{% trans "Sign-in for named ministry officers. Contributing to a listed project needs no DevNepal account." %}{% endblock %}
 {% block header_nav %}
 <div class="dn-header-actions dn-header-actions--end">
-  <form class="lang-switch" action="/i18n/setlang/" method="post" aria-label="{% trans 'Language' %}">
-    {% csrf_token %}
-    {% if request %}<input type="hidden" name="next" value="{{ request.get_full_path }}">{% endif %}
-    <button type="submit" name="language" value="en" lang="en"{% if CURRENT_LANGUAGE == 'en' %} aria-current="true"{% endif %}>EN</button>
-    <span class="lang-switch__divider" aria-hidden="true">|</span>
-    <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
-  </form>
   <a class="btn btn-sm" href="{% url 'projects:government' %}">{% trans "Browse projects" %}</a>
 </div>
 {% endblock %}
