@@ -730,19 +730,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 
 /* The counts substantiate the hero's claim, so they sit directly beneath it as
    a measure rather than in a box that competes with the headline. */
-/* Three live counts. The number and its label are one unit, so they sit tight
-   together and the whole row reads in a glance; the eyebrow and the caveat share
-   a line above rather than each claiming their own band of whitespace. */
-.dn-measure { background: var(--color-paper); }
-.dn-measure > .container { padding-block: var(--space-6) var(--space-8); border-top: 1px solid var(--color-divider); }
-.dn-measure__head { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); align-items: baseline; justify-content: space-between; margin-bottom: var(--space-5); }
-.dn-measure h2 { margin: 0; color: var(--color-neutral-600); font-family: var(--font-body); font-size: var(--fs-xs); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.dn-measure__note { margin: 0; color: var(--color-neutral-600); font-size: var(--fs-xs); }
-.dn-measure__figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
-.dn-measure__figures > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 var(--space-4); align-items: center; padding-right: var(--space-6); }
-.dn-measure__figures > div + div { padding-left: var(--space-6); border-left: 1px solid var(--color-divider); }
-.dn-measure__figures dt { color: var(--color-accent-700); font-family: var(--font-heading); font-size: var(--fs-3xl); font-weight: 600; line-height: .9; font-variant-numeric: tabular-nums; }
-.dn-measure__figures dd { max-width: 22ch; margin: 0; color: var(--color-neutral-800); font-size: var(--fs-sm); line-height: 1.35; }
 
 .dn-featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: var(--space-5); }
 .dn-featured-card { gap: var(--space-4); padding: var(--space-6); }
@@ -813,10 +800,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-journey .dn-journey-step:nth-child(odd) { border-left: 0; }
   .dn-journey .dn-journey-step:nth-child(n + 3) { border-top: 1px solid var(--color-divider); }
   .dn-journey .dn-journey-step + .dn-journey-step { border-top: 1px solid var(--color-divider); border-left: 0; }
-  .dn-measure__figures { grid-template-columns: 1fr; }
-  .dn-measure__figures > div { padding: var(--space-3) 0; }
-  .dn-measure__figures > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--color-divider); }
-  .dn-measure__figures dt { font-size: var(--fs-2xl); }
   .dn-closing-band { padding: var(--space-6); }
 }
 

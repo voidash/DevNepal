@@ -255,10 +255,10 @@ def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert "On DevNepal today" in content
-    assert "ministries publishing, each through a named officer" in content
-    assert "projects open for contribution" in content
-    assert "contributions accepted by a named maintainer" in content
+    # The live counts block is gone from the landing page; what it asserted about
+    # named accountability is made in the terms section instead.
+    assert "On DevNepal today" not in content
+    assert "named maintainer" in content
     assert "Public member profiles" not in content
     assert "Nine ways to contribute" in content
     assert "Writing code is one of them" in content

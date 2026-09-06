@@ -17,7 +17,6 @@ def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(clien
     home_content = home.content.decode()
 
     ordered_sections = (
-        'id="hero-proof-heading"',
         'id="contribution-path-heading"',
         'id="path-heading"',
         'id="opportunities-heading"',

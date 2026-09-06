@@ -201,15 +201,6 @@ def home(request: HttpRequest) -> HttpResponse:
             "featured_projects": featured_projects,
             "recommendations": recommendations,
             "github_oauth_enabled": github_oauth.oauth_config().enabled,
-            "platform_metrics": {
-                "ministries": MinistryOrganization.objects.filter(status=OrgStatus.ACTIVE).count(),
-                "open_projects": public_projects()
-                .filter(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
-                .count(),
-                "verified_contributions": ContributionRecord.objects.filter(
-                    status=VerificationStatus.ACCEPTED
-                ).count(),
-            },
         },
     )
 

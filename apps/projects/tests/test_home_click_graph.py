@@ -234,7 +234,6 @@ def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
 
     assert "Featured government projects" in content
     assert "Nine ways to contribute" in content
-    assert "On DevNepal today" in content
     assert "How a contribution works" in content
     assert 'id="path-heading"' in content
     assert "dn-way-chips" not in content
