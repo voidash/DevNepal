@@ -907,6 +907,11 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-publisher-repository > header h2 { margin: 0; font-size: var(--fs-lg); }
 .dn-publisher-repository li a { color: var(--color-text); font-weight: 500; text-decoration: none; }
 .dn-publisher-repository li a:hover { color: var(--color-accent-700); text-decoration: underline; }
+
+[data-repository-connect] { display: grid; gap: var(--space-2); justify-items: start; }
+.dn-connect-status { max-width: 48ch; color: var(--color-neutral-700); font-size: var(--fs-sm); line-height: var(--lh-normal); }
+[data-repository-connect] .is-connecting::before { width: 14px; height: 14px; flex: none; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; content: ""; animation: dn-connect-spin .75s linear infinite; }
+@keyframes dn-connect-spin { to { transform: rotate(360deg); } }
 .dn-publisher-project__summary h2 { margin: 0; }
 .dn-publisher-project__summary > div > p { margin: var(--space-2) 0 0; color: var(--color-neutral-700); font-size: var(--fs-sm); }
 

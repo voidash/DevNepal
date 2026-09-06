@@ -1,6 +1,8 @@
-{% load i18n %}
-<form method="post" action="{% url 'github_sync:connect_repository' %}">
+{% load i18n static %}
+<form method="post" action="{% url 'github_sync:connect_repository' %}" data-repository-connect aria-busy="false">
   {% csrf_token %}
   <input type="hidden" name="project_id" value="{{ project.pk }}">
-  <button class="{{ button_class|default:'btn btn--primary' }}" type="submit">{% trans "Connect repository" %}</button>
+  <button class="{{ button_class|default:'btn btn--primary' }}" type="submit" data-connecting-label="{% trans 'Connecting to GitHub…' %}"><span data-connect-label>{% trans "Connect repository" %}</span></button>
+  <span class="dn-connect-status" role="status" aria-live="polite" hidden>{% trans "Checking GitHub App access and loading issues, pull requests, and contributors." %}</span>
 </form>
+<script type="module" src="{% static 'src/repository-connect.js' %}?v=20260906a"></script>

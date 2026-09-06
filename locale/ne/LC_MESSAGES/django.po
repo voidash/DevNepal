@@ -4101,6 +4101,14 @@ msgstr "रिपोजिटरी जडान भयो। यस रिप�
 msgid "Project published. It is now visible to the public."
 msgstr "परियोजना प्रकाशित भयो। अब यो सार्वजनिक रूपमा देखिन्छ।"
 
+#: apps/projects/templates/projects/_connect_repository_button.html:5
+msgid "Connecting to GitHub…"
+msgstr "GitHub सँग जडान हुँदैछ…"
+
+#: apps/projects/templates/projects/_connect_repository_button.html:6
+msgid "Checking GitHub App access and loading issues, pull requests, and contributors."
+msgstr "GitHub App पहुँच जाँच्दै र इशु, पुल रिक्वेस्ट तथा योगदानकर्ताहरू लोड गर्दैछ।"
+
 #: apps/github_sync/views.py:481
 msgid "Repository connected. Activity for this repository can now feed listed projects."
 msgstr "रिपोजिटरी जडान भयो। यस रिपोजिटरीको गतिविधिले अब सूचीबद्ध परियोजनाहरूमा जानकारी पुर्‍याउन सक्छ।"

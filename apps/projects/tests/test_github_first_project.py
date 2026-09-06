@@ -238,4 +238,19 @@ def test_gov_004_new_project_workspace_links_to_repository_connection(client):
     assert response.status_code == 200
     assert f'action="{expected}"' in content
     assert f'name="project_id" value="{project.pk}"' in content
-    assert 'type="submit">Connect repository</button>' in content
+    assert 'data-repository-connect aria-busy="false"' in content
+    assert 'data-connecting-label="Connecting to GitHub…"' in content
+    assert 'data-connect-label>Connect repository</span>' in content
+    assert "Checking GitHub App access and loading issues" in content
+    assert 'src="/static/src/repository-connect.js?v=20260906a"' in content
+
+
+def test_repository_connect_script_exposes_an_accessible_pending_state():
+    """GIT-003/NFR-A11Y-01: a slow GitHub connection gives immediate honest feedback."""
+    script = (Path(settings.BASE_DIR) / "static/src/repository-connect.js").read_text()
+
+    assert 'form.setAttribute("aria-busy", "true")' in script
+    assert "button.disabled = true" in script
+    assert 'button.classList.add("is-connecting")' in script
+    assert "status.hidden = false" in script
+    assert 'form.addEventListener("submit"' in script
