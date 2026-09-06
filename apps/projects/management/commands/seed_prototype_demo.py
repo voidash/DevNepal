@@ -549,6 +549,30 @@ def seed_prototype_demo() -> dict[str, int]:
     _maintainer(sign_language, health_maintainer, MaintainerRole.LEAD)
     sign_language.contribution_types.set([engineering, documentation])
     sign_language.skills.set(_skills("Python", "Documentation", "Machine Learning"))
+    RepositoryConnection.objects.update_or_create(
+        provider=Provider.GITHUB,
+        repository_id=1_299_111_781,
+        defaults={
+            "installation_id": 159_188_767,
+            "repository_node_id": "R_kgDOTW7fZQ",
+            "full_name": "voidash/nepali-sign-language-research",
+            "is_public": True,
+            "project": sign_language,
+            "granted_scopes": [
+                "contents:read",
+                "issues:read",
+                "metadata:read",
+                "pull_requests:read",
+            ],
+            "sync_state": SyncState.IDLE,
+            "health_note": "",
+            "sync_failure_count": 0,
+            "next_sync_attempt_at": None,
+            "access_revoked_reason": "",
+            "activated_by": health_maintainer,
+            "deactivated_at": None,
+        },
+    )
 
     sajhabus, sajhabus_created = Project.objects.get_or_create(
         slug="sajhabus-timetable",

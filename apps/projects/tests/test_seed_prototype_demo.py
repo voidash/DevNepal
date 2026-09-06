@@ -9,7 +9,12 @@ from apps.blogs.enums import BlogPostType, BlogStatus
 from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
-from apps.github_sync.models import GithubRepositoryContributor, GithubStarterTask
+from apps.github_sync.enums import SyncState
+from apps.github_sync.models import (
+    GithubRepositoryContributor,
+    GithubStarterTask,
+    RepositoryConnection,
+)
 from apps.ministries.enums import OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import ProjectStatus, ProjectType
@@ -68,6 +73,14 @@ def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials(clie
         "https://github.com/voidash/civic-nepal",
         "https://github.com/voidash/nepali-sign-language-research",
     }
+    assert RepositoryConnection.objects.filter(
+        repository_id=1_299_111_781,
+        repository_node_id="R_kgDOTW7fZQ",
+        full_name="voidash/nepali-sign-language-research",
+        project__slug="nepali-sign-language-research-portal",
+        is_public=True,
+        sync_state=SyncState.IDLE,
+    ).exists()
     home = client.get(reverse("projects:home"))
     assert home.status_code == 200
     assert len(list(home.context["featured_projects"])) == 6
