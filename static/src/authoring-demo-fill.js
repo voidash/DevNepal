@@ -48,7 +48,7 @@ if (button instanceof HTMLButtonElement && detailsElement && status instanceof H
 
       const demoIntent = form.elements.namedItem("demo_fill");
       if (demoIntent instanceof HTMLInputElement) {
-        demoIntent.value = "nepali-sign-language-research";
+        demoIntent.value = "civic-help-directory";
       }
 
       status.textContent = status.dataset.filledMessage || "";
