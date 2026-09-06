@@ -406,10 +406,18 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-catalog-card__tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 /* Four labels — Mode, Difficulty, Effort, First response — need ~90px each or the
    headings collide and values break mid-word. Wrap to two rows instead. */
-.dn-catalog-card__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-4); margin: auto 0 0; padding-top: var(--space-4); border-top: 1px solid var(--color-divider); color: var(--color-neutral-800); font-size: var(--fs-sm); }
-.dn-catalog-card__facts div { flex: 1 1 90px; min-width: 90px; }
-.dn-catalog-card__facts dt { color: var(--color-neutral-600); font-size: var(--fs-2xs); letter-spacing: .08em; text-transform: uppercase; }
-.dn-catalog-card__facts dd { margin: 0; overflow-wrap: normal; hyphens: auto; }
+/* Card metadata is a row of quiet chips, not a grid of columns: a two-column
+   grid clipped its own values the moment the text face got wider. The pill
+   corner and the 11px step keep them below the status Labels above, which own
+   the same height but carry a fill. */
+/* One definition, not three: this row had accumulated a base rule and two
+   higher-specificity overrides, and the last one — nowrap chips at --fs-sm —
+   is what clipped its own values once the text face got wider. The row hangs
+   left by the chip's own padding so the chip TEXT lines up with the title,
+   the count and the footer link rather than sitting a few pixels inside them. */
+.dn-catalog-card__facts { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: auto 0 0 calc(var(--space-2) * -1); padding-top: var(--space-4); border-top: 1px solid var(--color-divider); }
+.dn-catalog-card__facts div { display: inline-flex; min-height: var(--badge-h); align-items: center; padding: 0 var(--space-2); border-radius: var(--radius-pill); color: var(--color-neutral-700); background: var(--color-neutral-100); font-size: var(--fs-2xs); letter-spacing: .01em; line-height: var(--lh-tight); white-space: nowrap; }
+.dn-catalog-card__facts dd { margin: 0; }
 .dn-catalog-card__foot { display: flex; justify-content: space-between; gap: var(--space-3); color: var(--color-neutral-600); font-size: var(--fs-xs); }
 .dn-catalog-pagination { display: flex; align-items: center; justify-content: center; gap: var(--space-3); padding-top: var(--space-8); }
 
@@ -429,7 +437,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-catalog-search { grid-column: auto; }
   .dn-catalog-body { display: block; }
   .dn-catalog-result-summary, .dn-catalog-card__foot { flex-direction: column; }
-  .dn-catalog-card__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 }
 
 /* Prototype A2.2 — public project sheet. */
@@ -1078,10 +1085,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-catalog-card__work { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; margin: 0; padding: var(--space-3) 0; border-block: 1px solid var(--color-divider); }
 .dn-catalog-card__work strong { color: var(--color-accent-700); font-family: var(--font-heading); font-size: var(--fs-lg); font-weight: 600; }
 .dn-catalog-card__work--quiet { color: var(--color-neutral-600); font-size: var(--fs-sm); }
-.dn-catalog-results > .card .dn-catalog-card__facts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); padding-top: 0; border-top: 0; }
-.dn-catalog-results > .card .dn-catalog-card__facts div { display: flex; gap: var(--space-2); align-items: baseline; }
-.dn-catalog-results > .card .dn-catalog-card__facts dt { margin: 0; }
-.dn-catalog-results > .card .dn-catalog-card__facts dd { font-weight: 500; }
 .dn-catalog-card__foot { align-items: baseline; padding-top: var(--space-3); border-top: 1px solid var(--color-divider); }
 
 /* One-click starts for the three choices a newcomer makes first. */
@@ -1169,9 +1172,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-catalog-card__work { gap: var(--space-2); margin-top: var(--space-2); padding: var(--space-3) 0 0; border-top: 1px solid var(--color-divider); border-bottom: 0; }
 .dn-catalog-card__work strong { font-size: var(--fs-md); }
 .dn-catalog-card__work .Label { font-size: var(--fs-2xs); }
-.dn-catalog-results > .card .dn-catalog-card__facts { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin: 0; padding: 0; border: 0; color: var(--color-neutral-700); font-size: var(--fs-sm); }
-
-.dn-catalog-results > .card .dn-catalog-card__facts dd { margin: 0; }
 .dn-catalog-card__tags { margin-top: var(--space-1); }
 .dn-catalog-card__foot { margin-top: auto; padding-top: var(--space-3); font-size: var(--fs-sm); }
 
@@ -1186,4 +1186,3 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
   .dn-catalog-filters .dn-catalog-filter-head { display: none; }
   .dn-catalog-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
 }
-.dn-catalog-results > .card .dn-catalog-card__facts div { white-space: nowrap; }

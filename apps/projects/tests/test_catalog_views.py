@@ -592,7 +592,7 @@ def test_catalog_uses_the_a2_1_blueprint_filter_and_project_sheet(client):
     assert "Official" in content
     assert "Community" in content
     assert ">Mode<" in content
-    assert "First response" in content
+    assert "replies within" not in content
 
 
 @pytest.mark.unit
