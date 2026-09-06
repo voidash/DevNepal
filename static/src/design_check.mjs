@@ -78,6 +78,47 @@ for (const cssFile of cssFiles.filter((cssFile) => cssFile !== 'src/tokens.css')
   if (/#[\da-f]{3,8}\b/i.test(css)) cssViolations.push(`${cssFile}: raw color value`)
 }
 
+// The type, spacing and corner scales only hold if nothing can reintroduce a raw
+// value. tokens.css is the one file allowed to name a size.
+for (const cssFile of cssFiles.filter((cssFile) => cssFile !== 'src/tokens.css')) {
+  const css = await readFile(join(root, 'static', cssFile), 'utf8')
+  const lines = css.split('\n')
+  lines.forEach((line, index) => {
+    if (line.includes('clamp(')) return
+    if (/font-size:\s*\d+px/.test(line)) {
+      cssViolations.push(`${cssFile}:${index + 1}: raw font-size, use a --fs- token`)
+    }
+    if (/font:\s*(?:\d+\s+)?\d+px/.test(line)) {
+      cssViolations.push(`${cssFile}:${index + 1}: raw size in a font shorthand, use a --fs- token`)
+    }
+    if (/border-radius:\s*\d+px/.test(line)) {
+      cssViolations.push(`${cssFile}:${index + 1}: raw border-radius, use var(--radius)`)
+    }
+    const spacing = line.match(/\b(?:padding|margin|gap|row-gap|column-gap)(?:-[a-z]+)?:\s*[^;]+/g) ?? []
+    for (const declaration of spacing) {
+      for (const value of declaration.match(/\b(\d+)px/g) ?? []) {
+        const px = Number.parseInt(value, 10)
+        if (px > 3) {
+          cssViolations.push(`${cssFile}:${index + 1}: raw spacing ${value}, use a --space- token`)
+        }
+      }
+    }
+  })
+}
+
+// #5395fc measures 2.97:1 against white. The primary action reads two tokens, so
+// the pairing has to be checked at the token level — the selector-level contrast
+// rule below cannot see through the indirection.
+{
+  const tokens = await readFile(join(root, 'static', 'src/tokens.css'), 'utf8')
+  const action = tokens.match(/--color-action:\s*([^;]+);/)?.[1]?.trim()
+  const actionFg = tokens.match(/--color-action-fg:\s*([^;]+);/)?.[1]?.trim()
+  const lightFg = actionFg === 'var(--color-paper)' || actionFg === '#ffffff'
+  if (action === 'var(--color-accent)' && lightFg) {
+    cssViolations.push('src/tokens.css: --color-action is the base accent under light text (2.97:1)')
+  }
+}
+
 for (const cssFile of ['src/onboarding.css', 'src/public-discovery.css']) {
   const css = await readFile(join(root, 'static', cssFile), 'utf8')
   if (/\/\*/.test(css)) cssViolations.push(`${cssFile}: explanatory CSS comment`)

@@ -7,7 +7,7 @@
 html {
   font-size: 100%;
   font-family: var(--font-body);
-  scroll-padding-top: var(--space-24);
+  scroll-padding-top: var(--header-h);
   background: var(--color-bg);
   color-scheme: light;
 }

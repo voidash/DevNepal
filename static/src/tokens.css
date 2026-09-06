@@ -125,6 +125,10 @@
   --container-narrow: 900px;
   --page-gutter: 40px;
   --target-min: 44px;
+  /* The sticky header's real height: 64px of content plus --space-3 above and
+     below. Anchor offsets and sticky rails read this so they can never drift
+     apart from the bar they are clearing. */
+  --header-h: 88px;
 
   /* Three control heights, each with one job, so a row of mixed controls sits
      on a single line. Everything interactive is one of these. */

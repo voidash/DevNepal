@@ -1,7 +1,7 @@
 .dn-onboarding { padding: var(--space-10) var(--space-5) var(--space-16); }
 .dn-onboarding__shell { width: min(100%, 820px); margin: 0 auto; }
 .dn-onboarding__heading { margin-bottom: var(--space-5); }
-.dn-onboarding__heading > p:first-child { margin: 0 0 var(--space-2); color: var(--color-accent-700); font: 600 13px/1.35 var(--font-body); letter-spacing: 0; }
+.dn-onboarding__heading > p:first-child { margin: 0 0 var(--space-2); color: var(--color-accent-700); font: 600 var(--fs-sm)/1.35 var(--font-body); letter-spacing: 0; }
 .dn-onboarding__heading h1, .dn-onboarding__sheet h2, .dn-onboarding__sheet h3 { font-family: var(--font-heading); }
 .dn-onboarding__lede { max-width: 62ch; color: var(--color-neutral-800); }
 .dn-onboarding__sheet { display: flex; flex-direction: column; gap: var(--space-5); padding: var(--space-5); border: 1px solid var(--color-divider); background: var(--color-paper); }
