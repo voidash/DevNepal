@@ -44,7 +44,7 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-primary-nav ul { display: flex; align-items: center; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
 .dn-primary-nav a { display: inline-flex; align-items: center; min-height: var(--control-md); padding: 0 var(--space-3); border-radius: var(--radius-md); color: var(--color-neutral-800); font-size: var(--fs-sm); font-weight: 500; text-decoration: none; white-space: nowrap; }
 .dn-primary-nav a:hover { background: var(--color-neutral-100); color: var(--color-accent-700); }
-.dn-primary-nav a[aria-current="page"] { color: var(--color-accent-700); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; }
+.dn-primary-nav a[aria-current="page"] { color: var(--color-accent-700); text-decoration: none; }
 .dn-header-actions { display: flex; flex: none; align-items: center; gap: var(--space-2); }
 .dn-header-actions--end { margin-left: auto; }
 .lang-switch { display: inline-flex; overflow: hidden; border: 1px solid var(--color-divider-strong); border-radius: var(--radius-md); }

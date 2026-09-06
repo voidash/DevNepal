@@ -153,7 +153,10 @@ if (!/a\s*\{[^}]*color:\s*var\(--color-accent-700\)/s.test(baseCss)) {
 
 const shellCss = await readFile(join(root, 'static', 'src/devnepal.css'), 'utf8')
 const navigationCues = [
-  [/\.dn-primary-nav a\[aria-current="page"\]\s*\{[^}]*text-decoration:\s*underline/s, 'primary navigation'],
+  [
+    /\.dn-primary-nav a\[aria-current="page"\]\s*\{[^}]*color:\s*var\(--color-accent-700\)[^}]*text-decoration:\s*none/s,
+    'primary navigation',
+  ],
   [/\.mobile-nav a\[aria-current="page"\]\s*\{[^}]*border-left:/s, 'mobile navigation'],
 ]
 for (const [pattern, name] of navigationCues) {
