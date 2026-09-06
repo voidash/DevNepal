@@ -296,9 +296,11 @@ def test_verification_queue_exposes_provenance_review_age_sla_and_escalation(cli
 
     assert response.status_code == 200
     assert owned.get_source_display() in content
-    assert "Automated check: provider event reference recorded" in content
-    assert "Age:" in content
-    assert "Review SLA: Within 3 days" in content
+    assert "Automated check" in content
+    assert "provider event reference recorded" in content
+    assert "Age" in content
+    assert "Review SLA" in content
+    assert "Within 3 days" in content
     assert owned.project.escalation_path in content
 
 

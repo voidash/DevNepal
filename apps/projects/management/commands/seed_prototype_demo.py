@@ -11,7 +11,11 @@ from apps.blogs.services import render_safe_markdown
 from apps.contributions.enums import ContributionSource, ImpactTier, VerificationStatus
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.enums import Provider, SyncState
-from apps.github_sync.models import GithubStarterTask, RepositoryConnection
+from apps.github_sync.models import (
+    GithubRepositoryContributor,
+    GithubStarterTask,
+    RepositoryConnection,
+)
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import (
@@ -343,6 +347,16 @@ def seed_prototype_demo() -> dict[str, int]:
         "Document keyboard-first contribution workflow",
         ["good first issue"],
     )
+    _github_people(
+        repository,
+        (
+            (1, "voidash", 41),
+            (42, "aarati-shrestha", 9),
+            (43, "kritika-poudel", 6),
+            (44, "bibek-gurung", 4),
+            (45, "sujata-tamang", 2),
+        ),
+    )
 
     address_schema = _government_project(
         slug="unified-local-address-schema",
@@ -356,9 +370,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "levels, wards and tole names."
         ),
         summary_ne="७५३ स्थानीय तह, वडा र टोल नामका लागि खुला JSON schema र validation library।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mofaga-np/local-address-schema",
+        issue_tracker_url="https://github.com/mofaga-np/local-address-schema/issues",
+        documentation_url="https://github.com/mofaga-np/local-address-schema#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         estimated_effort=EffortBand.SMALL,
@@ -371,7 +385,7 @@ def seed_prototype_demo() -> dict[str, int]:
         address_schema,
         "Document ward and tole name validation",
         "Documentation task for the unified local address schema.",
-        "",
+        "https://github.com/mofaga-np/local-address-schema/issues/1",
     )
 
     health_registry = _government_project(
@@ -386,9 +400,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "posts and birthing centres."
         ),
         summary_ne="अस्पताल, स्वास्थ्य चौकी र प्रसूति केन्द्रको राष्ट्रिय दर्ताका लागि सार्वजनिक API।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mohp-np/health-facility-registry",
+        issue_tracker_url="https://github.com/mohp-np/health-facility-registry/issues",
+        documentation_url="https://github.com/mohp-np/health-facility-registry#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         difficulty=DifficultyLevel.BEGINNER,
@@ -402,7 +416,7 @@ def seed_prototype_demo() -> dict[str, int]:
         health_registry,
         "Improve the first API contribution guide",
         "Beginner-friendly documentation task for the public health registry API.",
-        "",
+        "https://github.com/mohp-np/health-facility-registry/issues/1",
     )
 
     sajhabus, sajhabus_created = Project.objects.get_or_create(
@@ -485,6 +499,7 @@ def seed_prototype_demo() -> dict[str, int]:
         documentation_url="https://github.com/doit-np/sewa-portal#readme",
         status=ProjectStatus.COMPLETED,
         completion=True,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
     )
     _maintainer(completed, publisher, MaintainerRole.LEAD)
     completed.contribution_types.set([engineering, localization, documentation])
@@ -754,7 +769,7 @@ def _maintainer(project, user, role):
 
 
 def _task(project, title, description, issue_url):
-    return ProjectTask.objects.get_or_create(
+    task, created = ProjectTask.objects.get_or_create(
         project=project,
         title=title,
         defaults={
@@ -763,7 +778,12 @@ def _task(project, title, description, issue_url):
             "issue_url": issue_url,
             "status": TaskStatus.OPEN,
         },
-    )[0]
+    )
+    if not created and issue_url and task.issue_url != issue_url:
+        task.description = description
+        task.issue_url = issue_url
+        task.save(update_fields=["description", "issue_url", "updated_at"])
+    return task
 
 
 def _starter_task(repository, number, title, labels):
@@ -778,6 +798,31 @@ def _starter_task(repository, number, title, labels):
             "source_updated_at": timezone.now(),
         },
     )[0]
+
+
+def _github_avatar_url(login):
+    return f"https://avatars.githubusercontent.com/{login}?s=80&v=4"
+
+
+def _github_people(repository, people):
+    existing = list(repository.contributor_snapshots.all())
+    if existing:
+        for contributor in existing:
+            avatar_url = _github_avatar_url(contributor.login)
+            if contributor.avatar_url == avatar_url:
+                continue
+            contributor.avatar_url = avatar_url
+            contributor.save(update_fields=["avatar_url"])
+        return
+    for github_user_id, login, contributions in people:
+        GithubRepositoryContributor.objects.create(
+            repository=repository,
+            github_user_id=github_user_id,
+            login=login,
+            avatar_url=_github_avatar_url(login),
+            profile_url=f"https://github.com/{login}",
+            contributions=contributions,
+        )
 
 
 def _contribution(

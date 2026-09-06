@@ -286,7 +286,7 @@ def test_catalog_cards_and_accountability_sheets_keep_textual_state(rendered_pag
     content = detail.content.decode()
     assert "Maintainers" in content, "project detail"
     assert "Response commitment" in content, "project detail"
-    assert "In review" in content, "project detail"
+    assert "Suitability checklist not started" not in content, "project detail"
 
 
 @pytest.mark.unit

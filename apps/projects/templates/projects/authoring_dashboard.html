@@ -1,46 +1,119 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Project authoring" %} | DevNepal{% endblock %}
+{% block title %}{% trans "Publishing dashboard" %} | DevNepal{% endblock %}
 {% block content %}
+{% comment %} An officer opens this page to find out what needs them, not to
+   read an inventory. So the page answers in that order: what is waiting, then
+   drafts that are not public yet, then live listings, then closed ones. A
+   project's row carries the one action its state calls for. {% endcomment %}
 <div class="dn-page-header">
   <div class="dn-container">
     <div class="dn-repo-title">
-      <h1>{% trans "Government project authoring" %}</h1>
+      <h1>{% trans "Publishing dashboard" %}</h1>
       <span class="Label">{% trans "Ministry workspace" %}</span>
     </div>
     <nav class="dn-tabs" aria-label="{% trans 'Project authoring sections' %}">
       <a class="dn-tab" aria-current="page" href="{% url 'projects:authoring_dashboard' %}">{% trans "Projects" %} <span class="Counter">{{ projects|length }}</span></a>
-      <a class="dn-tab" href="{% url 'projects:application_list' %}">{% trans "Applications" %}</a>
+      <a class="dn-tab" href="{% url 'projects:application_list' %}">{% trans "Applications" %}{% if pending_application_count %} <span class="Counter">{{ pending_application_count }}</span>{% endif %}</a>
+      <a class="dn-tab" href="{% url 'contributions:verification_queue' %}">{% trans "Verification queue" %}{% if pending_evidence_count %} <span class="Counter">{{ pending_evidence_count }}</span>{% endif %}</a>
     </nav>
   </div>
 </div>
-<main class="section">
-  <div class="dn-container">
-    <header class="card__head">
-      <div>
-        <p class="dn-section-kicker">{% trans "Government publishing" %}</p>
-        <h2>{% trans "Ministry projects" %}</h2>
-      </div>
-      {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
-      {% if user.is_superuser %}<a class="btn btn--secondary" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>{% endif %}
-    </header>
-    <div class="table-scroll">
-    <table class="dn-data-table">
-      <thead><tr><th>{% trans "Project" %}</th><th>{% trans "Ministry" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead>
-      <tbody>
-        {% for project in projects %}
-        <tr>
-          <td><a class="card__title-link" href="{% url 'projects:authoring_detail' project.slug %}"><strong>{{ project.localized_title }}</strong></a></td>
-          <td>{{ project.ministry.localized_name }}</td>
-          <td><span class="Label">{{ project.get_status_display }}</span></td>
-          <td><a class="btn btn-sm" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit" %}</a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">{% trans "No government projects are available for your ministry assignments." %}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+
+<div class="dn-container dn-workspace">
+  {% for assignment in user.publisher_assignments.all %}{% if forloop.first %}
+  <section class="blueprint dn-workspace-identity" aria-labelledby="ministry-heading">
+    <div>
+      {% if assignment.ministry.name_ne %}<p class="dn-workspace-identity__ne" lang="ne">{{ assignment.ministry.name_ne }}</p>{% endif %}
+      <h2 id="ministry-heading">{{ assignment.ministry.name_en }}</h2>
+      <p>{{ user.get_full_name|default:user.username }} · {{ assignment.title }} · {{ assignment.official_email }}</p>
     </div>
-  </div>
-</main>
+    <dl class="dn-workspace-identity__facts">
+      <div><dt>{% trans "Named officers" %}</dt><dd>{{ assignment.ministry.publishers.count }}</dd></div>
+      <div><dt>{% trans "Projects" %}</dt><dd>{{ projects|length }}</dd></div>
+      <div><dt>{% trans "Sign-in" %}</dt><dd>{% trans "MFA enforced" %}</dd></div>
+    </dl>
+  </section>
+  {% endif %}{% endfor %}
+
+  <section class="dn-attention" aria-labelledby="attention-heading">
+    <h2 id="attention-heading" class="dn-attention__heading">{% trans "What needs you" %}</h2>
+    {% if draft_projects or pending_application_count or pending_evidence_count %}
+    <ul class="dn-attention__list">
+      {% if draft_projects %}
+      <li class="blueprint dn-attention__item">
+        <a href="#drafts-heading">
+          <strong>{{ draft_projects|length }}</strong>
+          <span>{% blocktrans count counter=draft_projects|length %}draft is not public yet{% plural %}drafts are not public yet{% endblocktrans %}</span>
+        </a>
+        {% if unconnected_draft_count %}<p>{% blocktrans count counter=unconnected_draft_count %}{{ counter }} of them still needs its repository connected{% plural %}{{ counter }} of them still need their repository connected{% endblocktrans %}</p>{% endif %}
+      </li>
+      {% endif %}
+      {% if pending_application_count %}
+      <li class="blueprint dn-attention__item">
+        <a href="{% url 'projects:application_list' %}">
+          <strong>{{ pending_application_count }}</strong>
+          <span>{% blocktrans count counter=pending_application_count %}application waiting on your response{% plural %}applications waiting on your response{% endblocktrans %}</span>
+        </a>
+        <p>{% trans "Your ministry publishes a first-response commitment on every listing." %}</p>
+      </li>
+      {% endif %}
+      {% if pending_evidence_count %}
+      <li class="blueprint dn-attention__item">
+        <a href="{% url 'contributions:verification_queue' %}">
+          <strong>{{ pending_evidence_count }}</strong>
+          <span>{% blocktrans count counter=pending_evidence_count %}contribution waiting to be verified{% plural %}contributions waiting to be verified{% endblocktrans %}</span>
+        </a>
+        <p>{% trans "Recognition is only created once a named maintainer accepts the work." %}</p>
+      </li>
+      {% endif %}
+    </ul>
+    {% else %}
+    <p class="dn-attention__clear">{% trans "Nothing is waiting. Every listing is published and every queue is clear." %}</p>
+    {% endif %}
+  </section>
+
+  <section class="dn-workspace-work" aria-labelledby="ministry-projects-heading">
+    <header class="dn-home-section-heading">
+      <div>
+        <span class="dn-section-kicker">{% trans "Government publishing" %}</span>
+        <h2 id="ministry-projects-heading">{% trans "Ministry projects" %}</h2>
+        <p>{% trans "Each listing shows what the public sees and what its repository is doing right now. Issues, pull requests and contributors are synchronised from GitHub." %}</p>
+      </div>
+      <div class="button-group">
+        {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
+        {% if user.is_superuser %}<a class="btn" href="{% url 'projects:review_queue' %}">{% trans "Open review queue" %}</a>{% endif %}
+      </div>
+    </header>
+
+    {% if draft_projects %}
+    <h3 class="dn-group-heading" id="drafts-heading">{% trans "Draft" %} <span class="Counter">{{ draft_projects|length }}</span> <em>{% trans "not visible to the public" %}</em></h3>
+    <div class="dn-project-rows">
+      {% for project in draft_projects %}{% include "projects/_authoring_row.html" with project=project stage="draft" %}{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if live_projects %}
+    <h3 class="dn-group-heading" id="live-heading">{% trans "Live" %} <span class="Counter">{{ live_projects|length }}</span> <em>{% trans "open to contributors now" %}</em></h3>
+    <div class="dn-project-rows">
+      {% for project in live_projects %}{% include "projects/_authoring_row.html" with project=project stage="live" %}{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if closed_projects %}
+    <h3 class="dn-group-heading" id="closed-heading">{% trans "Closed" %} <span class="Counter">{{ closed_projects|length }}</span> <em>{% trans "completed, cancelled or archived" %}</em></h3>
+    <div class="dn-project-rows">
+      {% for project in closed_projects %}{% include "projects/_authoring_row.html" with project=project stage="closed" %}{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not projects %}
+    <div class="dn-empty" role="status">
+      <strong>{% trans "No projects yet" %}</strong>
+      <p>{% trans "Create a project, connect the ministry's public GitHub repository, and DevNepal will show its issues, pull requests and contributors here." %}</p>
+      {% if can_create %}<a class="btn btn--primary" href="{% url 'projects:authoring_create' %}">{% trans "Create project" %}</a>{% endif %}
+    </div>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}

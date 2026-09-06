@@ -26,6 +26,7 @@
       {% block header_nav %}
       <nav class="dn-primary-nav" aria-label="{% trans 'Primary' %}">
         <ul>
+          {% url 'projects:issue_index' as nav_issues %}{% if nav_issues %}<li><a href="{{ nav_issues }}"{% if request.resolver_match.view_name == 'projects:issue_index' %} aria-current="page"{% endif %}>{% trans "Open issues" %}</a></li>{% endif %}
           {% url 'projects:government' as nav_government %}{% if nav_government %}<li><a href="{{ nav_government }}"{% if request.resolver_match.view_name == 'projects:government' %} aria-current="page"{% endif %}>{% trans "Government projects" %}</a></li>{% endif %}
           {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}"{% if request.resolver_match.view_name == 'projects:community' %} aria-current="page"{% endif %}>{% trans "Community projects" %}</a></li>{% endif %}
           {% url 'projects:about' as nav_about %}{% if nav_about %}<li><a href="{{ nav_about }}"{% if request.resolver_match.view_name == 'projects:about' %} aria-current="page"{% endif %}>{% trans "How to contribute" %}</a></li>{% endif %}
@@ -40,15 +41,16 @@
           <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
         </form>
         {% if user.is_authenticated %}
-        <a class="dn-greeting" href="{% url 'accounts:dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
-        {% if viewer_is_ministry_publisher %}<a class="btn btn-sm" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>{% endif %}
+        {% if viewer_is_ministry_publisher %}<a class="dn-greeting" href="{% url 'projects:authoring_dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
+        <a class="btn btn-sm dn-header-pub" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>
+        {% else %}<a class="dn-greeting" href="{% url 'accounts:dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>{% endif %}
         <form action="{% url 'accounts:logout' %}" method="post">
           {% csrf_token %}
           <button class="btn btn-sm" type="submit">{% trans "Sign out" %}</button>
         </form>
         {% else %}
         {% block header_signin %}
-        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Sign in" %}</a>
+        <a class="btn btn-sm dn-signin" href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a>
         {% endblock %}
         {% endif %}
       </div>
@@ -56,6 +58,7 @@
         <summary>{% trans "Menu" %}</summary>
         <nav aria-label="{% trans 'Primary' %}">
           <ul>
+            {% url 'projects:issue_index' as nav_issues_m %}{% if nav_issues_m %}<li><a href="{{ nav_issues_m }}"{% if request.resolver_match.view_name == 'projects:issue_index' %} aria-current="page"{% endif %}>{% trans "Open issues" %}</a></li>{% endif %}
             {% url 'projects:government' as nav_gov %}{% if nav_gov %}<li><a href="{{ nav_gov }}"{% if request.resolver_match.view_name == 'projects:government' %} aria-current="page"{% endif %}>{% trans "Government projects" %}</a></li>{% endif %}
             {% url 'projects:community' as nav_community %}{% if nav_community %}<li><a href="{{ nav_community }}"{% if request.resolver_match.view_name == 'projects:community' %} aria-current="page"{% endif %}>{% trans "Community projects" %}</a></li>{% endif %}
             {% url 'projects:about' as nav_about_m %}{% if nav_about_m %}<li><a href="{{ nav_about_m }}"{% if request.resolver_match.view_name == 'projects:about' %} aria-current="page"{% endif %}>{% trans "How to contribute" %}</a></li>{% endif %}
@@ -92,15 +95,8 @@
   </main>
   {% block footer %}
   <footer class="dn-footer">
-    <div class="dn-container dn-footer-brand">
-      <span class="dn-brand-copy">
-        <strong>DevNepal</strong>
-        <small>{% trans "नेपाल सरकार · Government of Nepal" %}</small>
-      </span>
-      <p>{% trans "A trusted registry and collaboration layer, not a replacement for GitHub. Code, issues and reviews stay in approved repositories; DevNepal records who did what, and for which ministry." %}</p>
-    </div>
     <div class="dn-container dn-footer-grid">
-      <nav aria-label="{% trans 'Platform' %}">
+      <nav class="dn-footer-platform" aria-label="{% trans 'Platform' %}">
         <h2>{% trans "Platform" %}</h2>
         <ul>
           {% url 'projects:government' as government_url %}{% if government_url %}<li><a href="{{ government_url }}">{% trans "Government Projects" %}</a></li>{% endif %}
@@ -127,12 +123,12 @@
       <nav aria-label="{% trans 'Help' %}">
         <h2>{% trans "Help" %}</h2>
         <ul>
-          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Sign in" %}</a></li>{% endif %}
-          {% url 'accounts:signup' as signup_url %}{% if signup_url %}<li><a href="{{ signup_url }}">{% trans "Create an account" %}</a></li>{% endif %}
+          {% url 'accounts:login' as login_url %}{% if login_url %}<li><a href="{{ login_url }}">{% trans "Ministry sign-in" %}</a></li>{% endif %}
+          {% url 'projects:ministry_onboarding' as onboarding_url %}{% if onboarding_url %}<li><a href="{{ onboarding_url }}">{% trans "Become a publishing ministry" %}</a></li>{% endif %}
           {% url 'github_sync:connection' as github_connection_url %}{% if github_connection_url %}<li><a href="{{ github_connection_url }}">{% trans "GitHub connection" %}</a></li>{% endif %}
         </ul>
       </nav>
-      <div>
+      <div class="dn-footer-note">
         <h2>{% trans "Official platform" %}</h2>
         <p>{% trans "A Government of Nepal public collaboration platform." %}</p>
         <p lang="ne">{% trans "नेपाल सरकारको सार्वजनिक सहयोग मञ्च।" %}</p>

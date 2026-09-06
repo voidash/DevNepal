@@ -574,6 +574,9 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
 
     assert 'class="dn-footer"' in base
     assert 'class="dn-container dn-footer-grid"' in base
+    assert 'class="dn-footer-platform"' in base
+    assert 'class="dn-footer-note"' in base
+    assert "dn-footer-brand" not in base
     assert base.count("<footer") == 1
     for label in ("Platform", "Policies", "Help"):
         assert f"aria-label=\"{{% trans '{label}' %}}\"" in base, label
@@ -595,4 +598,15 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
         " min-height: var(--target-min, 44px);"
     )
     assert footer_link_rule in footer_css
+    assert (
+        ".dn-footer { margin-top: var(--space-10); padding: var(--space-8) 0 var(--space-5);"
+        in (footer_css)
+    )
+    assert ".dn-footer-grid { display: grid; gap: var(--space-6) var(--space-8); }" in footer_css
+    assert "@media (min-width: 640px) { .dn-footer-grid { grid-template-columns:" in footer_css
+    assert "repeat(2, minmax(0, 1fr)); } }" in footer_css
     assert ".dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }" in footer_css
+    assert (
+        ".dn-footer-platform ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));"
+        in footer_css
+    )

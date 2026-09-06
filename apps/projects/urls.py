@@ -65,6 +65,7 @@ urlpatterns = [
         views.authoring_workflow,
         name="authoring_workflow",
     ),
+    path("issues/", views.issue_index, name="issue_index"),
     path("projects/", views.project_list, name="list"),
     path(
         "projects/gov/",

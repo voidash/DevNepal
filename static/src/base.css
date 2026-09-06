@@ -7,7 +7,31 @@
 html {
   font-size: 100%;
   font-family: var(--font-body);
-  scroll-padding-top: 64px;
+  scroll-padding-top: 88px;
+  background: var(--color-bg);
+  color-scheme: light;
+}
+
+/* Every filter and every quick chip on this site is a real navigation, so the
+   browser repaints the whole document each time one is used. Painting the same
+   ground behind the swap and crossfading it turns that repaint from a flash
+   into a change of state. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 140ms;
+  animation-timing-function: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 [lang="ne"] {
@@ -18,10 +42,9 @@ body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  /* Primer sets its own family on body, which beats the one inherited from html. */
   font-family: inherit;
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: var(--fs-base);
+  line-height: 1.6;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -37,28 +60,29 @@ h3,
 h4,
 h5,
 h6 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   text-transform: none;
+  text-wrap: balance;
 }
 
 h1 {
-  font-size: 42px;
+  font-size: clamp(34px, 5vw, 46px);
 }
 
 h2 {
-  font-size: 32px;
+  font-size: clamp(26px, 3.5vw, 32px);
 }
 
 h3 {
-  font-size: 25px;
+  font-size: clamp(21px, 2.8vw, 24px);
 }
 
 h4 {
-  font-size: 20px;
+  font-size: var(--fs-lg);
 }
 
 p,
@@ -68,11 +92,17 @@ ul {
   margin: 0 0 var(--space-4);
 }
 
-/* Links take the -600 step, not the accent itself: the accent carries white
-   button text at 4.76:1, but as text on the page ground it measures 4.26:1,
-   under the 4.5:1 that NFR-A11Y-01 requires. -600 measures 5.30:1 there. */
-a { color: var(--color-accent-600); text-underline-offset: 3px; }
-a:hover { color: var(--color-accent-700); }
+p {
+  max-width: 78ch;
+}
+
+a { color: var(--color-accent-700); text-underline-offset: 3px; }
+a:hover { color: var(--color-accent-800); }
+
+main :where(p, li, dd) a:not(.btn) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
 
 button,
 input,
@@ -100,17 +130,15 @@ textarea {
 }
 
 :focus-visible {
-  /* Not var(--focus-outline): Primer declares that name too, on a selector our
-     :root cannot outrank, so the ring rendered in Primer's blue. Name the
-     accent directly — that token is ours alone. */
-  outline: 2px solid var(--color-accent);
+  outline: var(--focus-outline);
   outline-offset: 2px;
 }
 
 .dn-product-header :focus-visible,
 .site-footer :focus-visible { outline-color: var(--color-accent); }
 
-.visually-hidden {
+.visually-hidden,
+.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -128,9 +156,10 @@ textarea {
   top: -100%;
   left: var(--space-2);
   z-index: 100;
-  background: var(--color-bg);
+  background: var(--color-paper);
   color: var(--color-text);
-  border: 1px solid var(--color-divider);
+  border: 1px solid var(--color-divider-strong);
+  border-radius: var(--radius-md);
   font-weight: 700;
   font-size: var(--fs-sm);
   text-transform: none;
@@ -143,6 +172,27 @@ textarea {
 
 .skip-link:focus-visible {
   top: var(--space-2);
+}
+
+/* Hover and selection states used to snap. Easing only the paint properties
+   keeps the page calm without moving anything. */
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button,
+  .btn,
+  summary,
+  input,
+  select,
+  textarea,
+  .card,
+  .Label,
+  .tag {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      outline-color 120ms ease;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
