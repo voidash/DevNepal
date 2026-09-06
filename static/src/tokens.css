@@ -106,11 +106,11 @@
   --border-2: 1px solid var(--color-divider);
   --border-4: 1px solid var(--color-divider);
 
-  /* One corner. Every bordered surface in the platform rounds to the same 6px;
+  /* One corner. Every bordered surface in the platform rounds to the same 8px;
      sm and lg are aliases kept so older call sites land on that same corner
      rather than inventing a second one. Pills and avatars are the only
      exceptions, because they are shapes rather than panels. */
-  --radius: 6px;
+  --radius: 8px;
   --radius-none: 0;
   --radius-sm: var(--radius);
   --radius-md: var(--radius);
