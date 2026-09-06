@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Open issues" %} | DevNepal{% endblock %}
+{% block meta_description %}{% trans "Every open issue across Government of Nepal projects that welcome public contribution. No DevNepal account is needed." %}{% endblock %}
+{% block content %}
+{% comment %} A contributor's unit of work is an issue, not a project. The
+   catalogue answers "which ministry", this page answers "what can I do
+   tonight", which is the question most people arrive with. {% endcomment %}
+<section class="dn-catalog" aria-labelledby="issues-heading">
+  <div class="container">
+    <header class="dn-catalog-heading">
+      <div>
+        <p class="dn-section-kicker">{% trans "Open public work" %}</p>
+        <h1 id="issues-heading">{% trans "Open issues" %}</h1>
+        <p>{% trans "Every open issue synchronised from the public repositories of ministry projects. Pick one and work in the repository. No DevNepal account is needed." %}</p>
+      </div>
+      <dl class="dn-catalog-status-counts" aria-label="{% trans 'Issue counts' %}">
+        <div><dt>{% trans "open" %}</dt><dd>{{ issues|length }}</dd></div>
+        <div><dt>{% trans "first issue" %}</dt><dd>{{ starter_count }}</dd></div>
+      </dl>
+    </header>
+
+    <div class="dn-catalog-quick" aria-label="{% trans 'Filter issues' %}">
+      <span>{% trans "Filter by" %}</span>
+      {% for name, count in labels %}
+      <a{% if filters.label|lower == name|lower %} aria-current="true"{% endif %} href="{% url 'projects:issue_index' %}?label={{ name|urlencode }}{% if filters.ministry %}&amp;ministry={{ filters.ministry }}{% endif %}">{{ name }} <span class="Counter">{{ count }}</span></a>
+      {% endfor %}
+      {% if filters.label or filters.ministry %}<a class="dn-catalog-quick__clear" href="{% url 'projects:issue_index' %}">{% trans "Clear" %}</a>{% endif %}
+    </div>
+
+    {% if ministries %}
+    <form class="dn-issue-index__ministry" method="get" action="{% url 'projects:issue_index' %}">
+      {% if filters.label %}<input type="hidden" name="label" value="{{ filters.label }}">{% endif %}
+      <label for="issue-ministry">{% trans "Ministry" %}</label>
+      <select id="issue-ministry" name="ministry">
+        <option value="">{% trans "All ministries" %}</option>
+        {% for ministry in ministries %}<option value="{{ ministry.slug }}"{% if filters.ministry == ministry.slug %} selected{% endif %}>{{ ministry.localized_name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-sm" type="submit">{% trans "Apply" %}</button>
+    </form>
+    {% endif %}
+
+    <div class="dn-issue-list dn-issue-index">
+      {% for issue in issues %}
+      <article class="dn-issue-row">
+        <div>
+          <div class="dn-labels">
+            {% if issue.is_starter %}<span class="Label Label--accent">{% trans "Good first issue" %}</span>{% endif %}
+            {% for label in issue.labels %}{% if not issue.is_starter or label|lower not in "good first issue,good-first-issue,help wanted,starter" %}<span class="Label">{{ label }}</span>{% endif %}{% endfor %}
+          </div>
+          <h2><a href="{{ issue.read_url }}">#{{ issue.number }} · {{ issue.title }}</a></h2>
+          <p class="dn-issue-meta">
+            <a class="dn-issue-index__project" href="{% url 'projects:detail' issue.project.slug %}">{{ issue.project.localized_title }}</a>
+            {% if issue.project.ministry %} · {{ issue.project.ministry.abbreviation|default:issue.project.ministry.localized_name }}{% endif %}
+            · {{ issue.repository }}
+            {% if issue.author_login %} · {% blocktrans with author=issue.author_login %}opened by @{{ author }}{% endblocktrans %}{% endif %}
+          </p>
+        </div>
+        <span class="dn-issue-actions">
+          <a href="{{ issue.read_url }}">{% trans "Read issue" %}</a>
+          <a href="{{ issue.url }}" rel="noopener noreferrer">{% trans "Open on GitHub" %} ↗</a>
+        </span>
+      </article>
+      {% empty %}
+      <div class="dn-empty" role="status">
+        <strong>{% trans "No open issues match this filter" %}</strong>
+        <p>{% trans "Issues appear here once a ministry connects its public repository and DevNepal synchronises it. Try clearing the filter, or browse the projects instead." %}</p>
+        <a class="btn" href="{% url 'projects:government' %}">{% trans "Browse government projects" %}</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

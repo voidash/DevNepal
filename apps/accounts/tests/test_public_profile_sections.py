@@ -9,6 +9,7 @@ from apps.blogs.enums import BlogPostType, BlogStatus
 from apps.blogs.tests.factories import BlogPostFactory
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.tests.factories import ContributionRecordFactory
+from apps.github_sync.tests.factories import GithubConnectionFactory
 from apps.projects.enums import ApplicationStatus, ProjectStatus
 from apps.projects.tests.factories import (
     ApplicationFactory,
@@ -78,30 +79,30 @@ def public_profile_url(user):
 
 @pytest.mark.integration
 def test_mem005_i1_public_profile_renders_separate_public_sections(client):
-    """MEM-005-I1: the public profile renders projects, blogs, verified contributions, and
-    badges in separate sections using only owned/public items."""
+    """MEM-005-I1/GIT-010: public profiles render only consented GitHub identity fields."""
     user = UserFactory(username="portfolio-member")
     MemberProfileFactory(user=user)
     made = build_portfolio(user)
+    github = GithubConnectionFactory(
+        user=user,
+        login="portfolio-gh",
+        consent_scopes=["public_profile"],
+        display_name="Portfolio Contributor",
+        html_url="https://github.com/portfolio-gh",
+        bio="Works in public on civic software.",
+    )
 
     response = client.get(public_profile_url(user))
     content = response.content.decode()
 
     assert response.status_code == 200
-    assert 'id="projects-heading"' in content
-    assert 'id="blogs-heading"' in content
-    assert 'id="contributions-heading"' in content
-    assert 'id="badges-heading"' in content
-    assert f"/en/projects/{made['owned_open'].slug}/" in content
-    assert f"/en/projects/{made['owned_completed'].slug}/" in content
-    assert f"/en/projects/{made['joined'].slug}/" in content
-    assert made["published"].title in content
-    assert made["published"].canonical_url in content
+    assert github.display_name in content
+    assert github.html_url in content
+    assert github.bio in content
     assert 'rel="noopener noreferrer"' in content
-    assert "Civic Engineering" in content
-    assert "1 verified contribution" in content
-    assert made["active_badge"].name in content
-
+    assert f"/en/projects/{made['owned_open'].slug}/" not in content
+    assert made["published"].title not in content
+    assert made["active_badge"].name not in content
     assert made["other_project"].slug not in content
     assert made["declined_project"].slug not in content
     assert made["draft"].title not in content
@@ -126,6 +127,10 @@ def test_mem005_u1_payload_sections_exclude_nonpublic_and_unverified_items():
     }
     assert [row["title"] for row in payload["blogs"]] == [made["published"].title]
     assert payload["contributions"] == [{"label": "Civic Engineering", "count": 1}]
+    assert payload["contribution_records"][0]["title"]
+    assert payload["contribution_records"][0]["project_slug"]
+    assert payload["contribution_records"][0]["accepted_by"]
+    assert payload["accepted_contribution_total"] == 1
     assert [row["name"] for row in payload["badges"]] == [made["active_badge"].name]
 
 

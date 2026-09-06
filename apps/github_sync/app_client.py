@@ -267,6 +267,58 @@ class GithubAppClient:
             f"/repos/{repository}/issues?state=open", _extract_items, token=token
         )
 
+    def repository_metadata(self, installation_id: int, full_name: str) -> dict:
+        """GIT-003/GIT-010: retrieve validated public repository metadata."""
+        repository = _repository_path(full_name)
+        payload = self._request(
+            "GET", f"/repos/{repository}", token=self.mint_installation_token(installation_id)
+        )
+        if not isinstance(payload, dict) or not isinstance(payload.get("full_name"), str):
+            raise GithubAppResponseError("GitHub repository metadata response was malformed")
+        return payload
+
+    def get_issue(self, installation_id: int, full_name: str, number: int) -> dict:
+        """GIT-003/GIT-010: retrieve one validated public issue payload."""
+        if isinstance(number, bool) or not isinstance(number, int) or number < 1:
+            raise GithubAppResponseError("GitHub issue number was malformed")
+        repository = _repository_path(full_name)
+        payload = self._request(
+            "GET",
+            f"/repos/{repository}/issues/{number}",
+            token=self.mint_installation_token(installation_id),
+        )
+        if not isinstance(payload, dict) or payload.get("number") != number:
+            raise GithubAppResponseError("GitHub issue response was malformed")
+        return payload
+
+    def list_open_pull_requests(self, installation_id: int, full_name: str) -> list[dict]:
+        """GIT-003/GIT-010: retrieve open pull requests through an in-memory App token."""
+        repository = _repository_path(full_name)
+        return self._paged_get(
+            f"/repos/{repository}/pulls?state=open",
+            _extract_items,
+            token=self.mint_installation_token(installation_id),
+        )
+
+    def list_contributors(self, installation_id: int, full_name: str) -> list[dict]:
+        """GIT-003/GIT-010: retrieve public aggregate repository contributors."""
+        repository = _repository_path(full_name)
+        return self._paged_get(
+            f"/repos/{repository}/contributors",
+            _extract_items,
+            token=self.mint_installation_token(installation_id),
+        )
+
+    def get_public_user(self, login: str) -> dict:
+        """GIT-002/GIT-010: retrieve one public GitHub account without user token storage."""
+        value = str(login).strip()
+        if not value or len(value) > 100:
+            raise GithubAppResponseError("GitHub login was malformed")
+        payload = self._request("GET", f"/users/{quote(value, safe='')}", app_auth=False)
+        if not isinstance(payload, dict) or payload.get("login") != value:
+            raise GithubAppResponseError("GitHub public profile response was malformed")
+        return payload
+
     def list_repository_events_page(
         self, installation_id: int, full_name: str, page: int
     ) -> list[dict]:
@@ -305,15 +357,25 @@ class GithubAppClient:
                 break
         return items
 
-    def _request(self, method: str, path: str, *, token: str | None = None) -> object:
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        token: str | None = None,
+        app_auth: bool = True,
+    ) -> object:
         if not self.is_configured:
             raise GithubAppNotConfiguredError("GitHub App credentials are not configured")
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": GITHUB_API_VERSION,
             "User-Agent": USER_AGENT,
-            "Authorization": f"token {token}" if token else f"Bearer {self._app_jwt()}",
         }
+        if token:
+            headers["Authorization"] = f"token {token}"
+        elif app_auth:
+            headers["Authorization"] = f"Bearer {self._app_jwt()}"
         payload = self._dispatch(
             {
                 "method": method,

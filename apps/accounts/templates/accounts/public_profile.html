@@ -1,29 +1,40 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{{ payload.username }} | DevNepal{% endblock %}
+{% block title %}{% if github_profile.display_name %}{{ github_profile.display_name }}{% else %}@{{ profile.user.username }}{% endif %} | DevNepal{% endblock %}
 {% block content %}
-<article class="section public-discovery public-discovery--profile" aria-labelledby="profile-heading">
-  <div class="container">
-    <header class="public-discovery__profile-header">
-      <div class="public-discovery__monogram public-discovery__monogram--large" aria-hidden="true">{{ payload.username|slice:":1"|upper }}</div>
-      <div><p class="dn-section-kicker">{% trans "A3.4 · Public profile" %}</p><h1 id="profile-heading">@{{ payload.username }}</h1>{% if payload.headline %}<p class="hero__lead">{{ payload.headline }}</p>{% endif %}{% if payload.location %}<p class="public-discovery__meta">{{ payload.location }}</p>{% endif %}{% if payload.province %}<p class="public-discovery__meta">{{ payload.province }}</p>{% endif %}</div>
-      <div class="public-discovery__profile-actions"><p class="public-discovery__notice">{% trans "Private by default" %}<br><span>{% trans "Email, sign-in provider, education, and private contact details are never shown." %}</span></p><a class="btn btn--secondary" href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report this profile" %}</a></div>
-    </header>
-    {% if payload.bio %}<div class="public-discovery__profile-bio"><h2>{% trans "About" %}</h2><p>{{ payload.bio }}</p></div>{% endif %}
-    <div class="public-discovery__profile-layout">
-      <div class="public-discovery__profile-main">
-        <section class="public-discovery__section" aria-labelledby="skills-heading"><h2 id="skills-heading">{% trans "Skills" %}</h2><div class="dn-labels">{% for skill in payload.skills %}<span class="Label">{{ skill.name }}{% if skill.self_rating %} · {{ skill.self_rating }}{% endif %}</span>{% empty %}<p>{% trans "No public skills listed." %}</p>{% endfor %}</div></section>
-        <section class="public-discovery__section" aria-labelledby="projects-heading"><h2 id="projects-heading">{% trans "Projects" %}</h2><div class="dn-issue-list">{% for project in payload.projects %}<div class="dn-issue-row"><div><a class="dn-issue-title" href="{% url 'projects:detail' project.slug %}">{{ project.title }}</a><div class="dn-issue-meta">{{ project.status }}</div></div><div class="dn-issue-aside">{% if project.official %}<span class="Label Label--outline">{% trans "Official" %}</span>{% else %}<span class="Label Label--secondary">{% trans "Community" %}</span>{% endif %}</div></div>{% empty %}<p>{% trans "No public projects listed." %}</p>{% endfor %}</div></section>
-        <section class="public-discovery__section" aria-labelledby="contributions-heading"><div class="public-discovery__section-heading"><h2 id="contributions-heading">{% trans "Verified contributions" %}</h2><span>{% trans "Accepted work only" %}</span></div><ul class="public-discovery__fact-list">{% for item in payload.contributions %}<li><strong>{{ item.label }}</strong><span>{% blocktrans count counter=item.count %}{{ counter }} verified contribution{% plural %}{{ counter }} verified contributions{% endblocktrans %}</span></li>{% empty %}<li>{% trans "No verified contributions yet." %}</li>{% endfor %}</ul></section>
-        <section class="public-discovery__section" aria-labelledby="blogs-heading"><h2 id="blogs-heading">{% trans "Technical blogs" %}</h2><ul class="public-discovery__link-list">{% for post in payload.blogs %}<li><a href="{{ post.url }}"{% if post.external %} rel="noopener noreferrer"{% endif %}>{{ post.title }}</a>{% if post.external %} <span class="Label Label--outline">{% trans "External article" %}</span>{% endif %}{% if post.published_at %}<time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}</li>{% empty %}<li>{% trans "No published blog listings." %}</li>{% endfor %}</ul></section>
+<div class="dn-container dn-github-profile" aria-labelledby="profile-heading">
+  {% if github_profile %}
+  <article class="dn-github-profile__card">
+    <header class="dn-github-profile__identity">
+      {% if github_profile.avatar_url %}<img src="{{ github_profile.avatar_url }}" alt="" width="112" height="112">{% endif %}
+      <div>
+        <p class="dn-section-kicker">{% trans "GitHub profile" %}</p>
+        <h1 id="profile-heading">{{ github_profile.display_name|default:github_profile.login }}</h1>
+        <p class="dn-github-profile__login">@{{ github_profile.login }}</p>
+        {% if github_profile.bio %}<p class="dn-lede">{{ github_profile.bio }}</p>{% endif %}
       </div>
-      <aside class="public-discovery__aside" aria-label="{% trans 'Profile recognition and links' %}">
-        <section class="dn-sidebar-section"><h2 id="badges-heading">{% trans "Badges" %}</h2><div class="dn-labels">{% for badge in payload.badges %}<span class="Label">{{ badge.name }}</span>{% empty %}<p>{% trans "No badges awarded yet." %}</p>{% endfor %}</div><p>{% trans "Only active badge awards appear here." %}</p><a href="{% url 'recognition:public_badges' %}">{% trans "Badge criteria" %}</a></section>
-        <section class="dn-sidebar-section"><h2>{% trans "Public links" %}</h2><ul class="public-discovery__link-list">{% for link in payload.links %}<li><a href="{{ link.url }}" rel="noopener noreferrer">{{ link.label|default:link.url }}</a> <span class="Label Label--outline">{% trans "External link" %}</span></li>{% empty %}<li>{% trans "No public links listed." %}</li>{% endfor %}</ul></section>
-        <section class="dn-sidebar-section"><h2>{% trans "Privacy boundary" %}</h2><p>{% trans "This page uses only fields the member made public plus public projects, published writing, accepted contribution totals, and active badges." %}</p></section>
-      </aside>
+    </header>
+
+    <dl class="dn-github-profile__facts">
+      {% if github_profile.company %}<div><dt>{% trans "Organization" %}</dt><dd>{{ github_profile.company }}</dd></div>{% endif %}
+      {% if github_profile.location %}<div><dt>{% trans "Location" %}</dt><dd>{{ github_profile.location }}</dd></div>{% endif %}
+      <div><dt>{% trans "Repositories" %}</dt><dd>{% blocktrans count counter=github_profile.public_repos %}{{ counter }} public repository{% plural %}{{ counter }} public repositories{% endblocktrans %}</dd></div>
+      <div><dt>{% trans "Followers" %}</dt><dd>{{ github_profile.followers }}</dd></div>
+    </dl>
+
+    <div class="dn-github-profile__actions">
+      <a class="btn btn--primary" href="{{ github_profile.html_url }}" rel="noopener noreferrer">{% trans "View profile on GitHub" %}</a>
+      <p>{% trans "This member chose to share these public GitHub fields. DevNepal does not show private GitHub activity." %}</p>
     </div>
-    {% include "github_sync/calendar.html" %}
-  </div>
-</article>
+  </article>
+  {% else %}
+  <section class="dn-empty-state" aria-labelledby="profile-heading">
+    <p class="dn-section-kicker">{% trans "GitHub profile" %}</p>
+    <h1 id="profile-heading">@{{ profile.user.username }}</h1>
+    <p>{% trans "This member has not shared a GitHub profile." %}</p>
+  </section>
+  {% endif %}
+
+  <p class="dn-github-profile__report"><a href="{% url 'moderation:report_create' %}?content_type={{ report_target.content_type }}&amp;object_id={{ report_target.object_id }}">{% trans "Report impersonation" %}</a></p>
+</div>
 {% endblock %}

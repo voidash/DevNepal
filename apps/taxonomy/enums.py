@@ -24,3 +24,16 @@ class SuggestionStatus(models.TextChoices):
     PENDING = "pending", "Pending"
     ACCEPTED = "accepted", "Accepted"
     DISMISSED = "dismissed", "Dismissed"
+
+
+class LicenseUse(models.TextChoices):
+    CODE = "code", "Code"
+    CONTENT_DATA = "content_data", "Content and data"
+
+
+class TaxonomyChangeAction(models.TextChoices):
+    ADDED = "added", "Added"
+    UPDATED = "updated", "Updated"
+    DEPRECATED = "deprecated", "Deprecated"
+    REINSTATED = "reinstated", "Reinstated"
+    MERGED = "merged", "Merged"

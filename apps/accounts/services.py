@@ -1,7 +1,7 @@
 import hashlib
 import logging
 import re
-import uuid
+from collections import Counter
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -16,6 +16,7 @@ from apps.accounts.enums import Visibility
 from apps.accounts.github import GitHubConnectError, GitHubProfileError
 from apps.audit.services import record_audit
 from apps.github_sync.models import GithubConnection
+from apps.observability.context import get_correlation_id
 from apps.projects.enums import ApplicationStatus, ProjectStatus
 from apps.taxonomy.fields import normalize_nfc
 
@@ -354,11 +355,10 @@ def public_portfolio(profile):
         author=user,
         status=BlogStatus.PUBLISHED,
     ).exclude(moderation_state=BlogModerationState.RESTRICTED)
-    contributions = (
+    accepted_contributions = list(
         ContributionRecord.objects.filter(contributor=user, status=VerificationStatus.ACCEPTED)
-        .values("contribution_type__label")
-        .annotate(count=models.Count("pk"))
-        .order_by("contribution_type__label")
+        .select_related("contribution_type", "project", "verified_by")
+        .order_by("-verified_at", "-created_at")
     )
     badges = BadgeAward.objects.filter(recipient=user, status=AwardStatus.ACTIVE).select_related(
         "badge"
@@ -387,11 +387,35 @@ def public_portfolio(profile):
             for post in blogs
         ],
         "contributions": [
-            {"label": row["contribution_type__label"], "count": row["count"]}
-            for row in contributions
+            {"label": label, "count": count}
+            for label, count in sorted(
+                Counter(item.contribution_type.label for item in accepted_contributions).items()
+            )
         ],
+        "contribution_records": [
+            {
+                "title": item.title,
+                "type_label": item.contribution_type.label,
+                "project_title": item.project.localized_title,
+                "project_slug": item.project.slug,
+                "accepted_by": (
+                    item.verified_by.get_full_name() or item.verified_by.username
+                    if item.verified_by
+                    else "Ministry review"
+                ),
+                "provenance": item.get_source_display(),
+                "accepted_at": item.verified_at or item.updated_at,
+            }
+            for item in accepted_contributions
+        ],
+        "accepted_contribution_total": len(accepted_contributions),
         "badges": [
-            {"name": award.badge.name, "description": award.badge.description} for award in badges
+            {
+                "name": award.badge.name,
+                "description": award.badge.description,
+                "issued_at": award.issued_at,
+            }
+            for award in badges
         ],
     }
 
@@ -403,6 +427,8 @@ def public_profile_payload(profile):
     """
     payload = {
         "username": profile.user.username,
+        "display_name": profile.user.get_full_name() or profile.user.username,
+        "member_since": profile.user.date_joined,
         "headline": profile.headline,
         "bio": profile.bio,
     }
@@ -564,7 +590,7 @@ def export_profile_data(user):
         action="account.data_export",
         obj=user,
         after={"contribution_count": len(data["contributions"])},
-        correlation_id=uuid.uuid4().hex,
+        correlation_id=get_correlation_id(),
     )
     return data
 
@@ -575,7 +601,7 @@ def request_account_deletion(user):
     from apps.contributions.models import ContributionRecord
     from apps.github_sync.models import GithubConnection
 
-    correlation_id = uuid.uuid4().hex
+    correlation_id = get_correlation_id()
     connection = GithubConnection.objects.filter(user=user, revoked_at__isnull=True).first()
 
     try:

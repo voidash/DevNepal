@@ -6,7 +6,7 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.accounts.models import MemberProfile, UserSession
 from apps.accounts.tests.factories import MemberProfileFactory, UserFactory
-from apps.ministries.tests.factories import MinistryPublisherFactory
+from apps.ministries.tests.factories import MinistryPublisherFactory, SuperAdminFactory
 from apps.ministries.tests.factories import UserFactory as PublisherUserFactory
 
 pytestmark = pytest.mark.django_db
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.unit
 def test_public_profile_exposes_only_public_payload(client):
-    """MEM-003/MEM-005: public profiles expose separate allowed sections, never email."""
+    """MEM-003/MEM-005: legacy profile data is not rendered on GitHub-only profiles."""
     user = UserFactory(email="private@example.com")
     profile = MemberProfileFactory(
         user=user,
@@ -28,6 +28,8 @@ def test_public_profile_exposes_only_public_payload(client):
     assert response.status_code == 200
     assert response.context["payload"]["headline"] == profile.headline
     assert response.context["payload"]["location"] == "Kathmandu"
+    assert b"Civic technologist" not in response.content
+    assert b"Kathmandu" not in response.content
     assert b"private@example.com" not in response.content
 
 
@@ -165,6 +167,33 @@ def test_dashboard_allows_member_without_privileged_role(client):
 
 
 @pytest.mark.unit
+def test_dashboard_routes_verified_super_admin_to_pmo_operations(client, monkeypatch):
+    """D5/AUTH-006: a PMO operator lands on platform operations, not member settings."""
+    super_admin = SuperAdminFactory()
+    client.force_login(super_admin)
+    monkeypatch.setattr("apps.accounts.permissions.mfa_verified", lambda user: True)
+
+    response = client.get(reverse("accounts:dashboard"))
+
+    assert response.status_code == 302
+    assert response.url == reverse("administration:console")
+
+
+@pytest.mark.unit
+def test_dashboard_routes_verified_publisher_to_ministry_authoring(client, monkeypatch):
+    """C1/AUTH-006: an officer lands on ministry publishing, not member settings."""
+    publisher = PublisherUserFactory()
+    MinistryPublisherFactory(user=publisher)
+    client.force_login(publisher)
+    monkeypatch.setattr("apps.accounts.permissions.mfa_verified", lambda user: True)
+
+    response = client.get(reverse("accounts:dashboard"))
+
+    assert response.status_code == 302
+    assert response.url == reverse("projects:authoring_dashboard")
+
+
+@pytest.mark.unit
 def test_dashboard_exposes_authenticated_member_tasks_with_mounted_routes(client):
     """AUTH-006/AUTH-007/AUTH-010/DSC-004/DSC-005: dashboard exposes accessible member tasks."""
     user = UserFactory(username="dashboard-member")
@@ -215,7 +244,9 @@ def test_totp_setup_verifies_publisher_and_unlocks_dashboard(client):
     assert setup.status_code == 200
     assert confirmed.status_code == 302
     assert confirmed.url == reverse("accounts:dashboard")
-    assert client.get(reverse("accounts:dashboard")).status_code == 200
+    dashboard = client.get(reverse("accounts:dashboard"))
+    assert dashboard.status_code == 302
+    assert dashboard.url == reverse("projects:authoring_dashboard")
 
 
 @pytest.mark.unit
@@ -261,7 +292,9 @@ def test_totp_setup_verifies_an_existing_device_for_password_only_user(client):
 
     assert response.status_code == 302
     assert response.url == reverse("accounts:dashboard")
-    assert client.get(reverse("accounts:dashboard")).status_code == 200
+    dashboard = client.get(reverse("accounts:dashboard"))
+    assert dashboard.status_code == 302
+    assert dashboard.url == reverse("projects:authoring_dashboard")
 
 
 @pytest.mark.unit

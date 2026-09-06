@@ -180,7 +180,9 @@ def test_c5_workflow_exposes_cancel_extend_and_approved_revocation(client):
 
     bad = client.post(url, {"action": "extend_deadline", "new_deadline": "2020-01-01"})
     assert bad.status_code == 400
-    assert "future" in bad.content.decode()
+    assert "future" in bad.context["workflow_form"].errors["new_deadline"][0]
+    assert "GitHub activity" in bad.content.decode()
+    assert "Next lifecycle action" not in bad.content.decode()
     live.refresh_from_db()
     assert live.deadline == timezone.localdate() + timedelta(days=2)
 

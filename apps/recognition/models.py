@@ -2,9 +2,16 @@ import typing
 import uuid
 
 from django.db import models
+from django.utils import timezone
 from django.utils.text import get_valid_filename
 
-from apps.recognition.enums import AwardStatus, BadgeKind
+from apps.recognition.enums import (
+    AwardStatus,
+    BadgeKind,
+    CorrectionKind,
+    CorrectionReason,
+    CorrectionStatus,
+)
 from apps.taxonomy.fields import NFCCharField, NFCSlugField, NFCTextField
 
 
@@ -136,3 +143,57 @@ class ContributionScore(models.Model):
 
     def __str__(self) -> str:
         return f"{self.points} pts for {self.contribution}"
+
+
+class RecognitionCorrection(models.Model):
+    """A reversible recognition decision and its appeal record (REC-005, ADM-007, BR-010)."""
+
+    recipient = models.ForeignKey(
+        "accounts.User", on_delete=models.PROTECT, related_name="recognition_corrections"
+    )
+    contributions = models.ManyToManyField(
+        "contributions.ContributionRecord", related_name="recognition_corrections"
+    )
+    kind = models.CharField(max_length=16, choices=CorrectionKind.choices)
+    reason = NFCCharField(max_length=80, choices=CorrectionReason.choices)
+    basis = NFCTextField()
+    member_note = NFCTextField()
+    adjusted_points = models.PositiveIntegerField(null=True, blank=True)
+    before_snapshot = models.JSONField(default=dict)
+    after_snapshot = models.JSONField(default=dict)
+    applied_by = models.ForeignKey(
+        "accounts.User", on_delete=models.PROTECT, related_name="applied_recognition_corrections"
+    )
+    applied_at = models.DateTimeField(auto_now_add=True)
+    appeal_due_at = models.DateTimeField()
+    appeal_text = NFCTextField(blank=True, default="")
+    appealed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=CorrectionStatus.choices,
+        default=CorrectionStatus.APPLIED,
+        db_index=True,
+    )
+    appeal_decided_by = models.ForeignKey(
+        "accounts.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="decided_recognition_correction_appeals",
+    )
+    appeal_decided_at = models.DateTimeField(null=True, blank=True)
+    appeal_decision_reason = NFCTextField(blank=True, default="")
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["-applied_at"]
+        indexes: typing.ClassVar[list] = [
+            models.Index(fields=["recipient", "-applied_at"], name="idx_correction_recipient"),
+            models.Index(fields=["status", "appeal_due_at"], name="idx_correction_appeal"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_kind_display()} correction #{self.pk} for {self.recipient.username}"
+
+    @property
+    def can_appeal(self) -> bool:
+        return self.status == CorrectionStatus.APPLIED and self.appeal_due_at >= timezone.now()

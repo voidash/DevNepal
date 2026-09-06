@@ -65,6 +65,7 @@ urlpatterns = [
         views.authoring_workflow,
         name="authoring_workflow",
     ),
+    path("issues/", views.issue_index, name="issue_index"),
     path("projects/", views.project_list, name="list"),
     path(
         "projects/gov/",
@@ -80,6 +81,11 @@ urlpatterns = [
     ),
     path("projects/<str:slug>/bookmark/", views.toggle_bookmark, name="bookmark"),
     path("projects/<str:slug>/updates/", views.project_updates, name="updates"),
+    path(
+        "projects/<str:slug>/issues/<int:number>/",
+        views.github_issue_detail,
+        name="github_issue",
+    ),
     path("projects/<str:slug>/apply/", views.apply, name="apply"),
     path("applications/", views.application_list, name="application_list"),
     path(

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Log onboarding request" %} | DevNepal{% endblock %}
+{% block content %}
+<main class="dn-onboarding">
+  <div class="dn-onboarding__shell">
+    <header class="dn-onboarding__heading">
+      <p>{% trans "Ministry organizations / Requests" %}</p>
+      <h1>{% trans "Log onboarding request" %}</h1>
+      <p class="dn-onboarding__lede">{% trans "Record the nomination before provisioning. A named officer, government domain, focal-contact signatory check and duplicate check are all required." %}</p>
+    </header>
+    <form method="post" class="dn-onboarding__sheet">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="dn-onboarding__grid">
+        {% for field in form %}
+          {% if field.name != "signatory_verified" %}
+            <div class="dn-onboarding__field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {{ field.errors }}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <label class="dn-onboarding__choices" for="{{ form.signatory_verified.id_for_label }}">
+        {{ form.signatory_verified }}
+        <span>{{ form.signatory_verified.label }}</span>
+      </label>
+      {{ form.signatory_verified.errors }}
+      <div class="dn-onboarding__note">
+        <strong>{% trans "PMO checks" %}</strong>
+        <p>{% trans "The system checks whether the organization already exists when the request is opened and again immediately before provisioning." %}</p>
+      </div>
+      <div class="dn-onboarding__actions">
+        <a class="btn" href="{% url 'ministries:organization_list' %}">{% trans "Cancel" %}</a>
+        <button class="btn btn--primary" type="submit">{% trans "Log request" %}</button>
+      </div>
+    </form>
+  </div>
+</main>
+{% endblock %}

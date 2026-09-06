@@ -34,9 +34,7 @@ def issue(*, issue_id=101, number=21, title="Add Nepali labels", labels=None, ur
 
 def test_sync_persists_only_labelled_issue_metadata_and_removes_stale_rows():
     """DSC-009/GIT-010: public starter snapshots retain selected labels, never bodies or PRs."""
-    connection = RepositoryConnectionFactory(
-        full_name="doit-np/sewa-portal", is_public=True
-    )
+    connection = RepositoryConnectionFactory(full_name="doit-np/sewa-portal", is_public=True)
     stale = GithubStarterTask.objects.create(
         repository=connection,
         github_issue_id=99,

@@ -18,4 +18,15 @@ urlpatterns = [
     path("admin/recognition/badges/<slug:slug>/award/", views.badge_award, name="badge_award"),
     path("admin/recognition/awards/<int:pk>/revoke/", views.award_revoke, name="award_revoke"),
     path("admin/recognition/anomalies/", views.anomaly_review, name="anomaly_review"),
+    path("admin/recognition/corrections/new/", views.correction_create, name="correction_create"),
+    path(
+        "admin/recognition/corrections/<int:pk>/",
+        views.correction_detail,
+        name="correction_detail",
+    ),
+    path(
+        "recognition/corrections/<int:pk>/appeal/",
+        views.correction_appeal,
+        name="correction_appeal",
+    ),
 ]

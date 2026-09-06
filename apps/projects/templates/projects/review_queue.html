@@ -30,7 +30,7 @@
     {% if review_actions %}<h3>{% trans "Recorded decision" %}</h3>
     <form method="post" class="dn-form-stack">{% csrf_token %}<input type="hidden" name="intent" value="decision"><input type="hidden" name="project" value="{{ selected.slug }}">{{ decision_form.non_field_errors }}{% for field in decision_form %}<div class="dn-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}<button class="btn btn--primary" type="submit">{% trans "Apply decision" %}</button></form>
     {% else %}<p>{% trans "This submission is awaiting publisher changes and resubmission." %}</p>{% endif %}
-    <p class="text-muted">{% trans "Every decision records the named reviewer, timestamp, reason, submitted version, and status transition in the immutable audit trail." %}</p>
+    <p class="dn-lede">{% trans "Every decision records the named reviewer, timestamp, reason, submitted version, and status transition in the immutable audit trail." %}</p>
   </section>{% endif %}
 </div></main>
 {% endblock %}

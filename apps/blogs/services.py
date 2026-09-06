@@ -1,11 +1,18 @@
 import logging
 import math
 import re
+import socket
+from dataclasses import dataclass
+from html.parser import HTMLParser
+from http.client import HTTPSConnection
+from ipaddress import ip_address
+from urllib.parse import urljoin, urlsplit
 
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.accounts.services import normalize_public_url, require_privileged_mfa
 from apps.audit.services import record_audit
@@ -74,6 +81,77 @@ class BlogCanonicalUrlError(BlogServiceError):
     """A listing canonical URL is missing or outside the http/https allowlist."""
 
 
+class BlogExternalArticleUrlError(BlogServiceError):
+    """An external article address is not a safe, public HTTPS URL."""
+
+
+class BlogProvenanceError(BlogServiceError):
+    """An external article was submitted without an authorship or listing-rights confirmation."""
+
+
+class BlogExternalMetadataError(BlogServiceError):
+    """Source metadata cannot be safely retrieved from an external article address."""
+
+
+@dataclass(frozen=True)
+class ExternalArticleMetadata:
+    canonical_url: str
+    source_name: str
+    title: str
+    excerpt: str
+    language: str
+
+
+class _ExternalMetadataParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.description = ""
+        self.language = ""
+        self.open_graph_title = ""
+        self.title_parts = []
+        self._in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == "html" and attributes.get("lang"):
+            self.language = attributes["lang"]
+        if tag == "title":
+            self._in_title = True
+        if tag != "meta":
+            return
+        name = attributes.get("name", "").lower()
+        property_name = attributes.get("property", "").lower()
+        content = attributes.get("content", "")
+        if content and property_name == "og:title" and not self.open_graph_title:
+            self.open_graph_title = content
+        if content and name == "description" and not self.description:
+            self.description = content
+        if content and property_name == "og:description" and not self.description:
+            self.description = content
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
+
+    def handle_data(self, data):
+        if self._in_title:
+            self.title_parts.append(data)
+
+
+class _PinnedHTTPSConnection(HTTPSConnection):
+    def __init__(self, host, port, connect_address):
+        super().__init__(host=host, port=port, timeout=5)
+        self._connect_address = connect_address
+
+    def connect(self):
+        sock = socket.create_connection((self._connect_address, self.port), self.timeout)
+        try:
+            self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
+        except Exception:
+            sock.close()
+            raise
+
+
 class BlogOwnershipError(BlogServiceError):
     """Only the active author of a listing may perform this action."""
 
@@ -121,6 +199,139 @@ def _clean_canonical_url(value):
     except ValidationError as exc:
         raise BlogCanonicalUrlError("canonical URL must use the http or https scheme") from exc
     return url
+
+
+def clean_external_article_url(value):
+    """BLG-005/MEM-007: accept a normalized, public HTTPS article address without credentials."""
+    raw_value = normalize_nfc(value.strip()) if isinstance(value, str) else value
+    raw_parts = urlsplit(raw_value)
+    if raw_parts.username is not None or raw_parts.password is not None:
+        raise BlogExternalArticleUrlError(_("Article address must not include credentials."))
+    try:
+        url = _clean_canonical_url(value)
+    except BlogCanonicalUrlError as exc:
+        raise BlogExternalArticleUrlError(_("Article address must be a valid HTTPS URL.")) from exc
+    parts = urlsplit(url)
+    if parts.scheme != "https":
+        raise BlogExternalArticleUrlError(_("Article address must use HTTPS."))
+    host = parts.hostname
+    if not host:
+        raise BlogExternalArticleUrlError(_("Article address must have a public hostname."))
+    try:
+        ip_address(host)
+    except ValueError:
+        pass
+    else:
+        raise BlogExternalArticleUrlError(_("Article address must have a public hostname."))
+    host = host.lower().rstrip(".")
+    if host in {"localhost", "local"} or host.endswith((".localhost", ".local")):
+        raise BlogExternalArticleUrlError(_("Article address must have a public hostname."))
+    return url
+
+
+def _external_source_name(url):
+    host = urlsplit(url).hostname or ""
+    names = {
+        "medium.com": "Medium",
+        "dev.to": "Dev.to",
+        "hashnode.com": "Hashnode",
+        "substack.com": "Substack",
+    }
+    normalized_host = host.removeprefix("www.")
+    for domain, name in names.items():
+        if normalized_host == domain or normalized_host.endswith(f".{domain}"):
+            return name
+    return normalized_host
+
+
+def _public_address_for(host, port):
+    try:
+        records = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise BlogExternalMetadataError("source hostname could not be resolved") from exc
+    for record in records:
+        address = record[4]
+        candidate = ip_address(address[0])
+        if candidate.is_global:
+            return str(candidate)
+    raise BlogExternalMetadataError("source hostname does not resolve to a public address")
+
+
+def _compact_external_metadata(value, limit):
+    return normalize_nfc(" ".join(value.split())).strip()[:limit]
+
+
+def fetch_external_article_metadata(value):
+    """BLG-005/MEM-007: retrieve bounded metadata over pinned, public HTTPS connections only."""
+    url = clean_external_article_url(value)
+    for _redirect_attempt in range(4):
+        parts = urlsplit(url)
+        try:
+            port = parts.port or 443
+        except ValueError as exc:
+            raise BlogExternalMetadataError("source address has an invalid port") from exc
+        address = _public_address_for(parts.hostname, port)
+        connection = _PinnedHTTPSConnection(parts.hostname, port, address)
+        target = parts.path or "/"
+        if parts.query:
+            target = f"{target}?{parts.query}"
+        try:
+            connection.request(
+                "GET",
+                target,
+                headers={
+                    "Accept": "text/html,application/xhtml+xml",
+                    "User-Agent": "DevNepal external article metadata",
+                },
+            )
+            response = connection.getresponse()
+            if response.status in {301, 302, 303, 307, 308}:
+                location = response.getheader("Location")
+                if not location:
+                    raise BlogExternalMetadataError("source redirected without a destination")
+                url = clean_external_article_url(urljoin(url, location))
+                continue
+            if response.status < 200 or response.status >= 300:
+                raise BlogExternalMetadataError("source did not return a readable article page")
+            content_type = response.getheader("Content-Type", "").lower()
+            if not content_type.startswith(("text/html", "application/xhtml+xml")):
+                raise BlogExternalMetadataError("source did not return an HTML article page")
+            content_length = response.getheader("Content-Length")
+            if content_length and int(content_length) > 262144:
+                raise BlogExternalMetadataError("source metadata page is too large")
+            body = response.read(262145)
+        except (OSError, ValueError) as exc:
+            raise BlogExternalMetadataError("source metadata could not be retrieved") from exc
+        finally:
+            connection.close()
+        if len(body) > 262144:
+            raise BlogExternalMetadataError("source metadata page is too large")
+        charset = response.headers.get_content_charset("utf-8")
+        try:
+            decoded_body = body.decode(charset, errors="replace")
+        except LookupError:
+            decoded_body = body.decode("utf-8", errors="replace")
+        parser = _ExternalMetadataParser()
+        parser.feed(decoded_body)
+        parser.close()
+        title = _compact_external_metadata(
+            parser.open_graph_title or " ".join(parser.title_parts), 200
+        )
+        if not title:
+            raise BlogExternalMetadataError("source page does not provide an article title")
+        language = (
+            ContentLanguage.NEPALI
+            if parser.language.lower().startswith("ne")
+            else ContentLanguage.ENGLISH
+        )
+        return ExternalArticleMetadata(
+            canonical_url=url,
+            source_name=_external_source_name(url),
+            title=title,
+            excerpt=_compact_external_metadata(parser.description, 5000),
+            language=language,
+        )
+    raise BlogExternalMetadataError("source redirected too many times")
 
 
 def _clean_optional_url(value, field_name):
@@ -204,6 +415,11 @@ def _snapshot(post):
         "content_markdown": post.content_markdown,
         "content_rendered": post.content_rendered,
         "canonical_url": post.canonical_url,
+        "external_rights_confirmed_at": (
+            post.external_rights_confirmed_at.isoformat()
+            if post.external_rights_confirmed_at
+            else None
+        ),
         "cover_image_url": post.cover_image_url,
         "cover_image_alt": post.cover_image_alt,
         "language": post.language,
@@ -360,7 +576,7 @@ def _deny_official_publication(actor, post, error_type, message):
     raise error_type(message)
 
 
-def create_listing(member, **fields):
+def create_listing(member, *, external_rights_confirmed_at=None, **fields):
     """BLG-004/BLG-005: a member creates a DRAFT external-link listing (D13: no content copy)."""
     cleaned = _clean_listing_fields(fields)
     if "title" not in fields:
@@ -373,6 +589,7 @@ def create_listing(member, **fields):
         title=cleaned.get("title", ""),
         excerpt=cleaned.get("excerpt", ""),
         canonical_url=cleaned["canonical_url"],
+        external_rights_confirmed_at=external_rights_confirmed_at,
         cover_image_url=cleaned.get("cover_image_url", ""),
         cover_image_alt=cleaned.get("cover_image_alt", ""),
         language=cleaned.get("language", ContentLanguage.ENGLISH),
@@ -392,6 +609,18 @@ def create_listing(member, **fields):
             after=_snapshot(post),
         )
     return post
+
+
+def create_external_article(member, *, rights_confirmed: bool, **fields):
+    """BLG-005/MEM-007: persist a link-only external article with confirmed provenance."""
+    if rights_confirmed is not True:
+        raise BlogProvenanceError("authorship or listing rights must be confirmed")
+    fields["canonical_url"] = clean_external_article_url(fields.get("canonical_url"))
+    return create_listing(
+        member,
+        external_rights_confirmed_at=timezone.now(),
+        **fields,
+    )
 
 
 def create_native_post(member, **fields):

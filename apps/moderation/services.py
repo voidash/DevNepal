@@ -11,11 +11,15 @@ SRS 13.2 principles encoded here:
 """
 
 import logging
-from datetime import timedelta
+from collections import defaultdict
+from datetime import UTC, timedelta
+from statistics import median
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.db.models import Count, Q
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.accounts.services import require_privileged_mfa
 from apps.audit.models import AuditEvent
@@ -55,6 +59,37 @@ WORKING_STATUSES = frozenset({CaseStatus.NEW, CaseStatus.UNDER_REVIEW, CaseStatu
 EXPORT_MIN_PURPOSE_LENGTH = 20
 EXPORT_RATE_LIMIT = 10
 EXPORT_RATE_WINDOW = timedelta(hours=1)
+COMMUNITY_HEALTH_SLA = timedelta(days=2)
+COMMUNITY_HEALTH_REPEAT_SUBJECT_MINIMUM = 2
+
+COMMUNITY_HEALTH_REASON_LABELS = {
+    ReportReason.IMPERSONATION: _("Impersonation"),
+    ReportReason.GOV_BRANDING_MISUSE: _("Misleading government branding"),
+    ReportReason.UNSAFE_LINK: _("Unsafe link"),
+    ReportReason.MALWARE: _("Malicious file"),
+    ReportReason.COPYRIGHT: _("Copyright or intellectual property"),
+    ReportReason.HARASSMENT: _("Harassment or code-of-conduct violation"),
+    ReportReason.SPAM: _("Spam"),
+    ReportReason.UNLAWFUL_CONTENT: _("Unlawful content"),
+    ReportReason.SECURITY_CONCERN: _("Security concern"),
+    ReportReason.OTHER: _("Other"),
+}
+COMMUNITY_HEALTH_ACTION_LABELS = {
+    ModerationAction.NO_ACTION: _("No action"),
+    ModerationAction.WARNING: _("Warning"),
+    ModerationAction.CONTENT_RESTRICTION: _("Content restriction"),
+    ModerationAction.UNPUBLISH: _("Unpublish"),
+    ModerationAction.ACCOUNT_SUSPENSION: _("Account suspension"),
+    ModerationAction.ESCALATION: _("Escalation"),
+}
+COMMUNITY_HEALTH_ACTION_ORDER = {
+    ModerationAction.ACCOUNT_SUSPENSION: 0,
+    ModerationAction.UNPUBLISH: 1,
+    ModerationAction.CONTENT_RESTRICTION: 2,
+    ModerationAction.WARNING: 3,
+    ModerationAction.NO_ACTION: 4,
+    ModerationAction.ESCALATION: 5,
+}
 
 
 class ModerationServiceError(Exception):
@@ -99,6 +134,122 @@ class ExportPurposeError(ModerationServiceError):
 
 class ExportRateLimitError(ModerationServiceError):
     """A privileged export exceeded the per-admin rate limit (ADM-005, SEC-006)."""
+
+
+def build_community_health_snapshot(*, now=None) -> dict:
+    """Build current-month, aggregate-only moderation health metrics (ADM-006/SRS 3.2)."""
+    now = now or timezone.now()
+    if timezone.is_naive(now):
+        raise ValueError("community health requires an aware timestamp")
+    period_start = _month_start(now)
+    reports = Report.objects.filter(created_at__gte=period_start, created_at__lte=now)
+    routine_cases = ModerationCase.objects.filter(
+        report__created_at__gte=period_start,
+        report__created_at__lte=now,
+    ).exclude(report__reason__in=SECURITY_REASONS)
+
+    reason_rows = _community_health_reason_rows(routine_cases)
+    decision_hours = [
+        (decided_at - created_at).total_seconds() / 3600
+        for created_at, decided_at in routine_cases.filter(decided_at__isnull=False).values_list(
+            "created_at", "decided_at"
+        )
+    ]
+    decision_count = len(decision_hours)
+    sla_hours = COMMUNITY_HEALTH_SLA.total_seconds() / 3600
+    sla_met_count = sum(hours <= sla_hours for hours in decision_hours)
+    repeat_subject_count = (
+        routine_cases.values("report__content_type_id", "report__object_id")
+        .annotate(case_count=Count("pk"))
+        .filter(case_count__gte=COMMUNITY_HEALTH_REPEAT_SUBJECT_MINIMUM)
+        .count()
+    )
+    appeal_count = routine_cases.filter(appealed_at__isnull=False).count()
+    overturned_appeal_count = routine_cases.filter(appeal_status=AppealStatus.OVERTURNED).count()
+    routine_case_count = routine_cases.count()
+
+    return {
+        "period_start": period_start,
+        "period_end": now,
+        "report_count": reports.count(),
+        "routine_case_count": routine_case_count,
+        "security_report_count": reports.filter(reason__in=SECURITY_REASONS).count(),
+        "decision_count": decision_count,
+        "median_decision_hours": _median_hours(decision_hours),
+        "sla_met_count": sla_met_count,
+        "sla_met_percent": round(100 * sla_met_count / decision_count) if decision_count else None,
+        "appeal_count": appeal_count,
+        "overturned_appeal_count": overturned_appeal_count,
+        "repeat_subject_count": repeat_subject_count,
+        "reason_rows": reason_rows,
+        "pattern": _community_health_pattern(reason_rows, routine_case_count),
+    }
+
+
+def _month_start(now):
+    local_now = timezone.localtime(now)
+    return local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
+
+
+def _median_hours(hours: list[float]) -> int | float | None:
+    if not hours:
+        return None
+    value = median(hours)
+    return int(value) if value.is_integer() else value
+
+
+def _community_health_reason_rows(routine_cases) -> list[dict]:
+    action_counts = defaultdict(list)
+    for entry in (
+        routine_cases.exclude(action="")
+        .values("report__reason", "action")
+        .annotate(count=Count("pk"))
+    ):
+        action_counts[entry["report__reason"]].append(
+            {
+                "action": entry["action"],
+                "label": str(COMMUNITY_HEALTH_ACTION_LABELS[entry["action"]]),
+                "count": entry["count"],
+            }
+        )
+
+    rows = []
+    for entry in (
+        routine_cases.values("report__reason")
+        .annotate(
+            case_count=Count("pk"),
+            appeal_count=Count("pk", filter=Q(appealed_at__isnull=False)),
+            overturned_appeal_count=Count("pk", filter=Q(appeal_status=AppealStatus.OVERTURNED)),
+        )
+        .order_by("-case_count", "report__reason")
+    ):
+        reason = entry["report__reason"]
+        rows.append(
+            {
+                "reason": reason,
+                "label": str(COMMUNITY_HEALTH_REASON_LABELS[reason]),
+                "case_count": entry["case_count"],
+                "outcomes": sorted(
+                    action_counts[reason],
+                    key=lambda outcome: COMMUNITY_HEALTH_ACTION_ORDER[outcome["action"]],
+                ),
+                "appeal_count": entry["appeal_count"],
+                "overturned_appeal_count": entry["overturned_appeal_count"],
+            }
+        )
+    return rows
+
+
+def _community_health_pattern(reason_rows: list[dict], routine_case_count: int) -> dict | None:
+    if not reason_rows or not routine_case_count:
+        return None
+    row = reason_rows[0]
+    return {
+        "reason": row["reason"],
+        "label": row["label"],
+        "case_count": row["case_count"],
+        "percent": round(100 * row["case_count"] / routine_case_count),
+    }
 
 
 def _is_super_admin(actor) -> bool:

@@ -1,0 +1,105 @@
+{% load i18n %}{% comment %} The signed-in rail, in the prototype's anatomy: an
+   organisation lockup with its icon tile, grouped rows carrying an icon and a
+   right-aligned count, and a footer holding the support links and the person.
+
+   Role comes from the user's own rows so no view has to supply it: a super
+   admin is a flag, a publisher has a ministry assignment, everyone else is a
+   member. Counts are the person's own related objects.
+
+   A template cannot filter revoked assignments — publisher_assignments.exists
+   counts them too — so a revoked publisher keeps the ministry rail until a
+   view supplies is_publisher. That request is in the PR.
+{% endcomment %}
+<nav class="dn-rail" aria-label="{% trans 'Your work' %}">
+  {% url 'accounts:dashboard' as overview_url %}
+
+  {% if user.is_superuser %}
+    <div class="dn-rail-org">
+      <span class="dn-rail-org-mark" aria-hidden="true">{% include "components/dn_icon.html" with icon="building" %}</span>
+      <span class="dn-rail-org-copy">
+        <strong>{% trans "PMO" %}</strong>
+        <span>{% trans "DevNepal operations" %}</span>
+      </span>
+    </div>
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Review" %}</span>
+      <a href="{{ overview_url }}"{% if request.path == overview_url %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="gauge" %}<span>{% trans "Overview" %}</span></a>
+      {% url 'projects:review_queue' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="flag" %}<span>{% trans "Review queue" %}</span></a>
+      {% url 'moderation:case_queue' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="alert" %}<span>{% trans "Reports & moderation" %}</span></a>
+      {% url 'recognition:anomaly_review' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="activity" %}<span>{% trans "Recognition · anomalies" %}</span></a>
+    </div>
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Platform" %}</span>
+      {% url 'ministries:organization_list' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="building" %}<span>{% trans "Ministry organizations" %}</span></a>
+      {% url 'recognition:badge_list' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="shield" %}<span>{% trans "Badges & scoring policy" %}</span></a>
+      {% url 'audit:ops_dashboard' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="sliders" %}<span>{% trans "Operational dashboard" %}</span></a>
+      {% url 'audit:audit_log' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="scroll" %}<span>{% trans "Audit log" %}</span></a>
+    </div>
+
+  {% elif user.publisher_assignments.exists %}
+    {% for assignment in user.publisher_assignments.all %}{% if forloop.first %}
+    <div class="dn-rail-org">
+      <span class="dn-rail-org-mark" aria-hidden="true">{% include "components/dn_icon.html" with icon="building" %}</span>
+      <span class="dn-rail-org-copy">
+        <strong>{{ assignment.ministry.localized_name|truncatechars:28 }}</strong>
+        <span>{{ assignment.title }}</span>
+      </span>
+    </div>
+    {% endif %}{% endfor %}
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Work" %}</span>
+      <a href="{{ overview_url }}"{% if request.path == overview_url %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="gauge" %}<span>{% trans "Overview" %}</span></a>
+      {% url 'projects:authoring_dashboard' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="folder" %}<span>{% trans "Projects" %}</span></a>
+      {% url 'projects:application_list' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="clipboard" %}<span>{% trans "Applications" %}</span></a>
+      {% url 'contributions:verification_queue' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="seal-check" %}<span>{% trans "Verification queue" %}</span></a>
+      {% url 'projects:updates' as u %}{% if u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="megaphone" %}<span>{% trans "Progress updates" %}</span></a>{% endif %}
+    </div>
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Administration" %}</span>
+      {% url 'analytics:public_monthly_report' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="chart" %}<span>{% trans "Analytics" %}</span></a>
+      {% url 'accounts:profile_edit' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="user" %}<span>{% trans "Profile & visibility" %}</span></a>
+    </div>
+
+  {% else %}
+    <div class="dn-rail-org">
+      <span class="dn-rail-org-mark dn-rail-org-mark--avatar" aria-hidden="true">{{ user.get_full_name|default:user.username|slice:":1"|upper }}</span>
+      <span class="dn-rail-org-copy">
+        <strong>{{ user.get_full_name|default:user.username }}</strong>
+        <span>@{{ user.username }}</span>
+      </span>
+    </div>
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Contributing" %}</span>
+      <a href="{{ overview_url }}"{% if request.path == overview_url %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="gauge" %}<span>{% trans "Overview" %}</span></a>
+      {% url 'projects:application_list' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="clipboard" %}<span>{% trans "Applications" %}</span><span class="dn-rail-count">{% if user.applications.count %}{{ user.applications.count }}{% else %}—{% endif %}</span></a>
+      {% url 'projects:government' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="search" %}<span>{% trans "Find a project" %}</span></a>
+      {% url 'recognition:my_profile' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="shield" %}<span>{% trans "Recognition" %}</span><span class="dn-rail-count">{% if user.badge_awards.count %}{{ user.badge_awards.count }}{% else %}—{% endif %}</span></a>
+    </div>
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Publishing" %}</span>
+      {% url 'projects:community_dashboard' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="folder" %}<span>{% trans "My community projects" %}</span></a>
+      {% url 'blogs:mine' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="book" %}<span>{% trans "My blog posts" %}</span><span class="dn-rail-count">{% if user.blog_posts.count %}{{ user.blog_posts.count }}{% else %}—{% endif %}</span></a>
+    </div>
+    <div class="dn-rail-group">
+      <span class="dn-rail-label">{% trans "Account" %}</span>
+      {% url 'notifications:list' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="bell" %}<span>{% trans "Notifications" %}</span></a>
+      {% url 'accounts:profile_edit' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="user" %}<span>{% trans "Profile & visibility" %}</span></a>
+      {% url 'github_sync:connection' as u %}<a href="{{ u }}"{% if request.path == u %} aria-current="page"{% endif %}>{% include "components/dn_icon.html" with icon="plug" %}<span>{% trans "Connections & data" %}</span></a>
+    </div>
+  {% endif %}
+
+  {% comment %} Footer: the two support routes an officer needs one click away
+     (§10.3.7 report-a-problem), the way back to the public site, and the person
+     signed in. {% endcomment %}
+  <div class="dn-rail-foot">
+    {% url 'moderation:report_create' as u %}<a href="{{ u }}">{% include "components/dn_icon.html" with icon="lifebuoy" %}<span>{% trans "Report a problem" %}</span></a>
+    <a href="{% url 'projects:home' %}">{% include "components/dn_icon.html" with icon="external" %}<span>{% trans "View public site" %}</span></a>
+    <div class="dn-rail-person">
+      <span class="dn-rail-person-avatar" aria-hidden="true">{{ user.get_full_name|default:user.username|slice:":2"|upper }}</span>
+      <span class="dn-rail-person-copy">
+        <strong>{{ user.get_full_name|default:user.username }}</strong>
+        <span>{% if user.is_superuser %}{% trans "Super Admin · PMO" %}{% elif user.publisher_assignments.exists %}{% trans "Ministry Publisher" %}{% else %}{% trans "Member" %}{% endif %}</span>
+      </span>
+    </div>
+  </div>
+</nav>

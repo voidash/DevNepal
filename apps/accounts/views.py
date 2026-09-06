@@ -27,7 +27,24 @@ from apps.accounts.forms import (
     OnboardingVisibilityForm,
 )
 from apps.accounts.models import MemberProfile, UserSession
-from apps.accounts.permissions import privileged_mfa_required, requires_mfa
+from apps.accounts.permissions import (
+    is_ministry_publisher,
+    is_super_admin,
+    privileged_mfa_required,
+    requires_mfa,
+)
+from apps.accounts.rate_limits import (
+    GITHUB_CALLBACK_LIMIT,
+    GITHUB_CALLBACK_WINDOW_SECONDS,
+    GITHUB_CONNECT_LIMIT,
+    GITHUB_CONNECT_WINDOW_SECONDS,
+    LOGIN_ATTEMPT_LIMIT,
+    LOGIN_WINDOW_SECONDS,
+    MFA_VERIFICATION_LIMIT,
+    MFA_VERIFICATION_WINDOW_SECONDS,
+    check_rate_limit,
+    consume_rate_limit,
+)
 from apps.accounts.services import (
     GitHubConnectError,
     complete_github_connect,
@@ -43,7 +60,6 @@ from apps.accounts.services import (
 )
 from apps.audit.services import record_audit
 from apps.github_sync.models import GithubConnection
-from apps.github_sync.views import calendar_context
 from apps.taxonomy.models import Skill
 
 logger = logging.getLogger(__name__)
@@ -65,12 +81,41 @@ class LocalLoginView(LoginView):
         context["github_oauth_enabled"] = github_oauth.oauth_config().enabled
         return context
 
+    def post(self, request, *args, **kwargs):
+        self.rate_limit_principal = request.POST.get("username", "")
+        blocked = _auth_rate_limit_response(
+            request,
+            surface="login",
+            principal=self.rate_limit_principal,
+            limit=LOGIN_ATTEMPT_LIMIT,
+            window_seconds=LOGIN_WINDOW_SECONDS,
+            audit_action="auth.login.rate_limited",
+            consume=False,
+        )
+        if blocked is not None:
+            return blocked
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         response = super().form_valid(form)
         record_session(self.request, self.request.user)
         if self.request.session.pop(ONBOARDING_MEMBER_SESSION_KEY, None) == self.request.user.pk:
             return redirect("accounts:onboarding_profile")
         return response
+
+    def form_invalid(self, form):
+        blocked = _auth_rate_limit_response(
+            self.request,
+            surface="login",
+            principal=getattr(self, "rate_limit_principal", self.request.POST.get("username", "")),
+            limit=LOGIN_ATTEMPT_LIMIT,
+            window_seconds=LOGIN_WINDOW_SECONDS,
+            audit_action="auth.login.rate_limited",
+            consume=True,
+        )
+        if blocked is not None:
+            return blocked
+        return super().form_invalid(form)
 
 
 class LocalLogoutView(LogoutView):
@@ -126,6 +171,17 @@ def github_connect(request):
     config = github_oauth.oauth_config()
     if not config.enabled:
         raise Http404("GitHub connect is not enabled")
+    blocked = _auth_rate_limit_response(
+        request,
+        surface="github_connect",
+        principal=_oauth_principal(request),
+        limit=GITHUB_CONNECT_LIMIT,
+        window_seconds=GITHUB_CONNECT_WINDOW_SECONDS,
+        audit_action="github_connection.connect.rate_limited",
+        consume=True,
+    )
+    if blocked is not None:
+        return blocked
     if request.POST.get("onboarding") == "1":
         request.session[ONBOARDING_GITHUB_SESSION_KEY] = True
     state = github_oauth.generate_state()
@@ -139,6 +195,17 @@ def github_callback(request):
     config = github_oauth.oauth_config()
     if not config.enabled:
         raise Http404("GitHub connect is not enabled")
+    blocked = _auth_rate_limit_response(
+        request,
+        surface="github_callback",
+        principal=_oauth_principal(request),
+        limit=GITHUB_CALLBACK_LIMIT,
+        window_seconds=GITHUB_CALLBACK_WINDOW_SECONDS,
+        audit_action="github_connection.callback.rate_limited",
+        consume=True,
+    )
+    if blocked is not None:
+        return blocked
     if request.GET.get("setup_action") == "install":
         record_audit(
             actor=request.user if request.user.is_authenticated else None,
@@ -186,6 +253,46 @@ def _refuse_github_connect(request, action: str):
     actor = request.user if request.user.is_authenticated else None
     record_audit(actor=actor, action=action, result="failure")
     messages.error(request, gettext("GitHub connect could not be completed."))
+
+
+def _oauth_principal(request) -> str:
+    if request.user.is_authenticated:
+        return f"user:{request.user.pk}"
+    return f"session:{request.session.session_key or 'anonymous'}"
+
+
+def _auth_rate_limit_response(
+    request,
+    *,
+    surface: str,
+    principal: str,
+    limit: int,
+    window_seconds: int,
+    audit_action: str,
+    consume: bool,
+):
+    limit_check = consume_rate_limit if consume else check_rate_limit
+    decision = limit_check(
+        request,
+        surface=surface,
+        principal=principal,
+        limit=limit,
+        window_seconds=window_seconds,
+    )
+    if decision.allowed:
+        return None
+    if decision.first_denial:
+        record_audit(
+            actor=request.user if request.user.is_authenticated else None,
+            action=audit_action,
+            result="failure",
+        )
+    return HttpResponse(
+        gettext("Too many attempts. Try again in %(seconds)s seconds.")
+        % {"seconds": decision.retry_after},
+        status=429,
+        headers={"Retry-After": str(decision.retry_after)},
+    )
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))
@@ -290,21 +397,23 @@ def onboarding_publish(request):
 
 
 def public_profile(request, username):
-    """MEM-003/MEM-005: render the fail-closed public profile projection only."""
+    """MEM-003/MEM-005/GIT-010: render only a consented public GitHub identity."""
     user = get_object_or_404(get_user_model(), username=username, is_active=True)
     profile = get_object_or_404(MemberProfile.objects.select_related("user"), user=user)
-    raw_year = request.GET.get("year")
-    year = int(raw_year) if raw_year and raw_year.isdigit() and len(raw_year) == 4 else None
+    github_profile = GithubConnection.objects.filter(user=user, revoked_at__isnull=True).first()
+    if github_profile is not None and "public_profile" not in github_profile.consent_scopes:
+        github_profile = None
     return render(
         request,
         "accounts/public_profile.html",
         {
+            "profile": profile,
+            "github_profile": github_profile,
             "payload": public_profile_payload(profile),
             "report_target": {
                 "content_type": ContentType.objects.get_for_model(user).pk,
                 "object_id": user.pk,
             },
-            **calendar_context(user, year),
         },
     )
 
@@ -383,6 +492,10 @@ def profile_preview(request):
 @privileged_mfa_required
 def dashboard(request):
     """AUTH-005/AUTH-006: role-aware authenticated landing page behind privileged MFA."""
+    if is_super_admin(request.user):
+        return redirect("administration:console")
+    if is_ministry_publisher(request.user):
+        return redirect("projects:authoring_dashboard")
     connection = GithubConnection.objects.filter(user=request.user, revoked_at__isnull=True).first()
     return render(
         request,
@@ -406,6 +519,18 @@ def mfa_setup(request):
     config_url = None
     device = TOTPDevice.objects.filter(user=request.user).order_by("id").first()
     if request.method == "POST":
+        if request.POST.get("action") != "enroll":
+            blocked = _auth_rate_limit_response(
+                request,
+                surface="mfa_verification",
+                principal=f"user:{request.user.pk}",
+                limit=MFA_VERIFICATION_LIMIT,
+                window_seconds=MFA_VERIFICATION_WINDOW_SECONDS,
+                audit_action="auth.mfa_verification.rate_limited",
+                consume=False,
+            )
+            if blocked is not None:
+                return blocked
         if request.POST.get("action") == "enroll":
             if device is None:
                 device = TOTPDevice.objects.create(user=request.user, name="devnepal")
@@ -417,6 +542,17 @@ def mfa_setup(request):
             if device.verify_token(token):
                 otp_login(request, device)
                 return redirect("accounts:dashboard")
+            blocked = _auth_rate_limit_response(
+                request,
+                surface="mfa_verification",
+                principal=f"user:{request.user.pk}",
+                limit=MFA_VERIFICATION_LIMIT,
+                window_seconds=MFA_VERIFICATION_WINDOW_SECONDS,
+                audit_action="auth.mfa_verification.rate_limited",
+                consume=True,
+            )
+            if blocked is not None:
+                return blocked
             error = gettext("Invalid authentication code. Try again.")
     return render(
         request,

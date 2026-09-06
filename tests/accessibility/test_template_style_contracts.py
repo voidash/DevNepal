@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906e\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -76,10 +76,10 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert 'class="dn-header-search" role="search"' not in base
     assert 'class="lang-switch"' in base
     assert "dn-state-banner" in base and "is-success" in base and "is-danger" in base
-    assert "--color-bg: #f2f2f3;" in tokens_css
-    assert "--color-surface: #e9e9ea;" in tokens_css
-    assert "--color-text: #1d1f20;" in tokens_css
-    assert "--color-accent: #5980a6;" in tokens_css
+    assert "--color-bg: #f2f5f7;" in tokens_css
+    assert "--color-surface: #e5e9ee;" in tokens_css
+    assert "--color-text: #181c20;" in tokens_css
+    assert "--color-accent: #5395fc;" in tokens_css
     assert 'font-family: "Barlow Condensed"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css
@@ -103,7 +103,7 @@ def test_shared_navigation_keeps_the_compact_menu_through_tablet_widths():
 def test_shared_shell_loads_one_coherent_design_system_after_primer():
     """NFR-A11Y-01/DSC-001: shared styles have a predictable, accessible cascade."""
     base = (Path(settings.BASE_DIR) / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}\"", base)
+    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base)
 
     assert stylesheets == [
         "vendor/primer/primer.css",
@@ -205,6 +205,12 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
     assert "transition-duration: 0.01ms !important;" in base_css
     assert "animation-duration: 0.01ms !important;" in base_css
     assert "scroll-behavior: auto !important;" in base_css
+    assert "@view-transition" in base_css
+    assert "navigation: auto" in base_css
+    view_transition = base_css.split("@view-transition", 1)[1].split("@media", 1)[0]
+    assert "animation: none" in view_transition
+    assert "mix-blend-mode: normal" in view_transition
+    assert "140ms" not in view_transition
     assert "--target-min: 44px;" in tokens_css
     assert ".btn" in shell_css or ".btn" in components_css
     for selector in (
@@ -213,6 +219,8 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
         ".dn-footer a",
     ):
         assert selector in shell_css
+    assert "flex-wrap: wrap" in shell_css
+    assert ".dn-state-dot" in components_css
 
 
 @pytest.mark.unit
@@ -245,32 +253,32 @@ def _read(relative: str) -> str:
 def test_blog_templates_use_issue_rows_context_header_and_form_layout():
     """A8/NFR-A11Y-01/BLG-005/D13: blog surfaces reuse the shared design-system grammar.
 
-    Listings render as dn-issue-list rows with the shared status Octicon partial and
-    provenance Labels, the detail page gets a repository-style context header, and
-    the authoring form uses dn-form-layout with named fields.
+    Public discovery uses featured/stream rows with provenance, personal listings
+    retain workflow-state rows, and authoring uses named form fields.
     """
     blog_list = _read("apps/blogs/templates/blogs/blog_list.html")
     my_list = _read("apps/blogs/templates/blogs/my_blog_list.html")
     detail = _read("apps/blogs/templates/blogs/blog_detail.html")
     form = _read("apps/blogs/templates/blogs/blog_form.html")
 
-    for template in (blog_list, my_list):
-        assert 'class="dn-issue-list"' in template
-        assert 'class="dn-issue-row"' in template
-        assert '{% include "components/status_octicon.html"' in template
-        assert "{{ post.get_status_display }}" in template or "get_language_display" in template
+    assert 'class="public-discovery__feature blueprint"' in blog_list
+    assert 'class="public-discovery__row"' in blog_list
+    assert 'class="public-discovery__aside"' in blog_list
+    assert 'class="dn-issue-list"' in my_list
+    assert 'class="dn-issue-row"' in my_list
+    assert '{% include "components/status_octicon.html"' in my_list
+    assert "{{ post.get_status_display }}" in my_list
 
-    assert 'class="Label Label--outline">{% trans "Official" %}' in blog_list
+    assert '{% trans "Official" %}' in blog_list
     assert "{{ post.get_language_display }}" in blog_list
     assert "reading_time_minutes" in blog_list
     assert "canonical_url" in blog_list
     assert "noopener noreferrer external" in blog_list
 
-    assert 'class="dn-page-header"' in detail
-    assert 'class="dn-repo-title"' in detail
-    assert 'class="dn-repo-title-separator" aria-hidden="true">/<' in detail
+    assert 'class="public-discovery__breadcrumb"' in detail
+    assert 'class="public-discovery__article-header"' in detail
     assert '{% trans "Official government publication" %}' in detail
-    assert 'class="dn-sidebar"' in detail
+    assert 'class="public-discovery__aside"' in detail
 
     assert 'class="dn-form-layout"' in form
     assert 'class="dn-form-stack"' in form
@@ -486,7 +494,8 @@ def test_forms_use_the_design_system_form_layout_and_field_patterns():
         assert 'class="dn-form-stack"' in template, relative
         assert 'class="dn-field"' in template, relative
         assert 'class="dn-field-help"' in template or "{{ field.help_text }}" in template
-        assert 'class="dn-sidebar"' in template, relative
+        if relative != "apps/projects/templates/projects/authoring_form.html":
+            assert 'class="dn-sidebar"' in template, relative
         assert "as_p" not in template, relative
 
     authoring = _read("apps/projects/templates/projects/authoring_detail.html")
@@ -571,6 +580,9 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
 
     assert 'class="dn-footer"' in base
     assert 'class="dn-container dn-footer-grid"' in base
+    assert 'class="dn-footer-platform"' in base
+    assert 'class="dn-footer-note"' in base
+    assert "dn-footer-brand" not in base
     assert base.count("<footer") == 1
     for label in ("Platform", "Policies", "Help"):
         assert f"aria-label=\"{{% trans '{label}' %}}\"" in base, label
@@ -592,4 +604,21 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
         " min-height: var(--target-min, 44px);"
     )
     assert footer_link_rule in footer_css
-    assert ".dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }" in footer_css
+    assert ".dn-footer { margin-top: var(--space-10); padding: var(--space-10) 0 0;" in (footer_css)
+    # The footer closes on the same state colour the header opens with, and names
+    # the publishing authority with the emblem rather than in prose alone.
+    assert ".dn-footer-legal { margin-top: var(--space-10);" in footer_css
+    assert "background: var(--color-state); color: var(--color-paper);" in footer_css
+    assert 'class="dn-footer-identity"' in base
+    assert 'class="dn-footer-emblem"' in base
+    assert ".dn-footer-grid { display: grid; gap: var(--space-6) var(--space-8); }" in footer_css
+    assert "@media (min-width: 640px) { .dn-footer-grid { grid-template-columns:" in footer_css
+    assert "repeat(2, minmax(0, 1fr)); } }" in footer_css
+    assert (
+        ".dn-footer-grid { grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) 1.1fr; }"
+        in footer_css
+    )
+    assert (
+        ".dn-footer-platform ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));"
+        in footer_css
+    )

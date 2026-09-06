@@ -11,7 +11,11 @@ from apps.blogs.services import render_safe_markdown
 from apps.contributions.enums import ContributionSource, ImpactTier, VerificationStatus
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.enums import Provider, SyncState
-from apps.github_sync.models import GithubStarterTask, RepositoryConnection
+from apps.github_sync.models import (
+    GithubRepositoryContributor,
+    GithubStarterTask,
+    RepositoryConnection,
+)
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
 from apps.projects.enums import (
@@ -264,21 +268,24 @@ def seed_prototype_demo() -> dict[str, int]:
 
     sewa = _government_project(
         slug="sewa-portal-accessibility-remediation",
-        title_en="Sewa Portal Accessibility Remediation",
-        title_ne="सेवा पोर्टल पहुँचयोग्यता सुधार",
+        title_en="Civic Help Directory",
+        title_ne="नागरिक सहायता निर्देशिका",
         owner=publisher,
         ministry=doit,
         license_obj=license_obj,
         summary_en=(
-            "Bring the citizen services portal to WCAG 2.2 AA: keyboard operation, Nepali "
-            "screen-reader labels, error recovery on every form."
+            "Discover Government of Nepal public help programmes and improve their bilingual, "
+            "accessible programme data in public."
         ),
-        summary_ne="नागरिक सेवा फारामलाई किबोर्ड र स्क्रिन रिडरबाट प्रयोगयोग्य बनाउने।",
-        repository_url="https://github.com/doit-np/sewa-portal",
-        issue_tracker_url="https://github.com/doit-np/sewa-portal/issues",
-        documentation_url="https://github.com/doit-np/sewa-portal#readme",
+        summary_ne="नेपाल सरकारका सार्वजनिक सहायता कार्यक्रम खोज्न र तिनको खुला डेटा सुधार्न सहयोग गर्नुहोस्।",
+        repository_url="https://github.com/voidash/civic-help-directory",
+        issue_tracker_url="https://github.com/voidash/civic-help-directory/issues",
+        documentation_url="https://github.com/voidash/civic-help-directory#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         deadline=date(2026, 11, 30),
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+        difficulty=DifficultyLevel.BEGINNER,
+        estimated_effort=EffortBand.SMALL,
     )
     _maintainer(sewa, publisher, MaintainerRole.LEAD)
     _maintainer(sewa, sabina, MaintainerRole.MAINTAINER)
@@ -286,23 +293,23 @@ def seed_prototype_demo() -> dict[str, int]:
     sewa.skills.set(skills)
     _task(
         sewa,
-        'Add lang="ne" to Nepali error strings',
-        "Starter accessibility and localization task from the prototype issue #131.",
-        "https://github.com/doit-np/sewa-portal/issues/131",
+        "Add Nepali eligibility text for scholarship programs",
+        "Translate the scholarship eligibility guidance while preserving source links.",
+        "https://github.com/voidash/civic-help-directory/issues/7",
     )
     _task(
         sewa,
-        "Write a keyboard test script for passport renewal",
-        "QA-oriented non-code task from the prototype issue list.",
-        "https://github.com/doit-np/sewa-portal/issues/119",
+        "Check health subsidy contact details against official sources",
+        "Verify public contact information and cite the source used.",
+        "https://github.com/voidash/civic-help-directory/issues/8",
     )
     repository, _ = RepositoryConnection.objects.get_or_create(
         provider=Provider.GITHUB,
-        repository_id=9_026_001,
+        repository_id=1_357_413_723,
         defaults={
-            "installation_id": 9_026_001,
-            "repository_node_id": "R_demo_sewa_portal",
-            "full_name": "doit-np/sewa-portal",
+            "installation_id": 159_188_767,
+            "repository_node_id": "R_kgDOUOh9Ww",
+            "full_name": "voidash/civic-help-directory",
             "is_public": True,
             "project": sewa,
             "granted_scopes": ["metadata:read", "issues:read"],
@@ -312,23 +319,43 @@ def seed_prototype_demo() -> dict[str, int]:
             "activated_by": publisher,
         },
     )
+    RepositoryConnection.objects.filter(
+        repository_id=9_026_001,
+        full_name="doit-np/sewa-portal",
+    ).exclude(pk=repository.pk).update(
+        project=None,
+        is_public=False,
+        sync_state=SyncState.STOPPED,
+        deactivated_at=timezone.now(),
+        health_note="Retired prototype-only repository connection.",
+    )
     _starter_task(
         repository,
-        131,
-        'Add lang="ne" to Nepali error strings in FormError.tsx',
+        7,
+        "Add Nepali eligibility text for scholarship programs",
         ["good first issue"],
     )
     _starter_task(
         repository,
-        119,
-        "Write a keyboard test script for the passport renewal flow",
+        8,
+        "Check health subsidy contact details against official sources",
         ["help wanted"],
     )
     _starter_task(
         repository,
-        128,
-        "Focus is lost after the district select closes",
+        9,
+        "Document keyboard-first contribution workflow",
         ["good first issue"],
+    )
+    _github_people(
+        repository,
+        (
+            (1, "voidash", 41),
+            (42, "aarati-shrestha", 9),
+            (43, "kritika-poudel", 6),
+            (44, "bibek-gurung", 4),
+            (45, "sujata-tamang", 2),
+        ),
     )
 
     address_schema = _government_project(
@@ -343,9 +370,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "levels, wards and tole names."
         ),
         summary_ne="७५३ स्थानीय तह, वडा र टोल नामका लागि खुला JSON schema र validation library।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mofaga-np/local-address-schema",
+        issue_tracker_url="https://github.com/mofaga-np/local-address-schema/issues",
+        documentation_url="https://github.com/mofaga-np/local-address-schema#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         estimated_effort=EffortBand.SMALL,
@@ -358,7 +385,7 @@ def seed_prototype_demo() -> dict[str, int]:
         address_schema,
         "Document ward and tole name validation",
         "Documentation task for the unified local address schema.",
-        "",
+        "https://github.com/mofaga-np/local-address-schema/issues/1",
     )
 
     health_registry = _government_project(
@@ -373,9 +400,9 @@ def seed_prototype_demo() -> dict[str, int]:
             "posts and birthing centres."
         ),
         summary_ne="अस्पताल, स्वास्थ्य चौकी र प्रसूति केन्द्रको राष्ट्रिय दर्ताका लागि सार्वजनिक API।",
-        repository_url="",
-        issue_tracker_url="",
-        documentation_url="",
+        repository_url="https://github.com/mohp-np/health-facility-registry",
+        issue_tracker_url="https://github.com/mohp-np/health-facility-registry/issues",
+        documentation_url="https://github.com/mohp-np/health-facility-registry#readme",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         contribution_mode=ContributionMode.OPEN_DIRECT,
         difficulty=DifficultyLevel.BEGINNER,
@@ -389,7 +416,7 @@ def seed_prototype_demo() -> dict[str, int]:
         health_registry,
         "Improve the first API contribution guide",
         "Beginner-friendly documentation task for the public health registry API.",
-        "",
+        "https://github.com/mohp-np/health-facility-registry/issues/1",
     )
 
     sajhabus, sajhabus_created = Project.objects.get_or_create(
@@ -472,6 +499,7 @@ def seed_prototype_demo() -> dict[str, int]:
         documentation_url="https://github.com/doit-np/sewa-portal#readme",
         status=ProjectStatus.COMPLETED,
         completion=True,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
     )
     _maintainer(completed, publisher, MaintainerRole.LEAD)
     completed.contribution_types.set([engineering, localization, documentation])
@@ -741,7 +769,7 @@ def _maintainer(project, user, role):
 
 
 def _task(project, title, description, issue_url):
-    return ProjectTask.objects.get_or_create(
+    task, created = ProjectTask.objects.get_or_create(
         project=project,
         title=title,
         defaults={
@@ -750,7 +778,12 @@ def _task(project, title, description, issue_url):
             "issue_url": issue_url,
             "status": TaskStatus.OPEN,
         },
-    )[0]
+    )
+    if not created and issue_url and task.issue_url != issue_url:
+        task.description = description
+        task.issue_url = issue_url
+        task.save(update_fields=["description", "issue_url", "updated_at"])
+    return task
 
 
 def _starter_task(repository, number, title, labels):
@@ -765,6 +798,31 @@ def _starter_task(repository, number, title, labels):
             "source_updated_at": timezone.now(),
         },
     )[0]
+
+
+def _github_avatar_url(login):
+    return f"https://avatars.githubusercontent.com/{login}?s=80&v=4"
+
+
+def _github_people(repository, people):
+    existing = list(repository.contributor_snapshots.all())
+    if existing:
+        for contributor in existing:
+            avatar_url = _github_avatar_url(contributor.login)
+            if contributor.avatar_url == avatar_url:
+                continue
+            contributor.avatar_url = avatar_url
+            contributor.save(update_fields=["avatar_url"])
+        return
+    for github_user_id, login, contributions in people:
+        GithubRepositoryContributor.objects.create(
+            repository=repository,
+            github_user_id=github_user_id,
+            login=login,
+            avatar_url=_github_avatar_url(login),
+            profile_url=f"https://github.com/{login}",
+            contributions=contributions,
+        )
 
 
 def _contribution(

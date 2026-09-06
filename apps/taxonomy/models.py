@@ -2,13 +2,20 @@ import typing
 
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils.translation import get_language
 
-from apps.taxonomy.enums import SuggestionStatus, TermVocabulary
+from apps.taxonomy.enums import (
+    LicenseUse,
+    SuggestionStatus,
+    TaxonomyChangeAction,
+    TermVocabulary,
+)
 from apps.taxonomy.fields import NFCCharField, NFCSlugField, NFCTextField
 
 
 class Skill(models.Model):
     name = NFCCharField(100)
+    name_ne = NFCCharField(100, blank=True, default="")
     slug = NFCSlugField(120, allow_unicode=True, unique=True)
     description = NFCTextField(blank=True)
     is_active = models.BooleanField(default=True)
@@ -26,6 +33,17 @@ class Skill(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def localized_name(self) -> str:
+        if get_language() == "ne" and self.name_ne:
+            return self.name_ne
+        return self.name
+
+    @property
+    def is_publishable(self) -> bool:
+        """DSC-001/D5.5: a term goes live only when both languages are present."""
+        return bool(self.name.strip() and self.name_ne.strip())
 
 
 class TaxonomyTerm(models.Model):
@@ -67,6 +85,9 @@ class ApprovedLicense(models.Model):
     )
     name = NFCCharField(200)
     reference_url = models.URLField(blank=True)
+    use = models.CharField(max_length=16, choices=LicenseUse.choices, default=LicenseUse.CODE)
+    legal_reference = NFCCharField(60, blank=True, default="")
+    legal_approved_on = models.DateField(null=True, blank=True)
     is_approved = models.BooleanField(default=False)
     is_default = models.BooleanField(default=False)
 
@@ -112,3 +133,37 @@ class SkillSuggestion(models.Model):
 
     def __str__(self):
         return f"Suggestion: {self.term_name}"
+
+
+class TaxonomyVersion(models.Model):
+    """ADM-001/D5.5: one numbered, attributed change to the skills taxonomy.
+
+    The prototype states that every change creates a new taxonomy version with a
+    diff and the name of the Super Admin who made it, so the catalogue can be
+    read back as a history rather than only as its current state.
+    """
+
+    version = models.PositiveIntegerField(unique=True)
+    action = models.CharField(max_length=12, choices=TaxonomyChangeAction.choices)
+    subject = models.ForeignKey(
+        "taxonomy.Skill",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="versions",
+    )
+    subject_label = NFCCharField(150)
+    summary = NFCTextField(blank=True, default="")
+    diff = models.JSONField(default=dict, blank=True)
+    actor = models.ForeignKey(
+        "accounts.User", on_delete=models.PROTECT, related_name="taxonomy_versions"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering: typing.ClassVar[list[str]] = ["-version"]
+        verbose_name = "taxonomy version"
+        verbose_name_plural = "taxonomy versions"
+
+    def __str__(self) -> str:
+        return f"v{self.version} · {self.get_action_display()} {self.subject_label}"

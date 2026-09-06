@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import pytest
+from django.conf import settings
 from django.urls import reverse
 
 from apps.accounts.models import UserSession
@@ -18,6 +21,30 @@ def test_auth001_login_explains_identity_github_and_private_email(client):
     assert "GitHub connection" in content
     assert "separate" in content
     assert "Your email is never shown publicly" in content
+
+
+@pytest.mark.unit
+def test_auth001_login_leads_with_the_form_and_sends_contributors_back(client):
+    """AUTH-001/AUTH-002: sign-in serves ministry officers; contributors need no account."""
+    response = client.get(reverse("accounts:login"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "dn-auth-page--signin" in content
+    assert content.index("dn-auth-form") < content.index(
+        "Sign-in and GitHub connection are separate"
+    )
+    assert "Member account" not in content
+    assert "safe return address" not in content
+    assert "Ministry publisher" in content
+    assert "You do not need a DevNepal account" in content
+    assert reverse("projects:government") in content
+    assert reverse("accounts:signup") not in content
+    assert "dn-primary-nav" not in content
+    assert "dn-footer--auth" in content
+    assert "dn-footer-grid" not in content
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    assert ".dn-footer--auth { margin-top: auto; padding: var(--space-3) 0; }" in css
 
 
 @pytest.mark.unit

@@ -84,14 +84,14 @@ def test_every_homepage_link_resolves_for_signed_in_members(client):
 
 @pytest.mark.unit
 def test_every_homepage_link_resolves_for_mfa_verified_super_admins(client):
-    """ADM-001/ADM-008: administrators reach every admin surface from home."""
+    """SEC-005/DSC-001: a privileged account still receives only visitor-shell links."""
     admin = SuperAdminFactory(username="hub-admin")
     MinistryPublisherFactory(user=UserFactory(username="hub-publisher-seed"))
     verify_mfa(client, admin)
 
     links = homepage_links(client)
 
-    assert any("ministries" in link for link in links)
-    assert any("cases" in link for link in links)
-    assert any("audit" in link for link in links)
+    assert not any("ministries" in link for link in links)
+    assert not any("cases" in link for link in links)
+    assert not any("audit" in link for link in links)
     assert_links_resolve(client, links)

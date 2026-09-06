@@ -3994,11 +3994,6 @@ msgstr ""
 msgid "01 · The process"
 msgstr "०१ · प्रक्रिया"
 
-#: apps/projects/templates/projects/about.html:17
-#: apps/projects/templates/projects/about.html:18
-msgid "Contribution steps"
-msgstr "योगदानका चरणहरू"
-
 #: apps/projects/templates/projects/about.html:19
 msgid "A ministry lists a project"
 msgstr "मन्त्रालयले परियोजना सूचीबद्ध गर्छ"
@@ -4010,10 +4005,6 @@ msgid ""
 msgstr ""
 "प्रकाशनअघि नामित प्रकाशकले योगदान मार्ग, सार्वजनिक सुरक्षा उपाय र मर्मतकर्ताको "
 "जिम्मेवारी दस्तावेज गर्छ।"
-
-#: apps/projects/templates/projects/about.html:20
-msgid "PMO approves"
-msgstr "PMO ले स्वीकृत गर्छ"
 
 #: apps/projects/templates/projects/about.html:20
 msgid ""
@@ -4046,10 +4037,6 @@ msgid ""
 msgstr ""
 "मेन्टेनर वा अधिकृत समीक्षकले प्रमाण जाँचेर कारणसहित निर्णय अभिलेख गर्छ। आफैं बुझाएको दाबी "
 "मात्र आधिकारिक सम्मान हुँदैन।"
-
-#: apps/projects/templates/projects/about.html:28
-msgid "02 · What DevNepal is — and is not"
-msgstr "०२ · DevNepal के हो — र के होइन"
 
 #: apps/projects/templates/projects/about.html:32
 msgid "What DevNepal verifies"
@@ -4967,17 +4954,22 @@ msgstr "सबै प्रविधिहरू"
 msgid "built in public."
 msgstr "सार्वजनिक रूपमा निर्माण गरिएको।"
 
-#: apps/projects/templates/projects/home.html:17
+#: apps/projects/templates/projects/home.html:16
 msgid ""
 "DevNepal is where ministries open suitable technology projects to public "
 "contribution — and where Nepal’s developers, designers, writers and testers "
-"earn recognition that a ministry has actually verified. Code stays on "
-"GitHub; DevNepal holds identity, listings, participation and the record."
+"earn recognition that a ministry has actually verified."
 msgstr ""
 "DevNepal मा मन्त्रालयहरूले उपयुक्त प्रविधि परियोजना सार्वजनिक योगदानका लागि खोल्छन् — "
 "र नेपालका विकासकर्ता, डिजाइनर, लेखक र परीक्षकले मन्त्रालयले वास्तवमै प्रमाणित गरेको "
-"पहिचान पाउँछन्। कोड GitHub मै रहन्छ; DevNepal ले पहिचान, सूचीकरण, सहभागिता र अभिलेख "
-"राख्छ।"
+"पहिचान पाउँछन्।"
+
+#: apps/projects/templates/projects/home.html:17
+msgid ""
+"Code stays on GitHub; DevNepal holds identity, listings, participation and "
+"the record."
+msgstr ""
+"कोड GitHub मै रहन्छ; DevNepal ले पहिचान, सूचीकरण, सहभागिता र अभिलेख राख्छ।"
 
 #: apps/projects/templates/projects/home.html:19
 #: apps/projects/templates/projects/home.html:98
@@ -7020,3 +7012,183 @@ msgstr "नेपाल सरकारको सार्वजनिक सह
 #: templates/base.html:129
 msgid "All content available in English and Nepali"
 msgstr "सबै सामग्री अङ्ग्रेजी र नेपालीमा उपलब्ध छ"
+
+msgid "Ways to contribute"
+msgstr "योगदान गर्ने तरिका"
+
+msgid "Pilot 2026"
+msgstr "पाइलट २०२६"
+
+msgid "Docs"
+msgstr "कागजात"
+
+msgid "For you"
+msgstr "तपाईंका लागि"
+
+msgid "Open to"
+msgstr "उपलब्ध"
+
+msgid "All nine contribution types"
+msgstr "योगदानका नौ वटै प्रकार"
+
+msgid "GitHub ownership verified"
+msgstr "GitHub स्वामित्व प्रमाणित"
+
+msgid "Listed by a member"
+msgstr "सदस्यले सूचीकृत"
+
+msgid "No repository published"
+msgstr "रिपोजिटरी प्रकाशित छैन"
+
+msgid "No community listings are open yet."
+msgstr "अहिले कुनै सामुदायिक सूची खुला छैन।"
+
+msgid "Member-owned projects appear here once their owner publishes them. They stay separate from Government of Nepal opportunities."
+msgstr "सदस्यका परियोजना मालिकले प्रकाशित गरेपछि यहाँ देखिन्छन्। ती नेपाल सरकारका अवसरबाट छुट्टै रहन्छन्।"
+
+msgid "Public directory"
+msgstr "सार्वजनिक निर्देशिका"
+
+msgid "Discoverable members"
+msgstr "खोज्न मिल्ने सदस्यहरू"
+
+msgid "These profiles appear only because the member chose to be found. Email, sign-in provider and private contact details are not shown."
+msgstr "यी प्रोफाइल सदस्यले खोजिने अनुमति दिएकाले मात्र देखिन्छन्। इमेल, साइन-इन प्रदायक र निजी सम्पर्क विवरण देखाइँदैन।"
+
+msgid "Browse members"
+msgstr "सदस्य हेर्नुहोस्"
+
+msgid "Public learning"
+msgstr "सार्वजनिक सिकाइ"
+
+msgid "Technical writing"
+msgstr "प्राविधिक लेखन"
+
+msgid "Notes from members and maintainers on listed work, in Nepali and English."
+msgstr "सूचीकृत कामबारे सदस्य र मर्मतकर्ताका टिपोट, नेपाली र अङ्ग्रेजीमा।"
+
+msgid "Browse technical blogs"
+msgstr "प्राविधिक ब्लग हेर्नुहोस्"
+
+msgid "Before you start"
+msgstr "सुरु गर्नुअघि"
+
+msgid "What listing means"
+msgstr "सूचीकरणको अर्थ"
+
+msgid "DevNepal is the public register and collaboration layer. Code, issues and pull requests stay on GitHub."
+msgstr "DevNepal सार्वजनिक दर्ता र सहकार्य तह हो। कोड, इशु र पुल रिक्वेस्ट GitHub मै रहन्छन्।"
+
+msgid "Frequently asked"
+msgstr "बारम्बार सोधिने"
+
+msgid "Do I need a DevNepal account to contribute?"
+msgstr "योगदान गर्न DevNepal खाता चाहिन्छ?"
+
+msgid "No. Work happens on the project's public GitHub repository. Only ministry officers sign in here to publish and maintain listings."
+msgstr "पर्दैन। काम परियोजनाको सार्वजनिक GitHub रिपोजिटरीमा हुन्छ। सूची प्रकाशित र मर्मत गर्न यहाँ मन्त्रालयका अधिकृतले मात्र साइन इन गर्छन्।"
+
+msgid "Start with a listed project"
+msgstr "सूचीकृत परियोजनाबाट सुरु गर्नुहोस्"
+
+msgid "Read the contribution route, pick an issue, and work on GitHub. Recognition follows verified, accepted work."
+msgstr "योगदान मार्ग पढ्नुहोस्, इशु छान्नुहोस् र GitHub मा काम गर्नुहोस्। प्रमाणित र स्वीकृत कामपछि मान्यता आउँछ।"
+
+msgid "Community support"
+msgstr "सामुदायिक सहयोग"
+
+msgid "Owner"
+msgstr "मालिक"
+
+msgid "Listing"
+msgstr "सूचीकरण"
+
+msgid "How to join"
+msgstr "जोडिने तरिका"
+
+msgid "Choose an issue"
+msgstr "इशु छान्नुहोस्"
+
+msgid "Choose a task"
+msgstr "कार्य छान्नुहोस्"
+
+msgid "View open issues"
+msgstr "खुला इशु हेर्नुहोस्"
+
+msgid "View on GitHub"
+msgstr "GitHub मा हेर्नुहोस्"
+
+msgid "Contributing needs no DevNepal account."
+msgstr "योगदान गर्न DevNepal खाता चाहिँदैन।"
+
+msgid "Apply for assigned work"
+msgstr "तोकिएको कामका लागि आवेदन दिनुहोस्"
+
+msgid "Applying uses a DevNepal account. Public GitHub work, when listed, does not."
+msgstr "आवेदनका लागि DevNepal खाता चाहिन्छ। सूचीकृत सार्वजनिक GitHub कामका लागि चाहिँदैन।"
+
+msgid "Pick an issue on GitHub. No DevNepal account is needed."
+msgstr "GitHub मा इशु छान्नुहोस्। DevNepal खाता चाहिँदैन।"
+
+msgid "Start from an open task. No DevNepal account is needed."
+msgstr "खुला कार्यबाट सुरु गर्नुहोस्। DevNepal खाता चाहिँदैन।"
+
+msgid "Open tasks on GitHub, or apply for assigned work."
+msgstr "GitHub का खुला कार्य गर्नुहोस्, वा तोकिएको कामका लागि आवेदन दिनुहोस्।"
+
+msgid "Public GitHub work is open. Screened workstreams need an application."
+msgstr "सार्वजनिक GitHub काम खुला छ। जाँच गरिएका कार्यधाराका लागि आवेदन चाहिन्छ।"
+
+msgid "This ministry workstream is assigned after an application."
+msgstr "यो मन्त्रालय कार्यधारा आवेदनपछि तोकिन्छ।"
+
+msgid "You can already contribute on GitHub without a DevNepal account. Use this form only for screened workstreams."
+msgstr "तपाईं GitHub मा DevNepal खाता बिना नै योगदान गर्न सक्नुहुन्छ। यो फारम जाँच गरिएका कार्यधाराका लागि मात्र हो।"
+
+#: apps/projects/templates/projects/about.html
+msgid "From a published listing to a recognised contribution"
+msgstr "प्रकाशित सूचीबाट मान्यता प्राप्त योगदानसम्म"
+
+#: apps/projects/templates/projects/about.html
+msgid "Three steps, each with a named party answerable for it. Nothing on this platform is published, opened or recognised without one."
+msgstr "तीन चरण, प्रत्येकका लागि एक नामित पक्ष उत्तरदायी हुन्छ। यस मञ्चमा कुनै पनि कुरा त्यस्तो पक्षविना प्रकाशित, खुला वा मान्यता प्राप्त हुँदैन।"
+
+#: apps/projects/templates/projects/about.html
+msgid "02 · Scope and limits"
+msgstr "०२ · दायरा र सीमा"
+
+#: apps/projects/templates/projects/about.html
+msgid "What DevNepal is — and is not"
+msgstr "देवनेपाल के हो — र के होइन"
+
+#: apps/projects/templates/projects/about.html
+msgid "Read both columns before you invest time in a listing. The left column is what the platform checks; the right is what it deliberately leaves to the project."
+msgstr "कुनै सूचीमा समय लगाउनुअघि दुवै स्तम्भ पढ्नुहोस्। बायाँ स्तम्भ मञ्चले जाँच्ने कुरा हो; दायाँ स्तम्भ मञ्चले जानाजान परियोजनालाई छाड्ने कुरा हो।"
+
+#: apps/projects/templates/projects/about.html
+msgid "Reports reach the moderation queue, not the project’s public page. Filing one needs a signed-in account."
+msgstr "प्रतिवेदन परियोजनाको सार्वजनिक पृष्ठमा होइन, मध्यस्थता सूचीमा पुग्छ। प्रतिवेदन दर्ता गर्न साइन इन गरिएको खाता चाहिन्छ।"
+
+#: apps/projects/templates/projects/about.html
+msgid "No. Contributions are made and reviewed on the project’s own repository; only ministry publishers sign in here."
+msgstr "पर्दैन। योगदान परियोजनाकै रिपोजिटोरीमा गरिन्छ र त्यहीँ पुनरावलोकन हुन्छ; यहाँ मन्त्रालयका प्रकाशकमात्र साइन इन गर्छन्।"
+
+#: apps/projects/templates/projects/about.html
+msgid "05 · Where to start"
+msgstr "०५ · कहाँबाट सुरु गर्ने"
+
+#: apps/projects/templates/projects/about.html
+msgid "Ministry-published work with a named publisher, an approved listing, and a stated response expectation."
+msgstr "नामित प्रकाशक, स्वीकृत सूची र उल्लिखित प्रतिक्रिया अपेक्षासहितको मन्त्रालयद्वारा प्रकाशित काम।"
+
+#: apps/projects/templates/projects/about.html
+msgid "Independently owned public-interest work, listed under its own terms rather than a government endorsement."
+msgstr "स्वतन्त्र स्वामित्वको सार्वजनिक हितको काम, सरकारी समर्थनअन्तर्गत होइन आफ्नै सर्तअन्तर्गत सूचीबद्ध।"
+
+#: apps/projects/templates/projects/about.html
+msgid "Contributor profiles built from synced GitHub activity and the decisions maintainers recorded against it."
+msgstr "सिन्क गरिएको GitHub गतिविधि र त्यसमाथि मर्मतकर्ताले अभिलेख गरेका निर्णयबाट बनेका योगदानकर्ता प्रोफाइल।"
+
+#: apps/projects/templates/projects/about.html
+msgid "06 · Support"
+msgstr "०६ · सहयोग"

@@ -13,12 +13,19 @@ from apps.ministries.enums import PublisherStatus
 from apps.ministries.forms import (
     ContactConfirmationForm,
     MinistryActionForm,
+    MinistryOnboardingRequestForm,
     MinistryOrganizationForm,
+    OnboardingRequestDeclineForm,
     PublisherActionForm,
     PublisherCreateForm,
 )
-from apps.ministries.models import MinistryOrganization, MinistryPublisher
+from apps.ministries.models import (
+    MinistryOnboardingRequest,
+    MinistryOrganization,
+    MinistryPublisher,
+)
 from apps.ministries.services import (
+    MinistryOnboardingRequestError,
     MinistryProvisioningError,
     OfficialContactNotificationError,
     OfficialContactVerificationError,
@@ -26,7 +33,10 @@ from apps.ministries.services import (
     PublisherLifecycleError,
     activate_organization,
     create_publisher,
+    decline_onboarding_request,
+    log_onboarding_request,
     provision_ministry,
+    provision_onboarding_request,
     reissue_official_contact_challenge,
     revoke_organization,
     revoke_publisher,
@@ -69,6 +79,107 @@ def organization_list(request):
     _require_super_admin(request.user)
     organizations = MinistryOrganization.objects.prefetch_related("publishers__user")
     return render(request, "ministries/organization_list.html", {"organizations": organizations})
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_http_methods(["GET", "POST"])
+def onboarding_request_create(request):
+    """AUTH-004/D1.1: log a PMO-verified organization onboarding request."""
+    _require_super_admin(request.user)
+    form = MinistryOnboardingRequestForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            onboarding_request = log_onboarding_request(request.user, **form.cleaned_data)
+        except MinistryOnboardingRequestError as exc:
+            form.add_error(None, str(exc))
+        else:
+            return redirect(
+                "ministries:onboarding_request_detail",
+                reference=onboarding_request.reference,
+            )
+    return render(
+        request,
+        "ministries/onboarding_request_form.html",
+        {"form": form},
+        status=400 if form.errors else 200,
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_GET
+def onboarding_request_detail(request, reference):
+    """AUTH-004/D1.1: show the checks and accountable choices for one PMO request."""
+    _require_super_admin(request.user)
+    onboarding_request = get_object_or_404(
+        MinistryOnboardingRequest.objects.select_related("provisioned_organization", "logged_by"),
+        reference=reference,
+    )
+    return render(
+        request,
+        "ministries/onboarding_request_detail.html",
+        {
+            "onboarding_request": onboarding_request,
+            "decline_form": OnboardingRequestDeclineForm(),
+        },
+    )
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_POST
+def onboarding_request_provision(request, reference):
+    """AUTH-004/D1.1/D1.2: move a checked request into the ministry provisioning list."""
+    _require_super_admin(request.user)
+    onboarding_request = get_object_or_404(MinistryOnboardingRequest, reference=reference)
+    try:
+        provision_onboarding_request(request.user, onboarding_request)
+    except MinistryOnboardingRequestError as exc:
+        return render(
+            request,
+            "ministries/onboarding_request_detail.html",
+            {
+                "onboarding_request": onboarding_request,
+                "decline_form": OnboardingRequestDeclineForm(),
+                "action_error": str(exc),
+            },
+            status=409,
+        )
+    return redirect("ministries:organization_list")
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@privileged_mfa_required
+@require_POST
+def onboarding_request_decline(request, reference):
+    """AUTH-004/SEC-008: decline a logged onboarding request with a durable reason."""
+    _require_super_admin(request.user)
+    onboarding_request = get_object_or_404(MinistryOnboardingRequest, reference=reference)
+    form = OnboardingRequestDeclineForm(request.POST)
+    if form.is_valid():
+        try:
+            decline_onboarding_request(
+                request.user,
+                onboarding_request,
+                reason=form.cleaned_data["reason"],
+            )
+        except MinistryOnboardingRequestError as exc:
+            form.add_error(None, str(exc))
+        else:
+            return redirect(
+                "ministries:onboarding_request_detail",
+                reference=onboarding_request.reference,
+            )
+    return render(
+        request,
+        "ministries/onboarding_request_detail.html",
+        {
+            "onboarding_request": onboarding_request,
+            "decline_form": form,
+        },
+        status=400,
+    )
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))

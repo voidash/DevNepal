@@ -1,88 +1,94 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}{% trans "Account settings" %} | DevNepal{% endblock %}
+{% comment %} Ministry officers are sent to their publishing workspace before
+   they reach this page, so what is left here is account control: who can see
+   the profile, what is connected, what reaches the inbox, and how to leave.
+   It uses the public shell rather than a second application frame. {% endcomment %}
 {% block content %}
-<section class="section" aria-labelledby="dashboard-heading">
-  <div class="container">
-    <header>
+<div class="dn-page-header">
+  <div class="dn-container">
+    <div class="dn-repo-title">
       <h1 id="dashboard-heading">{% trans "Dashboard" %}</h1>
-      {% if requires_mfa %}
-      <p>{% trans "Your privileged session is protected by multi-factor authentication." %}</p>
-      {% else %}
-      <p>{% trans "Control what people can see, what reaches your inbox, and which services are connected." %}</p>
-      {% endif %}
-    </header>
-
-    <nav aria-label="{% trans 'Member dashboard' %}">
-      <div class="card-grid">
-        <section class="card" aria-labelledby="profile-heading">
-          <h2 class="card__title" id="profile-heading">{% trans "Profile & visibility" %}</h2>
-          <p class="card__summary">{% trans "Edit your member profile, set visibility for individual fields, and check the public result." %}</p>
-          <div class="button-group">
-            <a class="btn btn--primary" href="{% url 'accounts:profile_edit' %}">{% trans "Edit profile & visibility" %}</a>
-            <a class="btn btn--secondary" href="{% url 'accounts:public_profile' profile.user.username %}">{% trans "View public profile" %}</a>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="connections-heading">
-          <h2 class="card__title" id="connections-heading">{% trans "Connections & data" %}</h2>
-          <p class="card__summary">{% trans "Connecting GitHub is optional. It is separate from signing in and lets DevNepal link public contribution activity to your profile." %}</p>
-          {% if github_oauth_enabled %}
-            {% if github_connection %}
-            <p>{% trans "GitHub connected as" %} <strong>{{ github_connection.login }}</strong></p>
-            <a class="btn btn--secondary" href="{% url 'github_sync:connection' %}">{% trans "Manage GitHub connection" %}</a>
-            {% else %}
-            <form action="{% url 'accounts:github_connect' %}" method="post">
-              {% csrf_token %}
-              <p id="github-connect-notice">{% trans "Connect only if you want public GitHub activity included in your DevNepal account." %}</p>
-              <button class="btn btn--secondary" type="submit" aria-describedby="github-connect-notice">{% trans "Connect with GitHub account" %}</button>
-            </form>
-            {% endif %}
-          {% else %}
-          <p>{% trans "GitHub connection is not available on this installation." %}</p>
-          {% endif %}
-        </section>
-
-        <section class="card" aria-labelledby="preferences-heading">
-          <h2 class="card__title" id="preferences-heading">{% trans "Preferences" %}</h2>
-          <p class="card__summary">{% trans "Choose which messages you receive and how contribution recognition appears." %}</p>
-          <div class="button-group">
-            <a class="btn btn--secondary" href="{% url 'notifications:email_preferences' %}">{% trans "Email preferences" %}</a>
-            <a class="btn btn--secondary" href="{% url 'recognition:my_profile' %}">{% trans "Recognition settings" %}</a>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="security-heading">
-          <h2 class="card__title" id="security-heading">{% trans "Sessions & account data" %}</h2>
-          <p class="card__summary">{% trans "Review signed-in devices, download your data, or deactivate your account." %}</p>
-          <div class="button-group">
-            <a class="btn btn--secondary" href="{% url 'accounts:session_list' %}">{% trans "Signed-in devices" %}</a>
-            <a class="btn btn--secondary" href="{% url 'accounts:privacy_export' %}">{% trans "Download data export" %}</a>
-          </div>
-          <form action="{% url 'accounts:privacy_delete' %}" method="post" aria-describedby="deletion-notice">
-            {% csrf_token %}
-            <p id="deletion-notice">{% trans "Account deletion signs you out and deactivates your account." %}</p>
-            <button class="btn btn--secondary" type="submit">{% trans "Request account deletion" %}</button>
-          </form>
-        </section>
-
-        <section class="card" aria-labelledby="participation-heading">
-          <h2 class="card__title" id="participation-heading">{% trans "Participation" %}</h2>
-          <p class="card__summary">{% trans "Review applications and manage projects you maintain with the community." %}</p>
-          <div class="button-group">
-            <a class="btn btn--secondary" href="{% url 'projects:application_list' %}">{% trans "View applications" %}</a>
-            <a class="btn btn--secondary" href="{% url 'projects:community_dashboard' %}">{% trans "My community projects" %}</a>
-            <a class="btn btn--secondary" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="bookmarks-heading">
-          <h2 class="card__title" id="bookmarks-heading">{% trans "Bookmarks" %}</h2>
-          <p class="card__summary">{% trans "Open a project to save it and choose whether to receive change notifications." %}</p>
-          <a class="btn btn--secondary" href="{% url 'projects:list' %}">{% trans "Browse projects" %}</a>
-        </section>
-      </div>
-    </nav>
+      <span class="Label Label--secondary">{{ user.get_full_name|default:user.username }}</span>
+    </div>
+    <p class="dn-account-lede">
+      {% if requires_mfa %}{% trans "Your privileged session is protected by multi-factor authentication." %}
+      {% else %}{% trans "Control what people can see, what reaches your inbox, and which services are connected." %}{% endif %}
+    </p>
   </div>
-</section>
+</div>
+
+<div class="dn-container dn-account">
+  <nav aria-label="{% trans 'Member dashboard' %}">
+    <div class="dn-card-grid">
+      <section class="card blueprint" aria-labelledby="profile-heading">
+        <h2 class="card__title" id="profile-heading">{% trans "Profile & visibility" %}</h2>
+        <p class="card__summary">{% trans "Edit your member profile, set visibility for individual fields, and check the public result." %}</p>
+        <div class="button-group">
+          <a class="btn btn--primary" href="{% url 'accounts:profile_edit' %}">{% trans "Edit profile & visibility" %}</a>
+          <a class="btn" href="{% url 'accounts:public_profile' profile.user.username %}">{% trans "View public profile" %}</a>
+        </div>
+      </section>
+
+      <section class="card blueprint" aria-labelledby="connections-heading">
+        <h2 class="card__title" id="connections-heading">{% trans "Connections & data" %}</h2>
+        <p class="card__summary">{% trans "Connecting GitHub is optional. It is separate from signing in and lets DevNepal link public contribution activity to your profile." %}</p>
+        {% if github_oauth_enabled %}
+          {% if github_connection %}
+          <p class="dn-account-state"><span class="Label Label--success">{% trans "Connected" %}</span> {{ github_connection.login }}</p>
+          <a class="btn" href="{% url 'github_sync:connection' %}">{% trans "Manage GitHub connection" %}</a>
+          {% else %}
+          <form action="{% url 'accounts:github_connect' %}" method="post">
+            {% csrf_token %}
+            <p id="github-connect-notice">{% trans "Connect only if you want public GitHub activity included in your DevNepal account." %}</p>
+            <button class="btn" type="submit" aria-describedby="github-connect-notice">{% trans "Connect with GitHub account" %}</button>
+          </form>
+          {% endif %}
+        {% else %}
+        <p>{% trans "GitHub connection is not available on this installation." %}</p>
+        {% endif %}
+      </section>
+
+      <section class="card blueprint" aria-labelledby="preferences-heading">
+        <h2 class="card__title" id="preferences-heading">{% trans "Preferences" %}</h2>
+        <p class="card__summary">{% trans "Choose which messages you receive and how contribution recognition appears." %}</p>
+        <div class="button-group">
+          <a class="btn" href="{% url 'notifications:email_preferences' %}">{% trans "Email preferences" %}</a>
+          <a class="btn" href="{% url 'recognition:my_profile' %}">{% trans "Recognition settings" %}</a>
+        </div>
+      </section>
+
+      <section class="card blueprint" aria-labelledby="participation-heading">
+        <h2 class="card__title" id="participation-heading">{% trans "Participation" %}</h2>
+        <p class="card__summary">{% trans "Review applications and manage projects you maintain with the community." %}</p>
+        <div class="button-group">
+          <a class="btn" href="{% url 'projects:application_list' %}">{% trans "View applications" %}</a>
+          <a class="btn" href="{% url 'projects:community_dashboard' %}">{% trans "My community projects" %}</a>
+          <a class="btn" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
+        </div>
+      </section>
+
+      <section class="card blueprint" aria-labelledby="bookmarks-heading">
+        <h2 class="card__title" id="bookmarks-heading">{% trans "Bookmarks" %}</h2>
+        <p class="card__summary">{% trans "Open a project to save it and choose whether to receive change notifications." %}</p>
+        <a class="btn" href="{% url 'projects:list' %}">{% trans "Browse projects" %}</a>
+      </section>
+
+      <section class="card blueprint dn-account-danger" aria-labelledby="security-heading">
+        <h2 class="card__title" id="security-heading">{% trans "Sessions & account data" %}</h2>
+        <p class="card__summary">{% trans "Review signed-in devices, download your data, or deactivate your account." %}</p>
+        <div class="button-group">
+          <a class="btn" href="{% url 'accounts:session_list' %}">{% trans "Signed-in devices" %}</a>
+          <a class="btn" href="{% url 'accounts:privacy_export' %}">{% trans "Download data export" %}</a>
+        </div>
+        <form action="{% url 'accounts:privacy_delete' %}" method="post" aria-describedby="deletion-notice">
+          {% csrf_token %}
+          <p id="deletion-notice">{% trans "Account deletion signs you out and deactivates your account." %}</p>
+          <button class="btn btn--danger" type="submit">{% trans "Request account deletion" %}</button>
+        </form>
+      </section>
+    </div>
+  </nav>
+</div>
 {% endblock %}

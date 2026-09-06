@@ -1,9 +1,13 @@
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django_otp.oath import totp
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.audit.models import AuditEvent
-from apps.contributions.enums import VerificationStatus
+from apps.contributions.enums import ContributionSource, VerificationStatus
 from apps.contributions.models import ContributionRecord
+from apps.contributions.services import place_on_hold
 from apps.contributions.tests.factories import ContributionRecordFactory, contribution_type
 from apps.ministries.tests.factories import SuperAdminFactory, UserFactory
 from apps.projects.enums import ApplicationStatus, ContributionMode, ProjectStatus
@@ -18,6 +22,27 @@ pytestmark = [
     pytest.mark.django_db,
     pytest.mark.urls("apps.contributions.tests.urls"),
 ]
+
+
+@pytest.fixture(autouse=True)
+def isolated_evidence_storage(settings, tmp_path):
+    """SEC-007: view tests never persist uploads outside their temporary directory."""
+    settings.MEDIA_ROOT = tmp_path
+
+
+def verify_mfa(client, user):
+    """Create an OTP-verified session rather than bypassing the PMO authorization boundary."""
+    client.force_login(user)
+    device = TOTPDevice.objects.get(user=user)
+    token = totp(
+        device.bin_key,
+        step=device.step,
+        t0=device.t0,
+        digits=device.digits,
+        drift=device.drift,
+    )
+    response = client.post(reverse("accounts:mfa_setup"), {"token": token})
+    assert response.status_code == 302
 
 
 @pytest.mark.unit
@@ -46,6 +71,31 @@ def test_member_submits_non_code_evidence_through_the_authenticated_form(client)
     assert record.contributor == member
     assert record.status == VerificationStatus.CANDIDATE
     assert record.contribution_type.slug == "qa"
+
+
+@pytest.mark.unit
+def test_member_submits_content_checked_file_evidence_through_the_authenticated_form(client):
+    """SEC-007/A6: the submission route passes a validated evidence upload to the service layer."""
+    member = UserFactory()
+    project = ProjectFactory(
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+    )
+    client.force_login(member)
+
+    response = client.post(
+        reverse("contributions:submit", kwargs={"project_id": project.pk}),
+        {
+            "title": "Accessibility evidence",
+            "contribution_type": contribution_type("qa").pk,
+            "evidence_file": SimpleUploadedFile("review.pdf", b"%PDF-1.7 evidence"),
+        },
+    )
+
+    record = ContributionRecord.objects.get()
+    assert response.status_code == 302
+    assert record.evidence_content_type == "application/pdf"
+    assert record.evidence_size_bytes == len(b"%PDF-1.7 evidence")
 
 
 @pytest.mark.unit
@@ -227,6 +277,103 @@ def test_maintainer_verification_queue_scopes_candidates_to_owned_projects(clien
     assert owned.title in content
     assert other.title not in content
     assert reverse("contributions:detail", kwargs={"contribution_id": owned.pk}) in content
+
+
+@pytest.mark.unit
+def test_verification_queue_exposes_provenance_review_age_sla_and_escalation(client):
+    """REC-006/C4.1/C4.2: reviewers see source, checks, age, SLA, and escalation."""
+    owned = ContributionRecordFactory(
+        source=ContributionSource.PROVIDER_EVENT,
+        provider_event_ref="github:queue-check-1",
+        project__response_sla="3d",
+        project__escalation_path="Escalate to the PMO duty officer after the published SLA.",
+    )
+    maintainer = ProjectMaintainerFactory(project=owned.project).user
+    client.force_login(maintainer)
+
+    response = client.get(reverse("contributions:verification_queue"))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert owned.get_source_display() in content
+    assert "Automated check" in content
+    assert "provider event reference recorded" in content
+    assert "Age" in content
+    assert "Review SLA" in content
+    assert "Within 3 days" in content
+    assert owned.project.escalation_path in content
+
+
+@pytest.mark.unit
+def test_verified_pmo_can_hold_and_release_a_candidate_from_the_detail_screen(client):
+    """D4.1/D4.3/AUTH-005: PMO hold routes preserve the candidate and its history."""
+    record = ContributionRecordFactory()
+    pmo = SuperAdminFactory()
+    verify_mfa(client, pmo)
+
+    held = client.post(
+        reverse("contributions:hold", kwargs={"contribution_id": record.pk}),
+        {"reason": "Rate-cap anomaly is awaiting review."},
+    )
+    record.refresh_from_db()
+    assert held.status_code == 302
+    assert record.status == VerificationStatus.CANDIDATE
+    assert record.hold_active is True
+
+    released = client.post(
+        reverse("contributions:release_hold", kwargs={"contribution_id": record.pk}),
+        {"reason": "The review found no duplicate work."},
+    )
+    record.refresh_from_db()
+    assert released.status_code == 302
+    assert record.status == VerificationStatus.CANDIDATE
+    assert record.hold_active is False
+
+
+@pytest.mark.unit
+def test_non_pmo_cannot_place_a_contribution_on_hold(client):
+    """D4.1/AUTH-005: only an OTP-verified Super Admin can hold an outcome."""
+    record = ContributionRecordFactory()
+    client.force_login(UserFactory())
+
+    response = client.post(
+        reverse("contributions:hold", kwargs={"contribution_id": record.pk}),
+        {"reason": "Forged hold"},
+    )
+
+    record.refresh_from_db()
+    assert response.status_code == 403
+    assert record.status == VerificationStatus.CANDIDATE
+
+
+@pytest.mark.unit
+def test_only_affected_contributor_can_submit_one_pmo_hold_response(client):
+    """D4.2/REC-006: the affected member posts one response that PMO can inspect."""
+    record = ContributionRecordFactory()
+    pmo = SuperAdminFactory()
+    place_on_hold(pmo, record, "Please explain the rapid activity.")
+    client.force_login(record.contributor)
+
+    response = client.post(
+        reverse("contributions:hold_response", kwargs={"contribution_id": record.pk}),
+        {"response": "Each contribution addresses a separate documented issue."},
+    )
+    record.refresh_from_db()
+
+    assert response.status_code == 302
+    assert record.hold_response == "Each contribution addresses a separate documented issue."
+
+    verify_mfa(client, pmo)
+    pmo_detail = client.get(reverse("contributions:detail", kwargs={"contribution_id": record.pk}))
+    assert pmo_detail.status_code == 200
+    assert record.hold_response in pmo_detail.content.decode()
+
+    client.force_login(UserFactory())
+    denied = client.post(
+        reverse("contributions:hold_response", kwargs={"contribution_id": record.pk}),
+        {"response": "Forged follow-up"},
+    )
+    assert denied.status_code == 403
 
 
 @pytest.mark.unit

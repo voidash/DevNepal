@@ -113,9 +113,13 @@ def test_authenticated_members_are_redirected_away_from_signup(client):
 
 
 @pytest.mark.unit
-def test_login_page_offers_account_creation(client):
+def test_login_page_sends_contributors_to_the_work_not_to_signup(client):
     """AUTH-001: the sign-in page links to the create-account flow."""
     response = client.get(reverse("accounts:login"))
 
     assert response.status_code == 200
-    assert reverse("accounts:signup") in response.content.decode()
+    content = response.content.decode()
+
+    assert reverse("accounts:signup") not in content
+    assert reverse("projects:government") in content
+    assert "You do not need a DevNepal account" in content

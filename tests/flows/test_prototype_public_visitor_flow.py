@@ -8,8 +8,8 @@ from apps.projects.models import Project
 
 
 @pytest.mark.django_db
-def test_public_visitor_can_follow_home_catalog_detail_and_sign_in(client):
-    """A1/A2: the prototype's primary anonymous path stays connected end to end."""
+def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(client):
+    """A1/A2/DSC-001: the compact anonymous path stays connected end to end."""
     call_command("seed_prototype_demo")
 
     home = client.get(reverse("projects:home"))
@@ -17,36 +17,34 @@ def test_public_visitor_can_follow_home_catalog_detail_and_sign_in(client):
     home_content = home.content.decode()
 
     ordered_sections = (
-        "DevNepal — platform at a glance",
-        "Featured government projects",
-        "Ways to contribute",
-        "Community projects — listed by members",
-        "People — verified impact and the people behind it",
-        "Writing from the community",
-        "Get started",
+        'id="contribution-path-heading"',
+        'id="path-heading"',
+        'id="opportunities-heading"',
+        'id="safeguards-heading"',
+        'id="ministry-cta-heading"',
     )
     positions = [home_content.index(section) for section in ordered_sections]
     assert positions == sorted(positions)
 
     government = client.get(reverse("projects:government"))
     assert government.status_code == 200
-    assert "Sewa Portal Accessibility Remediation" in government.content.decode()
+    assert "Civic Help Directory" in government.content.decode()
 
     project = Project.objects.get(slug="sewa-portal-accessibility-remediation")
     detail_url = reverse("projects:detail", kwargs={"slug": project.slug})
     detail = client.get(detail_url)
     assert detail.status_code == 200
     detail_content = detail.content.decode()
-    assert "Rajan Koirala" in detail_content
-    assert "Sabina Lamichhane" in detail_content
-    assert "Starter tasks from GitHub" in detail_content
-    assert "Sign in to apply" in detail_content
-    assert f"next={detail_url}" in detail_content
+    assert "voidash/civic-help-directory" in detail_content
+    assert "Open tasks" in detail_content
+    assert "Add Nepali eligibility text for scholarship programs" in detail_content
+    assert "https://github.com/voidash/civic-help-directory/issues/7" in detail_content
+    assert "Sign in to apply" not in detail_content
 
 
 @pytest.mark.django_db
-def test_home_source_sections_link_to_real_public_destinations(client):
-    """A1/A3: prototype home calls-to-action are routes, not decorative controls."""
+def test_home_calls_to_action_link_to_real_public_destinations(client):
+    """A1/A3/DSC-001: compact home calls-to-action are routes, not decorative controls."""
     call_command("seed_prototype_demo")
 
     response = client.get(reverse("projects:home"))

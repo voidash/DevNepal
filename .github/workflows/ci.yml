@@ -16,4 +16,36 @@ jobs:
       - run: uv sync
       - run: uv run ruff check .
       - run: uv run ruff format --check .
+      - run: uv run python manage.py check
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+      - run: uv run python manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
       - run: uv run pytest --cov=apps --cov=tests --cov-report=term-missing
+
+  observability-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run python ops/observability/validate_dashboards.py
+      - run: |
+          token_file="$(mktemp)"
+          printf '%s' "ci-metrics-token" > "$token_file"
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/ops/observability/prometheus:/etc/prometheus" \
+            -v "$token_file:/run/secrets/metrics_token:ro" \
+            prom/prometheus:v2.55.1 check config /etc/prometheus/prometheus.yml
+      - run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/ops/observability/prometheus:/etc/prometheus" \
+            prom/prometheus:v2.55.1 check rules /etc/prometheus/alerts.yml
+      - run: |
+          token_file="$(mktemp)"
+          printf '%s' "ci-metrics-token" > "$token_file"
+          GRAFANA_ADMIN_PASSWORD="ci-password" OBSERVABILITY_METRICS_TOKEN_FILE="$token_file" \
+            docker compose -f ops/observability/docker-compose.yml config --quiet

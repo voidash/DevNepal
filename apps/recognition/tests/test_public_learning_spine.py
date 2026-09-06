@@ -51,8 +51,8 @@ def test_a3_public_learning_spine_renders_seeded_records_with_public_provenance(
     assert "nisha-maharjan" in directory.content.decode()
 
     assert profile.status_code == 200
-    assert "Public profile" in profile.content.decode()
-    assert "Private by default" in profile.content.decode()
+    assert "GitHub profile" in profile.content.decode()
+    assert "has not shared a GitHub profile" in profile.content.decode()
     assert "aarati-shrestha" in profile.content.decode()
     assert "demo-pmo-admin@example.invalid" not in profile.content.decode()
 

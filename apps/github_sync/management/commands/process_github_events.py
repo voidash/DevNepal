@@ -1,13 +1,14 @@
 import logging
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps.github_sync.services import process_pending
+from apps.observability.commands import InstrumentedCommand
 
 logger = logging.getLogger(__name__)
 
 
-class Command(BaseCommand):
+class Command(InstrumentedCommand):
     help = (
         "GIT-005: worker entrypoint that drains PENDING provider events into "
         "candidate contributions (idempotent; safe to re-run on a schedule)."

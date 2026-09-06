@@ -9,16 +9,22 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from apps.accounts.models import MemberProfile
 from apps.blogs.enums import BlogModerationState, BlogPostType, BlogStatus
-from apps.blogs.forms import ListingForm, OfficialPublicationForm
+from apps.blogs.forms import (
+    ExternalArticleAddressForm,
+    ExternalArticleForm,
+    ListingForm,
+    OfficialPublicationForm,
+)
 from apps.blogs.models import BlogPost
 from apps.blogs.services import (
     BlogServiceError,
     archive,
     can_publish_official,
-    create_listing,
+    create_external_article,
     create_native_post,
     edit_listing,
     edit_native_post,
+    fetch_external_article_metadata,
     publish_listing,
     publish_official,
     unpublish,
@@ -124,23 +130,69 @@ def my_blog_list(request: HttpRequest) -> HttpResponse:
 @login_required(login_url=reverse_lazy("accounts:login"))
 @require_http_methods(["GET", "POST"])
 def blog_create(request: HttpRequest) -> HttpResponse:
-    """BLG-001/BLG-005: create an author-owned external-article link listing."""
-    form = ListingForm(request.POST or None)
+    """BLG-001/BLG-002: create an author-owned native Markdown draft."""
+    form = ListingForm(request.POST or None, create_native_only=True)
     if request.method == "POST" and form.is_valid():
         if request.POST.get("action") == "preview":
             return render(request, "blogs/blog_form.html", _preview_context(form, None))
-        post_type, fields = _post_fields(form)
+        _, fields = _post_fields(form)
         try:
-            if post_type == BlogPostType.NATIVE:
-                post = create_native_post(request.user, **fields)
-            else:
-                post = create_listing(request.user, **fields)
+            post = create_native_post(request.user, **fields)
         except BlogServiceError:
             logger.exception("Blog creation failed for author=%s", request.user.pk)
             _service_form_error(form)
         else:
             return redirect("blogs:edit", post_id=post.pk)
     return render(request, "blogs/blog_form.html", {"form": form, "post": None})
+
+
+@login_required(login_url=reverse_lazy("accounts:login"))
+@require_http_methods(["GET", "POST"])
+def link_external_article(request: HttpRequest) -> HttpResponse:
+    """BLG-005/MEM-007: create a rights-confirmed link-only external article listing."""
+    if request.method == "POST" and request.POST.get("action") == "fetch":
+        address_form = ExternalArticleAddressForm(request.POST)
+        if address_form.is_valid():
+            try:
+                source_metadata = fetch_external_article_metadata(
+                    address_form.cleaned_data["canonical_url"]
+                )
+            except BlogServiceError:
+                logger.info("External article metadata unavailable for author=%s", request.user.pk)
+                form = ExternalArticleForm(request.POST)
+                form.add_error(
+                    "canonical_url",
+                    _("We could not retrieve article details from that address."),
+                )
+            else:
+                form = ExternalArticleForm(
+                    initial={
+                        "canonical_url": source_metadata.canonical_url,
+                        "title": source_metadata.title,
+                        "excerpt": source_metadata.excerpt,
+                        "language": source_metadata.language,
+                        "reading_time_minutes": 0,
+                    }
+                )
+                return render(
+                    request,
+                    "blogs/external_article_form.html",
+                    {"form": form, "source_metadata": source_metadata},
+                )
+        else:
+            form = ExternalArticleForm(request.POST)
+            form.add_error("canonical_url", address_form.errors["canonical_url"])
+        return render(request, "blogs/external_article_form.html", {"form": form})
+    form = ExternalArticleForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            post = create_external_article(request.user, **form.cleaned_data)
+        except BlogServiceError:
+            logger.exception("External article link failed for author=%s", request.user.pk)
+            _service_form_error(form)
+        else:
+            return redirect("blogs:edit", post_id=post.pk)
+    return render(request, "blogs/external_article_form.html", {"form": form})
 
 
 @login_required(login_url=reverse_lazy("accounts:login"))

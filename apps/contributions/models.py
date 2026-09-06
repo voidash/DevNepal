@@ -4,12 +4,23 @@ import uuid
 from django.db import models
 from django.utils.text import get_valid_filename
 
-from apps.contributions.enums import ContributionSource, ImpactTier, VerificationStatus
+from apps.contributions.enums import (
+    ContributionSource,
+    EvidenceScanStatus,
+    ImpactTier,
+    VerificationStatus,
+)
 from apps.taxonomy.fields import NFCCharField, NFCTextField
 
 
+def safe_evidence_filename(filename):
+    normalized = str(filename or "").replace("\\", "/").rsplit("/", maxsplit=1)[-1]
+    safe_name = get_valid_filename(normalized).replace("..", ".").lstrip(".")
+    return safe_name or "evidence"
+
+
 def evidence_upload_path(instance, filename):
-    safe_name = get_valid_filename(filename)
+    safe_name = safe_evidence_filename(filename)
     return f"contribution-evidence/{uuid.uuid4().hex}/{safe_name}"
 
 
@@ -34,6 +45,14 @@ class ContributionRecord(models.Model):
     evidence_url = models.URLField(blank=True, default="")
     evidence_file = models.FileField(
         upload_to=evidence_upload_path, null=True, blank=True, max_length=255
+    )
+    evidence_content_type = models.CharField(max_length=100, blank=True, default="")
+    evidence_size_bytes = models.PositiveBigIntegerField(default=0)
+    evidence_scan = models.CharField(
+        max_length=14,
+        choices=EvidenceScanStatus.choices,
+        default=EvidenceScanStatus.NOT_APPLICABLE,
+        db_index=True,
     )
     source = models.CharField(
         max_length=25,
@@ -67,6 +86,33 @@ class ContributionRecord(models.Model):
         related_name="secondary_approvals",
     )
     pending_mapping = models.BooleanField(default=False)
+    hold_active = models.BooleanField(default=False)
+    held_from_status = models.CharField(
+        max_length=15,
+        choices=VerificationStatus.choices,
+        blank=True,
+        default="",
+    )
+    hold_reason = NFCTextField(blank=True, default="")
+    held_by = models.ForeignKey(
+        "accounts.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="held_contributions",
+    )
+    held_at = models.DateTimeField(null=True, blank=True)
+    hold_released_by = models.ForeignKey(
+        "accounts.User",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="released_contribution_holds",
+    )
+    hold_released_at = models.DateTimeField(null=True, blank=True)
+    hold_release_reason = NFCTextField(blank=True, default="")
+    hold_response = NFCTextField(blank=True, default="")
+    hold_responded_at = models.DateTimeField(null=True, blank=True)
     revocation_reason = NFCTextField(blank=True, default="")
     revoked_by = models.ForeignKey(
         "accounts.User",
@@ -87,6 +133,31 @@ class ContributionRecord(models.Model):
                 condition=~models.Q(provider_event_ref=""),
                 name="uniq_contrib_provider_event_ref",
             ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(hold_active=True)
+                    | (
+                        models.Q(
+                            held_at__isnull=False,
+                            held_by__isnull=False,
+                            held_from_status__in=(
+                                VerificationStatus.CANDIDATE,
+                                VerificationStatus.PENDING_INFO,
+                            ),
+                            hold_active=True,
+                        )
+                        & ~models.Q(hold_reason="")
+                    )
+                ),
+                name="contrib_hold_metadata_consistent",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hold_responded_at__isnull=True, hold_response="")
+                    | (models.Q(hold_responded_at__isnull=False) & ~models.Q(hold_response=""))
+                ),
+                name="contrib_hold_response_consistent",
+            ),
         ]
         indexes: typing.ClassVar[list] = [
             models.Index(fields=["project", "status"], name="idx_contrib_project_status"),
@@ -99,3 +170,8 @@ class ContributionRecord(models.Model):
 
     def __str__(self) -> str:
         return f"{self.title} by {self.contributor}"
+
+    @property
+    def has_recorded_automated_check(self) -> bool:
+        """True only when an authoritative provider event reference was persisted."""
+        return bool(self.source == ContributionSource.PROVIDER_EVENT and self.provider_event_ref)

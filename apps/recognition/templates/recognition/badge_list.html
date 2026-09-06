@@ -18,7 +18,7 @@
     <div class="dn-issue-list">
       {% for badge in badges %}
       <div class="dn-issue-row">
-        <span class="dn-state-dot{% if not badge.is_active %}" style="border-color: var(--devnepal-gov-red){% endif %}" aria-hidden="true"></span>
+        <span class="dn-state-dot{% if not badge.is_active %} is-inactive{% endif %}" aria-hidden="true"></span>
         <div>
           <a class="dn-issue-title" href="{% url 'recognition:badge_edit' badge.slug %}">{{ badge.name }}</a>
           <div class="dn-issue-meta">

@@ -28,7 +28,12 @@
     </div>
     {% endif %}
 
-    {% if contribution.status == "candidate" %}
+    {% if contribution.hold_active %}
+    <div class="dn-state-banner is-attention" role="status">
+      <strong>{% trans "Outcome on PMO hold" %}</strong>
+      <p>{% trans "PMO has paused this unscored outcome for anomaly review. Publisher decisions are disabled until PMO releases the hold; the reason is retained in the decision history." %}</p>
+    </div>
+    {% elif contribution.status == "candidate" %}
     <div class="dn-state-banner is-attention" role="status">
       <strong>{% trans "Awaiting verification by a project maintainer" %}</strong>
       <p>{% trans "No score is created while this record is a candidate. The contributor and authorized maintainers can see it." %}</p>
@@ -85,6 +90,36 @@
         <div class="dn-timeline-item-body"><p>{{ contribution.revocation_reason }}</p></div>
       </li>
       {% endif %}
+      {% if contribution.hold_reason %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <strong>{% trans "PMO hold recorded" %}</strong>
+          {% if contribution.held_at %}<time datetime="{{ contribution.held_at|date:'c' }}">{{ contribution.held_at }}</time>{% endif %}
+          {% if contribution.held_by %}<span>{% blocktrans with actor=contribution.held_by.username %}by {{ actor }}{% endblocktrans %}</span>{% endif %}
+        </div>
+        <div class="dn-timeline-item-body"><p>{{ contribution.hold_reason }}</p></div>
+      </li>
+      {% endif %}
+      {% if contribution.hold_release_reason %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <strong>{% trans "PMO hold released" %}</strong>
+          {% if contribution.hold_released_at %}<time datetime="{{ contribution.hold_released_at|date:'c' }}">{{ contribution.hold_released_at }}</time>{% endif %}
+          {% if contribution.hold_released_by %}<span>{% blocktrans with actor=contribution.hold_released_by.username %}by {{ actor }}{% endblocktrans %}</span>{% endif %}
+        </div>
+        <div class="dn-timeline-item-body"><p>{{ contribution.hold_release_reason }}</p></div>
+      </li>
+      {% endif %}
+      {% if contribution.hold_response %}
+      <li class="dn-timeline-item">
+        <div class="dn-timeline-item-header">
+          <strong>{% trans "Contributor response to PMO hold" %}</strong>
+          {% if contribution.hold_responded_at %}<time datetime="{{ contribution.hold_responded_at|date:'c' }}">{{ contribution.hold_responded_at }}</time>{% endif %}
+          {% if contribution.contributor %}<span>{% blocktrans with actor=contribution.contributor.username %}by {{ actor }}{% endblocktrans %}</span>{% endif %}
+        </div>
+        <div class="dn-timeline-item-body"><p>{{ contribution.hold_response }}</p></div>
+      </li>
+      {% endif %}
     </ol>
 
     {% if can_verify and contribution.status != "accepted" %}
@@ -103,7 +138,7 @@
       </fieldset>
       <div class="dn-field">
         <label for="contribution-reason">{% trans "Reason for the contributor" %} ({% trans "required" %})</label>
-        <textarea id="contribution-reason" name="reason" required></textarea>
+        <textarea id="contribution-reason" name="reason" maxlength="{{ contribution_reason_max_length }}" required></textarea>
       </div>
       <div class="dn-field">
         <label for="contribution-second-approver">{% trans "Secondary approver" %}</label>
@@ -122,8 +157,36 @@
       {% csrf_token %}
       <h2 id="revoke-contribution-heading">{% trans "Revoke contribution" %}</h2>
       <p>{% trans "Revocation reverses recognition but keeps the original decision and your reason in the audit history." %}</p>
-      <div class="dn-field"><label for="contribution-revocation-reason">{% trans "Revocation reason" %}</label><textarea id="contribution-revocation-reason" name="reason" required></textarea></div>
+      <div class="dn-field"><label for="contribution-revocation-reason">{% trans "Revocation reason" %}</label><textarea id="contribution-revocation-reason" name="reason" maxlength="{{ contribution_reason_max_length }}" required></textarea></div>
       <button class="btn btn--secondary" type="submit">{% trans "Revoke contribution" %}</button>
+    </form>
+    {% endif %}
+
+    {% if can_manage_hold and not contribution.hold_active %}
+    <form action="{% url 'contributions:hold' contribution.pk %}" method="post" class="dn-form-stack" aria-labelledby="hold-contribution-heading">
+      {% csrf_token %}
+      <h2 id="hold-contribution-heading">{% trans "Place outcome on hold" %}</h2>
+      <p>{% trans "Use this PMO anomaly control only for an unscored candidate or clarification outcome. Accepted work uses the separate revocation process so recognition remains consistent." %}</p>
+      <div class="dn-field"><label for="contribution-hold-reason">{% trans "Hold reason" %} ({% trans "required" %})</label><textarea id="contribution-hold-reason" name="reason" maxlength="{{ contribution_reason_max_length }}" required></textarea></div>
+      <button class="btn btn--secondary" type="submit">{% trans "Place on hold" %}</button>
+    </form>
+    {% elif can_manage_hold and contribution.hold_active %}
+    <form action="{% url 'contributions:release_hold' contribution.pk %}" method="post" class="dn-form-stack" aria-labelledby="release-hold-heading">
+      {% csrf_token %}
+      <h2 id="release-hold-heading">{% trans "Release PMO hold" %}</h2>
+      <p>{% trans "Release returns this record to its exact pre-hold review state. Both reasons remain in the audit history." %}</p>
+      <div class="dn-field"><label for="contribution-release-reason">{% trans "Release reason" %} ({% trans "required" %})</label><textarea id="contribution-release-reason" name="reason" maxlength="{{ contribution_reason_max_length }}" required></textarea></div>
+      <button class="btn btn--primary" type="submit">{% trans "Release hold" %}</button>
+    </form>
+    {% endif %}
+
+    {% if can_respond_to_hold %}
+    <form action="{% url 'contributions:hold_response' contribution.pk %}" method="post" class="dn-form-stack" aria-labelledby="hold-response-heading">
+      {% csrf_token %}
+      <h2 id="hold-response-heading">{% trans "Respond to PMO hold" %}</h2>
+      <p>{% trans "Your response is visible to PMO before it releases or corrects this outcome. It is recorded once and kept in the audit history." %}</p>
+      <div class="dn-field"><label for="contribution-hold-response">{% trans "Your response" %} ({% trans "required" %})</label><textarea id="contribution-hold-response" name="response" maxlength="{{ hold_response_max_length }}" required></textarea><p class="dn-field-help">{% blocktrans with limit=hold_response_max_length %}Maximum {{ limit }} characters. This response cannot be edited after it is recorded.{% endblocktrans %}</p></div>
+      <button class="btn btn--primary" type="submit">{% trans "Send response to PMO" %}</button>
     </form>
     {% endif %}
   </section>
@@ -139,6 +202,7 @@
         <dt>{% trans "Submitted" %}</dt><dd>{{ contribution.created_at }}</dd>
         <dt>{% trans "Status" %}</dt><dd>{{ contribution.get_status_display }}</dd>
         {% if contribution.verified_by %}<dt>{% trans "Verified by" %}</dt><dd>{{ contribution.verified_by.username }}</dd>{% endif %}
+        {% if contribution.hold_active %}<dt>{% trans "Held from" %}</dt><dd>{{ contribution.get_held_from_status_display }}</dd>{% endif %}
       </dl>
     </section>
     {% if contribution.status == "accepted" %}

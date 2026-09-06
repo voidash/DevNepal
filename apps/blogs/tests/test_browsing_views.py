@@ -67,13 +67,14 @@ def test_author_can_create_edit_and_transition_own_listing(client):
     client.force_login(author)
 
     create_response = client.post(
-        reverse("blogs:create"),
+        reverse("blogs:link_external"),
         {
             "title": "Public infrastructure notes",
             "excerpt": "A link to the full article.",
             "canonical_url": "https://medium.com/@author/infrastructure",
             "language": "en",
             "reading_time_minutes": 4,
+            "rights_confirmed": "on",
         },
     )
 

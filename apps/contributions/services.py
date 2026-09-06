@@ -9,16 +9,19 @@ SEC-008).
 
 import logging
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
+from django.conf import settings
 from django.db import OperationalError, ProgrammingError, transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from apps.accounts.services import require_privileged_mfa
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
 from apps.audit.services import record_audit
-from apps.contributions.enums import ContributionSource, VerificationStatus
-from apps.contributions.models import ContributionRecord
+from apps.contributions.enums import ContributionSource, EvidenceScanStatus, VerificationStatus
+from apps.contributions.models import ContributionRecord, safe_evidence_filename
 from apps.github_sync.enums import VerifiedEventKind
 from apps.github_sync.webhooks import ParsedEvent
 from apps.ministries.services import is_publisher_active
@@ -30,6 +33,7 @@ from apps.projects.enums import (
 )
 from apps.projects.models import Application, ProjectMaintainer
 from apps.taxonomy.enums import TermVocabulary
+from apps.taxonomy.fields import normalize_nfc
 from apps.taxonomy.models import TaxonomyTerm
 
 logger = logging.getLogger(__name__)
@@ -43,6 +47,16 @@ DECISION_STATUSES: frozenset[str] = frozenset(
 )
 PROVIDER_REF_PREFIX = "github"
 DEFAULT_GITHUB_CONTRIBUTION_SLUG = "engineering"
+MAX_CONTRIBUTION_REASON_LENGTH = 2000
+MAX_HOLD_RESPONSE_LENGTH = 4000
+DEFAULT_MAX_EVIDENCE_FILE_BYTES = 25 * 1024 * 1024
+EVIDENCE_CONTENT_TYPES = {
+    ".pdf": ("application/pdf", (b"%PDF-",)),
+    ".png": ("image/png", (b"\x89PNG\r\n\x1a\n",)),
+    ".jpg": ("image/jpeg", (b"\xff\xd8\xff",)),
+    ".jpeg": ("image/jpeg", (b"\xff\xd8\xff",)),
+}
+EXECUTABLE_SIGNATURES = (b"MZ", b"\x7fELF", b"#!")
 
 
 class ContributionServiceError(Exception):
@@ -55,6 +69,22 @@ class UnauthorizedVerifierError(ContributionServiceError):
 
 class UnauthorizedRevokerError(ContributionServiceError):
     """Actor is not a Super Admin (REC-005)."""
+
+
+class UnauthorizedHoldManagerError(ContributionServiceError):
+    """Actor is not an OTP-verified Super Admin permitted to manage a PMO hold."""
+
+
+class UnauthorizedHoldResponderError(ContributionServiceError):
+    """Actor is not the affected active contributor permitted to answer a PMO hold."""
+
+
+class HoldResponseAlreadyRecordedError(ContributionServiceError):
+    """A bounded contributor response is already recorded for this hold."""
+
+
+class InputTooLongError(ContributionServiceError):
+    """A governance reason or contributor response exceeds its documented boundary."""
 
 
 class SelfApprovalError(ContributionServiceError):
@@ -81,6 +111,14 @@ class InvalidEvidenceError(ContributionServiceError):
     """Submitted evidence is not valid for an approved contribution category (BR-006, GOV-008)."""
 
 
+class InvalidEvidenceFileError(ContributionServiceError):
+    """Evidence attachment violates the SEC-007 upload boundary."""
+
+
+class EvidenceFilePendingScanError(ContributionServiceError):
+    """A file-backed contribution cannot be accepted before an external security result."""
+
+
 class SubmissionNotEligibleError(ContributionServiceError):
     """The project is not open for direct member evidence submissions (DSC-005)."""
 
@@ -105,6 +143,102 @@ class Evidence:
     contribution_type: TaxonomyTerm
     description: str = ""
     evidence_url: str = ""
+    evidence_file: object | None = None
+
+
+@dataclass(frozen=True)
+class ValidatedEvidenceFile:
+    """SEC-007 metadata derived from bytes rather than a client-supplied MIME declaration."""
+
+    content_type: str
+    size_bytes: int
+
+
+def max_evidence_file_bytes() -> int:
+    """SEC-007: use the deployment upload ceiling without requiring a second setting."""
+    value = getattr(
+        settings,
+        "MAX_EVIDENCE_FILE_BYTES",
+        getattr(settings, "MAX_ATTACHMENT_BYTES", DEFAULT_MAX_EVIDENCE_FILE_BYTES),
+    )
+    try:
+        maximum = int(value)
+    except (TypeError, ValueError) as error:
+        raise InvalidEvidenceFileError(_("The evidence upload limit is not configured.")) from error
+    if maximum <= 0:
+        raise InvalidEvidenceFileError(_("The evidence upload limit is not configured."))
+    return maximum
+
+
+def validate_evidence_file(file) -> ValidatedEvidenceFile:
+    """SEC-007: allow only content-identified, non-executable evidence file types."""
+    if file is None or not getattr(file, "name", ""):
+        raise InvalidEvidenceFileError(_("Choose an evidence file to upload."))
+    safe_name = safe_evidence_filename(file.name)
+    suffix = PurePosixPath(safe_name).suffix.lower()
+    expected = EVIDENCE_CONTENT_TYPES.get(suffix)
+    if expected is None:
+        raise InvalidEvidenceFileError(_("Evidence files must be a PDF, PNG, or JPEG image."))
+    try:
+        file.seek(0, 2)
+        size_bytes = file.tell()
+        file.seek(0)
+        sample = file.read(32)
+        file.seek(0)
+    except (AttributeError, OSError, ValueError) as error:
+        logger.exception("Evidence upload could not be inspected; filename=%s", safe_name)
+        raise InvalidEvidenceFileError(_("The evidence file could not be inspected.")) from error
+    if size_bytes <= 0:
+        raise InvalidEvidenceFileError(_("Evidence files cannot be empty."))
+    if size_bytes > max_evidence_file_bytes():
+        raise InvalidEvidenceFileError(_("The evidence file exceeds the permitted size."))
+    if any(sample.startswith(signature) for signature in EXECUTABLE_SIGNATURES):
+        raise InvalidEvidenceFileError(
+            _("Executable or script files cannot be submitted as evidence.")
+        )
+    content_type, signatures = expected
+    if not any(sample.startswith(signature) for signature in signatures):
+        raise InvalidEvidenceFileError(
+            _("The evidence file content does not match its filename extension.")
+        )
+    return ValidatedEvidenceFile(content_type=content_type, size_bytes=size_bytes)
+
+
+def record_evidence_scan_result(record: ContributionRecord, scan_status: str) -> ContributionRecord:
+    """SEC-007: receive an external security result; this function does not scan files."""
+    if record.evidence_size_bytes <= 0:
+        raise InvalidEvidenceFileError(_("This contribution has no uploaded evidence file."))
+    if scan_status not in {
+        EvidenceScanStatus.CLEAN,
+        EvidenceScanStatus.FAILED,
+        EvidenceScanStatus.QUARANTINED,
+    }:
+        raise InvalidEvidenceFileError(_("The evidence security result is invalid."))
+    before = {"evidence_scan": record.evidence_scan}
+    with transaction.atomic():
+        if scan_status in {EvidenceScanStatus.FAILED, EvidenceScanStatus.QUARANTINED}:
+            try:
+                record.evidence_file.delete(save=False)
+            except (OSError, ValueError) as error:
+                logger.exception("Evidence quarantine failed; contribution_id=%s", record.pk)
+                raise InvalidEvidenceFileError(
+                    _("The unsafe evidence file could not be quarantined.")
+                ) from error
+            record.evidence_file = None
+            record.evidence_scan = EvidenceScanStatus.QUARANTINED
+            record.save(update_fields=["evidence_file", "evidence_scan", "updated_at"])
+        else:
+            record.evidence_scan = EvidenceScanStatus.CLEAN
+            record.save(update_fields=["evidence_scan", "updated_at"])
+        record_audit(
+            actor=None,
+            action="contribution.evidence_scanned",
+            obj=record,
+            before=before,
+            after={"evidence_scan": record.evidence_scan},
+            source="system",
+        )
+    return record
 
 
 def record_candidate_from_github(
@@ -154,6 +288,12 @@ def submit_evidence(member, project, evidence: Evidence) -> ContributionRecord:
             "or an accepted application (DSC-005)"
         )
 
+    evidence_file = None
+    file_metadata = None
+    if evidence.evidence_file is not None:
+        evidence_file = evidence.evidence_file
+        file_metadata = validate_evidence_file(evidence_file)
+
     return ContributionRecord.objects.create(
         project=project,
         contributor=member,
@@ -161,6 +301,12 @@ def submit_evidence(member, project, evidence: Evidence) -> ContributionRecord:
         title=evidence.title.strip(),
         description=evidence.description,
         evidence_url=evidence.evidence_url,
+        evidence_file=evidence_file,
+        evidence_content_type=file_metadata.content_type if file_metadata else "",
+        evidence_size_bytes=file_metadata.size_bytes if file_metadata else 0,
+        evidence_scan=(
+            EvidenceScanStatus.PENDING if file_metadata else EvidenceScanStatus.NOT_APPLICABLE
+        ),
         source=ContributionSource.MEMBER_SUBMISSION,
         status=VerificationStatus.CANDIDATE,
     )
@@ -201,6 +347,26 @@ def verify(
         )
     if record.status == VerificationStatus.REVOKED:
         raise InvalidStatusTransitionError("revoked records cannot be re-verified (REC-005)")
+    if record.hold_active:
+        raise InvalidStatusTransitionError(
+            "PMO-held records must be released before a verification decision can be recorded "
+            "(D4.1)"
+        )
+    if (
+        decision == VerificationStatus.ACCEPTED
+        and record.evidence_size_bytes > 0
+        and record.evidence_scan != EvidenceScanStatus.CLEAN
+    ):
+        _audit_decision(
+            verifier,
+            record,
+            "contribution.verify.denied",
+            {"status": record.status, "evidence_scan": record.evidence_scan},
+            {"decision": decision},
+        )
+        raise EvidenceFilePendingScanError(
+            _("File-backed evidence cannot be accepted before its security check passes.")
+        )
 
     before = {"status": record.status}
     if record.status == VerificationStatus.ACCEPTED:
@@ -304,6 +470,173 @@ def revoke(super_admin, record: ContributionRecord, reason: str) -> Contribution
     return record
 
 
+def place_on_hold(pmo, record: ContributionRecord, reason: str) -> ContributionRecord:
+    """D4.1/REC-006: PMO temporarily holds an unscored outcome for anomaly review.
+
+    This transition deliberately applies only before acceptance.  Accepted work has
+    score and badge side effects and must use the REC-005 revocation flow until a
+    separately designed restoration workflow exists.
+    """
+    reason = _require_reason(reason)
+    _require_hold_manager(pmo, record, action="contribution.hold")
+    with transaction.atomic():
+        locked = ContributionRecord.objects.select_for_update().get(pk=record.pk)
+        if locked.hold_active or locked.status not in {
+            VerificationStatus.CANDIDATE,
+            VerificationStatus.PENDING_INFO,
+        }:
+            _audit_decision(
+                pmo,
+                locked,
+                "contribution.hold.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise InvalidStatusTransitionError(
+                "only unscored candidate or clarification outcomes can be placed on hold (D4.1)"
+            )
+        before = {"status": locked.status, "hold_active": False}
+        locked.held_from_status = locked.status
+        locked.hold_active = True
+        locked.hold_reason = reason
+        locked.held_by = pmo
+        locked.held_at = timezone.now()
+        locked.hold_released_by = None
+        locked.hold_released_at = None
+        locked.hold_release_reason = ""
+        locked.hold_response = ""
+        locked.hold_responded_at = None
+        locked.save(
+            update_fields=[
+                "held_from_status",
+                "hold_active",
+                "hold_reason",
+                "held_by",
+                "held_at",
+                "hold_released_by",
+                "hold_released_at",
+                "hold_release_reason",
+                "hold_response",
+                "hold_responded_at",
+                "updated_at",
+            ]
+        )
+        _audit_decision(
+            pmo,
+            locked,
+            "contribution.held",
+            before,
+            {
+                "status": locked.status,
+                "hold_active": True,
+                "held_from_status": locked.held_from_status,
+                "reason": reason,
+            },
+        )
+    return locked
+
+
+def release_hold(pmo, record: ContributionRecord, reason: str) -> ContributionRecord:
+    """D4.3/REC-006: restore the exact pre-hold unscored outcome with an audit reason."""
+    reason = _require_reason(reason)
+    _require_hold_manager(pmo, record, action="contribution.release_hold")
+    with transaction.atomic():
+        locked = ContributionRecord.objects.select_for_update().get(pk=record.pk)
+        if not locked.hold_active or locked.held_from_status not in {
+            VerificationStatus.CANDIDATE,
+            VerificationStatus.PENDING_INFO,
+        }:
+            _audit_decision(
+                pmo,
+                locked,
+                "contribution.release_hold.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise InvalidStatusTransitionError("only an active PMO hold can be released (D4.3)")
+        before = {"status": locked.status, "hold_active": True}
+        locked.hold_active = False
+        locked.hold_released_by = pmo
+        locked.hold_released_at = timezone.now()
+        locked.hold_release_reason = reason
+        locked.save(
+            update_fields=[
+                "hold_active",
+                "hold_released_by",
+                "hold_released_at",
+                "hold_release_reason",
+                "updated_at",
+            ]
+        )
+        _audit_decision(
+            pmo,
+            locked,
+            "contribution.hold_released",
+            before,
+            {"status": locked.status, "hold_active": False, "reason": reason},
+        )
+    return locked
+
+
+def respond_to_hold(contributor, record: ContributionRecord, response: str) -> ContributionRecord:
+    """D4.2/REC-006: the affected contributor gives one reasoned response while held.
+
+    The response is intentionally bounded to one immutable-in-practice record.  A
+    correction or consolidation decision belongs to the later D4.3 workflow, not
+    to a contributor-controlled edit path.
+    """
+    response = _require_hold_response(response)
+    if (
+        contributor is None
+        or not contributor.is_active
+        or record.contributor_id is None
+        or record.contributor_id != contributor.pk
+    ):
+        _audit_decision(
+            contributor,
+            record,
+            "contribution.hold_response.denied",
+            {"status": record.status},
+            {},
+        )
+        raise UnauthorizedHoldResponderError(
+            "only the affected active contributor can respond to a PMO hold (D4.2)"
+        )
+    with transaction.atomic():
+        locked = ContributionRecord.objects.select_for_update().get(pk=record.pk)
+        if not locked.hold_active:
+            _audit_decision(
+                contributor,
+                locked,
+                "contribution.hold_response.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise InvalidStatusTransitionError("a response can be recorded only while held (D4.2)")
+        if locked.hold_responded_at is not None or locked.hold_response:
+            _audit_decision(
+                contributor,
+                locked,
+                "contribution.hold_response.denied",
+                {"status": locked.status},
+                {},
+            )
+            raise HoldResponseAlreadyRecordedError(
+                "a contributor response is already recorded for this PMO hold (D4.2)"
+            )
+        locked.hold_response = response
+        locked.hold_responded_at = timezone.now()
+        locked.save(update_fields=["hold_response", "hold_responded_at", "updated_at"])
+        _audit_decision(
+            contributor,
+            locked,
+            "contribution.hold_responded",
+            {"status": locked.status},
+            {"status": locked.status, "response": response},
+        )
+    return locked
+
+
 def accepted_contributions(member):
     """REC-001: the recognition and verified-portfolio basis is ACCEPTED records only."""
     return member.contributions.filter(status=VerificationStatus.ACCEPTED).select_related(
@@ -326,9 +659,25 @@ def link_profile_credit(record: ContributionRecord) -> ContributionRecord:
 
 
 def _require_reason(reason: str) -> str:
-    stripped = (reason or "").strip()
+    stripped = normalize_nfc(reason or "")
     if not stripped:
         raise MissingReasonError("a reason is required for every contribution decision (GOV-005)")
+    if len(stripped) > MAX_CONTRIBUTION_REASON_LENGTH:
+        raise InputTooLongError(
+            "a contribution decision reason cannot exceed "
+            f"{MAX_CONTRIBUTION_REASON_LENGTH} characters"
+        )
+    return stripped
+
+
+def _require_hold_response(response: str) -> str:
+    stripped = normalize_nfc(response or "")
+    if not stripped:
+        raise MissingReasonError("a contributor response is required for a PMO hold (D4.2)")
+    if len(stripped) > MAX_HOLD_RESPONSE_LENGTH:
+        raise InputTooLongError(
+            f"a PMO hold response cannot exceed {MAX_HOLD_RESPONSE_LENGTH} characters"
+        )
     return stripped
 
 
@@ -346,6 +695,18 @@ def _is_authorized_verifier(verifier, record: ContributionRecord) -> bool:
     return ProjectMaintainer.objects.filter(
         project_id=record.project_id, user_id=verifier.pk
     ).exists()
+
+
+def _require_hold_manager(actor, record: ContributionRecord, *, action: str) -> None:
+    if actor is None or not actor.is_active or not actor.is_superuser:
+        _audit_decision(actor, record, f"{action}.denied", {"status": record.status}, {})
+        raise UnauthorizedHoldManagerError("PMO outcome holds require a Super Admin (D4.1)")
+    require_privileged_mfa(
+        actor,
+        action=action,
+        obj=record,
+        error_type=UnauthorizedHoldManagerError,
+    )
 
 
 def _is_valid_second_approver(approver, verifier, record: ContributionRecord) -> bool:

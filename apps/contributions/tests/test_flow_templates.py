@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.tests.factories import ContributionRecordFactory
@@ -99,3 +100,31 @@ def test_rec001_accepted_record_names_verifier_and_recognition_next_step(client)
     assert verifier.username in content
     assert "Recognition uses the scoring policy attached to this accepted record" in content
     assert reverse("recognition:my_profile") in content
+
+
+@pytest.mark.unit
+def test_d401_held_record_explains_the_pmo_boundary_and_keeps_the_audit_reason_visible(client):
+    """D4.1/D4.3/REC-006: a hold is visible as an unscored PMO review state, not deletion."""
+    pmo = UserFactory(username="pmo-reviewer", is_superuser=True)
+    record = ContributionRecordFactory(
+        status=VerificationStatus.CANDIDATE,
+        hold_active=True,
+        held_from_status=VerificationStatus.CANDIDATE,
+        held_by=pmo,
+        held_at=timezone.now(),
+        hold_reason="Rate-cap anomaly requires review.",
+    )
+    client.force_login(record.contributor)
+
+    response = client.get(reverse("contributions:detail", kwargs={"contribution_id": record.pk}))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Outcome on PMO hold" in content
+    assert "Publisher decisions are disabled" in content
+    assert "PMO hold recorded" in content
+    assert record.hold_reason in content
+    assert "Respond to PMO hold" in content
+    assert 'maxlength="4000"' in content
+    assert "Maximum 4000 characters" in content
+    assert "Review evidence" not in content

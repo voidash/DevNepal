@@ -12,13 +12,14 @@ DEBUG = False
 ALLOWED_HOSTS: list[str] = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "apps.administration.admin_config.DevNepalAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.accounts",
+    "apps.administration",
     "apps.audit",
     "apps.ministries",
     "apps.taxonomy",
@@ -30,11 +31,14 @@ INSTALLED_APPS = [
     "apps.notifications",
     "apps.moderation",
     "apps.analytics",
+    "apps.observability",
     "django_otp",
     "django_otp.plugins.otp_totp",
 ]
 
 MIDDLEWARE = [
+    "apps.observability.middleware.CorrelationIdMiddleware",
+    "apps.observability.middleware.DatabaseMetricsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -59,6 +63,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.administration.context_processors.roles",
             ],
         },
     },
@@ -124,5 +129,40 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MAILERS = {
     "default": {
         "BACKEND": "django.core.mail.backends.console.EmailBackend",
+    },
+}
+
+OBSERVABILITY_METRICS_TOKEN = os.environ.get("OBSERVABILITY_METRICS_TOKEN", "")
+OBSERVABILITY_TRUST_INBOUND_CORRELATION_IDS = (
+    os.environ.get("OBSERVABILITY_TRUST_INBOUND_CORRELATION_IDS", "").lower() == "true"
+)
+OBSERVABILITY_JOB_RUN_RETENTION_DAYS = int(
+    os.environ.get("OBSERVABILITY_JOB_RUN_RETENTION_DAYS", "30")
+)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "correlation_id": {"()": "apps.observability.logging.CorrelationIdFilter"},
+        "scrub_secrets": {"()": "apps.observability.logging.SecretScrubbingFilter"},
+    },
+    "formatters": {
+        "json": {"()": "apps.observability.logging.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+            "filters": ["scrub_secrets", "correlation_id"],
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+    },
+    "loggers": {
+        "django.security": {"level": "WARNING", "propagate": True},
+        "django.server": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }

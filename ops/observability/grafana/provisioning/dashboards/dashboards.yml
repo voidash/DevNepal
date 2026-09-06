@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: devnepal
+    orgId: 1
+    folder: DevNepal
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards

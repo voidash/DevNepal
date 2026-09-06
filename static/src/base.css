@@ -7,21 +7,49 @@
 html {
   font-size: 100%;
   font-family: var(--font-body);
-  scroll-padding-top: 64px;
+  scroll-padding-top: var(--header-h);
+  background: var(--color-bg);
+  color-scheme: light;
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 [lang="ne"] {
   font-family: var(--font-nepali);
 }
 
+/* Devanagari carries matras above the line and a reph that sits higher still.
+   The Latin headline leading of 0.94 clipped them into the line above, so
+   Nepali headings get their own leading. */
+html[lang="ne"] :is(h1, h2, h3, h4, h5, h6),
+:is(h1, h2, h3, h4, h5, h6) [lang="ne"],
+[lang="ne"]:is(h1, h2, h3, h4, h5, h6) {
+  line-height: var(--lh-snug);
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  /* Primer sets its own family on body, which beats the one inherited from html. */
   font-family: inherit;
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: var(--fs-base);
+  line-height: 1.6;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -37,28 +65,29 @@ h3,
 h4,
 h5,
 h6 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   text-transform: none;
+  text-wrap: balance;
 }
 
 h1 {
-  font-size: 42px;
+  font-size: clamp(34px, 5vw, 46px);
 }
 
 h2 {
-  font-size: 32px;
+  font-size: clamp(26px, 3.5vw, 32px);
 }
 
 h3 {
-  font-size: 25px;
+  font-size: clamp(21px, 2.8vw, 24px);
 }
 
 h4 {
-  font-size: 20px;
+  font-size: var(--fs-lg);
 }
 
 p,
@@ -68,7 +97,17 @@ ul {
   margin: 0 0 var(--space-4);
 }
 
-a { color: var(--color-accent); text-underline-offset: 3px; }
+p {
+  max-width: 78ch;
+}
+
+a { color: var(--color-accent-700); text-underline-offset: 3px; }
+a:hover { color: var(--color-accent-800); }
+
+main :where(p, li, dd) a:not(.btn) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
 
 button,
 input,
@@ -103,7 +142,8 @@ textarea {
 .dn-product-header :focus-visible,
 .site-footer :focus-visible { outline-color: var(--color-accent); }
 
-.visually-hidden {
+.visually-hidden,
+.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -121,9 +161,10 @@ textarea {
   top: -100%;
   left: var(--space-2);
   z-index: 100;
-  background: var(--color-bg);
+  background: var(--color-paper);
   color: var(--color-text);
-  border: 1px solid var(--color-divider);
+  border: 1px solid var(--color-divider-strong);
+  border-radius: var(--radius-md);
   font-weight: 700;
   font-size: var(--fs-sm);
   text-transform: none;
@@ -136,6 +177,27 @@ textarea {
 
 .skip-link:focus-visible {
   top: var(--space-2);
+}
+
+/* Hover and selection states used to snap. Easing only the paint properties
+   keeps the page calm without moving anything. */
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button,
+  .btn,
+  summary,
+  input,
+  select,
+  textarea,
+  .card,
+  .Label,
+  .tag {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      outline-color 120ms ease;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -155,4 +217,8 @@ textarea {
     background: var(--color-bg);
     color: var(--color-fg);
   }
+}
+
+.hero .dn-home-hero {
+  grid-template-columns: minmax(0, 1fr);
 }

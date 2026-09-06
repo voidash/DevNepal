@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, F, Prefetch, Q, Sum
+from django.db.models import Case, Count, F, IntegerField, Prefetch, Q, When
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -15,15 +15,15 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.accounts import github as github_oauth
-from apps.accounts.models import MemberProfile
 from apps.accounts.permissions import privileged_mfa_required
 from apps.accounts.services import mfa_verified
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
-from apps.blogs.enums import BlogModerationState, BlogStatus
-from apps.blogs.models import BlogPost
+from apps.blogs.markdown import MarkdownValidationError, render_markdown
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
+from apps.github_sync.app_client import github_app_client
+from apps.github_sync.models import GithubIssueSnapshot, RepositoryConnection
 from apps.github_sync.services import starter_tasks_for_project
 from apps.ministries.enums import ContactVerificationStatus, OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
@@ -105,6 +105,7 @@ from apps.projects.services import (
     projects_for_publisher,
     provide_info,
     publish,
+    publish_by_publisher,
     recommended_projects,
     reject_submission,
     remove_screening_question,
@@ -150,6 +151,30 @@ AUTHORING_MANAGE_TABS = {
 }
 
 
+STARTER_ISSUE_LABELS = ("good first issue", "good-first-issue", "help wanted", "starter")
+
+
+def annotate_contribution_counts(project: Project) -> Project:
+    """DSC-005: attach the open-work counts a visitor scans a catalogue card for."""
+    connections = getattr(project, "public_connections", None)
+    if connections is None:
+        connections = [
+            connection
+            for connection in project.repository_connections.all()
+            if connection.is_public and connection.deactivated_at is None
+        ]
+    issues = [issue for connection in connections for issue in connection.issue_snapshots.all()]
+    if not issues:
+        issues = [task for connection in connections for task in connection.starter_tasks.all()]
+    project.open_issue_count = len(issues)
+    project.starter_issue_count = sum(
+        1
+        for issue in issues
+        if any(label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or []))
+    )
+    return project
+
+
 def public_projects():
     return (
         Project.objects.filter(status__in=PUBLIC_PROJECT_STATUSES)
@@ -167,64 +192,15 @@ def home(request: HttpRequest) -> HttpResponse:
             project_type=ProjectType.GOVERNMENT,
             status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         )
-        .order_by("-published_at", "-id")[:3]
-    )
-    featured_community_projects = (
-        public_projects()
-        .filter(
-            project_type=ProjectType.PERSONAL,
-            status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
-        )
-        .select_related("owner")
-        .order_by("-published_at", "-id")[:4]
-    )
-    featured_members = (
-        MemberProfile.objects.filter(directory_discoverable=True, leaderboard_opt_out=False)
-        .select_related("user")
-        .prefetch_related("user__skills__skill", "user__badge_awards__badge")
-        .annotate(
-            verified_count=Count(
-                "user__contributions",
-                filter=Q(user__contributions__status=VerificationStatus.ACCEPTED),
-                distinct=True,
-            ),
-            total_score=Sum(
-                "user__contributions__score__points",
-                filter=Q(user__contributions__score__reversed_at__isnull=True),
-            ),
-        )
-        .order_by("-total_score", "user__username")[:5]
-    )
-    featured_posts = (
-        BlogPost.objects.filter(status=BlogStatus.PUBLISHED)
-        .exclude(moderation_state=BlogModerationState.RESTRICTED)
-        .select_related("author", "official_published_by")
-        .prefetch_related("tags")
-        .order_by("-published_at", "-id")[:3]
+        .order_by("-published_at", "-id")[:6]
     )
     return render(
         request,
         "projects/home.html",
         {
             "featured_projects": featured_projects,
-            "featured_community_projects": featured_community_projects,
-            "featured_members": featured_members,
-            "featured_posts": featured_posts,
             "recommendations": recommendations,
             "github_oauth_enabled": github_oauth.oauth_config().enabled,
-            "platform_metrics": {
-                "ministries": MinistryOrganization.objects.filter(status=OrgStatus.ACTIVE).count(),
-                "open_projects": public_projects()
-                .filter(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
-                .count(),
-                "verified_contributions": ContributionRecord.objects.filter(
-                    status=VerificationStatus.ACCEPTED
-                ).count(),
-                "public_members": MemberProfile.objects.filter(directory_discoverable=True).count(),
-                "community_projects": public_projects()
-                .filter(project_type=ProjectType.PERSONAL)
-                .count(),
-            },
         },
     )
 
@@ -353,6 +329,76 @@ def ministry_onboarding(request: HttpRequest) -> HttpResponse:
     return render(request, "projects/ministry_onboarding.html")
 
 
+def issue_index(request: HttpRequest) -> HttpResponse:
+    """DSC-005/GIT-010: one public list of every open issue across published ministry work.
+
+    A contributor's unit of work is an issue, not a project, so the catalogue of
+    projects is not enough on its own. Labels live in a JSON column that no
+    supported database filters portably, so the label facet is applied in Python
+    over a bounded window of synced issues.
+    """
+    issues = (
+        GithubIssueSnapshot.objects.filter(
+            repository__is_public=True,
+            repository__deactivated_at__isnull=True,
+            repository__project__status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        )
+        .select_related("repository__project", "repository__project__ministry")
+        .order_by("-source_updated_at", "-number")[:200]
+    )
+    ministry_slug = normalize_nfc(request.GET.get("ministry", ""))
+    label = normalize_nfc(request.GET.get("label", ""))
+
+    rows = []
+    label_counts: dict[str, int] = {}
+    for issue in issues:
+        project = issue.repository.project
+        if project is None:
+            continue
+        labels = [str(name) for name in (issue.labels or [])]
+        for name in labels:
+            label_counts[name] = label_counts.get(name, 0) + 1
+        if label and label.lower() not in {name.lower() for name in labels}:
+            continue
+        if ministry_slug and (project.ministry is None or project.ministry.slug != ministry_slug):
+            continue
+        rows.append(
+            {
+                "number": issue.number,
+                "title": issue.title,
+                "labels": labels,
+                "is_starter": any(name.strip().lower() in STARTER_ISSUE_LABELS for name in labels),
+                "author_login": issue.author_login,
+                "comments_count": issue.comments_count,
+                "url": issue.url,
+                "repository": issue.repository.full_name,
+                "project": project,
+                "read_url": reverse("projects:github_issue", args=[project.slug, issue.number]),
+            }
+        )
+    rows.sort(key=lambda row: (0 if row["is_starter"] else 1, row["number"]))
+
+    ministries = list(
+        MinistryOrganization.objects.filter(
+            projects__status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+            projects__repository_connections__issue_snapshots__isnull=False,
+        )
+        .order_by("name_en")
+        .distinct()
+    )
+    return render(
+        request,
+        "projects/issue_index.html",
+        {
+            "issues": rows,
+            "starter_count": sum(1 for row in rows if row["is_starter"]),
+            "labels": sorted(label_counts.items(), key=lambda item: (-item[1], item[0]))[:10],
+            "ministries": ministries,
+            "filters": {"label": label, "ministry": ministry_slug},
+        },
+    )
+
+
 def project_list(request: HttpRequest, project_type: str | None = None) -> HttpResponse:
     """DSC-001/DSC-002: public project browse and explicit catalog filtering."""
     catalog = public_projects()
@@ -447,14 +493,25 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
         )
     )
 
-    sort = normalize_nfc(request.GET.get("sort", "updated"))
+    # A visitor is shopping for work, so open listings lead and closed records
+    # follow, whatever their last-edited date says.
+    projects = projects.annotate(
+        contribution_rank=Case(
+            When(status=ProjectStatus.OPEN_FOR_CONTRIBUTION, then=0),
+            When(status=ProjectStatus.PAUSED, then=1),
+            default=2,
+            output_field=IntegerField(),
+        )
+    )
+    sort = normalize_nfc(request.GET.get("sort", "activity"))
     ordering = {
+        "activity": ("contribution_rank", "-updated_at", "-pk"),
         "updated": ("-updated_at", "-pk"),
         "deadline": (F("deadline").asc(nulls_last=True), "title_en", "pk"),
         "title": ("title_en", "pk"),
     }
     if sort not in ordering:
-        sort = "updated"
+        sort = "activity"
     projects = projects.order_by(*ordering[sort])
 
     layout = normalize_nfc(request.GET.get("layout", "grid"))
@@ -536,7 +593,20 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
         if filters[key]
     ]
 
-    page = Paginator(projects.distinct(), 24).get_page(request.GET.get("page"))
+    page = Paginator(
+        projects.distinct().prefetch_related(
+            Prefetch(
+                "repository_connections",
+                queryset=RepositoryConnection.objects.filter(
+                    is_public=True, deactivated_at__isnull=True
+                ).prefetch_related("issue_snapshots", "starter_tasks"),
+                to_attr="public_connections",
+            )
+        ),
+        24,
+    ).get_page(request.GET.get("page"))
+    for project in page:
+        annotate_contribution_counts(project)
     return render(
         request,
         "projects/project_list.html",
@@ -550,6 +620,7 @@ def project_list(request: HttpRequest, project_type: str | None = None) -> HttpR
             "sort": sort,
             "layout": layout,
             "sort_choices": (
+                ("activity", _("Open work first")),
                 ("updated", _("Recently updated")),
                 ("deadline", _("Deadline soonest")),
                 ("title", _("Title A to Z")),
@@ -600,10 +671,43 @@ def project_updates(request: HttpRequest, slug: str) -> HttpResponse:
     )
 
 
+def github_issue_detail(request: HttpRequest, slug: str, number: int) -> HttpResponse:
+    """DSC-005/GIT-010: show a bounded public GitHub issue snapshot inside DevNepal."""
+    issue = get_object_or_404(
+        GithubIssueSnapshot.objects.select_related(
+            "repository__project", "repository__project__ministry"
+        ),
+        repository__project__slug=normalize_nfc(slug),
+        repository__project__status__in=PUBLIC_PROJECT_STATUSES,
+        repository__is_public=True,
+        repository__deactivated_at__isnull=True,
+        number=number,
+    )
+    try:
+        issue_body_html = render_markdown(issue.body)
+    except MarkdownValidationError:
+        logger.warning(
+            "public GitHub issue markdown could not be rendered (repository=%s issue=%s)",
+            issue.repository.full_name,
+            issue.number,
+        )
+        issue_body_html = None
+    return render(
+        request,
+        "projects/github_issue_detail.html",
+        {
+            "project": issue.repository.project,
+            "repository": issue.repository,
+            "issue": issue,
+            "issue_body_html": issue_body_html,
+        },
+    )
+
+
 def public_project_details():
     return (
         public_projects()
-        .select_related("license")
+        .select_related("license", "suitability")
         .prefetch_related(
             "links",
             "updates",
@@ -615,6 +719,15 @@ def public_project_details():
                     "skills"
                 ),
                 to_attr="open_tasks",
+            ),
+            Prefetch(
+                "repository_connections",
+                queryset=RepositoryConnection.objects.filter(
+                    is_public=True, deactivated_at__isnull=True
+                ).prefetch_related(
+                    "issue_snapshots", "pull_request_snapshots", "contributor_snapshots"
+                ),
+                to_attr="public_repositories",
             ),
         )
     )
@@ -631,6 +744,22 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         or project.published_at
     )
     github_starter_tasks, github_repositories = starter_tasks_for_project(project)
+    public_repositories = getattr(project, "public_repositories", [])
+    # A newcomer scans from the top, so issues labelled for a first contribution
+    # lead, then the rest by issue number.
+    github_issues = sorted(
+        (issue for repository in public_repositories for issue in repository.issue_snapshots.all()),
+        key=lambda issue: (
+            0
+            if any(label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or []))
+            else 1,
+            issue.number,
+        ),
+    )
+    accepting_contributions = project.status == ProjectStatus.OPEN_FOR_CONTRIBUTION
+    has_public_github_path = bool(
+        project.repository_url or project.issue_tracker_url or github_issues or github_starter_tasks
+    )
     return {
         "project": project,
         "open_tasks": project.open_tasks,
@@ -638,12 +767,31 @@ def public_project_detail_context(project: Project, **extra) -> dict:
         in {ContributionMode.OPEN_DIRECT, ContributionMode.HYBRID},
         "requires_application": project.contribution_mode
         in {ContributionMode.APPLICATION, ContributionMode.HYBRID},
+        "accepting_contributions": accepting_contributions,
+        "has_public_github_path": has_public_github_path,
         "last_activity_at": last_activity_at,
         "last_activity_days_ago": ((moment - last_activity_at).days if last_activity_at else None),
         "response_overdue": response_overdue(project, now=moment) if live else False,
         "maintainer_stale": maintainer_response_stale(project, now=moment) if live else False,
         "github_starter_tasks": github_starter_tasks,
         "github_repositories": github_repositories,
+        "github_issues": github_issues,
+        "starter_issue_count": sum(
+            1
+            for issue in github_issues
+            if any(label.strip().lower() in STARTER_ISSUE_LABELS for label in (issue.labels or []))
+        ),
+        "github_pull_requests": [
+            pull_request
+            for repository in public_repositories
+            for pull_request in repository.pull_request_snapshots.all()
+        ],
+        "github_contributors": [
+            contributor
+            for repository in public_repositories
+            for contributor in repository.contributor_snapshots.all()
+        ],
+        "public_github_repositories": public_repositories,
         **extra,
     }
 
@@ -676,7 +824,9 @@ def _manageable_project_or_404(user, slug: str) -> Project:
             "milestones",
             "attachments",
             "updates",
-            "repository_connections",
+            "repository_connections__issue_snapshots",
+            "repository_connections__pull_request_snapshots",
+            "repository_connections__contributor_snapshots",
         ),
         slug=normalize_nfc(slug),
         project_type=ProjectType.GOVERNMENT,
@@ -688,7 +838,7 @@ def _manageable_project_or_404(user, slug: str) -> Project:
 
 def _allowed_workflow_actions(user, project: Project) -> set[str]:
     status_actions = {
-        ProjectStatus.DRAFT: {"submit"},
+        ProjectStatus.DRAFT: {"submit", "publish"},
         ProjectStatus.IN_REVIEW: {"request_changes", "reject", "approve"},
         ProjectStatus.CHANGES_REQUESTED: {"resubmit"},
         ProjectStatus.APPROVED: {"publish", "revoke_approval"},
@@ -714,7 +864,6 @@ def _allowed_workflow_actions(user, project: Project) -> set[str]:
         "reject",
         "approve",
         "revoke_approval",
-        "publish",
         "restore",
     }
 
@@ -756,6 +905,7 @@ def _authoring_context(
         ),
         "suitability": suitability,
         "publish_readiness_violations": check_publish_readiness(project),
+        "github_app_configured": github_app_client().is_configured,
         "can_confirm_suitability": user.is_superuser and suitability is not None,
         "system_label": _("System"),
     }
@@ -968,15 +1118,54 @@ def authoring_dashboard(request: HttpRequest) -> HttpResponse:
     if not _can_author_projects(request.user):
         raise PermissionDenied
     projects = (
-        Project.objects.filter(project_type=ProjectType.GOVERNMENT)
-        if request.user.is_superuser
-        else projects_for_publisher(request.user)
+        (
+            Project.objects.filter(project_type=ProjectType.GOVERNMENT)
+            if request.user.is_superuser
+            else projects_for_publisher(request.user)
+        )
+        .select_related("ministry")
+        .prefetch_related("repository_connections")
     )
+    live_states = (ProjectStatus.OPEN_FOR_CONTRIBUTION, ProjectStatus.PAUSED)
+    draft_states = (
+        ProjectStatus.DRAFT,
+        ProjectStatus.IN_REVIEW,
+        ProjectStatus.CHANGES_REQUESTED,
+        ProjectStatus.APPROVED,
+    )
+    drafts = [project for project in projects if project.status in draft_states]
     return render(
         request,
         "projects/authoring_dashboard.html",
         {
-            "projects": projects.select_related("ministry"),
+            "projects": projects,
+            "draft_projects": drafts,
+            "live_projects": [project for project in projects if project.status in live_states],
+            "closed_projects": [
+                project
+                for project in projects
+                if project.status not in draft_states and project.status not in live_states
+            ],
+            "unconnected_draft_count": sum(
+                1
+                for project in drafts
+                if not any(
+                    connection.deactivated_at is None
+                    for connection in project.repository_connections.all()
+                )
+            ),
+            "pending_application_count": Application.objects.filter(
+                project__in=projects,
+                status__in=(
+                    ApplicationStatus.SUBMITTED,
+                    ApplicationStatus.INFO_REQUESTED,
+                    ApplicationStatus.WAITLISTED,
+                ),
+            ).count(),
+            "pending_evidence_count": ContributionRecord.objects.filter(
+                project__in=projects,
+                status__in=(VerificationStatus.CANDIDATE, VerificationStatus.PENDING_INFO),
+            ).count(),
             "can_create": _can_author_projects(request.user),
         },
     )
@@ -1186,7 +1375,7 @@ def authoring_create(request: HttpRequest) -> HttpResponse:
             except ProjectAuthorizationError as error:
                 raise PermissionDenied from error
             _save_authoring_many_to_many(form, project)
-            return redirect("projects:authoring_edit", slug=project.slug)
+            return redirect("projects:authoring_detail", slug=project.slug)
     else:
         form = GovernmentDraftCreateForm(actor=request.user)
     return render(request, "projects/authoring_form.html", {"form": form, "is_create": True})
@@ -1210,7 +1399,7 @@ def authoring_edit(request: HttpRequest, slug: str) -> HttpResponse:
                     status=400,
                 )
             _save_authoring_many_to_many(form, project)
-            return redirect("projects:authoring_edit", slug=project.slug)
+            return redirect("projects:authoring_detail", slug=project.slug)
     else:
         form = ProjectAuthoringForm(instance=project)
     return render(
@@ -1294,7 +1483,11 @@ def authoring_workflow(request: HttpRequest, slug: str) -> HttpResponse:
             comment=reason,
         ),
         "revoke_approval": lambda: revoke_approval(request.user, project, reason=reason),
-        "publish": lambda: publish(request.user, project),
+        "publish": lambda: (
+            publish_by_publisher(request.user, project)
+            if project.status == ProjectStatus.DRAFT
+            else publish(request.user, project)
+        ),
         "pause": lambda: pause(request.user, project),
         "resume": lambda: resume(request.user, project),
         "complete": lambda: complete(request.user, project),

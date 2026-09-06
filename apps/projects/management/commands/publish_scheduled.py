@@ -1,14 +1,14 @@
 import logging
 
-from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from apps.observability.commands import InstrumentedCommand
 from apps.projects.services import publish_due_scheduled
 
 logger = logging.getLogger(__name__)
 
 
-class Command(BaseCommand):
+class Command(InstrumentedCommand):
     help = "GOV-004/D5: publish approved projects whose scheduled publication time has arrived."
 
     def handle(self, *args, **options):

@@ -22,8 +22,38 @@ const templates = (
 
 for (const template of templates) await access(template)
 
-const cssFiles = ['src/devnepal.css', 'src/base.css', 'src/components.css', 'src/tokens.css']
-const forbidden = ['linear-gradient(', 'radial-gradient(', 'backdrop-filter:', 'box-shadow: 0 20px']
+const templateSources = await Promise.all(templates.map((template) => readFile(template, 'utf8')))
+const referencedStylesheets = new Set(
+  templateSources.flatMap((html) =>
+    [...html.matchAll(/{% static ['"]([^'"]+\.css)['"] %}/g)].map((match) => match[1]),
+  ),
+)
+const orphanStylesheets = (await readdir(join(root, 'static', 'src')))
+  .filter((name) => name.endsWith('.css'))
+  .map((name) => `src/${name}`)
+  .filter((name) => !referencedStylesheets.has(name))
+
+if (orphanStylesheets.length > 0) {
+  throw new Error(`Unreferenced custom stylesheets found: ${orphanStylesheets.join(', ')}`)
+}
+
+const cssFiles = [
+  'src/devnepal.css',
+  'src/base.css',
+  'src/components.css',
+  'src/tokens.css',
+  'src/onboarding.css',
+  'src/public-discovery.css',
+]
+const forbidden = [
+  'linear-gradient(',
+  'radial-gradient(',
+  'backdrop-filter:',
+  'box-shadow:',
+  '--shadow-sm:',
+  '--shadow-md:',
+  '--discovery-rule:',
+]
 const legacyClasses = [
   'pattern-grid',
   'pattern-dots',
@@ -40,6 +70,102 @@ for (const cssFile of cssFiles) {
   const css = await readFile(join(root, 'static', cssFile), 'utf8')
   for (const pattern of forbidden) {
     if (css.includes(pattern)) cssViolations.push(`${cssFile}: ${pattern}`)
+  }
+}
+
+for (const cssFile of cssFiles.filter((cssFile) => cssFile !== 'src/tokens.css')) {
+  const css = await readFile(join(root, 'static', cssFile), 'utf8')
+  if (/#[\da-f]{3,8}\b/i.test(css)) cssViolations.push(`${cssFile}: raw color value`)
+}
+
+// The type, spacing and corner scales only hold if nothing can reintroduce a raw
+// value. tokens.css is the one file allowed to name a size.
+for (const cssFile of cssFiles.filter((cssFile) => cssFile !== 'src/tokens.css')) {
+  const css = await readFile(join(root, 'static', cssFile), 'utf8')
+  const lines = css.split('\n')
+  lines.forEach((line, index) => {
+    if (line.includes('clamp(')) return
+    if (/font-size:\s*\d+px/.test(line)) {
+      cssViolations.push(`${cssFile}:${index + 1}: raw font-size, use a --fs- token`)
+    }
+    if (/font:\s*(?:\d+\s+)?\d+px/.test(line)) {
+      cssViolations.push(`${cssFile}:${index + 1}: raw size in a font shorthand, use a --fs- token`)
+    }
+    if (/border-radius:\s*\d+px/.test(line)) {
+      cssViolations.push(`${cssFile}:${index + 1}: raw border-radius, use var(--radius)`)
+    }
+    const spacing = line.match(/\b(?:padding|margin|gap|row-gap|column-gap)(?:-[a-z]+)?:\s*[^;]+/g) ?? []
+    for (const declaration of spacing) {
+      for (const value of declaration.match(/\b(\d+)px/g) ?? []) {
+        const px = Number.parseInt(value, 10)
+        if (px > 3) {
+          cssViolations.push(`${cssFile}:${index + 1}: raw spacing ${value}, use a --space- token`)
+        }
+      }
+    }
+  })
+}
+
+// #5395fc measures 2.97:1 against white. The primary action reads two tokens, so
+// the pairing has to be checked at the token level — the selector-level contrast
+// rule below cannot see through the indirection.
+{
+  const tokens = await readFile(join(root, 'static', 'src/tokens.css'), 'utf8')
+  const action = tokens.match(/--color-action:\s*([^;]+);/)?.[1]?.trim()
+  const actionFg = tokens.match(/--color-action-fg:\s*([^;]+);/)?.[1]?.trim()
+  const lightFg = actionFg === 'var(--color-paper)' || actionFg === '#ffffff'
+  if (action === 'var(--color-accent)' && lightFg) {
+    cssViolations.push('src/tokens.css: --color-action is the base accent under light text (2.97:1)')
+  }
+}
+
+for (const cssFile of ['src/onboarding.css', 'src/public-discovery.css']) {
+  const css = await readFile(join(root, 'static', cssFile), 'utf8')
+  if (/\/\*/.test(css)) cssViolations.push(`${cssFile}: explanatory CSS comment`)
+}
+
+const componentsCss = await readFile(join(root, 'static', 'src/components.css'), 'utf8')
+if (/\.dn-state-dot\s*\{[^}]*width:\s*10px;[^}]*height:\s*10px/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: decorative state dot')
+}
+if (/[^{}]*\.dn-section-kicker[^{}]*\{[^}]*text-transform:\s*uppercase/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: repeated uppercase section eyebrow')
+}
+if (/[^{}]*\.section__header[^{}]*\{[^}]*text-transform:\s*uppercase/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: inherited uppercase page header')
+}
+if (!/\.section__header\s*\{[^}]*display:\s*flex/s.test(componentsCss)) {
+  cssViolations.push('src/components.css: missing responsive page-header layout')
+}
+
+const onboardingCss = await readFile(join(root, 'static', 'src/onboarding.css'), 'utf8')
+if (/\.dn-onboarding__heading\s*>\s*p:first-child\s*\{[^}]*text-transform:\s*uppercase/s.test(onboardingCss)) {
+  cssViolations.push('src/onboarding.css: repeated uppercase onboarding eyebrow')
+}
+
+const baseCss = await readFile(join(root, 'static', 'src/base.css'), 'utf8')
+for (const required of ['h1 {\n  font-size: clamp(', 'main :where(p, li, dd) a:not(.btn)']) {
+  if (!baseCss.includes(required)) cssViolations.push(`src/base.css: missing ${required}`)
+}
+if (!/a\s*\{[^}]*color:\s*var\(--color-accent-700\)/s.test(baseCss)) {
+  cssViolations.push('src/base.css: default links use low-contrast accent')
+}
+
+const shellCss = await readFile(join(root, 'static', 'src/devnepal.css'), 'utf8')
+const navigationCues = [
+  [/\.dn-primary-nav a\[aria-current="page"\]\s*\{[^}]*text-decoration:\s*underline/s, 'primary navigation'],
+  [/\.mobile-nav a\[aria-current="page"\]\s*\{[^}]*border-left:/s, 'mobile navigation'],
+]
+for (const [pattern, name] of navigationCues) {
+  if (!pattern.test(shellCss)) cssViolations.push(`src/devnepal.css: missing ${name} cue`)
+}
+
+for (const [css, name] of [
+  [componentsCss, 'src/components.css'],
+  [shellCss, 'src/devnepal.css'],
+]) {
+  if (/color:\s*var\(--color-bg\);[^}]*background:\s*var\(--color-accent(?:-600)?\)/s.test(css)) {
+    cssViolations.push(`${name}: low-contrast text-bearing accent`)
   }
 }
 
@@ -83,6 +209,7 @@ if (templateViolations.length > 0) {
 
 const base = await readFile(join(root, 'templates/base.html'), 'utf8')
 for (const required of [
+  '<meta name="description"',
   'dn-product-header',
   'dn-primary-nav',
   'dn-skip-link',
@@ -90,6 +217,22 @@ for (const required of [
   'devnepal.css',
 ]) {
   if (!base.includes(required)) throw new Error(`templates/base.html is missing: ${required}`)
+}
+
+for (const viewName of [
+  'projects:government',
+  'projects:community',
+  'projects:about',
+  'accounts:login',
+  'accounts:signup',
+  'accounts:dashboard',
+  'recognition:my_profile',
+  'notifications:list',
+  'projects:application_list',
+  'projects:authoring_dashboard',
+]) {
+  const marker = `request.resolver_match.view_name == '${viewName}'`
+  if (!base.includes(marker)) throw new Error(`templates/base.html lacks current-page state: ${viewName}`)
 }
 
 console.log(`Validated ${templates.length} templates and ${cssFiles.length} stylesheets against the DevNepal design-system contract.`)

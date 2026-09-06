@@ -3,7 +3,7 @@
 {% block title %}{% trans "Ministry management" %} | DevNepal{% endblock %}
 {% block content %}
 <main class="section"><div class="container">
-  <header class="section__header"><h1>{% trans "Ministry management" %}</h1><a class="btn btn--primary" href="{% url 'ministries:organization_create' %}">{% trans "Create ministry" %}</a></header>
+  <header class="section__header"><h1>{% trans "Ministry management" %}</h1><a class="btn btn--primary" href="{% url 'ministries:onboarding_request_create' %}">{% trans "Log onboarding request" %}</a></header>
   <table><thead><tr><th>{% trans "Ministry" %}</th><th>{% trans "Status" %}</th><th>{% trans "Publishers" %}</th></tr></thead><tbody>
   {% for ministry in organizations %}<tr><td><a href="{% url 'ministries:organization_detail' ministry.slug %}">{{ ministry.localized_name }}</a></td><td>{{ ministry.get_status_display }}</td><td>{{ ministry.publishers.all|length }}</td></tr>{% empty %}<tr><td colspan="3">{% trans "No ministries have been provisioned." %}</td></tr>{% endfor %}
   </tbody></table>
