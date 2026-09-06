@@ -6,7 +6,7 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "exec .venv/bin/python manage.py runserver 127.0.0.1:${PORT:-8000} --noreload"
+        "exec .venv/bin/python manage.py runserver 127.0.0.1:${PORT:-8000}"
       ],
       "env": { "DJANGO_SETTINGS_MODULE": "config.settings.dev" },
       "port": 8000,
