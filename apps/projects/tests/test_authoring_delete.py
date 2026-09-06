@@ -20,10 +20,13 @@ def test_publisher_can_delete_only_their_unconnected_draft(client):
     client.force_login(publisher.user)
 
     page = client.get(reverse("projects:authoring_detail", args=[project.slug]))
+    dashboard = client.get(reverse("projects:authoring_dashboard"))
     deleted = client.post(reverse("projects:authoring_delete", args=[project.slug]))
 
     assert page.status_code == 200
+    assert dashboard.status_code == 200
     assert reverse("projects:authoring_delete", args=[project.slug]) in page.content.decode()
+    assert reverse("projects:authoring_delete", args=[project.slug]) in dashboard.content.decode()
     assert deleted.status_code == 302
     assert deleted.url == reverse("projects:authoring_dashboard")
     assert not Project.objects.filter(pk=project.pk).exists()
@@ -51,3 +54,18 @@ def test_draft_delete_refuses_non_drafts_and_connected_drafts(client, blocked_by
     assert response.url == reverse("projects:authoring_detail", args=[project.slug])
     assert Project.objects.filter(pk=project.pk).exists()
     assert not AuditEvent.objects.filter(action="project.draft_deleted").exists()
+
+
+@override_settings(PRIVILEGED_MFA_BYPASS=True)
+def test_connected_draft_dashboard_does_not_offer_destructive_delete(client):
+    """GIT-003: the dashboard never offers deletion while a repository is connected."""
+    publisher = MinistryPublisherFactory()
+    project = ProjectFactory(owner=publisher.user, ministry=publisher.ministry)
+    RepositoryConnectionFactory(project=project)
+    client.force_login(publisher.user)
+
+    response = client.get(reverse("projects:authoring_dashboard"))
+
+    assert response.status_code == 200
+    delete_url = reverse("projects:authoring_delete", args=[project.slug])
+    assert delete_url not in response.content.decode()

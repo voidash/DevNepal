@@ -56,7 +56,7 @@ def ingest_pending(delivery_id, *, node_id="R_kgDOKExAmPlE", pr_id=987654):
     )
 
 
-def issue_lifecycle_body(action, *, node_id, issue_id=8080, number=12):
+def issue_lifecycle_body(action, *, node_id, issue_id=8080, number=12, state_reason="not_planned"):
     return json.dumps(
         {
             "action": action,
@@ -64,7 +64,7 @@ def issue_lifecycle_body(action, *, node_id, issue_id=8080, number=12):
                 "id": issue_id,
                 "number": number,
                 "state": "closed" if action == "closed" else "open",
-                "state_reason": "not_planned" if action == "closed" else None,
+                "state_reason": state_reason if action == "closed" else None,
             },
             "repository": {
                 "id": 555001,
@@ -169,6 +169,45 @@ class FailingLifecycleSnapshotClient(LifecycleSnapshotClient):
 
 
 class TestProcessPending:
+    @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
+    def test_completed_issue_close_uses_signed_projection_when_provider_is_unavailable(
+        self, monkeypatch
+    ):
+        """GIT-003/GIT-005: a signed close removes stale UI data without another API call."""
+        connection = RepositoryConnectionFactory(
+            is_public=True, repository_node_id="R_kgDOCompletedIssue"
+        )
+        GithubIssueSnapshot.objects.create(
+            repository=connection,
+            github_issue_id=8080,
+            number=12,
+            title="Issue that was just closed",
+            state="open",
+            url=f"https://github.com/{connection.full_name}/issues/12",
+        )
+        calls = []
+        install_fake_contributions(monkeypatch, calls)
+        monkeypatch.setattr(
+            "apps.github_sync.services.github_app_client", FailingLifecycleSnapshotClient
+        )
+        body = issue_lifecycle_body(
+            "closed",
+            node_id=connection.repository_node_id,
+            state_reason="completed",
+        )
+
+        event = ingest_webhook(
+            "github", "issues", "completed-issue-close", sign_body(body), None, body
+        )
+        result = process_pending(limit=10)
+
+        event.refresh_from_db()
+        assert result.processed == 1
+        assert result.blocked == 0
+        assert event.processing_state == ProcessingState.PROCESSED
+        assert len(calls) == 1
+        assert not GithubIssueSnapshot.objects.filter(repository=connection).exists()
+
     @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
     def test_inflight_repository_refresh_coalesces_without_another_provider_call(self, monkeypatch):
         """GIT-003/SEC-006: a webhook burst cannot multiply full provider snapshots."""
@@ -370,7 +409,8 @@ class TestProcessPending:
         assert event.processing_state == ProcessingState.PROCESSED
         assert len(calls) == 1
         assert calls[0][1] == connection.project
-        assert GithubPullRequestSnapshot.objects.get(repository=connection).number == 34
+        assert not GithubPullRequestSnapshot.objects.filter(repository=connection).exists()
+        assert client.calls == []
 
     @override_settings(GITHUB_WEBHOOK_SECRET=WEBHOOK_SECRET)
     def test_issue_lifecycle_snapshot_failure_keeps_last_good_projection(self, monkeypatch):

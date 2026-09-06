@@ -115,7 +115,6 @@ from apps.projects.services import (
     restore,
     resubmit,
     resume,
-    reusable_bound_project_for_demo,
     revoke_approval,
     save_completion_summary,
     set_screening_question_active,
@@ -150,9 +149,6 @@ AUTHORING_MANAGE_TABS = {
     "screening_toggle": "questions",
     "screening_remove": "questions",
 }
-
-DEMO_FILL_INTENT = "civic-help-directory"
-
 
 STARTER_ISSUE_LABELS = ("good first issue", "good-first-issue", "help wanted", "starter")
 
@@ -1362,17 +1358,6 @@ def authoring_create(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = GovernmentDraftCreateForm(request.POST, actor=request.user)
         if form.is_valid():
-            if request.POST.get("demo_fill") == DEMO_FILL_INTENT:
-                try:
-                    reusable_project = reusable_bound_project_for_demo(
-                        request.user,
-                        form.cleaned_data["ministry"],
-                        form.cleaned_data.get("repository_url", ""),
-                    )
-                except ProjectAuthorizationError as error:
-                    raise PermissionDenied from error
-                if reusable_project is not None:
-                    return redirect("projects:authoring_detail", slug=reusable_project.slug)
             fields = {
                 name: value
                 for name, value in form.cleaned_data.items()

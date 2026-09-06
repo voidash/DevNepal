@@ -181,10 +181,16 @@ class TestValidDelivery:
             "number",
             "event_id",
             "triggered_by_login",
+            "public_snapshot_lifecycle",
         }
         assert row.payload["kind"] == "pr_merged"
         assert row.payload["event_id"] == "987654"
         assert row.payload["actor_login"] == "cdjk"
+        assert set(row.payload["public_snapshot_lifecycle"]) == {
+            "action",
+            "repository_node_id",
+            "snapshot_item",
+        }
         assert "sender" not in row.payload
         assert "pull_request" not in row.payload
 

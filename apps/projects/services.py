@@ -30,8 +30,7 @@ from apps.audit.models import AuditEvent
 from apps.audit.services import record_audit
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
-from apps.github_sync.enums import Provider, SyncState
-from apps.github_sync.models import GithubConnection, RepositoryConnection
+from apps.github_sync.models import GithubConnection
 from apps.ministries.models import MinistryPublisher
 from apps.ministries.services import is_publisher_active
 from apps.notifications.enums import NotificationType
@@ -254,8 +253,6 @@ RESPONSE_SLA_DAYS = {
     ResponseSla.WITHIN_3_DAYS: 3,
     ResponseSla.WITHIN_1_WEEK: 7,
 }
-
-DEMO_REPOSITORY_FULL_NAME = "voidash/civic-help-directory"
 
 
 class AttachmentError(Exception):
@@ -603,45 +600,6 @@ def create_government_draft(actor, ministry, **fields) -> Project:
         obj=project,
         after={"status": project.status, "ministry_id": ministry.pk},
     )
-    return project
-
-
-def reusable_bound_project_for_demo(actor, ministry, repository_url: str) -> Project | None:
-    """GOV-001/GOV-002/GIT-003: reuse the canonical connected demo project safely.
-
-    The demo helper is intentionally idempotent. It must never duplicate a
-    repository connection or redirect across ministry authorization boundaries.
-    """
-    repository_name = parse_github_repo_slug(repository_url)
-    if repository_name is None or repository_name.casefold() != DEMO_REPOSITORY_FULL_NAME:
-        return None
-
-    connection = (
-        RepositoryConnection.objects.filter(
-            provider=Provider.GITHUB,
-            full_name__iexact=repository_name,
-            is_public=True,
-            deactivated_at__isnull=True,
-            project__isnull=False,
-        )
-        .exclude(sync_state=SyncState.STOPPED)
-        .select_related("project__ministry")
-        .order_by("-updated_at", "pk")
-        .first()
-    )
-    if connection is None:
-        return None
-
-    project = connection.project
-    if project.project_type != ProjectType.GOVERNMENT or project.ministry_id != ministry.pk:
-        record_audit(
-            actor=actor,
-            action="project.demo_reuse.denied",
-            obj=ministry,
-            result="failure",
-        )
-        raise ProjectAuthorizationError("the prepared demo project is unavailable")
-    _require_publisher(actor, project, action="project.demo_reuse")
     return project
 
 

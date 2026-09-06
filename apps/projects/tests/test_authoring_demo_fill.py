@@ -72,8 +72,8 @@ def test_demo_fill_script_only_mutates_existing_controls_without_submitting_or_f
 
 
 @pytest.mark.integration
-def test_marked_demo_fill_reuses_the_same_ministry_connected_project(client):
-    """GOV-001/GOV-002/GIT-003: demo fill is idempotent for its canonical repository."""
+def test_marked_demo_fill_creates_a_new_draft_instead_of_redirecting_to_an_old_project(client):
+    """GOV-001/GOV-002: demo assistance must never substitute an existing project."""
     assignment = MinistryPublisherFactory()
     _verify_mfa(client, assignment.user)
     prepared = ProjectFactory(
@@ -106,8 +106,10 @@ def test_marked_demo_fill_reuses_the_same_ministry_connected_project(client):
     )
 
     assert response.status_code == 302
-    assert response.url == reverse("projects:authoring_detail", kwargs={"slug": prepared.slug})
-    assert Project.objects.count() == project_count
+    assert Project.objects.count() == project_count + 1
+    created = Project.objects.exclude(pk=prepared.pk).get(title_en="Civic Help Directory")
+    assert response.url == reverse("projects:authoring_detail", kwargs={"slug": created.slug})
+    assert created.status == "draft"
     connection.refresh_from_db()
     assert connection.project == prepared
 
@@ -146,8 +148,8 @@ def test_unmarked_submission_keeps_normal_draft_creation_semantics(client):
 
 
 @pytest.mark.integration
-def test_demo_fill_cannot_reuse_another_ministrys_connected_project(client):
-    """GOV-001/AUTH-006: a forged demo marker cannot cross a ministry boundary."""
+def test_demo_fill_does_not_resolve_to_another_ministrys_connected_project(client):
+    """GOV-001/AUTH-006: demo assistance creates only inside the selected ministry."""
     assignment = MinistryPublisherFactory()
     _verify_mfa(client, assignment.user)
     other_project = ProjectFactory(repository_url="https://github.com/voidash/civic-help-directory")
@@ -171,10 +173,12 @@ def test_demo_fill_cannot_reuse_another_ministrys_connected_project(client):
         },
     )
 
-    assert response.status_code == 403
-    assert not Project.objects.filter(
+    assert response.status_code == 302
+    created = Project.objects.get(
         owner=assignment.user, repository_url="https://github.com/voidash/civic-help-directory"
-    ).exists()
+    )
+    assert created.ministry == assignment.ministry
+    assert response.url == reverse("projects:authoring_detail", kwargs={"slug": created.slug})
 
 
 def test_demo_fill_uses_the_rendered_mit_licence_label(client):

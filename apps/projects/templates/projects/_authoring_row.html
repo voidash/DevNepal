@@ -34,6 +34,12 @@
     {% if stage == "draft" %}
     <a class="btn btn--primary" href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Review and publish" %}</a>
     <a class="btn" href="{% url 'projects:authoring_edit' project.slug %}">{% trans "Edit" %}</a>
+    {% if not project.repository_connections.all %}
+    <form action="{% url 'projects:authoring_delete' project.slug %}" method="post">
+      {% csrf_token %}
+      <button class="btn btn--danger" type="submit">{% trans "Delete draft" %}</button>
+    </form>
+    {% endif %}
     {% else %}
     <a class="btn btn--primary" href="{% url 'projects:authoring_detail' project.slug %}">{% trans "Open workspace" %}</a>
     <a class="dn-arrow-link" href="{% url 'projects:detail' project.slug %}">{% trans "View public page" %} →</a>

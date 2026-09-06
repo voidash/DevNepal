@@ -1208,7 +1208,7 @@ def _ingest(
             source=DeliverySource.WEBHOOK,
             signature_valid=True,
             signature_note=SIGNATURE_NOTE_VALID,
-            payload=asdict(parsed),
+            payload=_event_payload(parsed, snapshot_lifecycle),
             payload_digest=digest,
             processing_state=ProcessingState.DUPLICATE,
             last_error=f"duplicate of provider event {parsed.event_id}",
@@ -1250,7 +1250,7 @@ def _ingest(
         source=DeliverySource.WEBHOOK,
         signature_valid=True,
         signature_note=SIGNATURE_NOTE_VALID,
-        payload=asdict(parsed),
+        payload=_event_payload(parsed, snapshot_lifecycle),
         payload_digest=digest,
         processing_state=ProcessingState.PENDING,
         correlation_id=correlation_id,
@@ -1277,10 +1277,7 @@ def process_pending(
     blocked_event_ids: list[str] = []
     for event in events:
         snapshot_lifecycle = _stored_public_snapshot_lifecycle_event(event)
-        try:
-            parsed = ParsedEvent(**event.payload) if event.payload else None
-        except TypeError:
-            parsed = None
+        parsed = _stored_parsed_event(event)
         if parsed is None and snapshot_lifecycle is not None:
             connection = (
                 RepositoryConnection.objects.select_related("project")
@@ -1467,14 +1464,15 @@ def _stored_public_snapshot_lifecycle_event(
         event.payload, dict
     ):
         return None
+    payload = event.payload.get("public_snapshot_lifecycle", event.payload)
+    if not isinstance(payload, dict):
+        return None
     try:
         snapshot_lifecycle = ParsedPublicSnapshotLifecycleEvent(
-            action=str(event.payload["action"]),
-            repository_node_id=str(event.payload["repository_node_id"]),
+            action=str(payload["action"]),
+            repository_node_id=str(payload["repository_node_id"]),
             snapshot_item=(
-                event.payload["snapshot_item"]
-                if isinstance(event.payload.get("snapshot_item"), dict)
-                else {}
+                payload["snapshot_item"] if isinstance(payload.get("snapshot_item"), dict) else {}
             ),
         )
     except (KeyError, TypeError):
@@ -1483,6 +1481,29 @@ def _stored_public_snapshot_lifecycle_event(
     if snapshot_lifecycle.action not in actions or not snapshot_lifecycle.repository_node_id:
         return None
     return snapshot_lifecycle
+
+
+def _event_payload(
+    parsed: ParsedEvent,
+    snapshot_lifecycle: ParsedPublicSnapshotLifecycleEvent | None,
+) -> dict:
+    """Retain bounded contribution provenance plus the signed UI projection."""
+    payload = asdict(parsed)
+    if snapshot_lifecycle is not None:
+        payload["public_snapshot_lifecycle"] = asdict(snapshot_lifecycle)
+    return payload
+
+
+def _stored_parsed_event(event: ProviderEvent) -> ParsedEvent | None:
+    if not isinstance(event.payload, dict):
+        return None
+    payload = {
+        key: value for key, value in event.payload.items() if key != "public_snapshot_lifecycle"
+    }
+    try:
+        return ParsedEvent(**payload)
+    except TypeError:
+        return None
 
 
 def is_public_snapshot_lifecycle_delivery(event: ProviderEvent) -> bool:
