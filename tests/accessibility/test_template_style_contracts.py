@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906g\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906h\"" in base
     assert "href=\"{% static 'images/devnepal-mark.svg' %}\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
@@ -98,6 +98,17 @@ def test_shared_navigation_keeps_the_compact_menu_through_tablet_widths():
 
     assert "@media (max-width: 1179px)" in css
     assert "@media (min-width: 1180px)" in css
+
+
+@pytest.mark.unit
+def test_home_audience_cards_keep_complete_borders_at_every_width():
+    """DSC-001/NFR-A11Y-01: separated CTA cards retain all four visible edges."""
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+
+    assert ".dn-get-started-grid article + article { border-left: 0;" not in css
+    assert ".dn-get-started-grid article + article { border-top: 0;" not in css
+    assert ".dn-get-started-ministry {" in css
+    assert "border-color: var(--color-accent-300);" in css
 
 
 @pytest.mark.unit
