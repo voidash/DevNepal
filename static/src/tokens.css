@@ -77,7 +77,10 @@
   --font-body: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-heading: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-latin: var(--font-body);
-  --font-nepali: "Noto Sans Devanagari", system-ui, sans-serif;
+  /* Inter leads here too: Devanagari misses it and falls through, but the
+     Latin on a Nepali page then resolves to the same face as its headings
+     instead of a second one. */
+  --font-nepali: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-heading-weight: 600;
 
   /* One type scale. Every font-size in the platform is one of these steps; a

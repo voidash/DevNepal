@@ -44,7 +44,9 @@ def test_shared_shell_has_one_ordered_design_cascade_and_a_real_text_face():
     """DSC-001/NFR-I18N-01: styling and bilingual typography load predictably."""
     root = Path(settings.BASE_DIR)
     base = (root / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base)
+    stylesheets = re.findall(
+        r"rel=\"stylesheet\" href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base
+    )
 
     assert stylesheets == [
         "vendor/primer/primer.css",
@@ -100,8 +102,15 @@ def test_every_declared_font_face_resolves_to_a_served_asset():
         assert Path(served).stat().st_size > 0, url
 
 
+def _one(pattern, source):
+    """Return a regex's first group, failing with the pattern rather than an AttributeError."""
+    match = re.search(pattern, source)
+    assert match, f"no match for {pattern}"
+    return match.group(1)
+
+
 @pytest.mark.unit
-def test_display_scale_stays_ordered_below_the_condensed_ceiling():
+def test_display_scale_stays_ordered_below_the_hero_ceiling():
     """DSC-001: the heading ramp is one descending scale across three stylesheets.
 
     Inter sets far wider than the Barlow Condensed it replaced, so the ramp was
@@ -116,13 +125,13 @@ def test_display_scale_stays_ordered_below_the_condensed_ceiling():
     components_css = (root / "static/src/components.css").read_text()
     tokens_css = (root / "static/src/tokens.css").read_text()
 
-    hero = _clamp_ceiling(re.search(r"\.hero h1 \{([^}]*)\}", components_css).group(1), tokens_css)
+    hero = _clamp_ceiling(_one(r"\.hero h1 \{([^}]*)\}", components_css), tokens_css)
     headings = [
-        _clamp_ceiling(re.search(rf"\n{tag} \{{([^}}]*)\}}", base_css).group(1), tokens_css)
+        _clamp_ceiling(_one(rf"\n{tag} \{{([^}}]*)\}}", base_css), tokens_css)
         for tag in ("h1", "h2", "h3")
     ]
-    h4_token = re.search(r"\nh4 \{[^}]*font-size: var\((--fs-[a-z\d]+)\)", base_css).group(1)
-    ramp = [hero, *headings, int(re.search(rf"{h4_token}: (\d+)px;", tokens_css).group(1))]
+    h4_token = _one(r"\nh4 \{[^}]*font-size: var\((--fs-[a-z\d]+)\)", base_css)
+    ramp = [hero, *headings, int(_one(rf"{h4_token}:\s*(\d+)px", tokens_css))]
 
     assert ramp == sorted(set(ramp), reverse=True), ramp
     assert hero <= 72, hero

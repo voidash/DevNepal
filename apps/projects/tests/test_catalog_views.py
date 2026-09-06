@@ -430,7 +430,9 @@ def test_home_hero_heading_is_translated_rather_than_falling_back_to_english():
     read the msgids out of the template and demand a Nepali string for each.
     """
     template = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/home.html").read_text()
-    heading = re.search(r'<h1 id="hero-heading">(.*?)</h1>', template).group(1)
+    heading_match = re.search(r'<h1 id="hero-heading">(.*?)</h1>', template, re.S)
+    assert heading_match, 'home.html has no <h1 id="hero-heading">'
+    heading = heading_match.group(1)
     strings = [
         double or single
         for double, single in re.findall(
