@@ -421,6 +421,32 @@ def test_about_page_strings_are_all_present_in_the_compiled_nepali_catalog():
 
 
 @pytest.mark.unit
+def test_home_hero_heading_is_translated_rather_than_falling_back_to_english():
+    """NFR-I18N-01: the hero headline the home page renders survives a msgid edit.
+
+    The heading is two separately translated spans, and recapitalising one of them
+    changes its msgid. A template edit that skips the catalogue leaves the Nepali
+    hero silently English while the English-page assertions above stay green, so
+    read the msgids out of the template and demand a Nepali string for each.
+    """
+    template = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/home.html").read_text()
+    heading = re.search(r'<h1 id="hero-heading">(.*?)</h1>', template).group(1)
+    strings = [
+        double or single
+        for double, single in re.findall(
+            r"{%\s*(?:trans|translate)\s+(?:\"(.*?)\"|'(.*?)')", heading
+        )
+    ]
+
+    assert len(strings) == 2
+    with translation.override("ne"):
+        assert [translation.gettext(source) for source in strings] == [
+            "सबै प्रविधिहरू",
+            "सार्वजनिक रूपमा निर्माण गरिएको।",
+        ]
+
+
+@pytest.mark.unit
 def test_journey_track_follows_its_step_count_instead_of_a_fixed_four_columns():
     """DSC-001: the shared journey component fits three steps and four alike."""
     css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()

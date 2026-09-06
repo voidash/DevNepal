@@ -1,8 +1,10 @@
+import posixpath
 import re
 from pathlib import Path
 
 import pytest
 from django.conf import settings
+from django.contrib.staticfiles import finders
 
 
 @pytest.mark.unit
@@ -59,6 +61,71 @@ def test_shared_shell_has_one_ordered_design_cascade_and_a_real_text_face():
     for font in shipped:
         asset = root / "static/fonts" / font
         assert asset.is_file() and asset.stat().st_size > 0, font
+
+
+def _clamp_ceiling(declaration: str, tokens: str = "") -> int:
+    """The largest px a font-size declaration can render at.
+
+    Page titles stay fluid, so they are read as the ceiling of their clamp. Every
+    level below h1 is a flat scale step now, because a section heading that
+    resizes with the viewport makes the ramp impossible to reason about against a
+    card heading in another stylesheet; those are read through the token.
+    """
+    match = re.search(r"clamp\([^,]+,[^,]+,\s*(\d+)px\s*\)", declaration)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"font-size:\s*var\((--fs-[a-z\d]+)\)", declaration)
+    assert match, declaration
+    size = re.search(rf"{match.group(1)}: (\d+)px;", tokens)
+    assert size, match.group(1)
+    return int(size.group(1))
+
+
+@pytest.mark.unit
+def test_every_declared_font_face_resolves_to_a_served_asset():
+    """DSC-001/NFR-I18N-01: the declared text face is deliverable, not a fallback.
+
+    The shipped-asset check above proves a woff2 sits in static/fonts; it cannot
+    prove tokens.css points at that file. A typo in the @font-face url leaves every
+    page rendering in the system fallback with the whole suite green, so resolve
+    each declared url through the staticfiles finders that actually serve it.
+    """
+    tokens = (Path(settings.BASE_DIR) / "static/src/tokens.css").read_text()
+    declared = re.findall(r'@font-face\s*\{[^}]*src:\s*url\("([^"]+)"\)', tokens)
+
+    assert declared, "tokens.css declares no @font-face source"
+    for url in declared:
+        served = finders.find(posixpath.normpath(posixpath.join("src", url)))
+        assert served is not None, url
+        assert Path(served).stat().st_size > 0, url
+
+
+@pytest.mark.unit
+def test_display_scale_stays_ordered_below_the_condensed_ceiling():
+    """DSC-001: the heading ramp is one descending scale across three stylesheets.
+
+    Inter sets far wider than the Barlow Condensed it replaced, so the ramp was
+    stepped down. Its sizes now live in components.css (the hero), base.css (h1-h3,
+    and the token h4 reads) and tokens.css, with nothing tying them together: a
+    retune of one file can leave the hero smaller than a body h1, or restore the
+    84px condensed ceiling that Inter cannot carry. Pin the ordering and the
+    ceiling rather than the clamps, so deliberate retuning stays cheap.
+    """
+    root = Path(settings.BASE_DIR)
+    base_css = (root / "static/src/base.css").read_text()
+    components_css = (root / "static/src/components.css").read_text()
+    tokens_css = (root / "static/src/tokens.css").read_text()
+
+    hero = _clamp_ceiling(re.search(r"\.hero h1 \{([^}]*)\}", components_css).group(1), tokens_css)
+    headings = [
+        _clamp_ceiling(re.search(rf"\n{tag} \{{([^}}]*)\}}", base_css).group(1), tokens_css)
+        for tag in ("h1", "h2", "h3")
+    ]
+    h4_token = re.search(r"\nh4 \{[^}]*font-size: var\((--fs-[a-z\d]+)\)", base_css).group(1)
+    ramp = [hero, *headings, int(re.search(rf"{h4_token}: (\d+)px;", tokens_css).group(1))]
+
+    assert ramp == sorted(set(ramp), reverse=True), ramp
+    assert hero <= 72, hero
 
 
 @pytest.mark.django_db

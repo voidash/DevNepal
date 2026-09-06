@@ -250,6 +250,47 @@ def _read(relative: str) -> str:
 
 
 @pytest.mark.unit
+def test_catalogue_card_fact_row_keeps_exactly_one_definition():
+    """A2.1/DSC-002: the card metadata row is styled in one place, not three.
+
+    The row had accumulated a base rule and two higher-specificity overrides, and
+    the last one silently won — which is how a wider text face came to clip its own
+    values with every test green. Count every rule whose subject is the row itself,
+    at any nesting, so a re-added override fails here instead of in the browser.
+    """
+    css = re.sub(r"/\*.*?\*/", "", _read("static/src/devnepal.css"), flags=re.S)
+    selectors = [
+        selector.strip()
+        for block in re.findall(r"([^{}]+)\{[^{}]*\}", css)
+        for selector in block.split(",")
+    ]
+    subjects = [
+        selector
+        for selector in selectors
+        if selector.split() and selector.split()[-1].endswith(".dn-catalog-card__facts")
+    ]
+
+    assert subjects == [".dn-catalog-card__facts"], subjects
+
+
+@pytest.mark.unit
+def test_design_stylesheets_share_one_cache_buster():
+    """DSC-001: the design cascade is busted as a set, never one sheet at a time.
+
+    The version literal pinned above only proves base.html changed; it cannot see a
+    stylesheet edit at all. The failure it leaves open is a partial bump —
+    devnepal.css reloaded against a cached tokens.css, serving new component rules
+    against the previous --fs- scale. Assert the four sheets move together without
+    naming the value, so a deliberate bump stays a one-line change.
+    """
+    base = _read("templates/base.html")
+    busters = dict(re.findall(r"\{% static 'src/([^']+\.css)' %\}\?v=([^\"]+)\"", base))
+
+    assert set(busters) == {"tokens.css", "base.css", "components.css", "devnepal.css"}
+    assert len(set(busters.values())) == 1, busters
+
+
+@pytest.mark.unit
 def test_blog_templates_use_issue_rows_context_header_and_form_layout():
     """A8/NFR-A11Y-01/BLG-005/D13: blog surfaces reuse the shared design-system grammar.
 
