@@ -169,7 +169,6 @@ def test_home_tells_one_story_from_hero_to_the_cta(client):
         'id="contribution-path-heading"',
         'id="path-heading"',
         'id="opportunities-heading"',
-        'id="community-heading"',
         'id="safeguards-heading"',
         'id="ministry-cta-heading"',
     )

@@ -21,7 +21,6 @@ def test_public_visitor_can_follow_compact_home_catalog_detail_and_sign_in(clien
         'id="contribution-path-heading"',
         'id="path-heading"',
         'id="opportunities-heading"',
-        'id="community-heading"',
         'id="safeguards-heading"',
         'id="ministry-cta-heading"',
     )

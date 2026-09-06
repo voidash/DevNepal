@@ -157,57 +157,6 @@
   </div>
 </section>
 
-<section class="section dn-home dn-home--band dn-home--follow" aria-labelledby="community-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "Listed by members" %}</span>
-        <h2 id="community-heading">{% trans "Community projects" %}</h2>
-        <p>{% trans "These projects are listed by their owners, not by a ministry, and never imply government endorsement." %}</p>
-      </div>
-      <a class="dn-arrow-link" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
-    </header>
-    <div class="dn-sheet blueprint">
-      {% if featured_community_projects %}
-      <div class="dn-sheet__header dn-community-head">
-        <span>{% trans "Project" %}</span>
-        <span>{% trans "Owner" %}</span>
-        <span>{% trans "Technologies" %}</span>
-        <span>{% trans "Listing" %}</span>
-      </div>
-      <div class="dn-community-rows">
-        {% for project in featured_community_projects %}
-        <article class="dn-community-row">
-          <div class="dn-community-row__title">
-            <div class="dn-community-project-title">
-              <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3>
-              <span class="tag tag-neutral">{% trans "Community project" %}</span>
-            </div>
-            {% if project.localized_summary %}<p>{{ project.localized_summary }}</p>{% endif %}
-          </div>
-          <div class="dn-community-row__owner">
-            <span class="dn-avatar-tile" aria-hidden="true">{{ project.owner.username|slice:":1"|upper }}</span>
-            <span>@{{ project.owner.username }}</span>
-          </div>
-          <div class="dn-community-row__tech">
-            {% for technology in project.technologies.all|slice:":3" %}<span class="tag tag-outline">{{ technology.label }}</span>{% empty %}
-            {% for contribution_type in project.contribution_types.all|slice:":2" %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}
-            {% endfor %}
-          </div>
-          <div class="dn-community-row__links">
-            {% if project.ownership_verification == "verified_github" %}<span class="is-verified">{% trans "GitHub ownership verified" %}</span>{% else %}<span>{% trans "Listed by a member" %}</span>{% endif %}
-            {% if project.repository_url %}<span>{% trans "Public repository" %}</span>{% else %}<span>{% trans "No repository published" %}</span>{% endif %}
-          </div>
-        </article>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="dn-empty" role="status"><strong>{% trans "No community listings are open yet." %}</strong><p>{% trans "Projects appear here once their owner publishes them. They stay separate from Government of Nepal work." %}</p></div>
-      {% endif %}
-    </div>
-  </div>
-</section>
-
 {% if recommendations %}
 <section class="section dn-home dn-home--band dn-home--follow" aria-labelledby="recommended-heading">
   <div class="container">
@@ -222,67 +171,6 @@
         <div>
           <a class="dn-issue-title" href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a>
           <div class="dn-labels">{% for reason in recommendation.reasons %}<span class="tag tag-neutral">{{ reason }}</span>{% endfor %}</div>
-        </div>
-      </article>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-{% if featured_members %}
-<section class="section dn-home" aria-labelledby="people-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "Public directory" %}</span>
-        <h2 id="people-heading">{% trans "People in the directory" %}</h2>
-        <p>{% trans "A profile appears here only if the person chose to be listed. Email addresses and private contact details are never shown." %}</p>
-      </div>
-      <a class="dn-arrow-link" href="{% url 'accounts:member_directory' %}">{% trans "Browse members" %} →</a>
-    </header>
-    <div class="dn-people-grid">
-      {% for profile in featured_members %}
-      <article class="dn-person-card">
-        <span class="dn-person-avatar" aria-hidden="true">{{ profile.user.username|slice:":1"|upper }}</span>
-        <h3><a href="{% url 'accounts:public_profile' profile.user.username %}">@{{ profile.user.username }}</a></h3>
-        {% if profile.headline %}<p class="dn-person-headline">{{ profile.headline }}</p>{% endif %}
-        {% if profile.field_visibility.skills == "public" and profile.user.directory_skills %}
-        <div class="dn-labels">{% for member_skill in profile.user.directory_skills|slice:":3" %}<span class="tag tag-neutral">{{ member_skill.skill.name }}</span>{% endfor %}</div>
-        {% endif %}
-        <p class="dn-person-meta">{% trans "Public profile" %}</p>
-      </article>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-{% if featured_posts %}
-<section class="section dn-home{% if featured_members %} dn-home--follow{% endif %}" aria-labelledby="writing-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "Public learning" %}</span>
-        <h2 id="writing-heading">{% trans "Technical writing" %}</h2>
-        <p>{% trans "Notes from members and maintainers on listed work, in Nepali and English." %}</p>
-      </div>
-      <a class="dn-arrow-link" href="{% url 'blogs:list' %}">{% trans "Browse technical blogs" %} →</a>
-    </header>
-    <div class="dn-writing-list">
-      {% for post in featured_posts %}
-      <article class="dn-writing-row">
-        <div class="dn-writing-row__meta">
-          <span class="tag tag-neutral">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span>
-          {% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}
-        </div>
-        <div class="dn-writing-row__body">
-          <h3><a href="{% url 'blogs:detail' post.pk %}">{{ post.title }}</a></h3>
-          {% if post.excerpt %}<p>{{ post.excerpt }}</p>{% endif %}
-        </div>
-        <div class="dn-writing-row__aside">
-          <strong>@{{ post.author.username }}</strong>
-          <span>{% if post.reading_time_minutes %}{% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}{% else %}{{ post.get_language_display }}{% endif %}</span>
         </div>
       </article>
       {% endfor %}
