@@ -256,15 +256,20 @@ def test_each_role_lands_where_the_script_says(client):
 
 
 @pytest.mark.acceptance
-def test_a_signed_in_presenter_can_always_get_back_to_their_console(client):
-    """AUTH-006: the header greeting is the route back once the shell dropped the admin bar."""
-    super_admin = SuperAdminFactory()
-    signed_in(client, super_admin)
+def test_a_signed_in_publisher_can_always_get_back_to_their_workspace(client):
+    """AUTH-006: the stripped public shell retains the publisher's essential route."""
+    assignment = MinistryPublisherFactory(
+        status=PublisherStatus.ACTIVE,
+        contact_verification_status=ContactVerificationStatus.VERIFIED,
+    )
+    assignment.ministry.status = OrgStatus.ACTIVE
+    assignment.ministry.save(update_fields=["status"])
+    signed_in(client, assignment.user)
 
     home = client.get(reverse("projects:home")).content.decode()
 
-    assert reverse("accounts:dashboard") in home
-    assert client.get(reverse("accounts:dashboard")).url == reverse("administration:console")
+    assert reverse("projects:authoring_dashboard") in home
+    assert client.get(reverse("accounts:dashboard")).url == reverse("projects:authoring_dashboard")
 
 
 @pytest.mark.acceptance
