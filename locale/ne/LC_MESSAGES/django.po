@@ -4951,7 +4951,7 @@ msgid "Public technology,"
 msgstr "सबै प्रविधिहरू"
 
 #: apps/projects/templates/projects/home.html:16
-msgid "built in public."
+msgid "Built in public."
 msgstr "सार्वजनिक रूपमा निर्माण गरिएको।"
 
 #: apps/projects/templates/projects/home.html:16

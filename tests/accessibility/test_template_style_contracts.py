@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906e\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906j\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -80,7 +80,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert "--color-surface: #e5e9ee;" in tokens_css
     assert "--color-text: #181c20;" in tokens_css
     assert "--color-accent: #5395fc;" in tokens_css
-    assert 'font-family: "Barlow Condensed"' in tokens_css
+    assert 'font-family: "Inter"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css
     assert "border-radius: 0;" in devnepal_css
@@ -103,7 +103,9 @@ def test_shared_navigation_keeps_the_compact_menu_through_tablet_widths():
 def test_shared_shell_loads_one_coherent_design_system_after_primer():
     """NFR-A11Y-01/DSC-001: shared styles have a predictable, accessible cascade."""
     base = (Path(settings.BASE_DIR) / "templates/base.html").read_text()
-    stylesheets = re.findall(r"href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base)
+    stylesheets = re.findall(
+        r"rel=\"stylesheet\" href=\"\{% static '([^']+)' %\}(?:\?[^\"]+)?\"", base
+    )
 
     assert stylesheets == [
         "vendor/primer/primer.css",
@@ -247,6 +249,47 @@ def test_mechanical_design_gate_matches_the_authority_rule_set():
 
 def _read(relative: str) -> str:
     return (Path(settings.BASE_DIR) / relative).read_text()
+
+
+@pytest.mark.unit
+def test_catalogue_card_fact_row_keeps_exactly_one_definition():
+    """A2.1/DSC-002: the card metadata row is styled in one place, not three.
+
+    The row had accumulated a base rule and two higher-specificity overrides, and
+    the last one silently won — which is how a wider text face came to clip its own
+    values with every test green. Count every rule whose subject is the row itself,
+    at any nesting, so a re-added override fails here instead of in the browser.
+    """
+    css = re.sub(r"/\*.*?\*/", "", _read("static/src/devnepal.css"), flags=re.S)
+    selectors = [
+        selector.strip()
+        for block in re.findall(r"([^{}]+)\{[^{}]*\}", css)
+        for selector in block.split(",")
+    ]
+    subjects = [
+        selector
+        for selector in selectors
+        if selector.split() and selector.split()[-1].endswith(".dn-catalog-card__facts")
+    ]
+
+    assert subjects == [".dn-catalog-card__facts"], subjects
+
+
+@pytest.mark.unit
+def test_design_stylesheets_share_one_cache_buster():
+    """DSC-001: the design cascade is busted as a set, never one sheet at a time.
+
+    The version literal pinned above only proves base.html changed; it cannot see a
+    stylesheet edit at all. The failure it leaves open is a partial bump —
+    devnepal.css reloaded against a cached tokens.css, serving new component rules
+    against the previous --fs- scale. Assert the four sheets move together without
+    naming the value, so a deliberate bump stays a one-line change.
+    """
+    base = _read("templates/base.html")
+    busters = dict(re.findall(r"\{% static 'src/([^']+\.css)' %\}\?v=([^\"]+)\"", base))
+
+    assert set(busters) == {"tokens.css", "base.css", "components.css", "devnepal.css"}
+    assert len(set(busters.values())) == 1, busters
 
 
 @pytest.mark.unit

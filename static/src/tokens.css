@@ -1,8 +1,6 @@
-@font-face { font-family: "Barlow"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fonts/barlow-latin-400.woff2") format("woff2"); }
-@font-face { font-family: "Barlow"; font-style: normal; font-weight: 500; font-display: swap; src: url("../fonts/barlow-latin-500.woff2") format("woff2"); }
-@font-face { font-family: "Barlow"; font-style: normal; font-weight: 700; font-display: swap; src: url("../fonts/barlow-latin-700.woff2") format("woff2"); }
-@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fonts/barlow-condensed-latin-400.woff2") format("woff2"); }
-@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fonts/barlow-condensed-latin-600.woff2") format("woff2"); }
+/* One variable file carries 400 through 700, so the whole weight axis costs a
+   single 48KB request — less than the five static Barlow cuts it replaces. */
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 700; font-display: swap; src: url("../fonts/inter-latin-variable.woff2") format("woff2"); }
 
 :root {
   /* Ground and paper. The page is a cool grey desk; every card, sheet and queue
@@ -73,10 +71,16 @@
   --color-accent-subtle-1: var(--color-accent-100);
   --color-accent-subtle-2: var(--color-accent-300);
 
-  --font-body: "Barlow", "Noto Sans Devanagari", system-ui, sans-serif;
-  --font-heading: "Barlow Condensed", "Noto Sans Devanagari", system-ui, sans-serif;
+  /* One family for text and headings. Inter has no Devanagari, so Nepali still
+     falls through to Noto Sans Devanagari — the two scripts are not drawn
+     together, and that seam is a known limit of this choice. */
+  --font-body: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-heading: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-latin: var(--font-body);
-  --font-nepali: "Noto Sans Devanagari", system-ui, sans-serif;
+  /* Inter leads here too: Devanagari misses it and falls through, but the
+     Latin on a Nepali page then resolves to the same face as its headings
+     instead of a second one. */
+  --font-nepali: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-heading-weight: 600;
 
   /* One type scale. Every font-size in the platform is one of these steps; a

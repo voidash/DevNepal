@@ -73,7 +73,6 @@
                 <div><dt class="visually-hidden">{% trans "Mode" %}</dt><dd>{% if project.contribution_mode == "open_direct" %}{% trans "Start any time" %}{% elif project.contribution_mode == "application" %}{% trans "Apply first" %}{% elif project.contribution_mode == "hybrid" %}{% trans "Start or apply" %}{% else %}—{% endif %}<span class="visually-hidden"> {{ project.get_contribution_mode_display }}</span></dd></div>
                 {% if project.difficulty %}<div><dt class="visually-hidden">{% trans "Difficulty" %}</dt><dd>{{ project.get_difficulty_display }}</dd></div>{% endif %}
                 {% if project.estimated_effort %}<div><dt class="visually-hidden">{% trans "Effort" %}</dt><dd>{{ project.get_estimated_effort_display }}</dd></div>{% endif %}
-                {% if project.response_sla %}<div><dt class="visually-hidden">{% trans "First response" %}</dt><dd>{% blocktrans with sla=project.get_response_sla_display|lower %}replies {{ sla }}{% endblocktrans %}</dd></div>{% endif %}
               </dl>
               <div class="dn-catalog-card__foot">
                 <a class="dn-arrow-link" href="{% url 'projects:detail' project.slug %}">{% if project.open_issue_count %}{% trans "See the open issues" %}{% else %}{% trans "Open the project" %}{% endif %} →</a>

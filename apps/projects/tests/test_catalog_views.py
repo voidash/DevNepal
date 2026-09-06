@@ -240,7 +240,7 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
 
     assert response.status_code == 200
     assert b"Public technology," in response.content
-    assert b"built in public." in response.content
+    assert b"Built in public." in response.content
     assert b"public repository on GitHub" in response.content
     assert b"anyone can contribute" in response.content
     assert b"Browse government projects" in response.content
@@ -421,6 +421,34 @@ def test_about_page_strings_are_all_present_in_the_compiled_nepali_catalog():
 
 
 @pytest.mark.unit
+def test_home_hero_heading_is_translated_rather_than_falling_back_to_english():
+    """NFR-I18N-01: the hero headline the home page renders survives a msgid edit.
+
+    The heading is two separately translated spans, and recapitalising one of them
+    changes its msgid. A template edit that skips the catalogue leaves the Nepali
+    hero silently English while the English-page assertions above stay green, so
+    read the msgids out of the template and demand a Nepali string for each.
+    """
+    template = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/home.html").read_text()
+    heading_match = re.search(r'<h1 id="hero-heading">(.*?)</h1>', template, re.S)
+    assert heading_match, 'home.html has no <h1 id="hero-heading">'
+    heading = heading_match.group(1)
+    strings = [
+        double or single
+        for double, single in re.findall(
+            r"{%\s*(?:trans|translate)\s+(?:\"(.*?)\"|'(.*?)')", heading
+        )
+    ]
+
+    assert len(strings) == 2
+    with translation.override("ne"):
+        assert [translation.gettext(source) for source in strings] == [
+            "सबै प्रविधिहरू",
+            "सार्वजनिक रूपमा निर्माण गरिएको।",
+        ]
+
+
+@pytest.mark.unit
 def test_journey_track_follows_its_step_count_instead_of_a_fixed_four_columns():
     """DSC-001: the shared journey component fits three steps and four alike."""
     css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
@@ -592,7 +620,7 @@ def test_catalog_uses_the_a2_1_blueprint_filter_and_project_sheet(client):
     assert "Official" in content
     assert "Community" in content
     assert ">Mode<" in content
-    assert "First response" in content
+    assert "replies within" not in content
 
 
 @pytest.mark.unit
