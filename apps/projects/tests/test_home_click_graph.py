@@ -52,7 +52,10 @@ def test_home_hero_offers_exactly_two_visitor_actions(client):
     hero = response.content.split(b'<section class="hero"', 1)[1].split(b"</section>", 1)[0]
 
     assert response.status_code == 200
-    assert b"Government of Nepal" in hero
+    # The authority is named once, in the state band, so the hero carries only the
+    # office that publishes here.
+    assert b"Office of the Prime Minister" in hero
+    assert b"Government of Nepal" not in hero
     assert b"Digital Collaboration Initiative" not in hero
     assert b"Browse open issues" in hero
     assert b"Browse government projects" in hero
@@ -111,6 +114,18 @@ def test_home_hero_keeps_air_between_the_claim_the_actions_and_the_officer_line(
 
 
 @pytest.mark.unit
+def test_home_hero_does_not_show_the_decorative_illustration(client):
+    """DSC-001: the hero leads with the claim; the board drawing stays parked."""
+    response = client.get(reverse("projects:home"))
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    hero_rule = css.split(".dn-home-hero {", 1)[1].split("}", 1)[0]
+
+    assert response.status_code == 200
+    assert b'class="dn-hero-illo"' not in response.content
+    assert "grid-template-columns: minmax(0, 1fr)" in hero_rule
+
+
+@pytest.mark.unit
 def test_home_chapters_group_grounds_instead_of_striping_every_section():
     """DSC-001: home chapters share a ground; follow-on sections do not open a new band."""
     root = Path(settings.BASE_DIR)
@@ -157,7 +172,6 @@ def test_home_tells_one_story_from_hero_to_the_cta(client):
         'id="contribution-path-heading"',
         'id="path-heading"',
         'id="opportunities-heading"',
-        'id="community-heading"',
         'id="safeguards-heading"',
         'id="ministry-cta-heading"',
     )
@@ -220,7 +234,6 @@ def test_home_keeps_only_first_visit_decisions_and_real_project_exits(client):
 
     assert "Featured government projects" in content
     assert "Nine ways to contribute" in content
-    assert "On DevNepal today" in content
     assert "How a contribution works" in content
     assert 'id="path-heading"' in content
     assert "dn-way-chips" not in content

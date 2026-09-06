@@ -12,7 +12,7 @@
     <div class="dn-home-hero">
       <div class="hero__panel">
         <div class="dn-trust-tags">
-          <span class="tag tag-accent">{% trans "Government of Nepal · Office of the Prime Minister" %}</span>
+          <span class="tag tag-accent">{% trans "Office of the Prime Minister" %}</span>
         </div>
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
         <p class="hero__lead">{% trans "Ministries publish the technology work they need help with, and anyone can contribute. The work happens in each project’s public repository on GitHub, so no DevNepal account is needed." %}</p>
@@ -22,12 +22,8 @@
         </div>
         <p class="hero__ministry-link">{% trans "Ministry officer?" %} <a href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a> · <a href="{% url 'accounts:login' %}">{% trans "Ministry sign-in" %}</a></p>
       </div>
-      {% comment %} The hero states the promise; the counts that substantiate it
-         read better as a measure below than as a boxed panel competing with
-         the headline. What balances the claim here is a picture of the thing
-         being promised: a public board of open work. It carries no
-         information of its own, so it is hidden from assistive technology.
-      {% endcomment %}
+      {% comment %} Parked: decorative board drawing. Restore by moving the
+         svg out of this comment. It carries no information of its own.
       <svg class="dn-hero-illo" viewBox="0 0 460 380" role="presentation" aria-hidden="true" focusable="false">
         <rect class="dn-hero-illo__behind" x="39" y="1" width="370" height="298" rx="6"/>
         <rect class="dn-hero-illo__face" x="9" y="9" width="370" height="298" rx="6"/>
@@ -65,19 +61,8 @@
         <path class="dn-hero-illo__rule" d="M269 326 H431"/>
         <rect class="dn-hero-illo__bar dn-hero-illo__bar--soft" x="269" y="342" width="128" height="8" rx="4"/>
       </svg>
+      {% endcomment %}
     </div>
-  </div>
-</section>
-
-<section class="dn-measure" aria-labelledby="hero-proof-heading">
-  <div class="container">
-    <h2 id="hero-proof-heading">{% trans "On DevNepal today" %}</h2>
-    <dl class="dn-measure__figures">
-      <div><dt>{{ platform_metrics.ministries }}</dt><dd>{% trans "ministries publishing, each through a named officer" %}</dd></div>
-      <div><dt>{{ platform_metrics.open_projects }}</dt><dd>{% trans "projects open for contribution" %}</dd></div>
-      <div><dt>{{ platform_metrics.verified_contributions }}</dt><dd>{% trans "contributions accepted by a named maintainer" %}</dd></div>
-    </dl>
-    <p class="dn-measure__note">{% trans "Only reviewed public work is listed." %}</p>
   </div>
 </section>
 
@@ -160,57 +145,6 @@
   </div>
 </section>
 
-<section class="section dn-home dn-home--band dn-home--follow" aria-labelledby="community-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "Listed by members" %}</span>
-        <h2 id="community-heading">{% trans "Community projects" %}</h2>
-        <p>{% trans "These projects are listed by their owners, not by a ministry, and never imply government endorsement." %}</p>
-      </div>
-      <a class="dn-arrow-link" href="{% url 'projects:community' %}">{% trans "Browse community projects" %}</a>
-    </header>
-    <div class="dn-sheet blueprint">
-      {% if featured_community_projects %}
-      <div class="dn-sheet__header dn-community-head">
-        <span>{% trans "Project" %}</span>
-        <span>{% trans "Owner" %}</span>
-        <span>{% trans "Technologies" %}</span>
-        <span>{% trans "Listing" %}</span>
-      </div>
-      <div class="dn-community-rows">
-        {% for project in featured_community_projects %}
-        <article class="dn-community-row">
-          <div class="dn-community-row__title">
-            <div class="dn-community-project-title">
-              <h3><a href="{% url 'projects:detail' project.slug %}">{{ project.localized_title }}</a></h3>
-              <span class="tag tag-neutral">{% trans "Community project" %}</span>
-            </div>
-            {% if project.localized_summary %}<p>{{ project.localized_summary }}</p>{% endif %}
-          </div>
-          <div class="dn-community-row__owner">
-            <span class="dn-avatar-tile" aria-hidden="true">{{ project.owner.username|slice:":1"|upper }}</span>
-            <span>@{{ project.owner.username }}</span>
-          </div>
-          <div class="dn-community-row__tech">
-            {% for technology in project.technologies.all|slice:":3" %}<span class="tag tag-outline">{{ technology.label }}</span>{% empty %}
-            {% for contribution_type in project.contribution_types.all|slice:":2" %}<span class="tag tag-neutral">{{ contribution_type.label }}</span>{% endfor %}
-            {% endfor %}
-          </div>
-          <div class="dn-community-row__links">
-            {% if project.ownership_verification == "verified_github" %}<span class="is-verified">{% trans "GitHub ownership verified" %}</span>{% else %}<span>{% trans "Listed by a member" %}</span>{% endif %}
-            {% if project.repository_url %}<span>{% trans "Public repository" %}</span>{% else %}<span>{% trans "No repository published" %}</span>{% endif %}
-          </div>
-        </article>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="dn-empty" role="status"><strong>{% trans "No community listings are open yet." %}</strong><p>{% trans "Projects appear here once their owner publishes them. They stay separate from Government of Nepal work." %}</p></div>
-      {% endif %}
-    </div>
-  </div>
-</section>
-
 {% if recommendations %}
 <section class="section dn-home dn-home--band dn-home--follow" aria-labelledby="recommended-heading">
   <div class="container">
@@ -225,67 +159,6 @@
         <div>
           <a class="dn-issue-title" href="{% url 'projects:detail' recommendation.project.slug %}">{{ recommendation.project.localized_title }}</a>
           <div class="dn-labels">{% for reason in recommendation.reasons %}<span class="tag tag-neutral">{{ reason }}</span>{% endfor %}</div>
-        </div>
-      </article>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-{% if featured_members %}
-<section class="section dn-home" aria-labelledby="people-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "Public directory" %}</span>
-        <h2 id="people-heading">{% trans "People in the directory" %}</h2>
-        <p>{% trans "A profile appears here only if the person chose to be listed. Email addresses and private contact details are never shown." %}</p>
-      </div>
-      <a class="dn-arrow-link" href="{% url 'accounts:member_directory' %}">{% trans "Browse members" %} →</a>
-    </header>
-    <div class="dn-people-grid">
-      {% for profile in featured_members %}
-      <article class="dn-person-card">
-        <span class="dn-person-avatar" aria-hidden="true">{{ profile.user.username|slice:":1"|upper }}</span>
-        <h3><a href="{% url 'accounts:public_profile' profile.user.username %}">@{{ profile.user.username }}</a></h3>
-        {% if profile.headline %}<p class="dn-person-headline">{{ profile.headline }}</p>{% endif %}
-        {% if profile.field_visibility.skills == "public" and profile.user.directory_skills %}
-        <div class="dn-labels">{% for member_skill in profile.user.directory_skills|slice:":3" %}<span class="tag tag-neutral">{{ member_skill.skill.name }}</span>{% endfor %}</div>
-        {% endif %}
-        <p class="dn-person-meta">{% trans "Public profile" %}</p>
-      </article>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-{% if featured_posts %}
-<section class="section dn-home{% if featured_members %} dn-home--follow{% endif %}" aria-labelledby="writing-heading">
-  <div class="container">
-    <header class="dn-home-section-heading">
-      <div>
-        <span class="dn-section-kicker">{% trans "Public learning" %}</span>
-        <h2 id="writing-heading">{% trans "Technical writing" %}</h2>
-        <p>{% trans "Notes from members and maintainers on listed work, in Nepali and English." %}</p>
-      </div>
-      <a class="dn-arrow-link" href="{% url 'blogs:list' %}">{% trans "Browse technical blogs" %} →</a>
-    </header>
-    <div class="dn-writing-list">
-      {% for post in featured_posts %}
-      <article class="dn-writing-row">
-        <div class="dn-writing-row__meta">
-          <span class="tag tag-neutral">{% if post.is_official %}{% trans "Official" %}{% else %}{% trans "Member" %}{% endif %}</span>
-          {% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"DATE_FORMAT" }}</time>{% endif %}
-        </div>
-        <div class="dn-writing-row__body">
-          <h3><a href="{% url 'blogs:detail' post.pk %}">{{ post.title }}</a></h3>
-          {% if post.excerpt %}<p>{{ post.excerpt }}</p>{% endif %}
-        </div>
-        <div class="dn-writing-row__aside">
-          <strong>@{{ post.author.username }}</strong>
-          <span>{% if post.reading_time_minutes %}{% blocktrans count minutes=post.reading_time_minutes %}{{ minutes }} minute read{% plural %}{{ minutes }} minute read{% endblocktrans %}{% else %}{{ post.get_language_display }}{% endif %}</span>
         </div>
       </article>
       {% endfor %}

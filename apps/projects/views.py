@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Count, F, IntegerField, Prefetch, Q, Sum, When
+from django.db.models import Case, Count, F, IntegerField, Prefetch, Q, When
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -15,14 +15,11 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 
 from apps.accounts import github as github_oauth
-from apps.accounts.models import MemberProfile, MemberSkill
 from apps.accounts.permissions import privileged_mfa_required
 from apps.accounts.services import mfa_verified
 from apps.analytics.enums import EventName
 from apps.analytics.services import AnalyticsError, record_event
-from apps.blogs.enums import BlogModerationState, BlogStatus
 from apps.blogs.markdown import MarkdownValidationError, render_markdown
-from apps.blogs.models import BlogPost
 from apps.contributions.enums import VerificationStatus
 from apps.contributions.models import ContributionRecord
 from apps.github_sync.app_client import github_app_client
@@ -195,67 +192,15 @@ def home(request: HttpRequest) -> HttpResponse:
             project_type=ProjectType.GOVERNMENT,
             status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         )
-        .order_by("-published_at", "-id")[:3]
-    )
-    featured_community_projects = (
-        public_projects()
-        .filter(
-            project_type=ProjectType.PERSONAL,
-            status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
-        )
-        .select_related("owner")
-        .order_by("-published_at", "-id")[:4]
-    )
-    featured_members = (
-        MemberProfile.objects.filter(
-            directory_discoverable=True,
-            leaderboard_opt_out=False,
-            user__is_active=True,
-        )
-        .select_related("user")
-        .prefetch_related(
-            Prefetch(
-                "user__skills",
-                queryset=MemberSkill.objects.filter(skill__is_active=True)
-                .select_related("skill")
-                .order_by("skill__name"),
-                to_attr="directory_skills",
-            )
-        )
-        .annotate(
-            total_score=Sum(
-                "user__contributions__score__points",
-                filter=Q(user__contributions__score__reversed_at__isnull=True),
-            ),
-        )
-        .order_by("-total_score", "user__username")[:5]
-    )
-    featured_posts = (
-        BlogPost.objects.filter(status=BlogStatus.PUBLISHED)
-        .exclude(moderation_state=BlogModerationState.RESTRICTED)
-        .select_related("author", "official_published_by")
-        .prefetch_related("tags")
-        .order_by("-published_at", "-id")[:3]
+        .order_by("-published_at", "-id")[:6]
     )
     return render(
         request,
         "projects/home.html",
         {
             "featured_projects": featured_projects,
-            "featured_community_projects": featured_community_projects,
-            "featured_members": featured_members,
-            "featured_posts": featured_posts,
             "recommendations": recommendations,
             "github_oauth_enabled": github_oauth.oauth_config().enabled,
-            "platform_metrics": {
-                "ministries": MinistryOrganization.objects.filter(status=OrgStatus.ACTIVE).count(),
-                "open_projects": public_projects()
-                .filter(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
-                .count(),
-                "verified_contributions": ContributionRecord.objects.filter(
-                    status=VerificationStatus.ACCEPTED
-                ).count(),
-            },
         },
     )
 

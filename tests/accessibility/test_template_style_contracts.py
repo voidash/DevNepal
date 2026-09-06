@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260905\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906e\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
@@ -76,10 +76,10 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert 'class="dn-header-search" role="search"' not in base
     assert 'class="lang-switch"' in base
     assert "dn-state-banner" in base and "is-success" in base and "is-danger" in base
-    assert "--color-bg: #f2f2f3;" in tokens_css
-    assert "--color-surface: #e9e9ea;" in tokens_css
-    assert "--color-text: #1d1f20;" in tokens_css
-    assert "--color-accent: #3b6fd4;" in tokens_css
+    assert "--color-bg: #f2f5f7;" in tokens_css
+    assert "--color-surface: #e5e9ee;" in tokens_css
+    assert "--color-text: #181c20;" in tokens_css
+    assert "--color-accent: #5395fc;" in tokens_css
     assert 'font-family: "Barlow Condensed"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css
@@ -205,6 +205,12 @@ def test_transition_css_keeps_focus_motion_and_target_contracts():
     assert "transition-duration: 0.01ms !important;" in base_css
     assert "animation-duration: 0.01ms !important;" in base_css
     assert "scroll-behavior: auto !important;" in base_css
+    assert "@view-transition" in base_css
+    assert "navigation: auto" in base_css
+    view_transition = base_css.split("@view-transition", 1)[1].split("@media", 1)[0]
+    assert "animation: none" in view_transition
+    assert "mix-blend-mode: normal" in view_transition
+    assert "140ms" not in view_transition
     assert "--target-min: 44px;" in tokens_css
     assert ".btn" in shell_css or ".btn" in components_css
     for selector in (
@@ -598,14 +604,20 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
         " min-height: var(--target-min, 44px);"
     )
     assert footer_link_rule in footer_css
-    assert (
-        ".dn-footer { margin-top: var(--space-10); padding: var(--space-8) 0 var(--space-5);"
-        in (footer_css)
-    )
+    assert ".dn-footer { margin-top: var(--space-10); padding: var(--space-10) 0 0;" in (footer_css)
+    # The footer closes on the same state colour the header opens with, and names
+    # the publishing authority with the emblem rather than in prose alone.
+    assert ".dn-footer-legal { margin-top: var(--space-10);" in footer_css
+    assert "background: var(--color-state); color: var(--color-paper);" in footer_css
+    assert 'class="dn-footer-identity"' in base
+    assert 'class="dn-footer-emblem"' in base
     assert ".dn-footer-grid { display: grid; gap: var(--space-6) var(--space-8); }" in footer_css
     assert "@media (min-width: 640px) { .dn-footer-grid { grid-template-columns:" in footer_css
     assert "repeat(2, minmax(0, 1fr)); } }" in footer_css
-    assert ".dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }" in footer_css
+    assert (
+        ".dn-footer-grid { grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) 1.1fr; }"
+        in footer_css
+    )
     assert (
         ".dn-footer-platform ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));"
         in footer_css

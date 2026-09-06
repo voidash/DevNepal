@@ -7,23 +7,19 @@
 html {
   font-size: 100%;
   font-family: var(--font-body);
-  scroll-padding-top: 88px;
+  scroll-padding-top: var(--header-h);
   background: var(--color-bg);
   color-scheme: light;
 }
 
-/* Every filter and every quick chip on this site is a real navigation, so the
-   browser repaints the whole document each time one is used. Painting the same
-   ground behind the swap and crossfading it turns that repaint from a flash
-   into a change of state. */
 @view-transition {
   navigation: auto;
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 140ms;
-  animation-timing-function: ease;
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -36,6 +32,15 @@ html {
 
 [lang="ne"] {
   font-family: var(--font-nepali);
+}
+
+/* Devanagari carries matras above the line and a reph that sits higher still.
+   The Latin headline leading of 0.94 clipped them into the line above, so
+   Nepali headings get their own leading. */
+html[lang="ne"] :is(h1, h2, h3, h4, h5, h6),
+:is(h1, h2, h3, h4, h5, h6) [lang="ne"],
+[lang="ne"]:is(h1, h2, h3, h4, h5, h6) {
+  line-height: var(--lh-snug);
 }
 
 body {
@@ -212,4 +217,8 @@ textarea {
     background: var(--color-bg);
     color: var(--color-fg);
   }
+}
+
+.hero .dn-home-hero {
+  grid-template-columns: minmax(0, 1fr);
 }

@@ -299,7 +299,7 @@ def test_accessibility_css_contracts_cover_focus_motion_and_target_rules():
 
     assert "body { min-width: 320px" in devnepal_css
     assert "html { scroll-behavior: smooth" not in devnepal_css
-    assert "min-height: 44px" in devnepal_css
+    assert "--control-lg: var(--target-min);" in tokens_css
     assert "--devnepal-header-bg" not in devnepal_css
     for banned in ("linear-gradient(", "radial-gradient(", "backdrop-filter:"):
         assert banned not in devnepal_css
@@ -310,4 +310,4 @@ def test_accessibility_css_contracts_cover_focus_motion_and_target_rules():
     assert "scroll-behavior: auto !important;" in base_css
     assert "transition-duration: 0.01ms !important;" in base_css
     assert "--target-min: 44px;" in tokens_css
-    assert re.search(r"\.dn-tab\s*\{[^}]*min-height: 44px", devnepal_css, re.DOTALL)
+    assert re.search(r"\.dn-tab\s*\{[^}]*min-height: var\(--control-lg\)", devnepal_css, re.DOTALL)

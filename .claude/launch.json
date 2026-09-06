@@ -3,10 +3,14 @@
   "configurations": [
     {
       "name": "devnepal",
-      "runtimeExecutable": "/Users/madan/Library/Python/3.9/bin/uv",
-      "runtimeArgs": ["run", "python", "manage.py", "runserver", "127.0.0.1:8000"],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "exec .venv/bin/python manage.py runserver 127.0.0.1:${PORT:-8000}"
+      ],
       "env": { "DJANGO_SETTINGS_MODULE": "config.settings.dev" },
-      "port": 8000
+      "port": 8000,
+      "autoPort": true
     }
   ]
 }
