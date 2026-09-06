@@ -3,11 +3,12 @@ import types
 from types import SimpleNamespace
 
 import pytest
+from django.contrib.messages import get_messages
 from django.urls import reverse
 
 from apps.audit.models import AuditEvent
 from apps.github_sync.enums import ProcessingState
-from apps.github_sync.errors import RepositoryBindingError
+from apps.github_sync.errors import GithubAppError, RepositoryBindingError
 from apps.github_sync.models import RepositoryConnection
 from apps.github_sync.services import bind_repository, process_pending, rebind_repository_for_demo
 from apps.github_sync.tests.data import TEST_APP_KEY_PEM
@@ -32,6 +33,55 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 @pytest.fixture(autouse=True)
 def github_sync_urlconf(settings):
     settings.ROOT_URLCONF = "apps.github_sync.tests.urls"
+
+
+def publisher_repository_transport():
+    def transport(request):
+        url = request["url"]
+        if "/app/installations?" in url:
+            return 200, [
+                {
+                    "id": 42,
+                    "account": {"login": "dhm-np"},
+                    "permissions": {"metadata": "read"},
+                },
+                {
+                    "id": 43,
+                    "account": {"login": "foreign-org"},
+                    "permissions": {"metadata": "read"},
+                },
+            ]
+        if url.endswith("/app/installations/42/access_tokens"):
+            return 201, {"token": "token-for-dhm"}
+        if url.endswith("/app/installations/43/access_tokens"):
+            return 201, {"token": "token-for-foreign"}
+        if "/installation/repositories?" in url:
+            if request["headers"]["Authorization"] == "token token-for-dhm":
+                return 200, {
+                    "repositories": [
+                        {
+                            "id": 1001,
+                            "node_id": "R_dhm",
+                            "full_name": "dhm-np/flood-alert-gateway",
+                            "private": False,
+                            "owner": {"login": "dhm-np"},
+                        }
+                    ]
+                }
+            return 200, {
+                "repositories": [
+                    {
+                        "id": 1002,
+                        "node_id": "R_foreign",
+                        "full_name": "foreign-org/secret",
+                        "private": True,
+                        "owner": {"login": "foreign-org"},
+                    }
+                ]
+            }
+        raise AssertionError(url)
+
+    return transport
 
 
 def test_ministry_publisher_binds_organization_repository_to_own_project():
@@ -154,8 +204,9 @@ def test_configured_demo_publisher_can_move_exact_repository_to_own_new_project(
     assert repository.project.title_en == "Accessible Research Workspace"
 
 
-def test_publisher_project_filter_lists_exact_org_repository(client, settings, monkeypatch):
-    """GIT-003/AUTH-006: ministry App binding needs no personal GitHub OAuth link."""
+def test_publisher_connects_and_syncs_before_explicit_publication(client, settings, monkeypatch):
+    """GIT-003/GIT-010/GOV-004: connection is visible before an explicit publish."""
+    settings.ROOT_URLCONF = "config.urls"
     publisher = MinistryPublisherFactory()
     project = ProjectFactory(
         ready=True,
@@ -178,52 +229,7 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings, m
         "apps.github_sync.views.refresh_public_repository_snapshot", refresh_snapshot
     )
 
-    def transport(request):
-        url = request["url"]
-        if "/app/installations?" in url:
-            return 200, [
-                {
-                    "id": 42,
-                    "account": {"login": "dhm-np"},
-                    "permissions": {"metadata": "read"},
-                },
-                {
-                    "id": 43,
-                    "account": {"login": "foreign-org"},
-                    "permissions": {"metadata": "read"},
-                },
-            ]
-        if url.endswith("/app/installations/42/access_tokens"):
-            return 201, {"token": "token-for-dhm"}
-        if url.endswith("/app/installations/43/access_tokens"):
-            return 201, {"token": "token-for-foreign"}
-        if "/installation/repositories?" in url:
-            if request["headers"]["Authorization"] == "token token-for-dhm":
-                return 200, {
-                    "repositories": [
-                        {
-                            "id": 1001,
-                            "node_id": "R_dhm",
-                            "full_name": "dhm-np/flood-alert-gateway",
-                            "private": False,
-                            "owner": {"login": "dhm-np"},
-                        }
-                    ]
-                }
-            return 200, {
-                "repositories": [
-                    {
-                        "id": 1002,
-                        "node_id": "R_foreign",
-                        "full_name": "foreign-org/secret",
-                        "private": True,
-                        "owner": {"login": "foreign-org"},
-                    }
-                ]
-            }
-        raise AssertionError(url)
-
-    settings.GITHUB_APP_TRANSPORT = transport
+    settings.GITHUB_APP_TRANSPORT = publisher_repository_transport()
     client.force_login(publisher.user)
 
     response = client.get(
@@ -243,13 +249,31 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings, m
     )
 
     assert response.status_code == 302
-    assert response.url == reverse("projects:detail", args=[project.slug])
+    assert response.url == reverse("projects:authoring_detail", args=[project.slug])
     repository = RepositoryConnection.objects.get(repository_id=1001)
     assert repository.project == project
     assert repository.activated_by == publisher.user
     project.refresh_from_db()
-    assert project.status == ProjectStatus.OPEN_FOR_CONTRIBUTION
+    assert project.status == ProjectStatus.DRAFT
     assert refreshed == [repository.pk]
+    assert client.get(reverse("projects:detail", args=[project.slug])).status_code == 404
+
+    workspace = client.get(reverse("projects:authoring_detail", args=[project.slug]))
+    content = workspace.content.decode()
+    assert workspace.status_code == 200
+    assert "Connected" in content
+    assert "GitHub activity" in content
+    assert 'name="action" value="publish"' in content
+
+    published = client.post(
+        reverse("projects:authoring_workflow", args=[project.slug]),
+        {"action": "publish"},
+    )
+    project.refresh_from_db()
+    assert published.status_code == 302
+    assert published.url == reverse("projects:detail", args=[project.slug])
+    assert project.status == ProjectStatus.OPEN_FOR_CONTRIBUTION
+    assert client.get(published.url).status_code == 200
 
     project.ministry = MinistryOrganizationFactory()
     project.save(update_fields=["ministry", "updated_at"])
@@ -266,13 +290,48 @@ def test_publisher_project_filter_lists_exact_org_repository(client, settings, m
     )
 
     assert reused.status_code == 302
-    assert reused.url == reverse("projects:detail", args=[duplicate.slug])
+    assert reused.url == reverse("projects:authoring_detail", args=[duplicate.slug])
     repository.refresh_from_db()
     duplicate.refresh_from_db()
     assert repository.project == duplicate
     assert repository.project.ministry == publisher.ministry
-    assert duplicate.status == "open_for_contribution"
+    assert duplicate.status == ProjectStatus.DRAFT
     assert refreshed == [repository.pk, repository.pk]
+
+
+def test_initial_snapshot_failure_keeps_repository_bound_to_draft(client, settings, monkeypatch):
+    """GIT-003/GIT-010: a GitHub outage never erases the binding or publishes the draft."""
+    publisher = MinistryPublisherFactory()
+    project = ProjectFactory(
+        owner=publisher.user,
+        ministry=publisher.ministry,
+        repository_url="https://github.com/dhm-np/flood-alert-gateway",
+    )
+    settings.GITHUB_APP_ID = "987654"
+    settings.GITHUB_APP_PRIVATE_KEY = TEST_APP_KEY_PEM
+    settings.GITHUB_APP_TRANSPORT = publisher_repository_transport()
+    settings.PRIVILEGED_MFA_BYPASS = True
+
+    def fail_snapshot(_repository, _client):
+        raise GithubAppError("temporary provider outage")
+
+    monkeypatch.setattr("apps.github_sync.views.refresh_public_repository_snapshot", fail_snapshot)
+    client.force_login(publisher.user)
+
+    response = client.post(
+        reverse("github_sync:connect_repository"),
+        {"project_id": str(project.pk)},
+    )
+
+    repository = RepositoryConnection.objects.get(repository_id=1001)
+    project.refresh_from_db()
+    notices = [str(message) for message in get_messages(response.wsgi_request)]
+    assert response.status_code == 302
+    assert response.url == reverse("projects:authoring_detail", args=[project.slug])
+    assert repository.project == project
+    assert project.status == ProjectStatus.DRAFT
+    assert notices == ["Repository connected, but GitHub activity could not be loaded. Try again."]
+    assert client.get(reverse("projects:detail", args=[project.slug])).status_code == 404
 
 
 def test_cross_ministry_project_filter_is_not_found(client, settings):

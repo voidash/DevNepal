@@ -50,7 +50,6 @@ from apps.github_sync.services import (
 from apps.ministries.services import is_publisher_active
 from apps.projects.enums import ProjectStatus, ProjectType
 from apps.projects.models import Project
-from apps.projects.services import ProjectLifecycleError, publish_by_publisher
 
 MAX_WEBHOOK_BODY_BYTES = 1_048_576
 LIVE_SNAPSHOT_COOLDOWN_SECONDS = 60
@@ -367,14 +366,13 @@ def _render_connect_repository(request, client, connection, project=None) -> Htt
     )
 
 
-def _finish_demo_repository_connection(request, client, repository, project) -> HttpResponse:
-    """GIT-003/GIT-010: snapshot GitHub before exposing a connected demo project."""
+def _finish_project_repository_connection(request, client, repository, project) -> HttpResponse:
+    """GIT-003/GIT-010: sync a new binding without publishing its draft."""
     try:
         snapshot = refresh_public_repository_snapshot(repository, client)
-        publish_by_publisher(request.user, project)
     except GithubAppError:
         logger.exception(
-            "Initial GitHub snapshot failed during demo connection "
+            "Initial GitHub snapshot failed during project connection "
             "(member=%s project=%s repository=%s)",
             request.user.pk,
             project.pk,
@@ -385,21 +383,12 @@ def _finish_demo_repository_connection(request, client, repository, project) -> 
             _("Repository connected, but GitHub activity could not be loaded. Try again."),
         )
         return redirect("projects:authoring_detail", slug=project.slug)
-    except ProjectLifecycleError as error:
-        logger.exception(
-            "Demo project publication failed after repository snapshot "
-            "(member=%s project=%s repository=%s)",
-            request.user.pk,
-            project.pk,
-            repository.pk,
-        )
-        messages.error(request, str(error))
-        return redirect("projects:authoring_detail", slug=project.slug)
     messages.success(
         request,
         _(
-            "Repository connected and project published with %(issues)s issues, "
-            "%(pull_requests)s pull requests, and %(contributors)s contributors."
+            "Repository connected and synchronized with %(issues)s issues, "
+            "%(pull_requests)s pull requests, and %(contributors)s contributors. "
+            "Review the workspace, then publish when ready."
         )
         % {
             "issues": snapshot.issues,
@@ -407,7 +396,7 @@ def _finish_demo_repository_connection(request, client, repository, project) -> 
             "contributors": snapshot.contributors,
         },
     )
-    return redirect("projects:detail", slug=project.slug)
+    return redirect("projects:authoring_detail", slug=project.slug)
 
 
 def _enroll_repository(request, client, connection, project=None) -> HttpResponse:
@@ -458,23 +447,20 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             demo_publishers = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
             if request.user.username in demo_publishers:
                 try:
-                    outcome = rebind_repository_for_demo(
-                        request.user, existing_connection, project
-                    )
-                except (RepositoryBindingError, ProjectLifecycleError):
+                    outcome = rebind_repository_for_demo(request.user, existing_connection, project)
+                except RepositoryBindingError:
                     logger.exception(
-                        "Demo repository rebind or publication failed "
-                        "(member=%s project=%s repository=%s)",
+                        "Demo repository rebind failed (member=%s project=%s repository=%s)",
                         request.user.pk,
                         project.pk,
                         choice.repository_id,
                     )
                     messages.error(
                         request,
-                        _("The repository connected, but the project is not ready to publish."),
+                        _("This repository could not be connected to the project."),
                     )
                     return redirect("projects:authoring_detail", slug=project.slug)
-                return _finish_demo_repository_connection(
+                return _finish_project_repository_connection(
                     request, client, outcome.connection, project
                 )
             messages.info(
@@ -518,12 +504,9 @@ def _enroll_repository(request, client, connection, project=None) -> HttpRespons
             status=400,
         )
     if binding_outcome is not None and binding_outcome.bound:
-        demo_publishers = set(getattr(settings, "DEMO_ONE_CLICK_PUBLISH_USERNAMES", ()))
-        if project is not None and request.user.username in demo_publishers:
-            return _finish_demo_repository_connection(
-                request, client, binding_outcome.connection, project
-            )
-        messages.success(request, _("Repository connected to the project."))
+        return _finish_project_repository_connection(
+            request, client, binding_outcome.connection, project
+        )
     elif outcome.created:
         messages.success(
             request,

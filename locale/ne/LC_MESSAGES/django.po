@@ -4068,11 +4068,14 @@ msgstr ""
 msgid "The repository connected, but the project is not ready to publish."
 msgstr "रिपोजिटरी जडान भयो। यस रिपोजिटरीको गतिविधिले अब सूचीबद्ध परियोजनाहरूमा जानकारी पुर्‍याउन सक्छ।"
 
-#: apps/github_sync/views.py:434
-#, fuzzy
-#| msgid "Repository connected to the project."
-msgid "Repository connected and project published."
-msgstr "रिपोजिटरी जडान भयो। यस रिपोजिटरीको गतिविधिले अब सूचीबद्ध परियोजनाहरूमा जानकारी पुर्‍याउन सक्छ।"
+#: apps/github_sync/views.py:381
+msgid "Repository connected, but GitHub activity could not be loaded. Try again."
+msgstr "रिपोजिटरी जडान भयो, तर GitHub गतिविधि लोड गर्न सकिएन। पुनः प्रयास गर्नुहोस्।"
+
+#: apps/github_sync/views.py:387
+#, python-format
+msgid "Repository connected and synchronized with %(issues)s issues, %(pull_requests)s pull requests, and %(contributors)s contributors. Review the workspace, then publish when ready."
+msgstr "रिपोजिटरी जडान भयो र %(issues)s इशु, %(pull_requests)s पुल रिक्वेस्ट तथा %(contributors)s योगदानकर्तासँग सिंक्रोनाइज भयो। कार्यस्थान समीक्षा गर्नुहोस्, अनि तयार भएपछि प्रकाशित गर्नुहोस्।"
 
 #: apps/github_sync/views.py:438
 #, fuzzy
@@ -4093,6 +4096,10 @@ msgstr "यो रिपोर्ट पेश गर्न सकिएन।"
 #: apps/github_sync/views.py:477
 msgid "Repository connected to the project."
 msgstr "रिपोजिटरी जडान भयो। यस रिपोजिटरीको गतिविधिले अब सूचीबद्ध परियोजनाहरूमा जानकारी पुर्‍याउन सक्छ।"
+
+#: apps/projects/views.py:1539
+msgid "Project published. It is now visible to the public."
+msgstr "परियोजना प्रकाशित भयो। अब यो सार्वजनिक रूपमा देखिन्छ।"
 
 #: apps/github_sync/views.py:481
 msgid "Repository connected. Activity for this repository can now feed listed projects."

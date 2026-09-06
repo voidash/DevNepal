@@ -1535,6 +1535,9 @@ def authoring_workflow(request: HttpRequest, slug: str) -> HttpResponse:
             _authoring_context(project, user=request.user, workflow_form=form, error=str(error)),
             status=400,
         )
+    if action == "publish":
+        messages.success(request, _("Project published. It is now visible to the public."))
+        return redirect("projects:detail", slug=project.slug)
     return redirect("projects:authoring_detail", slug=project.slug)
 
 
