@@ -68,7 +68,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906-demo4\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906f\"" in base
     assert "href=\"{% static 'images/devnepal-mark.svg' %}\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
@@ -77,10 +77,10 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert 'class="dn-header-search" role="search"' not in base
     assert 'class="lang-switch"' in base
     assert "dn-state-banner" in base and "is-success" in base and "is-danger" in base
-    assert "--color-bg: #f2f2f3;" in tokens_css
-    assert "--color-surface: #e9e9ea;" in tokens_css
-    assert "--color-text: #1d1f20;" in tokens_css
-    assert "--color-accent: #3b6fd4;" in tokens_css
+    assert "--color-bg: #f2f5f7;" in tokens_css
+    assert "--color-surface: #e5e9ee;" in tokens_css
+    assert "--color-text: #181c20;" in tokens_css
+    assert "--color-accent: #5395fc;" in tokens_css
     assert 'font-family: "Barlow Condensed"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css
@@ -625,9 +625,11 @@ def test_public_demo_layouts_keep_filters_visible_and_mobile_actions_tappable():
     assert '<details class="dn-catalog-filters" open>' in catalog
     assert ".dn-catalog-filters > summary { display: none;" in shell_css
     assert "@media (max-width: 1000px)" in shell_css
-    assert ".dn-catalog-filters > summary { display: flex; min-height: 44px;" in shell_css
+    assert (
+        ".dn-catalog-filters > summary { display: flex; min-height: var(--control-lg);" in shell_css
+    )
     assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in shell_css
-    assert ".dn-provider-profile { max-width: 1200px;" in shell_css
+    assert ".dn-provider-profile { padding-block: var(--space-4) var(--space-16);" in shell_css
     assert (
         ".dn-github-project .dn-issue-row > a:last-child { display: inline-flex; "
         "min-height: var(--target-min);"

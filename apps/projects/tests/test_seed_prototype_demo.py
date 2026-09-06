@@ -2,6 +2,7 @@ import io
 
 import pytest
 from django.core.management import call_command
+from django.urls import reverse
 
 from apps.accounts.models import MemberProfile, User
 from apps.blogs.enums import BlogPostType, BlogStatus
@@ -11,7 +12,7 @@ from apps.contributions.models import ContributionRecord
 from apps.github_sync.models import GithubRepositoryContributor, GithubStarterTask
 from apps.ministries.enums import OrgStatus, PublisherStatus
 from apps.ministries.models import MinistryOrganization, MinistryPublisher
-from apps.projects.enums import ProjectStatus
+from apps.projects.enums import ProjectStatus, ProjectType
 from apps.projects.models import Project, ProjectTask
 from apps.recognition.enums import AwardStatus
 from apps.recognition.models import Badge, BadgeAward, ScoringPolicy
@@ -19,7 +20,7 @@ from apps.recognition.models import Badge, BadgeAward, ScoringPolicy
 pytestmark = pytest.mark.django_db
 
 
-def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials():
+def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials(client):
     """DSC-001/GOV-004/BLG-004/REC-002: the prototype demo seeds valid public records safely."""
     out = io.StringIO()
 
@@ -49,6 +50,29 @@ def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials():
         ministry__abbreviation="MoHP",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
     ).exists()
+    open_government_projects = Project.objects.filter(
+        project_type=ProjectType.GOVERNMENT,
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+    )
+    assert open_government_projects.count() == 6
+    assert set(
+        open_government_projects.filter(
+            slug__in={
+                "government-service-knowledge-engine",
+                "constitution-of-nepal-open-data",
+                "nepali-sign-language-research-portal",
+            }
+        ).values_list("repository_url", flat=True)
+    ) == {
+        "https://github.com/voidash/previllage",
+        "https://github.com/voidash/civic-nepal",
+        "https://github.com/voidash/nepali-sign-language-research",
+    }
+    home = client.get(reverse("projects:home"))
+    assert home.status_code == 200
+    assert len(list(home.context["featured_projects"])) == 6
+    featured_section = home.content.decode().split('class="dn-featured-grid"', 1)[1]
+    assert featured_section.count("dn-featured-card__head") == 6
     assert Project.objects.filter(
         slug="sajhabus-timetable",
         status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
@@ -76,16 +100,15 @@ def test_seed_prototype_demo_creates_a_rich_public_demo_without_credentials():
     assert ProjectTask.objects.filter(
         project__slug="sewa-portal-accessibility-remediation"
     ).exists()
-    assert (
+    starter_issue_numbers = list(
         GithubStarterTask.objects.filter(
             repository__project__slug="sewa-portal-accessibility-remediation"
         )
         .values_list("number", flat=True)
         .order_by("number")
         .distinct()
-        .count()
-        == 3
     )
+    assert starter_issue_numbers == [7, 8, 9, 11, 13]
     people = GithubRepositoryContributor.objects.filter(
         repository__project__slug="sewa-portal-accessibility-remediation"
     )

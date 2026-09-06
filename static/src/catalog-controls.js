@@ -76,7 +76,8 @@ function sameCatalogPage(url) {
 
 let incoming = null;
 
-async function loadCatalog(url, { push = true } = {}) {
+async function loadCatalog(target, { push = true } = {}) {
+  const url = target instanceof URL ? target : new URL(String(target), window.location.href);
   const catalog = document.querySelector(CATALOG_SELECTOR);
   if (!(catalog instanceof HTMLElement)) {
     window.location.assign(url);
@@ -177,12 +178,14 @@ function bindFilterLinks(root) {
 
 const filtersQuery = window.matchMedia("(max-width: 1000px)");
 
+let visitorToggledRail = false;
+
 function matchFiltersToViewport(query) {
   const filters = document.querySelector(".dn-catalog-filters");
   if (!(filters instanceof HTMLDetailsElement)) {
     return;
   }
-  if (query.matches && filters.dataset.visitorToggled !== "true") {
+  if (query.matches && !visitorToggledRail) {
     filters.open = false;
   }
   if (!query.matches) {
@@ -197,10 +200,14 @@ function bindFilterDisclosure(root) {
   }
   filters.addEventListener("toggle", () => {
     if (filtersQuery.matches) {
-      filters.dataset.visitorToggled = "true";
+      visitorToggledRail = filters.open;
     }
   });
-  matchFiltersToViewport(filtersQuery);
+  if (visitorToggledRail && filtersQuery.matches) {
+    filters.open = true;
+  } else {
+    matchFiltersToViewport(filtersQuery);
+  }
 }
 
 function enhance(root) {

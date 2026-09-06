@@ -2,84 +2,108 @@
 {% load i18n %}
 {% block title %}{% trans "How to contribute" %} — DevNepal{% endblock %}
 {% block content %}
-<div class="dn-container dn-doc-layout">
-  <article class="dn-doc-main dn-doc-main--centered" aria-labelledby="about-heading">
-    <section>
-      <p class="dn-section-kicker">{% trans "About · How to contribute" %}</p>
-      <h1 id="about-heading">{% trans "How to contribute" %}</h1>
-      <p class="dn-lede">{% trans "A practical path from finding public-interest work to leaving a visible record of what changed. DevNepal is the registry and collaboration layer; code stays on GitHub." %}</p>
-      <p>{% trans "Find a fit · Read before acting · Close the loop through the project’s published route." %}</p>
-    </section>
+<div class="dn-container dn-doc-layout dn-doc-layout--wide">
+  <header class="dn-doc-head">
+    <p class="dn-section-kicker">{% trans "About · How to contribute" %}</p>
+    <h1 id="about-heading">{% trans "How to contribute" %}</h1>
+    <p class="dn-lede">{% trans "A practical path from finding public-interest work to leaving a visible record of what changed. DevNepal is the registry and collaboration layer; code stays on GitHub." %}</p>
+    <p class="dn-doc-head__path">{% trans "Find a fit · Read before acting · Close the loop through the project’s published route." %}</p>
+  </header>
 
-    <section aria-labelledby="process-heading">
+  <article class="dn-doc-main" aria-labelledby="about-heading">
+    <section id="process" aria-labelledby="process-heading">
       <p class="dn-section-kicker">{% trans "01 · The process" %}</p>
-      <div class="blueprint dn-sheet">
-        <h2 id="process-heading" class="sr-only">{% trans "Contribution steps" %}</h2>
-        <div class="dn-journey" aria-label="{% trans 'Contribution steps' %}">
-          <div class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry lists a project" %}</strong><span>{% trans "A named publisher documents the contribution route, public safeguards, and maintainer responsibility before publication." %}</span></div>
-          <div class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "PMO approves" %}</strong><span>{% trans "Only approved government listings carry the Official badge; the decision is attributable and recorded." %}</span></div>
-          <div class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "You contribute" %}</strong><span>{% trans "Apply when a workstream is controlled, or follow the published direct-contribution instructions for an open task." %}</span></div>
-          <div class="dn-journey-step"><span class="Counter">4</span><strong>{% trans "Work is verified and recognised" %}</strong><span>{% trans "A maintainer reviews the evidence and records a reasoned decision; raw activity alone is not recognition." %}</span></div>
-        </div>
+      <h2 id="process-heading">{% trans "From a published listing to a recognised contribution" %}</h2>
+      <p>{% trans "Three steps, each with a named party answerable for it. Nothing on this platform is published, opened or recognised without one." %}</p>
+      <ol class="dn-journey">
+        <li class="dn-journey-step"><span class="Counter">1</span><strong>{% trans "A ministry lists a project" %}</strong><span>{% trans "A named publisher documents the contribution route, public safeguards, and maintainer responsibility before publication." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">2</span><strong>{% trans "You contribute" %}</strong><span>{% trans "Apply when a workstream is controlled, or follow the published direct-contribution instructions for an open task." %}</span></li>
+        <li class="dn-journey-step"><span class="Counter">3</span><strong>{% trans "Work is verified and recognised" %}</strong><span>{% trans "A maintainer reviews the evidence and records a reasoned decision; raw activity alone is not recognition." %}</span></li>
+      </ol>
+    </section>
+
+    <section id="scope" aria-labelledby="scope-heading">
+      <p class="dn-section-kicker">{% trans "02 · Scope and limits" %}</p>
+      <h2 id="scope-heading">{% trans "What DevNepal is — and is not" %}</h2>
+      <p>{% trans "Read both columns before you invest time in a listing. The left column is what the platform checks; the right is what it deliberately leaves to the project." %}</p>
+      <div class="dn-scope-split">
+        <section class="dn-scope-panel" aria-labelledby="scope-verifies">
+          <h3 id="scope-verifies" class="dn-scope-panel__title">{% trans "What DevNepal verifies" %}</h3>
+          <ul class="dn-scope-list">
+            <li>{% trans "Government projects have an accountable ministry publisher, maintainer, suitability review, and contribution guidance before publication." %}</li>
+            <li>{% trans "Accepted contributions retain a visible evidence and decision trail; raw activity is not treated as impact by itself." %}</li>
+          </ul>
+        </section>
+        <section class="dn-scope-panel dn-scope-panel--limits" aria-labelledby="scope-limits">
+          <h3 id="scope-limits" class="dn-scope-panel__title">{% trans "What DevNepal does not promise" %}</h3>
+          <ul class="dn-scope-list">
+            <li>{% trans "A listing is not an employment offer, procurement commitment, or guarantee that a contribution will be merged." %}</li>
+            <li>{% trans "DevNepal is not a code host; branches, issues, pull requests, and CI remain with the project’s repository." %}</li>
+          </ul>
+        </section>
       </div>
     </section>
 
-    <section aria-labelledby="scope-heading">
-      <p class="dn-section-kicker">{% trans "02 · What DevNepal is — and is not" %}</p>
-      <div class="blueprint dn-sheet">
-        <div class="dn-contribution-grid">
-          <div>
-            <h2 id="scope-heading">{% trans "What DevNepal verifies" %}</h2>
-            <ul>
-              <li>{% trans "Government projects have an accountable ministry publisher, maintainer, suitability review, and contribution guidance before publication." %}</li>
-              <li>{% trans "Community projects identify their owner, terms, repository, and route for questions before they open for collaboration." %}</li>
-              <li>{% trans "Accepted contributions retain a visible evidence and decision trail; raw activity is not treated as impact by itself." %}</li>
-            </ul>
-          </div>
-          <div>
-            <h2>{% trans "What DevNepal does not promise" %}</h2>
-            <ul>
-              <li>{% trans "A listing is not an employment offer, procurement commitment, or guarantee that a contribution will be merged." %}</li>
-              <li>{% trans "DevNepal is not a code host; branches, issues, pull requests, and CI remain with the project’s repository." %}</li>
-              <li>{% trans "Community projects are not government endorsements simply because they are listed here." %}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section aria-labelledby="safety-heading">
+    <section id="safety" aria-labelledby="safety-heading">
       <p class="dn-section-kicker">{% trans "03 · Policies" %}</p>
+      <h2 id="safety-heading">{% trans "Safety and reporting" %}</h2>
       <div class="blueprint dn-sheet">
         <div class="dn-sheet__header"><span>{% trans "Security and reporting" %}</span><span>{% trans "Confidential route available" %}</span></div>
         <div class="dn-readme-body">
-          <h2 id="safety-heading">{% trans "Safety and reporting" %}</h2>
           <p>{% trans "Follow the community code of conduct, keep private or security-sensitive details out of public project pages, and use the confidential report form when something needs review." %}</p>
-          <p><a class="btn btn--primary" href="{% url 'moderation:report_create' %}">{% trans "Report content confidentially" %}</a></p>
+        </div>
+        <div class="dn-sheet__actions">
+          <a class="btn btn--primary" href="{% url 'moderation:report_create' %}">{% trans "Report content confidentially" %}</a>
+          <span>{% trans "Reports reach the moderation queue, not the project’s public page. Filing one needs a signed-in account." %}</span>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="faq-heading">
+    <section id="faq" aria-labelledby="faq-heading">
       <p class="dn-section-kicker">{% trans "04 · Frequently asked" %}</p>
       <h2 id="faq-heading">{% trans "Frequently asked questions" %}</h2>
-      <dl>
-        <dt><strong>{% trans "How are contributions verified?" %}</strong></dt>
-        <dd>{% trans "A maintainer or authorised reviewer checks the evidence and records a reasoned decision. A self-submitted claim is not official recognition by itself." %}</dd>
-        <dt><strong>{% trans "What should I do if a project is not a fit?" %}</strong></dt>
-        <dd>{% trans "Do not submit sensitive material. Read the brief, use the stated contact path, or choose another project whose scope and response expectations fit your time." %}</dd>
+      <dl class="dn-doc-faq">
+        <div>
+          <dt>{% trans "How are contributions verified?" %}</dt>
+          <dd>{% trans "A maintainer or authorised reviewer checks the evidence and records a reasoned decision. A self-submitted claim is not official recognition by itself." %}</dd>
+        </div>
+        <div>
+          <dt>{% trans "What should I do if a project is not a fit?" %}</dt>
+          <dd>{% trans "Do not submit sensitive material. Read the brief, use the stated contact path, or choose another project whose scope and response expectations fit your time." %}</dd>
+        </div>
+        <div>
+          <dt>{% trans "Do I need a DevNepal account to contribute?" %}</dt>
+          <dd>{% trans "No. Contributions are made and reviewed on the project’s own repository; only ministry publishers sign in here." %}</dd>
+        </div>
       </dl>
     </section>
 
-    <section aria-labelledby="next-heading">
-      <h2>{% trans "Support and next steps" %}</h2>
-      <h2 id="next-heading">{% trans "Choose where to start" %}</h2>
+    <section id="start" aria-labelledby="start-heading">
+      <p class="dn-section-kicker">{% trans "05 · Where to start" %}</p>
+      <h2 id="start-heading">{% trans "Choose where to start" %}</h2>
       <p>{% trans "Use the route that matches your intent, then read the project’s own brief before contacting a maintainer." %}</p>
-      <p class="BtnGroup">
-        <a class="btn btn-primary" href="{% url 'projects:government' %}">{% trans "Government Projects" %}</a>
-        <a class="btn" href="{% url 'projects:issue_index' %}">{% trans "Open issues" %}</a>
-      </p>
+      <ul class="dn-route-grid">
+        <li>
+          <a class="dn-route" href="{% url 'projects:government' %}">
+            <strong>{% trans "Government projects" %}</strong>
+            <span>{% trans "Ministry-published work with a named publisher, an approved listing, and a stated response expectation." %}</span>
+          </a>
+        </li>
+        <li>
+          <a class="dn-route" href="{% url 'projects:issue_index' %}">
+            <strong>{% trans "Open issues" %}</strong>
+            <span>{% trans "Current GitHub issues from published government projects, ready to inspect without a DevNepal account." %}</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section id="support" aria-labelledby="support-heading">
+      <p class="dn-section-kicker">{% trans "06 · Support" %}</p>
+      <h2 id="support-heading">{% trans "Support and next steps" %}</h2>
+      <p>{% trans "For account, safety, or moderation questions, use the relevant signed-in workflow or confidential report form so the right record is created." %}</p>
     </section>
   </article>
+
 </div>
 {% endblock %}

@@ -1,12 +1,14 @@
+import re
 import unicodedata
 from datetime import date, timedelta
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from apps.accounts.tests.factories import MemberProfileFactory
 from apps.blogs.enums import BlogModerationState, BlogStatus
@@ -81,6 +83,7 @@ def test_home_features_recent_open_government_opportunities_only(client):
     assert featured.title_en.encode() in response.content
     assert community not in response.context["featured_projects"]
     assert "featured_community_projects" not in response.context
+    assert response.context["platform_metrics"]["open_projects"] == 1
     assert community.title_en.encode() not in response.content
     assert paused.title_en.encode() not in response.content
 
@@ -93,7 +96,7 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
     response = client.get(reverse("projects:home"))
     section = (
         response.content.split(b'aria-labelledby="opportunities-heading"', 1)[1]
-        .split(b'aria-labelledby="community-heading"', 1)[0]
+        .split(b'aria-labelledby="safeguards-heading"', 1)[0]
         .decode()
     )
 
@@ -122,6 +125,13 @@ def test_home_does_not_promote_community_projects_on_the_visitor_entry(client):
     assert "Community work that is not official" not in content
     assert reverse("projects:community") not in content
 
+    community_catalogue = client.get(reverse("projects:community"))
+    community_content = community_catalogue.content.decode()
+    assert community_catalogue.status_code == 200
+    assert "Community projects" in community_content
+    assert "do not carry government endorsement" in community_content
+    assert "Community work that is not official" in community_content
+
 
 @pytest.mark.unit
 def test_home_does_not_leak_community_owner_data_into_the_government_entry(client):
@@ -139,6 +149,15 @@ def test_home_does_not_leak_community_owner_data_into_the_government_entry(clien
     assert f"@{community.owner.username}" not in content
     assert reverse("projects:detail", args=[community.slug]) not in content
 
+    catalogue = client.get(reverse("projects:community"))
+    catalogue_section = (
+        catalogue.content.decode().split('class="dn-catalog-results', 1)[1].split("</main>", 1)[0]
+    )
+    assert community.title_en in catalogue_section
+    assert "Community project" in catalogue_section
+    assert "Official" not in catalogue_section
+    assert reverse("projects:detail", args=[community.slug]) in catalogue_section
+
 
 @pytest.mark.unit
 def test_home_keeps_legacy_member_directory_off_the_visitor_entry(client):
@@ -153,7 +172,8 @@ def test_home_keeps_legacy_member_directory_off_the_visitor_entry(client):
         directory_discoverable=False,
         leaderboard_opt_out=False,
     )
-    opted_out = MemberProfileFactory(
+    # Opting out of the leaderboard must not remove someone from the directory.
+    still_listed = MemberProfileFactory(
         headline="Leaderboard opted out",
         directory_discoverable=True,
         leaderboard_opt_out=True,
@@ -164,8 +184,17 @@ def test_home_keeps_legacy_member_directory_off_the_visitor_entry(client):
     assert visible.user.username not in content
     assert visible.headline not in content
     assert hidden.user.username not in content
-    assert opted_out.headline not in content
+    assert still_listed.headline not in content
     assert reverse("accounts:member_directory") not in content
+
+    directory = client.get(reverse("accounts:member_directory"))
+    directory_content = directory.content.decode()
+    assert visible.user.username in directory_content
+    assert visible.headline in directory_content
+    assert reverse("accounts:public_profile", args=[visible.user.username]) in directory_content
+    assert hidden.user.username not in directory_content
+    assert still_listed.user.username in directory_content
+    assert "points" not in directory_content.lower()
 
 
 @pytest.mark.unit
@@ -191,6 +220,13 @@ def test_home_keeps_technical_writing_off_the_minimal_visitor_entry(client):
     assert published.excerpt not in content
     assert reverse("blogs:detail", args=[published.pk]) not in content
     assert reverse("blogs:list") not in content
+
+    blog_index = client.get(reverse("blogs:list"))
+    blog_content = blog_index.content.decode()
+    assert published.title in blog_content
+    assert reverse("blogs:detail", args=[published.pk]) in blog_content
+    assert "Draft that must stay private" not in blog_content
+    assert "Restricted post" not in blog_content
 
 
 @pytest.mark.unit
@@ -304,27 +340,130 @@ def test_about_page_lays_out_a_grounded_contribution_flow_in_both_languages(clie
     assert reverse("projects:community").encode() not in english.content
     assert reverse("accounts:member_directory").encode() not in english.content
     assert b'aria-labelledby="about-heading"' in english.content
-    assert b'class="dn-doc-main dn-doc-main--centered"' in english.content
+    assert b'class="dn-container dn-doc-layout dn-doc-layout--wide"' in english.content
+    assert b'class="dn-doc-main"' in english.content
     assert nepali.status_code == 200
     assert "कसरी योगदान गर्ने" in nepali.content.decode()
 
 
 @pytest.mark.unit
-def test_about_page_uses_the_a1_2_process_and_policy_sheets(client):
+def test_about_page_keeps_the_numbered_process_and_the_policy_sheet(client):
     """A1.2/DSC-001/GOV-007: public guidance makes process and reporting scannable."""
     response = client.get(reverse("projects:about"))
 
     content = response.content.decode()
     assert response.status_code == 200
-    assert "blueprint dn-sheet" in content
+    safety = content.split('id="safety"', 1)[1].split("</section>", 1)[0]
+
+    assert "blueprint dn-sheet" in safety
     assert "01 · The process" in content
     assert "A ministry lists a project" in content
-    assert "PMO approves" in content
     assert "You contribute" in content
     assert "Work is verified and recognised" in content
     assert "What DevNepal is — and is not" in content
     assert "Security and reporting" in content
     assert "Report content confidentially" in content
+
+
+@pytest.mark.unit
+def test_about_page_walks_three_numbered_steps_without_the_pmo_gate(client):
+    """A1.2/DSC-001: the published contribution path is an ordered list of three steps."""
+    english = client.get(reverse("projects:about"))
+    nepali = client.get("/ne/about/")
+
+    content = english.content.decode()
+    process = content.split('<ol class="dn-journey">', 1)[1].split("</ol>", 1)[0]
+
+    assert english.status_code == 200
+    assert nepali.status_code == 200
+    assert process.count('class="dn-journey-step"') == 3
+    assert re.findall(r'<span class="Counter">(\d+)</span>', process) == ["1", "2", "3"]
+    assert "PMO approves" not in content
+    assert "PMO approves" not in nepali.content.decode()
+    assert "{% trans" not in content
+
+
+@pytest.mark.unit
+def test_about_page_routes_and_labels_point_at_destinations_that_exist(client):
+    """A1.2/NFR-A11Y-01: route cards and section labels reference real targets."""
+    response = client.get(reverse("projects:about"))
+    content = response.content.decode()
+    article = content.split("dn-doc-layout--wide", 1)[1].split("</main>", 1)[0]
+    routes = re.findall(r'<a class="dn-route" href="([^"]+)"', article)
+    headings = [int(level) for level in re.findall(r"<h([1-6])[ >]", article)]
+    identifiers = re.findall(r'\sid="([^"]+)"', content)
+
+    assert response.status_code == 200
+    assert routes == [
+        reverse("projects:government"),
+        reverse("projects:issue_index"),
+    ]
+    for route in routes:
+        assert client.get(route).status_code == 200, route
+    assert f'href="{reverse("moderation:report_create")}"' in article
+    assert len(identifiers) == len(set(identifiers))
+    referenced = {
+        idref
+        for attribute in re.findall(r'aria-labelledby="([^"]+)"', content)
+        for idref in attribute.split()
+    }
+    assert referenced <= set(identifiers)
+    assert headings[0] == 1
+    assert all(later - earlier <= 1 for earlier, later in pairwise(headings))
+
+
+@pytest.mark.unit
+def test_about_page_serves_the_redesigned_guidance_in_nepali(client):
+    """NFR-I18N-01: the rebuilt about sections reach Nepali readers translated."""
+    response = client.get("/ne/about/")
+
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert '<html lang="ne"' in content
+    assert "तीन चरण, प्रत्येकका लागि एक नामित पक्ष उत्तरदायी हुन्छ।" in content
+    assert "देवनेपाल के हो — र के होइन" in content
+    assert "०५ · कहाँबाट सुरु गर्ने" in content
+    assert "Three steps, each with a named party" not in content
+    assert "Where to start" not in content
+
+
+@pytest.mark.unit
+def test_about_page_strings_are_all_present_in_the_compiled_nepali_catalog():
+    """NFR-I18N-01: the shipped django.mo covers every string the about page renders.
+
+    A .po edited without recompiling leaves the Nepali page silently English, and a
+    msgid that drifts from the template by one character does the same.
+    """
+    template = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/about.html").read_text()
+    strings = [
+        double or single
+        for double, single in re.findall(
+            r"{%\s*(?:trans|translate)\s+(?:\"(.*?)\"|'(.*?)')", template
+        )
+    ]
+
+    assert strings
+    with translation.override("ne"):
+        untranslated = [source for source in strings if translation.gettext(source) == source]
+    assert untranslated == []
+
+
+@pytest.mark.unit
+def test_journey_track_follows_its_step_count_instead_of_a_fixed_four_columns():
+    """DSC-001: the shared journey component fits three steps and four alike."""
+    css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    home = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/home.html").read_text()
+    about = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/about.html").read_text()
+    track = css.split("\n.dn-journey { ", 1)[1].split("}", 1)[0]
+
+    assert "grid-auto-flow: column;" in track
+    assert "grid-auto-columns: minmax(0, 1fr);" in track
+    assert "grid-template-columns: none;" in track
+    assert "repeat(4," not in track
+    assert css.count(".dn-journey { grid-auto-flow: row;") == 2
+    assert home.count('class="dn-journey-step"') == 4
+    assert about.count('class="dn-journey-step"') == 3
 
 
 @pytest.mark.unit
@@ -569,7 +708,11 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
     assert "incoming?.abort()" in script
     assert "window.location.assign(url)" in script
     assert 'closest(".dn-catalog-results")' in script
+    # Back must swap, not reload: loadCatalog coerces whatever it is handed
+    # into a URL, because a bare string has no .searchParams and used to
+    # throw straight into the full-navigation fallback.
     assert "loadCatalog(window.location.href, { push: false })" in script
+    assert "target instanceof URL ? target : new URL(String(target)" in script
     assert 'credentials: "same-origin"' in script
     assert 'headers: { Accept: "text/html" }' in script
     assert "catalog.replaceWith(next)" in script

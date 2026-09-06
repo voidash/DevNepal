@@ -303,6 +303,18 @@ def seed_prototype_demo() -> dict[str, int]:
         "Verify public contact information and cite the source used.",
         "https://github.com/voidash/civic-help-directory/issues/8",
     )
+    _task(
+        sewa,
+        "Confirm DevNepal GitHub synchronization",
+        "Check that a repository issue appears on the public project page after synchronization.",
+        "https://github.com/voidash/civic-help-directory/issues/11",
+    )
+    _task(
+        sewa,
+        "Verify district office contact details",
+        "Confirm district office contact details against an official public source.",
+        "https://github.com/voidash/civic-help-directory/issues/13",
+    )
     repository, _ = RepositoryConnection.objects.get_or_create(
         provider=Provider.GITHUB,
         repository_id=1_357_413_723,
@@ -346,6 +358,18 @@ def seed_prototype_demo() -> dict[str, int]:
         9,
         "Document keyboard-first contribution workflow",
         ["good first issue"],
+    )
+    _starter_task(
+        repository,
+        11,
+        "Demo: confirm DevNepal GitHub synchronization",
+        ["documentation", "good first issue"],
+    )
+    _starter_task(
+        repository,
+        13,
+        "Demo: verify district office contact details",
+        ["documentation", "good first issue"],
     )
     _github_people(
         repository,
@@ -418,6 +442,113 @@ def seed_prototype_demo() -> dict[str, int]:
         "Beginner-friendly documentation task for the public health registry API.",
         "https://github.com/mohp-np/health-facility-registry/issues/1",
     )
+
+    service_knowledge = _government_project(
+        slug="government-service-knowledge-engine",
+        title_en="Government Service Knowledge Engine",
+        title_ne="सरकारी सेवा ज्ञान इन्जिन",
+        owner=publisher,
+        ministry=doit,
+        license_obj=license_obj,
+        summary_en=(
+            "A searchable Nepali and English knowledge base that turns public-service rules "
+            "into clear, source-linked guidance."
+        ),
+        summary_ne="सार्वजनिक सेवाका नियमलाई स्रोतसहित स्पष्ट बनाउने नेपाली र अङ्ग्रेजी ज्ञान आधार।",
+        repository_url="https://github.com/voidash/previllage",
+        issue_tracker_url="https://github.com/voidash/previllage/issues",
+        documentation_url="https://github.com/voidash/previllage#readme",
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+        difficulty=DifficultyLevel.INTERMEDIATE,
+        estimated_effort=EffortBand.MEDIUM,
+        problem_statement=(
+            "People must interpret scattered government pages to understand a service."
+        ),
+        target_users="Citizens, service-desk staff, researchers, and content maintainers.",
+        expected_outcome="Source-linked answers in Nepali and English for common public services.",
+        success_indicators=(
+            "Every published answer cites an official source and passes bilingual review."
+        ),
+        prerequisites="Python, information retrieval, documentation, or Nepali language review.",
+    )
+    _maintainer(service_knowledge, publisher, MaintainerRole.LEAD)
+    service_knowledge.contribution_types.set([engineering, documentation, localization])
+    service_knowledge.skills.set(_skills("Python", "Documentation", "Translation EN-NE"))
+
+    constitution_data = _government_project(
+        slug="constitution-of-nepal-open-data",
+        title_en="Constitution of Nepal Open Data",
+        title_ne="नेपालको संविधान खुला डेटा",
+        owner=address_maintainer,
+        ministry=mofaga,
+        license_obj=license_obj,
+        summary_en=(
+            "Structured, searchable constitutional text for civic education, public-interest "
+            "research, and accessible digital services."
+        ),
+        summary_ne="नागरिक शिक्षा, सार्वजनिक अनुसन्धान र पहुँचयोग्य सेवाका लागि संरचित संवैधानिक पाठ।",
+        repository_url="https://github.com/voidash/civic-nepal",
+        issue_tracker_url="https://github.com/voidash/civic-nepal/issues",
+        documentation_url="https://github.com/voidash/civic-nepal#readme",
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        contribution_mode=ContributionMode.OPEN_DIRECT,
+        difficulty=DifficultyLevel.BEGINNER,
+        estimated_effort=EffortBand.SMALL,
+        problem_statement=(
+            "Constitutional text is difficult to reuse in accessible digital products."
+        ),
+        target_users="Students, civic educators, legal researchers, and service designers.",
+        expected_outcome=(
+            "Versioned constitutional text with stable identifiers and bilingual metadata."
+        ),
+        success_indicators=(
+            "Every article is searchable, addressable, and checked against the source text."
+        ),
+        prerequisites=(
+            "Documentation, structured data, accessibility testing, or Nepali proofreading."
+        ),
+    )
+    _maintainer(constitution_data, address_maintainer, MaintainerRole.LEAD)
+    constitution_data.contribution_types.set([engineering, documentation, localization])
+    constitution_data.skills.set(_skills("Documentation", "Data Analysis", "Translation EN-NE"))
+
+    sign_language = _government_project(
+        slug="nepali-sign-language-research-portal",
+        title_en="Nepali Sign Language Research Portal",
+        title_ne="नेपाली साङ्केतिक भाषा अनुसन्धान पोर्टल",
+        owner=health_maintainer,
+        ministry=mohp,
+        license_obj=license_obj,
+        summary_en=(
+            "A public research catalogue for Nepali Sign Language datasets, experiments, "
+            "evaluation notes, and accessibility findings."
+        ),
+        summary_ne="नेपाली साङ्केतिक भाषा डेटा, प्रयोग र पहुँचयोग्यता निष्कर्षको सार्वजनिक अनुसन्धान सूची।",
+        repository_url="https://github.com/voidash/nepali-sign-language-research",
+        issue_tracker_url="https://github.com/voidash/nepali-sign-language-research/issues",
+        documentation_url="https://github.com/voidash/nepali-sign-language-research#readme",
+        status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+        contribution_mode=ContributionMode.APPLICATION,
+        difficulty=DifficultyLevel.INTERMEDIATE,
+        estimated_effort=EffortBand.MEDIUM,
+        problem_statement=(
+            "Nepali Sign Language research artifacts are difficult to discover and compare."
+        ),
+        target_users=(
+            "Deaf communities, accessibility researchers, interpreters, and service teams."
+        ),
+        expected_outcome=(
+            "A documented research trail with clear dataset and evaluation boundaries."
+        ),
+        success_indicators=(
+            "Each experiment records its data source, method, limitations, and review status."
+        ),
+        prerequisites="Accessibility research, documentation, data review, or machine learning.",
+    )
+    _maintainer(sign_language, health_maintainer, MaintainerRole.LEAD)
+    sign_language.contribution_types.set([engineering, documentation])
+    sign_language.skills.set(_skills("Python", "Documentation", "Machine Learning"))
 
     sajhabus, sajhabus_created = Project.objects.get_or_create(
         slug="sajhabus-timetable",
@@ -532,7 +663,7 @@ def seed_prototype_demo() -> dict[str, int]:
     _score(first, policy, 8)
     _score(second, policy, 16)
 
-    return {"ministries": 4, "projects": 8, "members": 7}
+    return {"ministries": 4, "projects": 11, "members": 7}
 
 
 def _user(username, **defaults):
@@ -609,6 +740,11 @@ def _government_project(
     difficulty=DifficultyLevel.INTERMEDIATE,
     estimated_effort=EffortBand.MEDIUM,
     response_sla=ResponseSla.WITHIN_3_DAYS,
+    problem_statement=None,
+    target_users=None,
+    expected_outcome=None,
+    success_indicators=None,
+    prerequisites=None,
 ):
     defaults = {
         "project_type": ProjectType.GOVERNMENT,
@@ -620,16 +756,20 @@ def _government_project(
         "summary_en": summary_en,
         "summary_ne": summary_ne,
         "description_md": summary_en,
-        "problem_statement": "Citizen-facing forms need accessible bilingual error recovery.",
-        "target_users": "Citizens, ward-office staff, and people using assistive technology.",
-        "expected_outcome": "WCAG 2.2 AA conformance for high-traffic services.",
-        "success_indicators": "No critical accessibility issues on the priority service forms.",
+        "problem_statement": problem_statement
+        or "Citizen-facing forms need accessible bilingual error recovery.",
+        "target_users": target_users
+        or "Citizens, ward-office staff, and people using assistive technology.",
+        "expected_outcome": expected_outcome
+        or "WCAG 2.2 AA conformance for high-traffic services.",
+        "success_indicators": success_indicators
+        or "No critical accessibility issues on the priority service forms.",
         "difficulty": difficulty,
         "estimated_effort": estimated_effort,
         "contributor_capacity": 12,
         "contribution_mode": contribution_mode,
-        "prerequisites": "React, WCAG basics, and Nepali reading are helpful.",
-        "communication_channel": "https://github.com/doit-np/sewa-portal/discussions",
+        "prerequisites": prerequisites or "React, WCAG basics, and Nepali reading are helpful.",
+        "communication_channel": f"{repository_url}/discussions" if repository_url else "",
         "response_sla": response_sla,
         "repository_url": repository_url,
         "default_branch": "main",
@@ -637,7 +777,7 @@ def _government_project(
         "documentation_url": documentation_url,
         "code_of_conduct_url": "https://example.invalid/code-of-conduct",
         "governance_model": "maintainer_consensus",
-        "outcome_ownership": "Department of Information Technology",
+        "outcome_ownership": ministry.name_en,
         "escalation_path": "Named project maintainers, then the ministry publisher.",
         "completion_criteria": (
             "Accessibility audit, bilingual recovery, and release notes are published."

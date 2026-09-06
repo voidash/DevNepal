@@ -13,10 +13,10 @@ def test_shared_shell_uses_the_verified_light_blueprint_system():
     tokens = (root / "static/src/tokens.css").read_text()
     shell = (root / "static/src/devnepal.css").read_text()
 
-    assert "--color-bg: #f2f2f3;" in tokens
-    assert "--color-surface: #e9e9ea;" in tokens
-    assert "--color-text: #1d1f20;" in tokens
-    assert "--color-accent: #3b6fd4;" in tokens
+    assert "--color-bg: #f2f5f7;" in tokens
+    assert "--color-surface: #e5e9ee;" in tokens
+    assert "--color-text: #181c20;" in tokens
+    assert "--color-accent: #5395fc;" in tokens
     assert 'font-family: "Barlow"' in tokens
     assert 'font-family: "Barlow Condensed"' in tokens
     assert '"Noto Sans Devanagari"' in tokens

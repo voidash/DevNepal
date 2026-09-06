@@ -194,7 +194,7 @@ def home(request: HttpRequest) -> HttpResponse:
             project_type=ProjectType.GOVERNMENT,
             status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
         )
-        .order_by("-published_at", "-id")[:3]
+        .order_by("-published_at", "-id")[:6]
     )
     return render(
         request,
@@ -204,7 +204,10 @@ def home(request: HttpRequest) -> HttpResponse:
             "platform_metrics": {
                 "ministries": MinistryOrganization.objects.filter(status=OrgStatus.ACTIVE).count(),
                 "open_projects": public_projects()
-                .filter(status=ProjectStatus.OPEN_FOR_CONTRIBUTION)
+                .filter(
+                    project_type=ProjectType.GOVERNMENT,
+                    status=ProjectStatus.OPEN_FOR_CONTRIBUTION,
+                )
                 .count(),
                 "verified_contributions": ContributionRecord.objects.filter(
                     status=VerificationStatus.ACCEPTED
