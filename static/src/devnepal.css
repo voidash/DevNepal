@@ -31,10 +31,12 @@ body { min-width: 320px; overflow-x: hidden; background: var(--color-bg); }
 .dn-header-inner { display: flex; align-items: center; gap: var(--space-4); width: calc(100% - var(--page-gutter) * 2); max-width: var(--container-max); min-height: 64px; margin: 0 auto; padding: var(--space-3) 0; }
 .dn-brand,
 .dn-brand:link,
-.dn-brand:visited,
+.dn-brand:visited { display: inline-flex; flex: none; align-items: center; min-height: var(--control-lg); color: var(--color-text); text-decoration: none; }
 .dn-brand:hover,
-.dn-brand:focus,
-.dn-brand:active { display: inline-flex; flex: none; align-items: center; min-height: var(--control-lg); color: var(--color-text); text-decoration: none; }
+.dn-brand:active { color: var(--color-accent-700); text-decoration: none; }
+.dn-brand:focus { text-decoration: none; }
+.dn-brand:focus:not(:focus-visible),
+.dn-brand:active { border: 0; outline: 0; }
 .dn-brand-copy { display: flex; align-items: center; line-height: 1; }
 .dn-brand-copy strong { font-family: var(--font-heading); font-size: var(--fs-lg); font-weight: 600; }
 .dn-brand-copy small { color: var(--color-neutral-600); font-size: var(--fs-2xs); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }

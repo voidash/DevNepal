@@ -68,15 +68,16 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     tokens_css = (root / "static/src/tokens.css").read_text()
 
     assert "href=\"{% static 'vendor/primer/primer.css' %}\"" in base
-    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906m\"" in base
+    assert "href=\"{% static 'src/devnepal.css' %}?v=20260906n\"" in base
     assert "href=\"{% static 'images/devnepal-mark.svg' %}\"" in base
     assert 'class="btn dn-skip-link" href="#main-content"' in base
     assert "नेपाल सरकार · Government of Nepal" in base
     assert 'class="dn-product-header"' in base
     assert 'class="dn-brand-mark"' not in base
     assert ".dn-brand:hover," in devnepal_css
-    assert ".dn-brand:focus," in devnepal_css
-    assert ".dn-brand:active {" in devnepal_css
+    assert ".dn-brand:focus:not(:focus-visible)," in devnepal_css
+    assert ".dn-brand:active { border: 0; outline: 0; }" in devnepal_css
+    assert "color: var(--color-accent-700); text-decoration: none;" in devnepal_css
     assert "color: var(--color-text); text-decoration: none;" in devnepal_css
     assert (
         '.dn-primary-nav a[aria-current="page"] { color: var(--color-accent-700); '
