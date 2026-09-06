@@ -604,14 +604,20 @@ def test_footer_has_four_columns_with_resolvable_translated_links():
         " min-height: var(--target-min, 44px);"
     )
     assert footer_link_rule in footer_css
-    assert (
-        ".dn-footer { margin-top: var(--space-10); padding: var(--space-8) 0 var(--space-5);"
-        in (footer_css)
-    )
+    assert ".dn-footer { margin-top: var(--space-10); padding: var(--space-10) 0 0;" in (footer_css)
+    # The footer closes on the same state colour the header opens with, and names
+    # the publishing authority with the emblem rather than in prose alone.
+    assert ".dn-footer-legal { margin-top: var(--space-10);" in footer_css
+    assert "background: var(--color-state); color: var(--color-paper);" in footer_css
+    assert 'class="dn-footer-identity"' in base
+    assert 'class="dn-footer-emblem"' in base
     assert ".dn-footer-grid { display: grid; gap: var(--space-6) var(--space-8); }" in footer_css
     assert "@media (min-width: 640px) { .dn-footer-grid { grid-template-columns:" in footer_css
     assert "repeat(2, minmax(0, 1fr)); } }" in footer_css
-    assert ".dn-footer-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }" in footer_css
+    assert (
+        ".dn-footer-grid { grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)) 1.1fr; }"
+        in footer_css
+    )
     assert (
         ".dn-footer-platform ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));"
         in footer_css

@@ -14,6 +14,14 @@
   --color-surface: #e5e9ee;
   --color-text: #181c20;
 
+  /* The state band, drawn from the platform blue rather than a second hue. It
+     takes the -800 step because white on it measures 8.0:1 and because that is
+     deeper than the -700 the primary button uses, so the band reads as the
+     authority above the product instead of competing with its call to action.
+     #5395fc itself can never go here: it is 2.97:1 against white. */
+  --color-state: var(--color-accent-800);
+  --color-state-deep: var(--color-accent-900);
+
   /* Primary. #5395fc is the brand blue and sits at the middle of the ramp. It
      carries 2.97:1 against white, so it may never hold white text — it is a
      signal colour for borders, focus rings, fills and dots. The -700 step is the
@@ -125,10 +133,15 @@
   --container-narrow: 900px;
   --page-gutter: 40px;
   --target-min: 44px;
-  /* The sticky header's real height: 64px of content plus --space-3 above and
-     below. Anchor offsets and sticky rails read this so they can never drift
-     apart from the bar they are clearing. */
-  --header-h: 88px;
+  /* What actually stays pinned: the product bar, which is one control tall plus
+     its padding. Derived rather than written down, because the last hard-coded
+     value drifted from the bar by 20px and anchors landed under it. The state
+     band above is not counted; it scrolls away. */
+  --header-h: calc(var(--control-lg) + var(--space-3) * 2);
+  /* The state identity band above the product bar. The header sticks at a
+     negative offset of exactly this height, so the band scrolls away and
+     --header-h stays the height of what is actually pinned. */
+  --gov-strip-h: 38px;
 
   /* Three control heights, each with one job, so a row of mixed controls sits
      on a single line. Everything interactive is one of these. */

@@ -12,7 +12,7 @@
     <div class="dn-home-hero">
       <div class="hero__panel">
         <div class="dn-trust-tags">
-          <span class="tag tag-accent">{% trans "Government of Nepal · Office of the Prime Minister" %}</span>
+          <span class="tag tag-accent">{% trans "Office of the Prime Minister" %}</span>
         </div>
         <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
         <p class="hero__lead">{% trans "Ministries publish the technology work they need help with, and anyone can contribute. The work happens in each project’s public repository on GitHub, so no DevNepal account is needed." %}</p>
@@ -68,13 +68,15 @@
 
 <section class="dn-measure" aria-labelledby="hero-proof-heading">
   <div class="container">
-    <h2 id="hero-proof-heading">{% trans "On DevNepal today" %}</h2>
+    <div class="dn-measure__head">
+      <h2 id="hero-proof-heading">{% trans "On DevNepal today" %}</h2>
+      <p class="dn-measure__note">{% trans "Only reviewed public work is listed." %}</p>
+    </div>
     <dl class="dn-measure__figures">
       <div><dt>{{ platform_metrics.ministries }}</dt><dd>{% trans "ministries publishing, each through a named officer" %}</dd></div>
       <div><dt>{{ platform_metrics.open_projects }}</dt><dd>{% trans "projects open for contribution" %}</dd></div>
       <div><dt>{{ platform_metrics.verified_contributions }}</dt><dd>{% trans "contributions accepted by a named maintainer" %}</dd></div>
     </dl>
-    <p class="dn-measure__note">{% trans "Only reviewed public work is listed." %}</p>
   </div>
 </section>
 

@@ -52,7 +52,10 @@ def test_home_hero_offers_exactly_two_visitor_actions(client):
     hero = response.content.split(b'<section class="hero"', 1)[1].split(b"</section>", 1)[0]
 
     assert response.status_code == 200
-    assert b"Government of Nepal" in hero
+    # The authority is named once, in the state band, so the hero carries only the
+    # office that publishes here.
+    assert b"Office of the Prime Minister" in hero
+    assert b"Government of Nepal" not in hero
     assert b"Digital Collaboration Initiative" not in hero
     assert b"Browse open issues" in hero
     assert b"Browse government projects" in hero

@@ -16,11 +16,37 @@
 <body>
   <a class="btn dn-skip-link" href="#main-content">{% trans "Skip to main content" %}</a>
   <header class="dn-product-header">
+    {% comment %} The state identity band. It names the authority once, links out
+       to the national portal so a visitor can verify this is real, and carries
+       the language switch, which was competing with the product actions below.
+       It sits inside the header landmark and scrolls away, leaving only the
+       product bar pinned. An approved national emblem belongs at the start of
+       .dn-gov-strip__origin; nothing is drawn there until one is supplied,
+       because the emblem is a regulated state symbol and must not be
+       approximated. {% endcomment %}
+    <div class="dn-gov-strip">
+      <div class="dn-gov-strip__inner">
+        <a class="dn-gov-strip__origin" href="https://nepal.gov.np" rel="noopener noreferrer">
+          <img class="dn-gov-strip__emblem" src="{% static 'images/emblem-of-nepal-60.png' %}" srcset="{% static 'images/emblem-of-nepal-60.png' %} 1x, {% static 'images/emblem-of-nepal-120.png' %} 2x" width="36" height="30" alt="{% trans 'Emblem of Nepal' %}" decoding="async">
+          {% trans "नेपाल सरकार · Government of Nepal" %}
+          <svg class="dn-gov-strip__out" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true" focusable="false"><path d="M4.5 2h5.5v5.5M10 2 3 9M8 10H2V4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="visually-hidden">{% trans "(opens the national portal)" %}</span>
+        </a>
+        <div class="dn-gov-strip__tools">
+        <form class="lang-switch" action="/i18n/setlang/" method="post" aria-label="{% trans 'Language' %}">
+          {% csrf_token %}
+          {% if request %}<input type="hidden" name="next" value="{{ request.get_full_path }}">{% endif %}
+          <button type="submit" name="language" value="en" lang="en"{% if CURRENT_LANGUAGE == 'en' %} aria-current="true"{% endif %}>EN</button>
+          <span class="lang-switch__divider" aria-hidden="true">|</span>
+          <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
+        </form>
+        </div>
+      </div>
+    </div>
     <div class="dn-header-inner">
       <a class="dn-brand" href="{% url 'projects:home' %}">
         <span class="dn-brand-copy">
           <strong>DevNepal</strong>
-          <small>{% trans "नेपाल सरकार · Government of Nepal" %}</small>
         </span>
       </a>
       {% block header_nav %}
@@ -33,13 +59,6 @@
         </ul>
       </nav>
       <div class="dn-header-actions">
-        <form class="lang-switch" action="/i18n/setlang/" method="post" aria-label="{% trans 'Language' %}">
-          {% csrf_token %}
-          {% if request %}<input type="hidden" name="next" value="{{ request.get_full_path }}">{% endif %}
-          <button type="submit" name="language" value="en" lang="en"{% if CURRENT_LANGUAGE == 'en' %} aria-current="true"{% endif %}>EN</button>
-          <span class="lang-switch__divider" aria-hidden="true">|</span>
-          <button type="submit" name="language" value="ne" lang="ne"{% if CURRENT_LANGUAGE == 'ne' %} aria-current="true"{% endif %}>ने</button>
-        </form>
         {% if user.is_authenticated %}
         {% if viewer_is_ministry_publisher %}<a class="dn-greeting" href="{% url 'projects:authoring_dashboard' %}">{% blocktrans with name=user.get_full_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</a>
         <a class="btn btn-sm dn-header-pub" href="{% url 'projects:authoring_dashboard' %}">{% trans "Publishing dashboard" %}</a>
@@ -96,6 +115,14 @@
   {% block footer %}
   <footer class="dn-footer">
     <div class="dn-container dn-footer-grid">
+      <div class="dn-footer-identity">
+        <strong class="dn-footer-mark">DevNepal</strong>
+        <p>{% trans "The public register of Government of Nepal technology work that is open to contribution." %}</p>
+        <a class="dn-footer-repo" href="https://github.com/voidash/DevNepal" rel="noopener noreferrer">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.34c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.19c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+          {% trans "Source on GitHub" %}
+        </a>
+      </div>
       <nav class="dn-footer-platform" aria-label="{% trans 'Platform' %}">
         <h2>{% trans "Platform" %}</h2>
         <ul>
@@ -130,11 +157,22 @@
       </nav>
       <div class="dn-footer-note">
         <h2>{% trans "Official platform" %}</h2>
+        <img class="dn-footer-emblem" src="{% static 'images/emblem-of-nepal-120.png' %}" width="58" height="48" alt="{% trans 'Emblem of Nepal' %}" loading="lazy" decoding="async">
         <p>{% trans "A Government of Nepal public collaboration platform." %}</p>
         <p lang="ne">{% trans "नेपाल सरकारको सार्वजनिक सहयोग मञ्च।" %}</p>
+        <p class="dn-footer-note__office">{% trans "Office of the Prime Minister" %}</p>
       </div>
     </div>
-    <p class="dn-container dn-footer-legal">© {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
+    <div class="dn-footer-legal">
+      <div class="dn-container dn-footer-legal__inner">
+        <p>© {% now "Y" %} DevNepal · {% trans "All content available in English and Nepali" %}</p>
+        <nav aria-label="{% trans 'Legal' %}">
+          {% url 'projects:privacy_policy' as legal_privacy %}{% if legal_privacy %}<a href="{{ legal_privacy }}">{% trans "Privacy" %}</a>{% endif %}
+          {% url 'projects:code_of_conduct' as legal_conduct %}{% if legal_conduct %}<a href="{{ legal_conduct }}">{% trans "Code of conduct" %}</a>{% endif %}
+          {% url 'projects:security_policy' as legal_security %}{% if legal_security %}<a href="{{ legal_security }}">{% trans "Security contact" %}</a>{% endif %}
+        </nav>
+      </div>
+    </div>
   </footer>
   {% endblock %}
 </body>
