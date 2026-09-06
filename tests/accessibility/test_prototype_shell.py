@@ -17,8 +17,8 @@ def test_shared_shell_uses_the_verified_light_blueprint_system():
     assert "--color-surface: #e5e9ee;" in tokens
     assert "--color-text: #181c20;" in tokens
     assert "--color-accent: #5395fc;" in tokens
-    assert 'font-family: "Barlow"' in tokens
-    assert 'font-family: "Barlow Condensed"' in tokens
+    assert 'font-family: "Inter"' in tokens
+    assert 'font-weight: 100 900' in tokens
     assert '"Noto Sans Devanagari"' in tokens
     # The shell used to forbid a second bar outright. It now carries one, and the
     # rules that kept the old ban worth having are asserted instead: the band lives

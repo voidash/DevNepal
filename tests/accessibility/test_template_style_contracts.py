@@ -81,7 +81,7 @@ def test_base_shell_uses_the_prototype_navigation_and_design_tokens():
     assert "--color-surface: #e5e9ee;" in tokens_css
     assert "--color-text: #181c20;" in tokens_css
     assert "--color-accent: #5395fc;" in tokens_css
-    assert 'font-family: "Barlow Condensed"' in tokens_css
+    assert '--font-heading: "Inter"' in tokens_css
     assert '"Noto Sans Devanagari"' in tokens_css
     assert "background: var(--color-bg);" in devnepal_css
     assert "border-radius: 0;" in devnepal_css
@@ -102,13 +102,14 @@ def test_shared_navigation_keeps_the_compact_menu_through_tablet_widths():
 
 @pytest.mark.unit
 def test_home_audience_cards_keep_complete_borders_at_every_width():
-    """DSC-001/NFR-A11Y-01: separated CTA cards retain all four visible edges."""
+    """DSC-001/NFR-A11Y-01: audience cards share one complete neutral treatment."""
     css = (Path(settings.BASE_DIR) / "static/src/devnepal.css").read_text()
+    home = (Path(settings.BASE_DIR) / "apps/projects/templates/projects/home.html").read_text()
 
     assert ".dn-get-started-grid article + article { border-left: 0;" not in css
     assert ".dn-get-started-grid article + article { border-top: 0;" not in css
-    assert ".dn-get-started-ministry {" in css
-    assert "border-color: var(--color-accent-300);" in css
+    assert "dn-get-started-ministry" not in css
+    assert "dn-get-started-ministry" not in home
 
 
 @pytest.mark.unit
