@@ -80,7 +80,7 @@ def test_home_features_recent_open_government_opportunities_only(client):
     assert list(response.context["featured_projects"]) == [featured]
     assert featured.title_en.encode() in response.content
     assert community not in response.context["featured_projects"]
-    assert community in response.context["featured_community_projects"]
+    assert community.title_en.encode() not in response.content
     assert paused.title_en.encode() not in response.content
 
 
@@ -92,7 +92,7 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
     response = client.get(reverse("projects:home"))
     section = (
         response.content.split(b'aria-labelledby="opportunities-heading"', 1)[1]
-        .split(b'aria-labelledby="community-heading"', 1)[0]
+        .split(b'aria-labelledby="safeguards-heading"', 1)[0]
         .decode()
     )
 
@@ -104,8 +104,8 @@ def test_home_featured_projects_lead_with_the_work_not_repeated_status(client):
 
 
 @pytest.mark.unit
-def test_home_community_sheet_puts_the_catalog_exit_in_the_header(client):
-    """DSC-001/GOV-011: community listings keep one catalog exit and no endorsement chrome."""
+def test_community_catalogue_states_the_endorsement_boundary(client):
+    """DSC-001/GOV-011: wherever community listings appear, the boundary appears with them."""
     make_public_project(
         project_type=ProjectType.PERSONAL,
         ministry=None,
@@ -113,19 +113,16 @@ def test_home_community_sheet_puts_the_catalog_exit_in_the_header(client):
         published_at=timezone.now(),
     )
 
-    response = client.get(reverse("projects:home"))
-    section = (
-        response.content.split(b'aria-labelledby="community-heading"', 1)[1]
-        .split(b'aria-labelledby="ministry-cta-heading"', 1)[0]
-        .decode()
-    )
+    response = client.get(reverse("projects:community"))
+    content = response.content.decode()
 
-    assert "Community projects" in section
-    assert "Browse community projects" in section
-    assert section.count("Browse community projects") == 1
-    assert "never imply government endorsement" in section
-    assert "not reviewed by PMO" not in section
-    assert "Community work that is not official" in section
+    assert response.status_code == 200
+    assert "Community projects" in content
+    assert "do not carry government endorsement" in content
+    assert "Community work that is not official" in content
+    # The landing page no longer carries a community chapter at all.
+    home = client.get(reverse("projects:home")).content.decode()
+    assert 'aria-labelledby="community-heading"' not in home
 
 
 @pytest.mark.unit
@@ -138,19 +135,15 @@ def test_home_community_sheet_names_the_owner_not_a_ministry(client):
         published_at=timezone.now(),
     )
 
-    response = client.get(reverse("projects:home"))
+    response = client.get(reverse("projects:community"))
     section = (
-        response.content.split(b'aria-labelledby="community-heading"', 1)[1]
-        .split(b'aria-labelledby="ministry-cta-heading"', 1)[0]
-        .decode()
+        response.content.decode().split('class="dn-catalog-results', 1)[1].split("</main>", 1)[0]
     )
 
     assert community.title_en in section
-    assert f"@{community.owner.username}" in section
+    assert "Community project" in section
     assert "Official" not in section
     assert reverse("projects:detail", args=[community.slug]) in section
-    assert ">Owner<" in section
-    assert ">Project<" in section
 
 
 @pytest.mark.unit
@@ -166,26 +159,22 @@ def test_home_people_sheet_lists_discoverable_members_without_scores(client):
         directory_discoverable=False,
         leaderboard_opt_out=False,
     )
-    opted_out = MemberProfileFactory(
+    # Opting out of the leaderboard must not remove someone from the directory.
+    still_listed = MemberProfileFactory(
         headline="Leaderboard opted out",
         directory_discoverable=True,
         leaderboard_opt_out=True,
     )
 
-    response = client.get(reverse("projects:home"))
-    section = (
-        response.content.split(b'aria-labelledby="people-heading"', 1)[1]
-        .split(b'aria-labelledby="safeguards-heading"', 1)[0]
-        .decode()
-    )
+    response = client.get(reverse("accounts:member_directory"))
+    section = response.content.decode()
 
     assert visible.user.username in section
     assert visible.headline in section
     assert reverse("accounts:public_profile", args=[visible.user.username]) in section
     assert hidden.user.username not in section
-    assert opted_out.headline not in section
+    assert still_listed.user.username in section
     assert "points" not in section.lower()
-    assert "leaderboard" not in section.lower()
 
 
 @pytest.mark.unit
@@ -205,15 +194,10 @@ def test_home_writing_sheet_lists_published_posts_only(client):
         moderation_state=BlogModerationState.RESTRICTED,
     )
 
-    response = client.get(reverse("projects:home"))
-    section = (
-        response.content.split(b'aria-labelledby="writing-heading"', 1)[1]
-        .split(b'aria-labelledby="safeguards-heading"', 1)[0]
-        .decode()
-    )
+    response = client.get(reverse("blogs:list"))
+    section = response.content.decode()
 
     assert published.title in section
-    assert published.excerpt in section
     assert reverse("blogs:detail", args=[published.pk]) in section
     assert "Draft that must stay private" not in section
     assert "Restricted post" not in section
@@ -276,8 +260,6 @@ def test_home_exposes_the_prototype_trust_sheet_and_contribution_model(client):
     assert "Public member profiles" not in content
     assert "Nine ways to contribute" in content
     assert "Writing code is one of them" in content
-    assert "Community projects" in content
-    assert "Browse community projects" in content
     assert "A named maintainer verifies accepted work" in content
     assert 'class="blueprint' in content
 
@@ -592,7 +574,11 @@ def test_catalog_selection_controls_apply_without_a_distant_submit_button(client
     assert "incoming?.abort()" in script
     assert "window.location.assign(url)" in script
     assert 'closest(".dn-catalog-results")' in script
+    # Back must swap, not reload: loadCatalog coerces whatever it is handed
+    # into a URL, because a bare string has no .searchParams and used to
+    # throw straight into the full-navigation fallback.
     assert "loadCatalog(window.location.href, { push: false })" in script
+    assert "target instanceof URL ? target : new URL(String(target)" in script
     assert 'credentials: "same-origin"' in script
     assert 'headers: { Accept: "text/html" }' in script
     assert "catalog.replaceWith(next)" in script
