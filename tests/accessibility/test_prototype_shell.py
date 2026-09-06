@@ -17,8 +17,9 @@ def test_shared_shell_uses_the_verified_light_blueprint_system():
     assert "--color-surface: #e5e9ee;" in tokens
     assert "--color-text: #181c20;" in tokens
     assert "--color-accent: #5395fc;" in tokens
-    assert 'font-family: "Barlow"' in tokens
-    assert 'font-family: "Barlow Condensed"' in tokens
+    assert 'font-family: "Inter"' in tokens
+    assert '--font-body: "Inter"' in tokens
+    assert '--font-heading: "Inter"' in tokens
     assert '"Noto Sans Devanagari"' in tokens
     # The shell used to forbid a second bar outright. It now carries one, and the
     # rules that kept the old ban worth having are asserted instead: the band lives
@@ -37,7 +38,7 @@ def test_shared_shell_uses_the_verified_light_blueprint_system():
 
 
 @pytest.mark.unit
-def test_shared_shell_has_one_ordered_design_cascade_and_real_barlow_assets():
+def test_shared_shell_has_one_ordered_design_cascade_and_a_real_text_face():
     """DSC-001/NFR-I18N-01: styling and bilingual typography load predictably."""
     root = Path(settings.BASE_DIR)
     base = (root / "templates/base.html").read_text()
@@ -52,13 +53,10 @@ def test_shared_shell_has_one_ordered_design_cascade_and_real_barlow_assets():
         "src/onboarding.css",
         "src/public-discovery.css",
     ]
-    for font in (
-        "barlow-latin-400.woff2",
-        "barlow-latin-500.woff2",
-        "barlow-latin-700.woff2",
-        "barlow-condensed-latin-400.woff2",
-        "barlow-condensed-latin-600.woff2",
-    ):
+    shipped = sorted(path.name for path in (root / "static/fonts").glob("*.woff2"))
+
+    assert shipped == ["inter-latin-variable.woff2"]
+    for font in shipped:
         asset = root / "static/fonts" / font
         assert asset.is_file() and asset.stat().st_size > 0, font
 
