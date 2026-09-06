@@ -262,7 +262,7 @@ def test_home_hero_sets_a_grounded_contribution_expectation(client):
 
     assert response.status_code == 200
     assert b"Public technology," in response.content
-    assert b"built in public." in response.content
+    assert b"Built in public." in response.content
     assert b"public repository on GitHub" in response.content
     assert b"anyone can contribute" in response.content
     assert b"Browse government projects" in response.content

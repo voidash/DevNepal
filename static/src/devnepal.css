@@ -774,8 +774,6 @@ body:has(> .dn-footer--auth) #main-content { flex: 1 0 auto; }
 .dn-writing-list .dn-writing-row:last-child { border-bottom: 0; }
 .dn-get-started-grid h2 { max-width: 22ch; margin: 0; font-size: var(--fs-xl); line-height: 1.05; letter-spacing: .02em; }
 .dn-get-started-grid .dn-section-kicker { margin-bottom: 0; }
-.dn-get-started-ministry { background: var(--color-accent-100); border-color: var(--color-accent-300); }
-.dn-get-started-ministry h2, .dn-get-started-ministry p { color: var(--color-accent-900); }
 .dn-closing-band { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: center; justify-content: space-between; padding: var(--space-10); border-color: var(--color-accent-300); background: var(--color-accent-100); }
 .dn-closing-band > div { max-width: 62ch; }
 .dn-closing-band h2 { margin: 0 0 var(--space-3); }

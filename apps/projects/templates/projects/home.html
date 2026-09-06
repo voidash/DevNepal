@@ -14,7 +14,7 @@
         <div class="dn-trust-tags">
           <span class="tag tag-accent">{% trans "Office of the Prime Minister" %}</span>
         </div>
-        <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "built in public." %}</span></h1>
+        <h1 id="hero-heading"><span>{% trans "Public technology," %}</span><span>{% trans "Built in public." %}</span></h1>
         <p class="hero__lead">{% trans "Ministries publish the technology work they need help with, and anyone can contribute. The work happens in each project’s public repository on GitHub, so no DevNepal account is needed." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary" href="{% url 'projects:issue_index' %}">{% trans "Browse open issues" %}</a>
@@ -187,9 +187,9 @@
           <a class="btn" href="{% url 'projects:about' %}">{% trans "How to contribute" %}</a>
         </div>
       </article>
-      <article class="blueprint dn-get-started-ministry">
+      <article class="blueprint">
         <span class="dn-section-kicker">{% trans "For ministries" %}</span>
-        <h2 id="ministry-cta-heading">{% trans "Have a project ready for public contribution?" %}</h2>
+        <h3 id="ministry-cta-heading">{% trans "Have a project ready for public contribution?" %}</h3>
         <p>{% trans "A named officer connects the ministry's public repository and publishes the listing. DevNepal then keeps its issues, pull requests and contributors in one place." %}</p>
         <div class="hero__actions">
           <a class="btn btn--primary" href="{% url 'projects:ministry_onboarding' %}">{% trans "How listing works" %}</a>
